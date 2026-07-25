@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="640" height="640" role="img" aria-label="ChinaMart product photo placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f7fa"/>
+      <stop offset="100%" stop-color="#e4e9f2"/>
+    </linearGradient>
+    <linearGradient id="boxTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3b45f"/>
+      <stop offset="100%" stop-color="#e09a3e"/>
+    </linearGradient>
+    <linearGradient id="boxLeft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d99340"/>
+      <stop offset="100%" stop-color="#c07c2e"/>
+    </linearGradient>
+    <linearGradient id="boxRight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c9832f"/>
+      <stop offset="100%" stop-color="#a96a20"/>
+    </linearGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#1f2937" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#1f2937" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="640" height="640" fill="url(#bg)"/>
+  <ellipse cx="320" cy="497" rx="176" ry="34" fill="url(#shadow)"/>
+
+  <!-- carton: isometric box -->
+  <g>
+    <path d="M320 168 L470 245 L320 322 L170 245 Z" fill="url(#boxTop)"/>
+    <path d="M170 245 L320 322 L320 470 L170 393 Z" fill="url(#boxLeft)"/>
+    <path d="M470 245 L470 393 L320 470 L320 322 Z" fill="url(#boxRight)"/>
+    <!-- tape seam -->
+    <path d="M320 168 L320 322" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6" stroke-linecap="round"/>
+    <path d="M320 322 L320 470" stroke="#000000" stroke-opacity="0.12" stroke-width="6" stroke-linecap="round"/>
+    <!-- shipping label -->
+    <rect x="205" y="300" width="86" height="60" rx="6" fill="#fdfdfd" fill-opacity="0.9" transform="skewY(27)"/>
+  </g>
+
+  <!-- air-freight mark -->
+  <g fill="#5b6478" fill-opacity="0.55" transform="translate(430 120) scale(1.05)">
+    <path d="M4 34 L54 12 L58 16 L34 44 L46 52 L44 58 L28 52 L18 62 L14 60 L16 46 L2 40 Z"/>
+  </g>
+
+  <text x="320" y="556" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#5b6478" letter-spacing="4">CHINAMART</text>
+  <text x="320" y="586" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="17" fill="#94a0b4" letter-spacing="1">sample product photo</text>
+</svg>

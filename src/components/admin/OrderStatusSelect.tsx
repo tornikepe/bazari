@@ -1,0 +1,40 @@
+"use client";
+
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { updateOrderStatus } from "@/app/actions/admin";
+import { SpinnerIcon } from "@/components/ui/icons";
+import { ORDER_STATUSES } from "@/lib/order-status";
+
+export function OrderStatusSelect({ id, status }: { id: string; status: string }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      {isPending && <SpinnerIcon size={14} className="text-ink-400" />}
+
+      <select
+        value={status}
+        disabled={isPending}
+        aria-label={t.admin.updateStatus}
+        onChange={(event) => {
+          const next = event.target.value;
+          startTransition(async () => {
+            await updateOrderStatus(id, next);
+            router.refresh();
+          });
+        }}
+        className="field h-9 w-auto min-w-[9.5rem] text-xs"
+      >
+        {ORDER_STATUSES.map((value) => (
+          <option key={value} value={value}>
+            {t.status[value]}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+}

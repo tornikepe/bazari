@@ -1,0 +1,100 @@
+// ChinaMart — schema for a China-import retail storefront.
+// Every user-facing string is duplicated per locale (ka / en).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  shipped
+  delivered
+  cancelled
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  nameKa    String
+  nameEn    String
+  icon      String    @default("📦")
+  sortOrder Int       @default(0)
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  nameKa        String
+  nameEn        String
+  descriptionKa String      @default("")
+  descriptionEn String      @default("")
+  price         Float
+  oldPrice      Float?
+  stock         Int         @default(0)
+  image         String      @default("/products/placeholder.svg")
+  brand         String      @default("")
+  rating        Float       @default(0)
+  reviewCount   Int         @default(0)
+  shippingDays  Int         @default(14)
+  isFeatured    Boolean     @default(false)
+  isActive      Boolean     @default(true)
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  number       String      @unique
+  customerName String
+  phone        String
+  email        String      @default("")
+  city         String
+  address      String
+  note         String      @default("")
+  total        Float
+  status       OrderStatus @default(pending)
+  items        OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Name/price are snapshotted so an order stays readable after a product edit.
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  nameKa    String
+  nameEn    String
+  image     String   @default("/products/placeholder.svg")
+  price     Float
+  quantity  Int
+
+  @@index([orderId])
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String   @default("Admin")
+  password  String
+  createdAt DateTime @default(now())
+}

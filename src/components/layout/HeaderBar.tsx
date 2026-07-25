@@ -1,0 +1,342 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCart } from "@/components/providers/CartProvider";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { useFavorites } from "@/components/product/FavoriteButton";
+import { LOCALES, type Locale } from "@/lib/i18n";
+import {
+  CartIcon,
+  CloseIcon,
+  HeadphonesIcon,
+  HeartIcon,
+  MenuIcon,
+  SearchIcon,
+  TruckIcon,
+  UserIcon,
+} from "@/components/ui/icons";
+
+export type HeaderCategory = {
+  slug: string;
+  nameKa: string;
+  nameEn: string;
+  icon: string;
+};
+
+export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
+  const { locale, t, setLocale } = useI18n();
+  const { count, hydrated } = useCart();
+  const favorites = useFavorites();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Both of these track external values (the URL), so they're adjusted during
+  // render instead of in an effect — React re-runs the component right away
+  // rather than committing the stale value first.
+  const urlQuery = searchParams.get("q") ?? "";
+  const [query, setQuery] = useState(urlQuery);
+  const [lastUrlQuery, setLastUrlQuery] = useState(urlQuery);
+
+  if (lastUrlQuery !== urlQuery) {
+    setLastUrlQuery(urlQuery);
+    setQuery(urlQuery);
+  }
+
+  // Route changes should always close the drawer.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
+    setMenuOpen(false);
+  }
+
+  // A drawer that scrolls the page behind it feels broken on mobile.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
+  function submitSearch(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = query.trim();
+    router.push(trimmed ? `/catalog?q=${encodeURIComponent(trimmed)}` : "/catalog");
+    searchRef.current?.blur();
+  }
+
+  const categoryName = (category: HeaderCategory) =>
+    locale === "ka" ? category.nameKa : category.nameEn;
+
+  const navLinks = [
+    { href: "/catalog", label: t.nav.catalog },
+    { href: "/catalog?sale=1", label: t.nav.deals },
+    { href: "/favorites", label: t.favorites.title },
+    { href: "/track", label: t.orderDone.trackHint },
+    { href: "/about", label: t.nav.about },
+    { href: "/contact", label: t.nav.contact },
+  ];
+
+  return (
+    <header className="sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]">
+      {/* Announcement strip */}
+      <div className="hidden bg-ink-900 text-white lg:block">
+        <div className="page-container flex h-9 items-center justify-between text-xs">
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1.5">
+              <TruckIcon size={14} className="text-brand-400" />
+              {t.topbar.shipping}
+            </span>
+            <span className="text-ink-400">{t.topbar.delivery}</span>
+          </div>
+
+          <div className="flex items-center gap-5">
+            <span className="flex items-center gap-1.5 text-ink-300">
+              <HeadphonesIcon size={14} />
+              {t.topbar.support}
+            </span>
+
+            <div className="flex items-center gap-1">
+              {LOCALES.map((code: Locale) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLocale(code)}
+                  aria-pressed={locale === code}
+                  className={`rounded px-1.5 py-0.5 font-semibold transition-colors ${
+                    locale === code
+                      ? "bg-white/15 text-white"
+                      : "text-ink-400 hover:text-white"
+                  }`}
+                >
+                  {code === "ka" ? "ქარ" : "EN"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main bar */}
+      <div className="page-container flex h-16 items-center gap-3 lg:h-20 lg:gap-6">
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label={t.nav.menu}
+          aria-expanded={menuOpen}
+          className="btn btn-ghost -ml-2 h-10 w-10 shrink-0 rounded-control p-0 lg:hidden"
+        >
+          <MenuIcon size={22} />
+        </button>
+
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-600 text-base font-black text-white shadow-sm">
+            忠
+          </span>
+          <span className="hidden text-lg leading-none font-extrabold tracking-tight text-ink-900 sm:block">
+            China<span className="text-brand-600">Mart</span>
+          </span>
+        </Link>
+
+        <form onSubmit={submitSearch} className="relative flex-1" role="search">
+          <SearchIcon
+            size={17}
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-400"
+          />
+          <input
+            ref={searchRef}
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t.nav.searchPlaceholder}
+            aria-label={t.nav.search}
+            className="field h-11 rounded-pill pl-10 sm:pr-24"
+          />
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 hidden h-8 -translate-y-1/2 rounded-pill sm:inline-flex"
+          >
+            {t.nav.search}
+          </button>
+        </form>
+
+        <div className="flex shrink-0 items-center gap-1">
+          <Link
+            href="/admin"
+            className="btn btn-ghost hidden h-10 rounded-control px-3 text-sm lg:inline-flex"
+          >
+            <UserIcon size={18} />
+            {t.nav.admin}
+          </Link>
+
+          <Link
+            href="/favorites"
+            aria-label={t.favorites.title}
+            className="btn btn-ghost relative h-10 rounded-control px-3 text-sm"
+          >
+            <span className="relative">
+              <HeartIcon size={20} />
+              {/* Only after hydration — the server can't know the wishlist. */}
+              {hydrated && favorites.length > 0 && (
+                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-600 px-1 text-xs font-bold text-white">
+                  {favorites.length > 99 ? "99+" : favorites.length}
+                </span>
+              )}
+            </span>
+          </Link>
+
+          <Link
+            href="/cart"
+            aria-label={t.nav.cart}
+            className="btn btn-ghost relative h-10 rounded-control px-3 text-sm"
+          >
+            <span className="relative">
+              <CartIcon size={21} />
+              {/* Rendered only after hydration — the server has no cart. */}
+              {hydrated && count > 0 && (
+                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-600 px-1 text-xs font-bold text-white">
+                  {count > 99 ? "99+" : count}
+                </span>
+              )}
+            </span>
+            <span className="hidden lg:inline">{t.nav.cart}</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Category rail */}
+      <nav className="hidden border-t border-line lg:block">
+        <div className="page-container flex h-11 items-center gap-1 overflow-x-auto no-scrollbar">
+          {categories.map((category) => (
+            <Link
+              key={category.slug}
+              href={`/catalog?category=${category.slug}`}
+              className="flex shrink-0 items-center gap-1.5 rounded-control px-3 py-1.5 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
+            >
+              <span aria-hidden="true">{category.icon}</span>
+              {categoryName(category)}
+            </Link>
+          ))}
+
+          <span className="mx-2 h-4 w-px shrink-0 bg-line" />
+
+          {navLinks.slice(1).map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="shrink-0 rounded-control px-3 py-1.5 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {/* Mobile drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label={t.nav.close}
+            onClick={() => setMenuOpen(false)}
+            className="absolute inset-0 bg-ink-900/50 backdrop-blur-[2px]"
+          />
+
+          <div className="absolute inset-y-0 left-0 flex w-[19rem] max-w-[85vw] flex-col bg-surface shadow-pop">
+            <div className="flex h-16 items-center justify-between border-b border-line px-4">
+              <span className="text-base font-extrabold tracking-tight text-ink-900">
+                China<span className="text-brand-600">Mart</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                aria-label={t.nav.close}
+                className="btn btn-ghost h-9 w-9 rounded-control p-0"
+              >
+                <CloseIcon size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="mb-2 px-1 text-xs font-bold tracking-wider text-ink-400 uppercase">
+                {t.nav.categories}
+              </p>
+              <ul className="mb-5 flex flex-col gap-0.5">
+                {categories.map((category) => (
+                  <li key={category.slug}>
+                    <Link
+                      href={`/catalog?category=${category.slug}`}
+                      className="flex items-center gap-2.5 rounded-control px-2.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100"
+                    >
+                      <span className="text-base" aria-hidden="true">
+                        {category.icon}
+                      </span>
+                      {categoryName(category)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="h-px bg-line" />
+
+              <ul className="mt-4 flex flex-col gap-0.5">
+                {navLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="block rounded-control px-2.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-2 rounded-control px-2.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100"
+                  >
+                    <UserIcon size={16} />
+                    {t.nav.admin}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="border-t border-line p-4">
+              <div className="flex items-center gap-1.5">
+                {LOCALES.map((code: Locale) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => setLocale(code)}
+                    aria-pressed={locale === code}
+                    className={`btn btn-sm flex-1 ${
+                      locale === code ? "btn-secondary" : "btn-outline"
+                    }`}
+                  >
+                    {code === "ka" ? "ქართული" : "English"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}

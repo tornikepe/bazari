@@ -1,26 +1,398 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   Design tokens
+   --------------------------------------------------------------------------
+   Everything visual is defined here. Components only use these tokens
+   (bg-brand-600, text-ink-500, rounded-card, shadow-card…), so a full
+   restyle means editing this block — not the components.
+   ========================================================================== */
+
+@theme {
+  /* Brand — warm red, the usual marketplace signal colour */
+  --color-brand-50: #fff1f1;
+  --color-brand-100: #ffdfdf;
+  --color-brand-200: #ffc5c5;
+  --color-brand-300: #ff9d9d;
+  --color-brand-400: #fb6565;
+  --color-brand-500: #f23b3b;
+  --color-brand-600: #de1f24;
+  --color-brand-700: #bb161c;
+  --color-brand-800: #9a161b;
+  --color-brand-900: #80191d;
+
+  /* Accent — amber, for deals and ratings */
+  --color-accent-50: #fffaeb;
+  --color-accent-100: #fff0c6;
+  --color-accent-200: #ffdf88;
+  --color-accent-300: #ffc84a;
+  --color-accent-400: #ffb020;
+  --color-accent-500: #f98d07;
+  --color-accent-600: #dd6702;
+  --color-accent-700: #b74606;
+  --color-accent-800: #94360c;
+  --color-accent-900: #7a2d0d;
+
+  /* Ink — neutral text and surfaces */
+  --color-ink-50: #f7f8fa;
+  --color-ink-100: #eef0f4;
+  --color-ink-200: #dfe3ea;
+  --color-ink-300: #c6ccd8;
+  --color-ink-400: #98a1b3;
+  --color-ink-500: #6b7488;
+  --color-ink-600: #4d5567;
+  --color-ink-700: #3b4252;
+  --color-ink-800: #262c39;
+  --color-ink-900: #161a23;
+
+  /* Semantic */
+  --color-success: #16a34a;
+  --color-success-soft: #dcfce7;
+  --color-warning: #d97706;
+  --color-warning-soft: #fef3c7;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fee2e2;
+  --color-info: #2563eb;
+  --color-info-soft: #dbeafe;
+
+  --color-surface: #ffffff;
+  --color-canvas: #f6f7f9;
+  --color-line: #e6e9ef;
+
+  /* Radii */
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+  --radius-pill: 999px;
+
+  /* Shadows — soft and layered rather than dark */
+  --shadow-card: 0 1px 2px rgb(22 26 35 / 0.04), 0 4px 12px rgb(22 26 35 / 0.05);
+  --shadow-lift: 0 2px 4px rgb(22 26 35 / 0.05), 0 12px 28px rgb(22 26 35 / 0.1);
+  --shadow-pop: 0 8px 32px rgb(22 26 35 / 0.16);
+
+  /* Typography — Geist has no Georgian glyphs, so Noto Sans Georgian picks
+     up those characters per-glyph through the fallback chain. */
+  --font-sans: var(--font-geist-sans), var(--font-noto-georgian), system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Type scale.
+     --------------------------------------------------------------------
+     Deliberately overrides Tailwind's defaults for two reasons:
+
+     1. The floor is 13px, not 12px — nothing on the site renders smaller,
+        so labels stay legible on a phone.
+     2. Sizes are fixed. No breakpoint font-size variants are used anywhere
+        in the app, so text is exactly the same size on a 380px phone and a
+        27" monitor, and switching ka/en never resizes anything.
+
+     Georgian runs a larger x-height than Latin at the same px, so line
+     heights are generous enough for both languages to breathe. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.15rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.4rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.55rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.7rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.85rem;
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: 2.1rem;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 2.45rem;
+  --text-4xl: 2.375rem;
+  --text-4xl--line-height: 2.85rem;
+
+  /* Layout */
+  --container-page: 80rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ==========================================================================
+   Base
+   ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink-800);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Georgian has no uppercase — `text-transform` on mixed UI only adds
+     spacing artefacts, so tracking carries the emphasis instead. */
+  :lang(ka) .uppercase {
+    text-transform: none;
+  }
+
+  ::selection {
+    background: var(--color-brand-100);
+    color: var(--color-brand-900);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Number spinners fight with the quantity steppers. */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ==========================================================================
+   Component primitives
+   Small reusable classes, so the same button isn't re-declared with a dozen
+   utilities across fifteen files.
+   ========================================================================== */
+
+@layer components {
+  .page-container {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .page-container {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .page-container {
+      padding-inline: 2rem;
+    }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-control);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.1s ease;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-md {
+    height: 2.75rem;
+    padding-inline: 1.125rem;
+    font-size: var(--text-sm);
+  }
+
+  .btn-sm {
+    height: 2.25rem;
+    padding-inline: 0.875rem;
+    font-size: var(--text-sm);
+  }
+
+  .btn-lg {
+    height: 3.25rem;
+    padding-inline: 1.75rem;
+    font-size: var(--text-base);
+  }
+
+  .btn-primary {
+    background: var(--color-brand-600);
+    color: #fff;
+    box-shadow: 0 1px 2px rgb(222 31 36 / 0.24);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-brand-700);
+  }
+
+  .btn-secondary {
+    background: var(--color-ink-900);
+    color: #fff;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--color-ink-800);
+  }
+
+  .btn-outline {
+    background: var(--color-surface);
+    color: var(--color-ink-800);
+    border: 1px solid var(--color-line);
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    border-color: var(--color-ink-300);
+    background: var(--color-ink-50);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-ink-600);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-ink-100);
+    color: var(--color-ink-900);
+  }
+
+  .btn-danger {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: var(--color-danger);
+    color: #fff;
+  }
+
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .field-label {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-ink-700);
+    margin-bottom: 0.375rem;
+  }
+
+  .field {
+    width: 100%;
+    height: 2.75rem;
+    padding-inline: 0.875rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-control);
+    font-size: var(--text-sm);
+    color: var(--color-ink-900);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .field::placeholder {
+    color: var(--color-ink-400);
+  }
+
+  .field:focus {
+    outline: none;
+    border-color: var(--color-brand-400);
+    box-shadow: 0 0 0 3px var(--color-brand-100);
+  }
+
+  textarea.field {
+    height: auto;
+    padding-block: 0.75rem;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  select.field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7488' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: var(--radius-pill);
+    padding: 0.25rem 0.625rem;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  /* Two-line clamp that *reserves* both lines even when the text only fills
+     one. Without the reserved height, a one-line product name pulls the price
+     and button up while its neighbour's two-line name pushes them down, so a
+     row of cards stops lining up — and the row re-shuffles when switching
+     between ka and en, since the same name is rarely the same length twice. */
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    min-height: calc(2 * var(--text-sm--line-height));
+  }
+
+  /* Same idea at the smaller size used by category tiles. */
+  .clamp-2-xs {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    min-height: calc(2 * var(--text-xs--line-height));
+  }
+
+  /* Horizontal chip rails scroll without showing a scrollbar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
