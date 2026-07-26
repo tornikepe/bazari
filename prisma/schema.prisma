@@ -15,6 +15,33 @@ enum Role {
   admin
 }
 
+/// What a one-time code is for. The same table serves both flows, so codes
+/// can't be replayed across them.
+enum TokenPurpose {
+  email_verification
+  password_reset
+}
+
+enum PaymentMethod {
+  cash_on_delivery
+  card
+  bank_transfer
+}
+
+enum PaymentStatus {
+  unpaid
+  paid
+  refunded
+}
+
+/// Why a product's stock changed, so the ledger explains itself.
+enum StockReason {
+  restock
+  sale
+  correction
+  return_to_stock
+}
+
 enum OrderStatus {
   pending
   confirmed
@@ -41,9 +68,14 @@ model Product {
   nameEn        String
   descriptionKa String      @default("")
   descriptionEn String      @default("")
+  sku           String      @unique
   price         Float
   oldPrice      Float?
+  /// What the shop paid. Drives the margin figures in the dashboard.
+  costPrice     Float       @default(0)
   stock         Int         @default(0)
+  /// Alert threshold — below this the dashboard flags the product.
+  lowStockAt    Int         @default(10)
   image         String      @default("/products/placeholder.svg")
   brand         String      @default("")
   shippingDays  Int         @default(14)
@@ -52,10 +84,49 @@ model Product {
   categoryId    String
   category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
+  stockMoves    StockMovement[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
   @@index([categoryId])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+/// Append-only stock ledger. Every change to `Product.stock` writes a row, so
+/// "why is this product out of stock?" is always answerable.
+model StockMovement {
+  id        String      @id @default(cuid())
+  productId String
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// Signed: negative for sales, positive for restocks.
+  delta     Int
+  reason    StockReason
+  /// Stock level after this movement, so history survives later edits.
+  balance   Int
+  note      String      @default("")
+  orderId   String?
+  createdAt DateTime    @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+/// Percentage or fixed-amount discount codes.
+model Coupon {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  /// Percent off when `percentOff` is set, otherwise a flat `amountOff`.
+  percentOff    Int?
+  amountOff     Float?
+  minOrderTotal Float     @default(0)
+  maxUses       Int?
+  usedCount     Int       @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean   @default(true)
+  orders        Order[]
+  createdAt     DateTime  @default(now())
+
   @@index([isActive])
 }
 
@@ -71,15 +142,48 @@ model Order {
   city         String
   address      String
   note         String      @default("")
+
+  /// Money is stored broken down, not just as a total, so an invoice can be
+  /// reproduced exactly even after prices or shipping rules change.
+  subtotal     Float       @default(0)
+  shipping     Float       @default(0)
+  discount     Float       @default(0)
   total        Float
+
+  couponId     String?
+  coupon       Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  paymentMethod PaymentMethod @default(cash_on_delivery)
+  paymentStatus PaymentStatus @default(unpaid)
+
   status       OrderStatus @default(pending)
+  /// Set when the order reaches `shipped` / `delivered`.
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+
   items        OrderItem[]
+  events       OrderEvent[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   @@index([status])
   @@index([createdAt])
   @@index([userId])
+  @@index([paymentStatus])
+}
+
+/// Status-change history for an order — who moved it and when.
+model OrderEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String      @default("")
+  /// Email of the staff member, or empty when the system did it.
+  actor     String      @default("")
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
 }
 
 /// Name/price are snapshotted so an order stays readable after a product edit.
@@ -91,8 +195,12 @@ model OrderItem {
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   nameKa    String
   nameEn    String
+  sku       String   @default("")
   image     String   @default("/products/placeholder.svg")
   price     Float
+  /// Snapshotted alongside the price so past margins don't move when the
+  /// product's cost is later updated.
+  costPrice Float    @default(0)
   quantity  Int
 
   @@index([orderId])
@@ -109,9 +217,31 @@ model User {
   address   String   @default("")
   password  String
   role      Role     @default(customer)
+  /// Sign-up sends a code; until it's confirmed this stays false.
+  emailVerified Boolean @default(false)
   orders    Order[]
+  tokens    VerificationToken[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([role])
+}
+
+/// Short-lived one-time codes for email verification and password resets.
+///
+/// Only a hash of the code is stored, so a database leak can't be replayed
+/// against either flow.
+model VerificationToken {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  purpose   TokenPurpose
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
 }

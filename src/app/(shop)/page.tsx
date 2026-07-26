@@ -68,11 +68,7 @@ export default async function HomePage() {
 
         <div className="page-container relative grid items-center gap-10 py-14 lg:grid-cols-2 lg:py-20">
           <div className="animate-rise">
-            <span className="badge bg-white/10 text-brand-200 ring-1 ring-white/15 backdrop-blur-sm">
-              {t.home.heroBadge}
-            </span>
-
-            <h1 className="mt-4 text-3xl leading-[1.15] font-extrabold tracking-tight">
+            <h1 className="text-3xl leading-[1.15] font-extrabold tracking-tight">
               {t.home.heroTitle}
             </h1>
 

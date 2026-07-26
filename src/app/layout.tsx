@@ -7,7 +7,7 @@ import { getLocale } from "@/lib/locale";
 import { getTheme } from "@/lib/server-theme";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_TITLE, SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,22 +32,21 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: {
-    default: `${SITE_NAME} — ონლაინ მაღაზია`,
-    template: `%s · ${SITE_NAME}`,
-  },
+  // Deliberately a single fixed string with no `template`: the tab title
+  // must read the same on every route, so pages never override it.
+  title: SITE_TITLE,
   description: DESCRIPTION,
-  applicationName: SITE_NAME,
+  applicationName: SITE_TITLE,
   openGraph: {
     type: "website",
-    siteName: SITE_NAME,
-    title: `${SITE_NAME} — ონლაინ მაღაზია`,
+    siteName: SITE_TITLE,
+    title: SITE_TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — ონლაინ მაღაზია`,
+    title: SITE_TITLE,
     description: DESCRIPTION,
   },
 };

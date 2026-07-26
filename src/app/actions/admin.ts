@@ -11,7 +11,10 @@ const DEFAULT_IMAGE = "/products/placeholder.svg";
 
 export type ActionResult =
   | { ok: true }
-  | { ok: false; error: "unauthorized" | "invalid" | "slug-taken" | "has-products" | "failed" };
+  | {
+      ok: false;
+      error: "unauthorized" | "invalid" | "slug-taken" | "sku-taken" | "has-products" | "failed";
+    };
 
 /**
  * Server Actions are reachable by direct POST, so the session is verified here
@@ -45,7 +48,7 @@ function revalidateStorefront() {
 /* ------------------------------------------------------------------ */
 
 type ProductFormParse =
-  | { ok: false; error: "invalid" | "slug-taken" }
+  | { ok: false; error: "invalid" | "slug-taken" | "sku-taken" }
   | { ok: true; data: Prisma.ProductUncheckedCreateInput };
 
 // The return type is annotated explicitly so the `ok` discriminant narrows at
@@ -71,10 +74,17 @@ async function readProductForm(
   const oldPriceRaw = text(formData, "oldPrice");
   const oldPrice = oldPriceRaw ? Number(oldPriceRaw) : null;
 
+  // SKU falls back to the slug so the field can be left blank, and is checked
+  // for collisions the same way the slug is.
+  const sku = (text(formData, "sku") || slug).toUpperCase().slice(0, 32);
+  const skuClash = await prisma.product.findUnique({ where: { sku }, select: { id: true } });
+  if (skuClash && skuClash.id !== currentId) return { ok: false, error: "sku-taken" };
+
   return {
     ok: true,
     data: {
       slug,
+      sku,
       nameKa,
       nameEn,
       descriptionKa: text(formData, "descriptionKa"),
@@ -83,6 +93,8 @@ async function readProductForm(
       // An "old price" below the current one would render a negative discount.
       oldPrice: oldPrice !== null && Number.isFinite(oldPrice) && oldPrice > price ? oldPrice : null,
       stock: Math.max(0, Math.floor(number(formData, "stock"))),
+      costPrice: Math.max(0, number(formData, "costPrice")),
+      lowStockAt: Math.max(0, Math.floor(number(formData, "lowStockAt", 10))),
       image: text(formData, "image") || DEFAULT_IMAGE,
       brand: text(formData, "brand"),
       shippingDays: Math.max(1, Math.floor(number(formData, "shippingDays", 14))),
@@ -205,14 +217,65 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
 /* ------------------------------------------------------------------ */
 
 export async function updateOrderStatus(id: string, status: string): Promise<ActionResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await getCurrentAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   // Narrows the incoming string to the schema enum — this is a Server Action,
   // so `status` can be anything a POST body contains.
   if (!isOrderStatus(status)) return { ok: false, error: "invalid" };
 
+  const order = await prisma.order.findUnique({
+    where: { id },
+    select: { status: true, items: { select: { productId: true, quantity: true } } },
+  });
+  if (!order) return { ok: false, error: "failed" };
+  if (order.status === status) return { ok: true };
+
+  const now = new Date();
+
   try {
-    await prisma.order.update({ where: { id }, data: { status } });
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id },
+        data: {
+          status,
+          // Timestamps are only stamped the first time the order reaches each
+          // stage, so re-opening an order doesn't rewrite its history.
+          ...(status === "shipped" ? { shippedAt: now } : {}),
+          ...(status === "delivered" ? { deliveredAt: now, paymentStatus: "paid" } : {}),
+          ...(status === "cancelled" ? { paymentStatus: "refunded" } : {}),
+        },
+      });
+
+      await tx.orderEvent.create({
+        data: { orderId: id, status, actor: admin.email },
+      });
+
+      // Cancelling releases the reserved stock back to the catalogue, with a
+      // ledger row explaining the increase.
+      if (status === "cancelled" && order.status !== "cancelled") {
+        for (const item of order.items) {
+          if (!item.productId) continue;
+
+          const updated = await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+            select: { stock: true },
+          });
+
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              delta: item.quantity,
+              reason: "return_to_stock",
+              balance: updated.stock,
+              orderId: id,
+              note: "Order cancelled",
+            },
+          });
+        }
+      }
+    });
   } catch (error) {
     console.error("updateOrderStatus failed", error);
     return { ok: false, error: "failed" };
@@ -220,5 +283,6 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
 
   revalidatePath("/dashboard/orders");
   revalidatePath(`/dashboard/orders/${id}`);
+  revalidatePath("/dashboard");
   return { ok: true };
 }

@@ -29,7 +29,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const [product, { locale }] = await Promise.all([getProduct(slug), getI18n()]);
-  if (!product) return { title: "404" };
+  if (!product) return {};
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const description = (
@@ -37,12 +37,10 @@ export async function generateMetadata({
   ).slice(0, 160);
 
   return {
-    title: name,
     description,
     alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
       type: "website",
-      title: name,
       description,
       url: `/product/${product.slug}`,
       images: [{ url: product.image, alt: name }],

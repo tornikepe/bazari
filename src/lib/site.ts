@@ -8,3 +8,11 @@ export const SITE_URL = (
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "Bazari";
+
+/**
+ * The browser tab title, used verbatim on every route.
+ *
+ * There is no `template` in the root metadata and no page sets its own title,
+ * so this string is what shows everywhere — by design.
+ */
+export const SITE_TITLE = "Bazari - ონლაინ მაღაზია";

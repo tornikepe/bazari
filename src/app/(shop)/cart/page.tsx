@@ -149,7 +149,7 @@ export default function CartPage() {
         </div>
 
         {/* ------------------------------ summary ---------------------------- */}
-        <aside className="card sticky top-[7.75rem] p-5">
+        <aside className="card sticky top-[var(--header-h)] p-5">
           <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
 
           <dl className="mt-4 flex flex-col gap-2.5 text-sm">

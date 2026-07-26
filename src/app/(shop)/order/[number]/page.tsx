@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,11 +6,6 @@ import { getI18n } from "@/lib/locale";
 import { formatPrice } from "@/lib/format";
 import { Price } from "@/components/ui/Price";
 import { CheckIcon, TruckIcon } from "@/components/ui/icons";
-
-export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getI18n();
-  return { title: t.orderDone.orderNumber };
-}
 
 export default async function OrderConfirmationPage({
   params,

@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -10,8 +9,6 @@ import { ProfileForm } from "@/components/account/ProfileForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
 import { BagIcon, HeartIcon, PackageIcon, TagIcon } from "@/components/ui/icons";
 import type { RawSearchParams } from "@/lib/filters";
-
-export const metadata: Metadata = { title: "Account" };
 
 export default async function AccountPage({
   searchParams,

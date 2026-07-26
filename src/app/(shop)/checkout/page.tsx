@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Price } from "@/components/ui/Price";
-import { AlertIcon, ShieldIcon, SpinnerIcon } from "@/components/ui/icons";
+import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
 import { formatPrice } from "@/lib/format";
 import { placeOrder } from "@/app/actions/orders";
 
@@ -182,14 +182,10 @@ export default function CheckoutPage() {
             </div>
           </fieldset>
 
-          <p className="flex items-center gap-2 text-xs text-ink-500">
-            <ShieldIcon size={16} className="shrink-0 text-success" />
-            {t.checkout.paymentNote}
-          </p>
         </div>
 
         {/* ----------------------------- summary ---------------------------- */}
-        <aside className="card sticky top-[7.75rem] p-5">
+        <aside className="card sticky top-[var(--header-h)] p-5">
           <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
 
           <ul className="mt-4 flex max-h-64 flex-col gap-3 overflow-y-auto">

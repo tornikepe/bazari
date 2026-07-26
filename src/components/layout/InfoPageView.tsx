@@ -51,9 +51,14 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
   );
 }
 
-/** Generates the metadata for an information route. */
+/**
+ * Metadata for an information route.
+ *
+ * Deliberately sets only the description: the tab title is a single fixed
+ * string for the whole site (see `SITE_TITLE`), so no page overrides it.
+ */
 export async function infoMetadata(slug: InfoSlug) {
   const { locale } = await getI18n();
   const page = getInfoPage(slug, locale);
-  return { title: page.title, description: page.intro.slice(0, 160) };
+  return { description: page.intro.slice(0, 160) };
 }

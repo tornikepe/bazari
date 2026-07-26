@@ -40,9 +40,17 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="field-label" htmlFor="password">
-            {t.auth.password}
-          </label>
+          <div className="flex items-baseline justify-between gap-2">
+            <label className="field-label" htmlFor="password">
+              {t.auth.password}
+            </label>
+            <Link
+              href="/forgot-password"
+              className="mb-1.5 text-xs font-semibold text-brand-600 hover:underline"
+            >
+              {t.auth.forgot}
+            </Link>
+          </div>
           <input
             id="password"
             name="password"

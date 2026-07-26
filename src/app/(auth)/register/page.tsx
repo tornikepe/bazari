@@ -16,9 +16,11 @@ export default function RegisterPage() {
       ? t.auth.taken
       : state.error === "weak"
         ? t.auth.weak
-        : state.error === "failed"
-          ? t.auth.failed
-          : t.auth.invalid;
+        : state.error === "mismatch"
+          ? t.auth.mismatch
+          : state.error === "failed"
+            ? t.auth.failed
+            : t.auth.invalid;
 
   return (
     <AuthCard
@@ -83,6 +85,21 @@ export default function RegisterPage() {
             className="field"
           />
           <p className="mt-1 text-xs text-ink-400">{t.auth.passwordHint}</p>
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="confirmPassword">
+            {t.auth.confirmPassword}
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            className="field"
+          />
         </div>
 
         {state.error && (

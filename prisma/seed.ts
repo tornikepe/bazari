@@ -8,6 +8,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import type { OrderStatus } from "../src/generated/prisma/enums";
 import { hashPassword } from "../src/lib/auth-hash";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "../src/lib/cart-rules";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -586,71 +587,51 @@ const products: SeedProduct[] = [
   },
 ];
 
-const demoOrders: {
-  number: string;
-  customerName: string;
-  phone: string;
-  email: string;
-  city: string;
-  address: string;
-  note: string;
-  status: OrderStatus;
-  picks: { slug: string; quantity: number }[];
-}[] = [
-  {
-    number: "BZ-240712",
-    customerName: "ნინო ბერიძე",
-    phone: "+995 599 12 34 56",
-    email: "nino.beridze@example.ge",
-    city: "თბილისი",
-    address: "ვაჟა-ფშაველას გამზ. 76, ბინა 12",
-    note: "დამირეკეთ მისვლამდე 30 წუთით ადრე",
-    status: "delivered",
-    picks: [
-      { slug: "anker-powercore-20000", quantity: 1 },
-      { slug: "ugreen-usbc-cable-2m", quantity: 2 },
-    ],
-  },
-  {
-    number: "BZ-240718",
-    customerName: "გიორგი მაისურაძე",
-    phone: "+995 577 88 90 21",
-    email: "giorgi.m@example.ge",
-    city: "ბათუმი",
-    address: "ჭავჭავაძის ქ. 31",
-    note: "",
-    status: "shipped",
-    picks: [{ slug: "70mai-dash-cam-a510", quantity: 1 }],
-  },
-  {
-    number: "BZ-240722",
-    customerName: "ანა კვარაცხელია",
-    phone: "+995 555 40 11 09",
-    email: "",
-    city: "ქუთაისი",
-    address: "თამარ მეფის ქ. 8, სად. 2",
-    note: "საღამოს 18:00-ის შემდეგ",
-    status: "confirmed",
-    picks: [
-      { slug: "qcy-t13-anc", quantity: 1 },
-      { slug: "mijia-thermometer-hygrometer", quantity: 3 },
-    ],
-  },
-  {
-    number: "BZ-240724",
-    customerName: "ლევან ჩხეიძე",
-    phone: "+995 598 76 54 32",
-    email: "levan.chkheidze@example.ge",
-    city: "რუსთავი",
-    address: "მეგობრობის გამზ. 14",
-    note: "",
-    status: "pending",
-    picks: [
-      { slug: "hoto-electric-screwdriver", quantity: 1 },
-      { slug: "jakemy-precision-kit-180", quantity: 1 },
-    ],
-  },
+
+/* ------------------------------------------------------------------ */
+/* Order generation                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Deterministic PRNG (mulberry32). Re-running the seed must produce the same
+ * catalogue and the same sales history, otherwise every run would change the
+ * dashboard's numbers.
+ */
+function makeRandom(seed: number) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const customerPool = [
+  { name: "ნინო ბერიძე", phone: "+995 599 12 34 56", city: "თბილისი", address: "ვაჟა-ფშაველას გამზ. 76, ბინა 12" },
+  { name: "გიორგი მაისურაძე", phone: "+995 577 88 90 21", city: "ბათუმი", address: "ჭავჭავაძის ქ. 31" },
+  { name: "ანა კვარაცხელია", phone: "+995 555 40 11 09", city: "ქუთაისი", address: "თამარ მეფის ქ. 8" },
+  { name: "ლევან ჩხეიძე", phone: "+995 598 76 54 32", city: "რუსთავი", address: "მეგობრობის გამზ. 14" },
+  { name: "მარიამ გელაშვილი", phone: "+995 591 22 33 44", city: "თბილისი", address: "პეკინის ქ. 5, ბინა 40" },
+  { name: "დავით ლომიძე", phone: "+995 574 65 43 21", city: "გორი", address: "სტალინის გამზ. 22" },
+  { name: "სოფიო თავაძე", phone: "+995 592 10 20 30", city: "ზუგდიდი", address: "რუსთაველის ქ. 47" },
+  { name: "ირakli ნადირაძე", phone: "+995 597 55 66 77", city: "თბილისი", address: "ალ. ყაზბეგის გამზ. 18" },
+  { name: "თამარ ჯaფარიძე", phone: "+995 595 81 19 28", city: "ფოთი", address: "დავით აღმაშენებლის ქ. 3" },
+  { name: "ზურაბ კიკნაძე", phone: "+995 596 44 55 66", city: "თელავი", address: "ერეკლე II-ის გამზ. 9" },
+  { name: "ეკა ბოლქვაძე", phone: "+995 593 77 88 99", city: "ბათუმი", address: "გორგასალის ქ. 61" },
+  { name: "ნიკა ღვინიაშვილი", phone: "+995 599 34 12 90", city: "მცხეთა", address: "არაგვის ქ. 12" },
 ];
+
+const coupons = [
+  { code: "WELCOME10", percentOff: 10, minOrderTotal: 50, maxUses: 500, isActive: true },
+  { code: "FREESHIP", amountOff: 15, minOrderTotal: 80, maxUses: 300, isActive: true },
+  { code: "SUMMER25", percentOff: 25, minOrderTotal: 200, maxUses: 100, isActive: true },
+  { code: "EXPIRED5", percentOff: 5, minOrderTotal: 0, maxUses: 50, isActive: false },
+];
+
+const ORDER_COUNT = 140;
+const HISTORY_DAYS = 180;
 
 async function main() {
   console.log("→ seeding categories…");
@@ -665,74 +646,318 @@ async function main() {
   }
 
   console.log("→ seeding products…");
-  const productBySlug = new Map<string, { id: string; nameKa: string; nameEn: string; price: number }>();
-  for (const { category, ...product } of products) {
+  type SeededProduct = {
+    id: string;
+    slug: string;
+    nameKa: string;
+    nameEn: string;
+    sku: string;
+    price: number;
+    costPrice: number;
+  };
+  const seeded: SeededProduct[] = [];
+
+  for (const [index, entry] of products.entries()) {
+    const { category, ...product } = entry;
     const categoryId = categoryIdBySlug.get(category);
     if (!categoryId) throw new Error(`Unknown category "${category}" on ${product.slug}`);
 
-    const data = { ...product, image: IMAGE, categoryId, isActive: true };
+    // A stable SKU and a plausible cost basis (58-68% of the sale price), both
+    // derived from the index so re-seeding doesn't churn the numbers.
+    const sku = `BZ-${String(index + 1).padStart(4, "0")}`;
+    const margin = 0.58 + ((index * 7) % 11) / 100;
+    const costPrice = Math.round(product.price * margin * 100) / 100;
+
+    const data = {
+      ...product,
+      sku,
+      costPrice,
+      lowStockAt: 10,
+      image: IMAGE,
+      categoryId,
+      isActive: true,
+    };
+
     const row = await prisma.product.upsert({
       where: { slug: product.slug },
       update: data,
       create: data,
     });
-    productBySlug.set(product.slug, row);
+
+    seeded.push({
+      id: row.id,
+      slug: row.slug,
+      nameKa: row.nameKa,
+      nameEn: row.nameEn,
+      sku: row.sku,
+      price: row.price,
+      costPrice: row.costPrice,
+    });
   }
 
-  const existingOrders = await prisma.order.count();
-  if (existingOrders === 0) {
-    console.log("→ seeding demo orders…");
-    for (const { picks, ...order } of demoOrders) {
-      const items = picks.map((pick) => {
-        const product = productBySlug.get(pick.slug);
-        if (!product) throw new Error(`Unknown product "${pick.slug}" in order ${order.number}`);
-        return {
-          productId: product.id,
-          nameKa: product.nameKa,
-          nameEn: product.nameEn,
-          image: IMAGE,
-          price: product.price,
-          quantity: pick.quantity,
-        };
-      });
-
-      await prisma.order.create({
-        data: {
-          ...order,
-          total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-          items: { create: items },
-        },
-      });
-    }
-  } else {
-    console.log(`→ skipping demo orders (${existingOrders} already exist)`);
+  console.log("→ seeding coupons…");
+  for (const coupon of coupons) {
+    await prisma.coupon.upsert({
+      where: { code: coupon.code },
+      update: coupon,
+      create: coupon,
+    });
   }
 
+  /* ---------------------------- users ------------------------------ */
   const email = process.env.ADMIN_EMAIL ?? "admin@bazari.ge";
   const password = process.env.ADMIN_PASSWORD ?? "admin123";
-  await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { email },
-    update: { password: hashPassword(password), role: "admin" },
-    create: { email, name: "Store admin", password: hashPassword(password), role: "admin" },
+    update: { password: hashPassword(password), role: "admin", emailVerified: true },
+    create: {
+      email,
+      name: "Store admin",
+      password: hashPassword(password),
+      role: "admin",
+      emailVerified: true,
+    },
   });
 
   // A ready-made customer, so the account area can be tried without signing up.
   const demoEmail = "user@bazari.ge";
-  await prisma.user.upsert({
+  const demoCustomer = await prisma.user.upsert({
     where: { email: demoEmail },
-    update: { password: hashPassword("user1234"), role: "customer" },
+    update: { password: hashPassword("user1234"), role: "customer", emailVerified: true },
     create: {
       email: demoEmail,
       name: "Demo customer",
       phone: "+995 599 00 00 00",
       city: "თბილისი",
+      address: "ვაჟა-ფშაველას გამზ. 76",
       password: hashPassword("user1234"),
       role: "customer",
+      emailVerified: true,
     },
   });
 
+  /* ---------------------------- orders ----------------------------- */
+  const existingOrders = await prisma.order.count();
+  if (existingOrders > 0) {
+    console.log(`→ skipping orders (${existingOrders} already exist)`);
+  } else {
+    console.log(`→ generating ${ORDER_COUNT} orders across ${HISTORY_DAYS} days…`);
+    const random = makeRandom(20260726);
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+
+    // Opening stock ledger: one restock per product, before any sale.
+    await prisma.stockMovement.createMany({
+      data: seeded.map((product) => ({
+        productId: product.id,
+        delta: 0,
+        reason: "restock" as const,
+        balance: 0,
+        note: "Opening balance",
+        createdAt: new Date(now - HISTORY_DAYS * DAY),
+      })),
+    });
+
+    const couponRows = await prisma.coupon.findMany({ where: { isActive: true } });
+
+    for (let i = 0; i < ORDER_COUNT; i++) {
+      // Skew towards recent days so the dashboard's trend looks like a real
+      // shop growing rather than a flat line.
+      const ageDays = Math.floor(HISTORY_DAYS * random() ** 1.7);
+      const createdAt = new Date(now - ageDays * DAY - Math.floor(random() * DAY));
+
+      const person = customerPool[Math.floor(random() * customerPool.length)];
+      // Roughly one order in five belongs to the demo customer's account.
+      const isDemoCustomer = random() < 0.2;
+
+      const lineCount = 1 + Math.floor(random() * 3);
+      const chosen = new Set<number>();
+      while (chosen.size < lineCount) chosen.add(Math.floor(random() * seeded.length));
+
+      const lines = [...chosen].map((index) => {
+        const product = seeded[index];
+        return { product, quantity: 1 + Math.floor(random() * 3) };
+      });
+
+      const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+      const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+
+      // One order in six uses a coupon it actually qualifies for.
+      let discount = 0;
+      let couponId: string | null = null;
+      if (random() < 0.16) {
+        const eligible = couponRows.filter((c) => subtotal >= c.minOrderTotal);
+        const coupon = eligible[Math.floor(random() * eligible.length)];
+        if (coupon) {
+          discount = coupon.percentOff
+            ? Math.round(subtotal * (coupon.percentOff / 100) * 100) / 100
+            : (coupon.amountOff ?? 0);
+          discount = Math.min(discount, subtotal);
+          couponId = coupon.id;
+        }
+      }
+
+      const total = Math.round((subtotal + shipping - discount) * 100) / 100;
+
+      // Older orders have had time to complete; recent ones are still moving.
+      const roll = random();
+      const status: OrderStatus =
+        ageDays > 21
+          ? roll < 0.9
+            ? "delivered"
+            : "cancelled"
+          : ageDays > 10
+            ? roll < 0.7
+              ? "delivered"
+              : roll < 0.9
+                ? "shipped"
+                : "cancelled"
+            : ageDays > 4
+              ? roll < 0.45
+                ? "shipped"
+                : roll < 0.85
+                  ? "confirmed"
+                  : "pending"
+              : roll < 0.6
+                ? "pending"
+                : "confirmed";
+
+      const paymentMethod =
+        random() < 0.72 ? "cash_on_delivery" : random() < 0.7 ? "card" : "bank_transfer";
+      const paymentStatus =
+        status === "delivered" ? "paid" : status === "cancelled" ? "refunded" : "unpaid";
+
+      const shippedAt =
+        status === "shipped" || status === "delivered"
+          ? new Date(createdAt.getTime() + (1 + random() * 3) * DAY)
+          : null;
+      const deliveredAt =
+        status === "delivered"
+          ? new Date(createdAt.getTime() + (4 + random() * 8) * DAY)
+          : null;
+
+      const order = await prisma.order.create({
+        data: {
+          number: `BZ-${String(100000 + i * 7 + Math.floor(random() * 6)).slice(-6)}`,
+          userId: isDemoCustomer ? demoCustomer.id : null,
+          customerName: isDemoCustomer ? demoCustomer.name : person.name,
+          phone: isDemoCustomer ? demoCustomer.phone : person.phone,
+          email: isDemoCustomer ? demoCustomer.email : "",
+          city: person.city,
+          address: person.address,
+          note: random() < 0.15 ? "დამირეკეთ მისვლამდე" : "",
+          subtotal,
+          shipping,
+          discount,
+          total,
+          couponId,
+          paymentMethod,
+          paymentStatus,
+          status,
+          shippedAt,
+          deliveredAt,
+          createdAt,
+          updatedAt: deliveredAt ?? shippedAt ?? createdAt,
+          items: {
+            create: lines.map(({ product, quantity }) => ({
+              productId: product.id,
+              nameKa: product.nameKa,
+              nameEn: product.nameEn,
+              sku: product.sku,
+              image: IMAGE,
+              price: product.price,
+              costPrice: product.costPrice,
+              quantity,
+            })),
+          },
+        },
+      });
+
+      // Timeline: one event per status the order actually passed through.
+      const timeline: { status: OrderStatus; at: Date }[] = [
+        { status: "pending", at: createdAt },
+      ];
+      if (status !== "pending" && status !== "cancelled") {
+        timeline.push({
+          status: "confirmed",
+          at: new Date(createdAt.getTime() + random() * DAY),
+        });
+      }
+      if (shippedAt) timeline.push({ status: "shipped", at: shippedAt });
+      if (deliveredAt) timeline.push({ status: "delivered", at: deliveredAt });
+      if (status === "cancelled") {
+        timeline.push({
+          status: "cancelled",
+          at: new Date(createdAt.getTime() + random() * 2 * DAY),
+        });
+      }
+
+      await prisma.orderEvent.createMany({
+        data: timeline.map((entry) => ({
+          orderId: order.id,
+          status: entry.status,
+          actor: entry.status === "pending" ? "" : admin.email,
+          createdAt: entry.at,
+        })),
+      });
+
+      // Stock ledger: cancelled orders never consumed stock.
+      if (status !== "cancelled") {
+        for (const { product, quantity } of lines) {
+          await prisma.stockMovement.create({
+            data: {
+              productId: product.id,
+              delta: -quantity,
+              reason: "sale",
+              balance: 0,
+              orderId: order.id,
+              createdAt,
+            },
+          });
+        }
+      }
+    }
+
+    // Stock ledger balances are filled in afterwards, in date order, so each
+    // row shows the level that actually followed it.
+    console.log("→ reconciling stock ledger…");
+    for (const product of seeded) {
+      const moves = await prisma.stockMovement.findMany({
+        where: { productId: product.id },
+        orderBy: { createdAt: "asc" },
+      });
+
+      const sold = moves.reduce((sum, m) => sum + (m.delta < 0 ? -m.delta : 0), 0);
+      const current = await prisma.product.findUnique({
+        where: { id: product.id },
+        select: { stock: true },
+      });
+
+      // Opening balance = what's left now plus everything since sold.
+      let balance = (current?.stock ?? 0) + sold;
+      for (const move of moves) {
+        if (move.reason === "restock" && move.delta === 0) {
+          await prisma.stockMovement.update({
+            where: { id: move.id },
+            data: { delta: balance, balance },
+          });
+          continue;
+        }
+        balance += move.delta;
+        await prisma.stockMovement.update({ where: { id: move.id }, data: { balance } });
+      }
+    }
+  }
+
+  const [orderCount, movementCount, couponCount] = await Promise.all([
+    prisma.order.count(),
+    prisma.stockMovement.count(),
+    prisma.coupon.count(),
+  ]);
+
   console.log(
-    `\n✓ done — ${categories.length} categories, ${products.length} products.\n` +
+    `\n✓ done — ${categories.length} categories, ${products.length} products,\n` +
+      `  ${orderCount} orders, ${movementCount} stock movements, ${couponCount} coupons.\n` +
       `  admin:    ${email} / ${password}\n` +
       `  customer: ${demoEmail} / user1234\n`,
   );

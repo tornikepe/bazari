@@ -62,9 +62,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   if (lines.some((line) => line.quantity < 1)) return { ok: false, error: "unavailable" };
 
-  const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  const subtotal =
+    Math.round(lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0) * 100) / 100;
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shipping;
+  const total = Math.round((subtotal + shipping) * 100) / 100;
 
   // A few attempts in case two orders draw the same random number.
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -80,6 +81,11 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             city,
             address,
             note: input.note?.trim() ?? "",
+            // Stored broken down so the invoice can be reproduced later even
+            // if prices or the shipping rules change.
+            subtotal,
+            shipping,
+            discount: 0,
             total,
             status: "pending",
             items: {
@@ -87,18 +93,36 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
                 productId: product.id,
                 nameKa: product.nameKa,
                 nameEn: product.nameEn,
+                sku: product.sku,
                 image: product.image,
                 price: product.price,
+                costPrice: product.costPrice,
                 quantity,
               })),
             },
+            // Opens the order's timeline; the dashboard appends to it on every
+            // status change.
+            events: { create: [{ status: "pending", note: "Order placed" }] },
           },
         });
 
         for (const { product, quantity } of lines) {
-          await tx.product.update({
+          const updated = await tx.product.update({
             where: { id: product.id },
             data: { stock: { decrement: quantity } },
+            select: { stock: true },
+          });
+
+          // Every stock change is written to the ledger, so the dashboard can
+          // always explain how a product reached its current level.
+          await tx.stockMovement.create({
+            data: {
+              productId: product.id,
+              delta: -quantity,
+              reason: "sale",
+              balance: updated.stock,
+              orderId: created.id,
+            },
           });
         }
 

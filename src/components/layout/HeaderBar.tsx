@@ -42,6 +42,7 @@ export function HeaderBar({
   const searchParams = useSearchParams();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Both of these track external values (the URL), so they're adjusted during
@@ -61,6 +62,7 @@ export function HeaderBar({
   if (lastPathname !== pathname) {
     setLastPathname(pathname);
     setMenuOpen(false);
+    setSearchOpen(false);
   }
 
   // A drawer that scrolls the page behind it feels broken on mobile.
@@ -86,6 +88,7 @@ export function HeaderBar({
     const trimmed = query.trim();
     router.push(trimmed ? `/catalog?q=${encodeURIComponent(trimmed)}` : "/catalog");
     searchRef.current?.blur();
+    setSearchOpen(false);
   }
 
   // Signed out -> sign in; customer -> their account; staff -> the dashboard.
@@ -164,7 +167,10 @@ export function HeaderBar({
           </span>
         </Link>
 
-        <form onSubmit={submitSearch} className="relative flex-1" role="search">
+        {/* Below `md` the bar is replaced by a single icon that opens a
+            full-width overlay — a cramped input squeezed between the logo and
+            four action buttons was unusable on a phone. */}
+        <form onSubmit={submitSearch} className="relative hidden flex-1 md:block" role="search">
           <SearchIcon
             size={17}
             className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-400"
@@ -176,17 +182,30 @@ export function HeaderBar({
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t.nav.searchPlaceholder}
             aria-label={t.nav.search}
-            className="field h-11 rounded-pill pl-10 sm:pr-24"
+            className="field h-11 rounded-pill pl-10 pr-24"
           />
           <button
             type="submit"
-            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 hidden h-8 w-20 -translate-y-1/2 rounded-pill px-0 sm:inline-flex"
+            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 h-8 w-20 -translate-y-1/2 rounded-pill px-0"
           >
             {t.nav.search}
           </button>
         </form>
 
+        {/* Pushes the actions to the right where the bar is hidden. */}
+        <div className="flex-1 md:hidden" />
+
         <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            aria-label={t.nav.search}
+            title={t.nav.search}
+            className="btn btn-ghost h-10 w-10 rounded-control p-0 md:hidden"
+          >
+            <SearchIcon size={19} />
+          </button>
+
           <ThemeToggle className="btn btn-ghost" />
 
           {/* Icon-only, so the cluster's width doesn't depend on how long
@@ -237,8 +256,8 @@ export function HeaderBar({
       </div>
 
       {/* Category rail */}
-      <nav className="hidden border-t border-line lg:block">
-        <div className="page-container flex h-11 items-center gap-1 overflow-x-auto no-scrollbar">
+      <nav className="rail-fade hidden border-t border-line lg:block">
+        <div className="page-container rail flex h-11 items-center gap-1 overflow-x-auto">
           {categories.map((category) => (
             <Link
               key={category.slug}
@@ -263,6 +282,42 @@ export function HeaderBar({
           ))}
         </div>
       </nav>
+
+      {/* Mobile search overlay */}
+      {searchOpen && (
+        <div className="absolute inset-x-0 top-0 z-50 bg-surface p-3 shadow-card md:hidden">
+          <form onSubmit={submitSearch} className="flex items-center gap-2" role="search">
+            <div className="relative min-w-0 flex-1">
+              <SearchIcon
+                size={17}
+                className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-400"
+              />
+              <input
+                autoFocus
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t.nav.searchPlaceholder}
+                aria-label={t.nav.search}
+                className="field h-11 rounded-pill pl-10"
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-md shrink-0 rounded-pill">
+              {t.nav.search}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSearchOpen(false)}
+              aria-label={t.nav.close}
+              className="btn btn-ghost h-10 w-10 shrink-0 rounded-control p-0"
+            >
+              <CloseIcon size={19} />
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Mobile drawer */}
       {menuOpen && (

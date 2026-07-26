@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { getI18n } from "@/lib/locale";
 import { fill } from "@/lib/i18n";
@@ -11,11 +10,6 @@ import { ActiveFilterChips } from "@/components/catalog/ActiveFilterChips";
 import { SortSelect } from "@/components/catalog/SortSelect";
 import { Pagination } from "@/components/catalog/Pagination";
 import { PackageIcon } from "@/components/ui/icons";
-
-export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getI18n();
-  return { title: t.catalog.title };
-}
 
 export default async function CatalogPage({
   searchParams,
@@ -57,7 +51,7 @@ export default async function CatalogPage({
       <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-8">
         {/* ----------------------------- sidebar ---------------------------- */}
         <aside className="hidden w-64 shrink-0 lg:block">
-          <div className="sticky top-[7.75rem] card max-h-[calc(100vh-9rem)] overflow-y-auto p-4">
+          <div className="sticky top-[var(--header-h)] card p-4">
             <h2 className="mb-3 text-sm font-extrabold tracking-tight text-ink-900">
               {t.catalog.filters}
             </h2>

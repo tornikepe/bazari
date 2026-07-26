@@ -13,6 +13,9 @@ const DEFAULT_IMAGE = "/products/placeholder.svg";
 export type ProductFormValues = {
   id?: string;
   slug: string;
+  sku: string;
+  costPrice: number;
+  lowStockAt: number;
   nameKa: string;
   nameEn: string;
   descriptionKa: string;
@@ -56,9 +59,11 @@ export function ProductForm({
         setError(
           result.error === "slug-taken"
             ? t.admin.slugTaken
-            : result.error === "invalid"
-              ? t.admin.required
-              : t.common.error,
+            : result.error === "sku-taken"
+              ? t.admin.skuTaken
+              : result.error === "invalid"
+                ? t.admin.required
+                : t.common.error,
         );
         return;
       }
@@ -106,14 +111,13 @@ export function ProductForm({
               <Text name="nameKa" label={t.admin.nameKa} defaultValue={product?.nameKa} required />
               <Text name="nameEn" label={t.admin.nameEn} defaultValue={product?.nameEn} required />
 
-              <div className="sm:col-span-2">
-                <Text
-                  name="slug"
-                  label={t.admin.slug}
-                  defaultValue={product?.slug}
-                  hint={t.admin.slugHint}
-                />
-              </div>
+              <Text
+                name="slug"
+                label={t.admin.slug}
+                defaultValue={product?.slug}
+                hint={t.admin.slugHint}
+              />
+              <Text name="sku" label={t.admin.skuField} defaultValue={product?.sku} />
 
               <div className="sm:col-span-2">
                 <label className="field-label" htmlFor="descriptionKa">
@@ -172,6 +176,21 @@ export function ProductForm({
                 type="number"
                 min="0"
                 defaultValue={product?.stock ?? 0}
+              />
+              <Text
+                name="costPrice"
+                label={t.admin.costPriceField}
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={product?.costPrice ?? 0}
+              />
+              <Text
+                name="lowStockAt"
+                label={t.admin.lowStockAtField}
+                type="number"
+                min="0"
+                defaultValue={product?.lowStockAt ?? 10}
               />
             </div>
           </section>
