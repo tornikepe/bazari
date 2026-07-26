@@ -6,7 +6,6 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
 import { Price } from "@/components/ui/Price";
-import { Rating } from "@/components/ui/Rating";
 import { TruckIcon } from "@/components/ui/icons";
 import { discountPercent } from "@/lib/format";
 import { fill } from "@/lib/i18n";
@@ -67,8 +66,6 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             {name}
           </Link>
         </h3>
-
-        <Rating value={product.rating} count={product.reviewCount} />
 
         <div className="mt-auto flex flex-col gap-2.5 pt-1">
           <Price value={product.price} oldValue={product.oldPrice} size="lg" />

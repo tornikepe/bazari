@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getI18n } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
-import { MailIcon, MapPinIcon, PhoneIcon, ShieldIcon, RefreshIcon, TruckIcon } from "@/components/ui/icons";
+import { RefreshIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
 
 export async function Footer() {
   const { locale, t } = await getI18n();
@@ -55,29 +55,14 @@ export async function Footer() {
         <div className="lg:col-span-2">
           <Link href="/" className="mb-4 inline-flex items-center gap-2.5">
             <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-600 text-base font-black text-white">
-              忠
+              ბ
             </span>
             <span className="text-lg font-extrabold tracking-tight text-ink-900">
-              China<span className="text-brand-600">Mart</span>
+              Ba<span className="text-brand-600">zari</span>
             </span>
           </Link>
 
           <p className="max-w-sm text-sm leading-relaxed text-ink-500">{t.footer.about}</p>
-
-          <ul className="mt-5 flex flex-col gap-2.5 text-sm text-ink-600">
-            <li className="flex items-center gap-2.5">
-              <PhoneIcon size={15} className="shrink-0 text-ink-400" />
-              +995 032 2 00 00 00
-            </li>
-            <li className="flex items-center gap-2.5">
-              <MailIcon size={15} className="shrink-0 text-ink-400" />
-              info@chinamart.ge
-            </li>
-            <li className="flex items-center gap-2.5">
-              <MapPinIcon size={15} className="shrink-0 text-ink-400" />
-              {t.footer.address}
-            </li>
-          </ul>
         </div>
 
         <nav aria-labelledby="footer-shop">
@@ -136,22 +121,10 @@ export async function Footer() {
       </div>
 
       <div className="border-t border-line">
-        <div className="page-container flex flex-col items-center justify-between gap-3 py-5 sm:flex-row">
+        <div className="page-container flex flex-col items-center justify-between gap-2 py-5 text-center sm:flex-row sm:text-left">
           <p className="text-xs text-ink-400">
-            © {new Date().getFullYear()} ChinaMart. {t.footer.rights}
+            © {new Date().getFullYear()} Bazari. {t.footer.rights}
           </p>
-
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs text-ink-400">{t.footer.payments}</span>
-            {["VISA", "MC", "BOG", "TBC"].map((method) => (
-              <span
-                key={method}
-                className="rounded border border-line bg-ink-50 px-2 py-1 text-xs font-bold text-ink-500"
-              >
-                {method}
-              </span>
-            ))}
-          </div>
 
           <p className="text-xs text-ink-400">{t.footer.demoNote}</p>
         </div>

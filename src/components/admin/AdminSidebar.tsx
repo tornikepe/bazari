@@ -35,10 +35,10 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
     <>
       <div className="flex items-center gap-2.5 px-2 pb-5">
         <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-600 text-base font-black text-white">
-          忠
+          ბ
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-extrabold tracking-tight text-white">ChinaMart</p>
+          <p className="truncate text-sm font-extrabold tracking-tight text-white">Bazari</p>
           <p className="truncate text-xs text-ink-400">{t.admin.panel}</p>
         </div>
       </div>

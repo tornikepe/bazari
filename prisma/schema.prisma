@@ -1,4 +1,4 @@
-// ChinaMart — schema for a China-import retail storefront.
+// Bazari — schema for a demo retail storefront.
 // Every user-facing string is duplicated per locale (ka / en).
 
 generator client {
@@ -41,8 +41,6 @@ model Product {
   stock         Int         @default(0)
   image         String      @default("/products/placeholder.svg")
   brand         String      @default("")
-  rating        Float       @default(0)
-  reviewCount   Int         @default(0)
   shippingDays  Int         @default(14)
   isFeatured    Boolean     @default(false)
   isActive      Boolean     @default(true)

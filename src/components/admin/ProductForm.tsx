@@ -22,8 +22,6 @@ export type ProductFormValues = {
   stock: number;
   image: string;
   brand: string;
-  rating: number;
-  reviewCount: number;
   shippingDays: number;
   isFeatured: boolean;
   isActive: boolean;
@@ -190,22 +188,6 @@ export function ProductForm({
                 type="number"
                 min="1"
                 defaultValue={product?.shippingDays ?? 14}
-              />
-              <Text
-                name="rating"
-                label={t.admin.ratingField}
-                type="number"
-                step="0.1"
-                min="0"
-                max="5"
-                defaultValue={product?.rating ?? 0}
-              />
-              <Text
-                name="reviewCount"
-                label={t.admin.reviewCountField}
-                type="number"
-                min="0"
-                defaultValue={product?.reviewCount ?? 0}
               />
             </div>
           </section>

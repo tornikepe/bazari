@@ -3,10 +3,62 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
 import { formatPrice } from "@/lib/format";
-import { AdminSearch } from "@/components/admin/AdminSearch";
+import { fill } from "@/lib/i18n";
+import { AdminToolbar, type SelectFilter } from "@/components/admin/AdminToolbar";
 import { ProductRowActions } from "@/components/admin/ProductRowActions";
-import { PlusIcon } from "@/components/ui/icons";
+import { AdminPagination } from "@/components/admin/AdminPagination";
+import { PackageIcon, PlusIcon } from "@/components/ui/icons";
+import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
+
+const PAGE_SIZE = 20;
+const LOW_STOCK_THRESHOLD = 10;
+
+const STATUSES = ["active", "inactive", "low", "out"] as const;
+const SORTS = ["newest", "name", "price-desc", "stock-asc"] as const;
+
+function one(value: string | string[] | undefined) {
+  return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+}
+
+function buildWhere(query: string, status: string, category: string): Prisma.ProductWhereInput {
+  const and: Prisma.ProductWhereInput[] = [];
+
+  if (query) {
+    // Postgres LIKE is case-sensitive, so this needs `mode: "insensitive"`.
+    const contains = { contains: query, mode: "insensitive" } as const;
+    and.push({
+      OR: [
+        { nameKa: contains },
+        { nameEn: contains },
+        { brand: contains },
+        { slug: contains },
+      ],
+    });
+  }
+
+  if (category) and.push({ category: { slug: category } });
+
+  if (status === "active") and.push({ isActive: true });
+  if (status === "inactive") and.push({ isActive: false });
+  if (status === "out") and.push({ stock: { lte: 0 } });
+  if (status === "low") and.push({ stock: { gt: 0, lte: LOW_STOCK_THRESHOLD } });
+
+  return and.length ? { AND: and } : {};
+}
+
+function buildOrderBy(sort: string): Prisma.ProductOrderByWithRelationInput[] {
+  switch (sort) {
+    case "name":
+      return [{ nameKa: "asc" }, { id: "asc" }];
+    case "price-desc":
+      return [{ price: "desc" }, { id: "asc" }];
+    case "stock-asc":
+      return [{ stock: "asc" }, { id: "asc" }];
+    default:
+      return [{ createdAt: "desc" }, { id: "asc" }];
+  }
+}
 
 export default async function AdminProductsPage({
   searchParams,
@@ -15,49 +67,172 @@ export default async function AdminProductsPage({
 }) {
   const { locale, t } = await getI18n();
   const params = await searchParams;
-  const query = (Array.isArray(params.q) ? params.q[0] : params.q)?.trim() ?? "";
+
+  const query = one(params.q);
+  const statusRaw = one(params.status);
+  const status = (STATUSES as readonly string[]).includes(statusRaw) ? statusRaw : "";
+  const category = one(params.category);
+  const sortRaw = one(params.sort);
+  const sort = (SORTS as readonly string[]).includes(sortRaw) ? sortRaw : "newest";
+  const pageRaw = Number(one(params.page));
+  const requestedPage = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+
+  const where = buildWhere(query, status, category);
+
+  const [total, categories] = await Promise.all([
+    prisma.product.count({ where }),
+    prisma.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { slug: true, nameKa: true, nameEn: true },
+    }),
+  ]);
+
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(requestedPage, pageCount);
 
   const products = await prisma.product.findMany({
-    where: query
-      ? {
-          OR: [
-            { nameKa: { contains: query } },
-            { nameEn: { contains: query } },
-            { brand: { contains: query } },
-            { slug: { contains: query } },
-          ],
-        }
-      : undefined,
+    where,
     include: { category: true },
-    orderBy: { createdAt: "desc" },
+    orderBy: buildOrderBy(sort),
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
   });
+
+  const filters: SelectFilter[] = [
+    {
+      name: "category",
+      label: t.admin.filterCategory,
+      value: category,
+      options: [
+        { value: "", label: t.admin.filterCategory },
+        ...categories.map((entry) => ({
+          value: entry.slug,
+          label: locale === "ka" ? entry.nameKa : entry.nameEn,
+        })),
+      ],
+    },
+    {
+      name: "status",
+      label: t.admin.filterStatus,
+      value: status,
+      options: [
+        { value: "", label: t.admin.filterStatus },
+        { value: "active", label: t.admin.filterActive },
+        { value: "inactive", label: t.admin.filterInactive },
+        { value: "low", label: t.admin.filterLowStock },
+        { value: "out", label: t.admin.filterOutOfStock },
+      ],
+    },
+    {
+      name: "sort",
+      label: t.admin.sortBy,
+      value: sort === "newest" ? "" : sort,
+      options: [
+        { value: "", label: t.admin.sortNewest },
+        { value: "name", label: t.admin.sortName },
+        { value: "price-desc", label: t.admin.sortPriceDesc },
+        { value: "stock-asc", label: t.admin.sortStockAsc },
+      ],
+    },
+  ];
+
+  const stockTone = (stock: number) =>
+    stock === 0
+      ? "bg-danger-soft text-danger"
+      : stock <= LOW_STOCK_THRESHOLD
+        ? "bg-warning-soft text-warning"
+        : "bg-ink-100 text-ink-600";
 
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
           {t.admin.products}
-          <span className="ml-2 text-sm font-medium text-ink-400">{products.length}</span>
+          <span className="ml-2 text-sm font-medium text-ink-400">{total}</span>
         </h1>
 
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <AdminSearch basePath="/admin/products" initial={query} />
-          <Link href="/admin/products/new" className="btn btn-primary btn-sm shrink-0">
+        <Link href="/admin/products/new" className="btn btn-primary btn-sm">
+          <PlusIcon size={15} />
+          {t.admin.newProduct}
+        </Link>
+      </div>
+
+      <div className="mt-4">
+        <AdminToolbar
+          basePath="/admin/products"
+          search={query}
+          filters={filters}
+          hasActive={Boolean(query || status || category || sort !== "newest")}
+        />
+      </div>
+
+      {products.length === 0 ? (
+        <div className="card mt-4 flex flex-col items-center gap-3 px-6 py-16 text-center">
+          <span className="grid h-14 w-14 place-items-center rounded-pill bg-ink-100 text-ink-400">
+            <PackageIcon size={26} />
+          </span>
+          <p className="text-sm text-ink-500">
+            {query || status || category ? t.admin.noMatches : t.admin.noProducts}
+          </p>
+          <Link href="/admin/products/new" className="btn btn-primary btn-sm mt-1">
             <PlusIcon size={15} />
             {t.admin.newProduct}
           </Link>
         </div>
-      </div>
-
-      {products.length === 0 ? (
-        <div className="card mt-5 px-6 py-16 text-center">
-          <p className="text-sm text-ink-500">{t.admin.noProducts}</p>
-        </div>
       ) : (
-        <div className="card mt-5 overflow-hidden">
-          {/* Horizontal scroll keeps the table usable on narrow screens. */}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[46rem] text-left">
+        <>
+          <p className="mt-3 text-xs text-ink-400">
+            {fill(t.admin.showingCount, {
+              from: (page - 1) * PAGE_SIZE + 1,
+              to: (page - 1) * PAGE_SIZE + products.length,
+              total,
+            })}
+          </p>
+
+          {/* Cards on small screens — a six-column table can't shrink far
+              enough to stay readable on a phone. */}
+          <ul className="mt-3 flex flex-col gap-2 lg:hidden">
+            {products.map((product) => (
+              <li key={product.id} className="card flex gap-3 p-3">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-control bg-ink-50">
+                  <Image src={product.image} alt="" fill sizes="64px" className="object-cover" />
+                </div>
+
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <Link
+                    href={`/admin/products/${product.id}`}
+                    className="clamp-2 text-sm font-semibold text-ink-900"
+                  >
+                    {locale === "ka" ? product.nameKa : product.nameEn}
+                  </Link>
+
+                  <p className="truncate text-xs text-ink-400">
+                    {product.category.icon}{" "}
+                    {locale === "ka" ? product.category.nameKa : product.category.nameEn}
+                    {product.brand && ` · ${product.brand}`}
+                  </p>
+
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-ink-900">
+                      {formatPrice(product.price, locale)}
+                    </span>
+                    <span className={`badge ${stockTone(product.stock)}`}>{product.stock}</span>
+                    {product.isFeatured && (
+                      <span className="badge bg-brand-50 text-brand-700">{t.admin.featured}</span>
+                    )}
+                  </div>
+
+                  <div className="mt-1">
+                    <ProductRowActions id={product.id} isActive={product.isActive} />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Table from lg upwards */}
+          <div className="card mt-3 hidden overflow-hidden lg:block">
+            <table className="w-full text-left">
               <thead className="border-b border-line bg-ink-50 text-xs font-bold tracking-wide text-ink-500 uppercase">
                 <tr>
                   <th className="px-4 py-2.5">{t.cart.item}</th>
@@ -86,7 +261,7 @@ export default async function AdminProductsPage({
                         <div className="min-w-0">
                           <Link
                             href={`/admin/products/${product.id}`}
-                            className="line-clamp-1 text-xs font-semibold text-ink-900 hover:text-brand-600"
+                            className="line-clamp-1 text-sm font-semibold text-ink-900 hover:text-brand-600"
                           >
                             {locale === "ka" ? product.nameKa : product.nameEn}
                           </Link>
@@ -106,7 +281,7 @@ export default async function AdminProductsPage({
                     </td>
 
                     <td className="px-4 py-2.5 text-right">
-                      <span className="text-xs font-semibold text-ink-900">
+                      <span className="text-sm font-semibold text-ink-900">
                         {formatPrice(product.price, locale)}
                       </span>
                       {product.oldPrice && (
@@ -117,17 +292,7 @@ export default async function AdminProductsPage({
                     </td>
 
                     <td className="px-4 py-2.5 text-right">
-                      <span
-                        className={`badge ${
-                          product.stock === 0
-                            ? "bg-danger-soft text-danger"
-                            : product.stock <= 10
-                              ? "bg-warning-soft text-warning"
-                              : "bg-ink-100 text-ink-600"
-                        }`}
-                      >
-                        {product.stock}
-                      </span>
+                      <span className={`badge ${stockTone(product.stock)}`}>{product.stock}</span>
                     </td>
 
                     <td className="px-4 py-2.5">
@@ -138,7 +303,15 @@ export default async function AdminProductsPage({
               </tbody>
             </table>
           </div>
-        </div>
+
+          <AdminPagination
+            basePath="/admin/products"
+            params={{ q: query, status, category, sort: sort === "newest" ? "" : sort }}
+            page={page}
+            pageCount={pageCount}
+            labels={{ previous: t.common.previous, next: t.common.next, page: t.common.page }}
+          />
+        </>
       )}
     </div>
   );

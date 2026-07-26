@@ -14,12 +14,13 @@ export function SortSelect({ filters }: { filters: CatalogFilters }) {
     newest: t.catalog.sortNewest,
     "price-asc": t.catalog.sortPriceAsc,
     "price-desc": t.catalog.sortPriceDesc,
-    rating: t.catalog.sortRating,
-    popular: t.catalog.sortPopular,
+    name: t.catalog.sortName,
   };
 
   return (
-    <label className="flex items-center gap-2">
+    // `min-w-0` lets the select shrink below its intrinsic option width, which
+    // is what pushed the row past a 320px viewport.
+    <label className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
       <span className="hidden shrink-0 text-xs text-ink-500 sm:inline">
         {t.catalog.sort}
       </span>
@@ -33,7 +34,7 @@ export function SortSelect({ filters }: { filters: CatalogFilters }) {
             });
           })
         }
-        className="field h-9 w-auto min-w-[10.5rem] text-xs"
+        className="field h-9 w-full min-w-0 text-xs sm:w-auto sm:min-w-[10.5rem]"
       >
         {SORT_OPTIONS.map((option) => (
           <option key={option} value={option}>

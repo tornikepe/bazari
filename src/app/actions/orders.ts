@@ -19,9 +19,9 @@ export type PlaceOrderResult =
   | { ok: true; number: string }
   | { ok: false; error: "empty" | "invalid" | "unavailable" | "failed" };
 
-/** `CM-` + 8 random hex chars; retried on the (unique) `number` column. */
+/** `BZ-` + 8 random hex chars; retried on the (unique) `number` column. */
 function generateOrderNumber() {
-  return `CM-${randomBytes(4).toString("hex").toUpperCase()}`;
+  return `BZ-${randomBytes(4).toString("hex").toUpperCase()}`;
 }
 
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {

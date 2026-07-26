@@ -4,8 +4,15 @@
  * Kept as data rather than eight hand-written page components: every entry
  * renders through the same `InfoPageView`, so the pages stay consistent and
  * adding one is a matter of adding a key here plus a three-line route file.
+ *
+ * The copy deliberately describes only what the application actually does.
+ * This is a portfolio build with no real company behind it, so there are no
+ * invented phone numbers, addresses, supplier claims or guarantees — the rules
+ * mentioned here (free-shipping threshold, cash on delivery) are the ones the
+ * code really enforces.
  */
 import type { Locale } from "@/lib/i18n";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
 
 type Section = { heading: string; body: string[] };
 type Content = { title: string; intro: string; sections: Section[] };
@@ -25,19 +32,20 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
     ka: {
       title: "ჩვენ შესახებ",
       intro:
-        "ChinaMart არის ქართული პლატფორმა, რომელიც ჩინელი მწარმოებლების პროდუქციას პირდაპირ, შუამავლების გარეშე გაწვდის.",
+        "Bazari არის ონლაინ მაღაზიის დემო — სასწავლო და საპორტფოლიო პროექტი, რომელიც სრულ e-commerce ნაკადს აჩვენებს.",
       sections: [
         {
-          heading: "როგორ ვმუშაობთ",
+          heading: "რა არის ეს პროექტი",
           body: [
-            "ვირჩევთ პროდუქტს დადასტურებული ქარხნებიდან, ვამოწმებთ ნიმუშს და მხოლოდ ამის შემდეგ ვუკვეთავთ პარტიას.",
-            "ტვირთი ჩამოდის საჰაერო და სახმელეთო გზით. საშუალო ვადა კარიდან კარამდე — 12-18 დღე.",
+            "ეს არის სრულფასოვანი ონლაინ მაღაზიის აპლიკაცია: კატალოგი ფილტრებით, კალათა, შეკვეთის გაფორმება, შეკვეთის ძებნა და ადმინ პანელი.",
+            "ის რეალურ კომპანიას არ ეკუთვნის და ნამდვილ გაყიდვებს არ ემსახურება. ყველა პროდუქტი, ფასი და შეკვეთა სატესტო მონაცემია.",
           ],
         },
         {
-          heading: "რატომ არის ფასი დაბალი",
+          heading: "რა მუშაობს ნამდვილად",
           body: [
-            "ჩვენ არ ვიხდით დისტრიბუტორის და მაღაზიის მარჟას. ფასში შედის პროდუქტი, ტრანსპორტირება და განბაჟება — მეტი არაფერი.",
+            "კატალოგის ფილტრები, ძებნა, კალათა, რჩეულები და შეკვეთის გაფორმება ნამდვილად მუშაობს — შეკვეთა ბაზაში ინახება.",
+            "ადმინ პანელიდან პროდუქტების, კატეგორიებისა და შეკვეთების მართვა რეალურად ცვლის მონაცემებს.",
           ],
         },
       ],
@@ -45,19 +53,20 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
     en: {
       title: "About us",
       intro:
-        "ChinaMart is a Georgian platform that brings products from Chinese manufacturers straight to you, with no middlemen.",
+        "Bazari is an online-store demo — a learning and portfolio project that shows a complete e-commerce flow.",
       sections: [
         {
-          heading: "How we work",
+          heading: "What this project is",
           body: [
-            "We pick products from verified factories, inspect a sample, and only then order a batch.",
-            "Shipments travel by air and land. Average door-to-door time is 12-18 days.",
+            "A full online-store application: a filterable catalog, cart, checkout, order tracking and an admin panel.",
+            "It does not belong to a real company and does not serve real sales. Every product, price and order is sample data.",
           ],
         },
         {
-          heading: "Why the price is lower",
+          heading: "What actually works",
           body: [
-            "We don't pay a distributor's or a retailer's margin. The price covers the product, transport and customs — nothing else.",
+            "Catalog filtering, search, cart, wishlist and checkout all genuinely work — orders are written to the database.",
+            "Managing products, categories and orders from the admin panel really does change the data.",
           ],
         },
       ],
@@ -67,39 +76,39 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   contact: {
     ka: {
       title: "კონტაქტი",
-      intro: "დაგვიკავშირდი ნებისმიერ სამუშაო დღეს, 10:00-დან 19:00-მდე.",
+      intro: "ეს დემო პროექტია — რეალური მხარდაჭერის სამსახური მას არ აქვს.",
       sections: [
-        {
-          heading: "საკონტაქტო ინფორმაცია",
-          body: [
-            "ტელეფონი: +995 032 2 00 00 00",
-            "ელფოსტა: info@chinamart.ge",
-            "მისამართი: თბილისი, ჭავჭავაძის გამზ. 45",
-          ],
-        },
         {
           heading: "შეკვეთის სტატუსი",
           body: [
-            "შეკვეთის სტატუსის შესამოწმებლად მოგვწერე შეკვეთის ნომერი, რომელიც შეძენის შემდეგ მიიღე.",
+            "შეკვეთის სტატუსის სანახავად გამოიყენე გვერდი „შეკვეთის მოძებნა“ — დაგჭირდება შეკვეთის ნომერი და ტელეფონი, რომელიც შეკვეთისას მიუთითე.",
+          ],
+        },
+        {
+          heading: "პროექტის ავტორი",
+          body: [
+            "კოდი ღიაა GitHub-ზე: github.com/tornikepe",
+            "შენიშვნები და შეკითხვები იქვე, issue-ს სახით მიიღება.",
           ],
         },
       ],
     },
     en: {
       title: "Contact",
-      intro: "Reach us any working day between 10:00 and 19:00.",
+      intro: "This is a demo project — there is no real support desk behind it.",
       sections: [
         {
-          heading: "Contact details",
+          heading: "Order status",
           body: [
-            "Phone: +995 032 2 00 00 00",
-            "Email: info@chinamart.ge",
-            "Address: 45 Chavchavadze Ave, Tbilisi",
+            "To check an order, use the “Track your order” page — you'll need the order number and the phone number you entered at checkout.",
           ],
         },
         {
-          heading: "Order status",
-          body: ["To check an order, send us the order number you received at checkout."],
+          heading: "Project author",
+          body: [
+            "The source is on GitHub: github.com/tornikepe",
+            "Questions and notes are welcome there as issues.",
+          ],
         },
       ],
     },
@@ -108,37 +117,45 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   faq: {
     ka: {
       title: "ხშირად დასმული კითხვები",
-      intro: "ყველაზე ხშირი კითხვები შეკვეთაზე, მიწოდებასა და გარანტიაზე.",
+      intro: "კითხვები შეკვეთაზე, მიწოდებასა და ამ პროექტის ბუნებაზე.",
       sections: [
         {
-          heading: "რამდენ ხანში მივიღებ შეკვეთას?",
-          body: ["საშუალოდ 12-18 სამუშაო დღე. ზუსტი ვადა თითოეულ პროდუქტზეა მითითებული."],
+          heading: "ეს ნამდვილი მაღაზიაა?",
+          body: [
+            "არა. ეს საპორტფოლიო დემოა. შეკვეთა ბაზაში ინახება, მაგრამ არაფერი იგზავნება და გადახდა არ ხდება.",
+          ],
         },
         {
-          heading: "როგორ ვიხდი?",
-          body: ["გადახდა ხდება კურიერთან, პროდუქტის მიღებისას. ონლაინ გადახდა მალე დაემატება."],
+          heading: "რეგისტრაცია მჭირდება?",
+          body: ["არა. შეკვეთის გასაფორმებლად საკმარისია სახელი, ტელეფონი და მისამართი."],
         },
         {
-          heading: "განბაჟება ცალკე მჭირდება?",
-          body: ["არა. განბაჟება უკვე შედის ფასში — დამატებით არაფერს იხდი."],
+          heading: "როგორ ვნახო ჩემი შეკვეთა?",
+          body: [
+            "გვერდზე „შეკვეთის მოძებნა“ შეიყვანე შეკვეთის ნომერი და ტელეფონი. ტელეფონი საჭიროა იმისთვის, რომ სხვისმა შეკვეთამ ხელში არ ჩაგივარდეს.",
+          ],
         },
       ],
     },
     en: {
       title: "Frequently asked questions",
-      intro: "The most common questions about ordering, delivery and warranty.",
+      intro: "Questions about ordering, delivery and what this project is.",
       sections: [
         {
-          heading: "How long does delivery take?",
-          body: ["12-18 business days on average. The exact estimate is shown on each product."],
+          heading: "Is this a real shop?",
+          body: [
+            "No. It's a portfolio demo. Orders are stored in the database, but nothing ships and no payment is taken.",
+          ],
         },
         {
-          heading: "How do I pay?",
-          body: ["Cash on delivery, paid to the courier. Online payments are coming soon."],
+          heading: "Do I need an account?",
+          body: ["No. A name, phone number and address are all checkout asks for."],
         },
         {
-          heading: "Do I have to handle customs myself?",
-          body: ["No. Customs clearance is already included in the price."],
+          heading: "How do I find my order?",
+          body: [
+            "On the “Track your order” page, enter the order number and your phone. The phone is required so that someone else's order can't be looked up.",
+          ],
         },
       ],
     },
@@ -146,41 +163,39 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
 
   shipping: {
     ka: {
-      title: "მიწოდება და განბაჟება",
-      intro: "ვაგზავნით საქართველოს ყველა ქალაქში.",
+      title: "მიწოდება",
+      intro: "მიწოდების წესები, რომლებსაც აპლიკაცია ნამდვილად იყენებს.",
       sections: [
-        {
-          heading: "ვადები",
-          body: [
-            "თბილისი — 12-16 დღე. რეგიონები — 14-18 დღე.",
-            "ვადა აითვლება შეკვეთის დადასტურების დღიდან.",
-          ],
-        },
         {
           heading: "ღირებულება",
           body: [
-            "მიწოდება უფასოა 200 ₾-ზე მეტ შეკვეთაზე. სხვა შემთხვევაში — 15 ₾.",
-            "განბაჟება უკვე შედის პროდუქტის ფასში.",
+            `მიწოდება უფასოა ${FREE_SHIPPING_THRESHOLD} ₾-ზე მეტ შეკვეთაზე. სხვა შემთხვევაში — ${SHIPPING_FEE} ₾.`,
+            "ეს თანხა კალათაშივე ჩანს და შეკვეთის ჯამში სერვერზე ითვლება.",
+          ],
+        },
+        {
+          heading: "ვადები",
+          body: [
+            "მიწოდების სავარაუდო ვადა თითოეულ პროდუქტზეა მითითებული და ადმინ პანელიდან იმართება.",
           ],
         },
       ],
     },
     en: {
-      title: "Shipping & customs",
-      intro: "We deliver to every city in Georgia.",
+      title: "Shipping",
+      intro: "The delivery rules the application actually applies.",
       sections: [
-        {
-          heading: "Timelines",
-          body: [
-            "Tbilisi — 12-16 days. Regions — 14-18 days.",
-            "The clock starts the day your order is confirmed.",
-          ],
-        },
         {
           heading: "Cost",
           body: [
-            "Delivery is free on orders over ₾200, otherwise ₾15.",
-            "Customs clearance is already included in the product price.",
+            `Delivery is free on orders over ₾${FREE_SHIPPING_THRESHOLD}, otherwise ₾${SHIPPING_FEE}.`,
+            "The amount is shown in the cart and recalculated on the server when the order is placed.",
+          ],
+        },
+        {
+          heading: "Timelines",
+          body: [
+            "The delivery estimate is set per product and managed from the admin panel.",
           ],
         },
       ],
@@ -190,35 +205,27 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   returns: {
     ka: {
       title: "დაბრუნების პოლიტიკა",
-      intro: "თუ პროდუქტი არ მოგერგო, დააბრუნე 14 დღის განმავლობაში.",
+      intro: "დემო პროექტს რეალური დაბრუნების პროცესი არ აქვს.",
       sections: [
         {
-          heading: "პირობები",
+          heading: "როგორ იქნებოდა რეალურ მაღაზიაში",
           body: [
-            "პროდუქტი უნდა იყოს გამოუყენებელი, ორიგინალ შეფუთვაში, ყველა აქსესუართან ერთად.",
-            "დაბრუნების მოთხოვნა უნდა დარეგისტრირდეს მიღებიდან 14 დღეში.",
+            "რეალურ მაღაზიაში აქ ეწერებოდა დაბრუნების ვადა, პროდუქტის მდგომარეობის მოთხოვნები და თანხის დაბრუნების პროცედურა.",
+            "ვინაიდან აქ გადახდა არ ხდება, დასაბრუნებელიც არაფერია.",
           ],
-        },
-        {
-          heading: "თანხის დაბრუნება",
-          body: ["თანხას ვაბრუნებთ პროდუქტის მიღებიდან 5 სამუშაო დღეში."],
         },
       ],
     },
     en: {
       title: "Return policy",
-      intro: "If a product isn't right for you, send it back within 14 days.",
+      intro: "A demo project has no real returns process.",
       sections: [
         {
-          heading: "Conditions",
+          heading: "What a real shop would put here",
           body: [
-            "The product must be unused, in its original packaging, with all accessories.",
-            "The return has to be registered within 14 days of delivery.",
+            "A real store would state its return window, the condition requirements and how refunds are issued.",
+            "Since no payment is taken here, there is nothing to return.",
           ],
-        },
-        {
-          heading: "Refunds",
-          body: ["We refund within 5 business days of receiving the returned product."],
         },
       ],
     },
@@ -227,37 +234,27 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   warranty: {
     ka: {
       title: "გარანტია",
-      intro: "ყველა პროდუქტს აქვს ადგილობრივი გარანტია.",
+      intro: "დემო პროექტს გარანტიის რეალური ვალდებულება არ აქვს.",
       sections: [
         {
-          heading: "ვადა",
+          heading: "რას ნიშნავს ეს",
           body: [
-            "ელექტრონიკა — 12 თვე. აქსესუარები — 6 თვე.",
-            "გარანტიის ვადა აითვლება პროდუქტის მიღების დღიდან.",
-          ],
-        },
-        {
-          heading: "სერვისცენტრი",
-          body: [
-            "სერვისცენტრი მდებარეობს თბილისში — გარანტიისთვის ჩინეთში გაგზავნა არ გჭირდება.",
+            "ამ გვერდზე რეალური მაღაზია მიუთითებდა გარანტიის ვადებს და სერვისცენტრის მისამართს.",
+            "აქ ასეთი ვალდებულება არ არსებობს — პროდუქტები სატესტო მონაცემია.",
           ],
         },
       ],
     },
     en: {
       title: "Warranty",
-      intro: "Every product carries a local warranty.",
+      intro: "A demo project carries no real warranty obligation.",
       sections: [
         {
-          heading: "Duration",
+          heading: "What this means",
           body: [
-            "Electronics — 12 months. Accessories — 6 months.",
-            "The warranty starts the day you receive the product.",
+            "A real store would list warranty periods and a service-centre address here.",
+            "No such obligation exists here — the products are sample data.",
           ],
-        },
-        {
-          heading: "Service centre",
-          body: ["Our service centre is in Tbilisi — nothing has to be shipped back to China."],
         },
       ],
     },
@@ -266,35 +263,35 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   terms: {
     ka: {
       title: "წესები და პირობები",
-      intro: "საიტით სარგებლობა ნიშნავს ამ პირობებზე თანხმობას.",
+      intro: "მოკლედ იმაზე, რას წარმოადგენს ეს საიტი.",
       sections: [
         {
-          heading: "შეკვეთა",
+          heading: "დემო სტატუსი",
           body: [
-            "შეკვეთა ძალაში შედის ოპერატორის დადასტურების შემდეგ.",
-            "ვიტოვებთ უფლებას გავაუქმოთ შეკვეთა, თუ პროდუქტი მარაგში აღარ არის.",
+            "საიტი სასწავლო/საპორტფოლიო პროექტია. მასზე გაფორმებული შეკვეთა იურიდიულ ვალდებულებას არ წარმოშობს.",
+            "პროდუქტები, ფასები და მარაგი სატესტო მონაცემია და ნებისმიერ დროს შეიძლება შეიცვალოს.",
           ],
         },
         {
           heading: "ფასები",
-          body: ["ფასები მითითებულია ლარში და მოიცავს მიწოდებასა და განბაჟებას."],
+          body: ["ფასები მითითებულია ლარში. გადახდა არ მუშაობს."],
         },
       ],
     },
     en: {
       title: "Terms & conditions",
-      intro: "Using this site means you accept these terms.",
+      intro: "A short note on what this site is.",
       sections: [
         {
-          heading: "Orders",
+          heading: "Demo status",
           body: [
-            "An order becomes binding once our operator confirms it.",
-            "We may cancel an order if the product is no longer in stock.",
+            "This site is a learning / portfolio project. Placing an order here creates no legal obligation.",
+            "Products, prices and stock are sample data and may change at any time.",
           ],
         },
         {
           heading: "Prices",
-          body: ["Prices are in Georgian lari and include delivery and customs."],
+          body: ["Prices are in Georgian lari. Payment is not implemented."],
         },
       ],
     },
@@ -303,34 +300,38 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   privacy: {
     ka: {
       title: "კონფიდენციალურობა",
-      intro: "ვაგროვებთ მხოლოდ იმ მონაცემებს, რაც შეკვეთის შესასრულებლადაა საჭირო.",
+      intro: "რა მონაცემებს ინახავს აპლიკაცია სინამდვილეში.",
       sections: [
         {
-          heading: "რას ვაგროვებთ",
-          body: ["სახელი, ტელეფონი, მისამართი და — სურვილის შემთხვევაში — ელფოსტა."],
+          heading: "რას ვინახავთ",
+          body: [
+            "შეკვეთის გაფორმებისას ბაზაში ინახება სახელი, ტელეფონი, ქალაქი, მისამართი და — თუ შეავსებ — ელფოსტა.",
+            "კალათა და რჩეულები მხოლოდ შენს ბრაუზერშია (localStorage) და სერვერზე არ იგზავნება.",
+          ],
         },
         {
-          heading: "როგორ ვიყენებთ",
+          heading: "რჩევა",
           body: [
-            "მონაცემები გამოიყენება მხოლოდ შეკვეთის დამუშავებისა და მიწოდებისთვის.",
-            "მესამე პირებს არ ვუზიარებთ, გარდა საკურიერო სამსახურისა.",
+            "რადგან ეს დემოა, გთხოვ, ნუ შეიყვან ნამდვილ პერსონალურ მონაცემებს — სატესტო მონაცემები სავსებით საკმარისია.",
           ],
         },
       ],
     },
     en: {
       title: "Privacy",
-      intro: "We collect only the data needed to fulfil your order.",
+      intro: "What the application actually stores.",
       sections: [
         {
-          heading: "What we collect",
-          body: ["Name, phone, address and — if you choose to give it — an email address."],
+          heading: "What we store",
+          body: [
+            "Placing an order stores your name, phone, city, address and — if you provide one — an email address.",
+            "The cart and wishlist live only in your browser (localStorage) and are never sent to the server.",
+          ],
         },
         {
-          heading: "How we use it",
+          heading: "A note",
           body: [
-            "Your data is used only to process and deliver your order.",
-            "We don't share it with third parties, apart from the courier service.",
+            "Since this is a demo, please don't enter real personal details — sample data is entirely sufficient.",
           ],
         },
       ],

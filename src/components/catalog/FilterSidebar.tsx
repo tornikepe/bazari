@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { Rating } from "@/components/ui/Rating";
 import { CheckIcon, CloseIcon, SpinnerIcon } from "@/components/ui/icons";
 import { buildQuery, type CatalogFilters } from "@/lib/filters";
 
@@ -128,27 +127,6 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
             {t.catalog.apply}
           </button>
         </form>
-      </FilterGroup>
-
-      {/* ------------------------------ rating ----------------------------- */}
-      <FilterGroup title={t.catalog.rating}>
-        <ul className="flex flex-col gap-0.5">
-          {[4, 3, 2].map((score) => (
-            <li key={score}>
-              <button
-                type="button"
-                onClick={() => apply({ rating: filters.rating === score ? null : score })}
-                aria-pressed={filters.rating === score}
-                className={`flex w-full items-center gap-2 rounded-control px-2 py-1.5 text-left transition-colors ${
-                  filters.rating === score ? "bg-brand-50" : "hover:bg-ink-50"
-                }`}
-              >
-                <Rating value={score} size={13} />
-                <span className="text-xs text-ink-500">{t.catalog.andUp}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
       </FilterGroup>
 
       {/* ------------------------------ brands ----------------------------- */}

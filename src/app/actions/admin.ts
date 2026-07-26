@@ -85,8 +85,6 @@ async function readProductForm(
       stock: Math.max(0, Math.floor(number(formData, "stock"))),
       image: text(formData, "image") || DEFAULT_IMAGE,
       brand: text(formData, "brand"),
-      rating: Math.min(5, Math.max(0, number(formData, "rating"))),
-      reviewCount: Math.max(0, Math.floor(number(formData, "reviewCount"))),
       shippingDays: Math.max(1, Math.floor(number(formData, "shippingDays", 14))),
       isFeatured: checkbox(formData, "isFeatured"),
       isActive: checkbox(formData, "isActive"),

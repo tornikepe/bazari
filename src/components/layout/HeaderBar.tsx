@@ -10,7 +10,6 @@ import { LOCALES, type Locale } from "@/lib/i18n";
 import {
   CartIcon,
   CloseIcon,
-  HeadphonesIcon,
   HeartIcon,
   MenuIcon,
   SearchIcon,
@@ -106,11 +105,6 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
           </div>
 
           <div className="flex items-center gap-5">
-            <span className="flex items-center gap-1.5 text-ink-300">
-              <HeadphonesIcon size={14} />
-              {t.topbar.support}
-            </span>
-
             <div className="flex items-center gap-1">
               {LOCALES.map((code: Locale) => (
                 <button
@@ -146,10 +140,10 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
 
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-600 text-base font-black text-white shadow-sm">
-            忠
+            ბ
           </span>
           <span className="hidden text-lg leading-none font-extrabold tracking-tight text-ink-900 sm:block">
-            China<span className="text-brand-600">Mart</span>
+            Ba<span className="text-brand-600">zari</span>
           </span>
         </Link>
 
@@ -260,7 +254,7 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
           <div className="absolute inset-y-0 left-0 flex w-[19rem] max-w-[85vw] flex-col bg-surface shadow-pop">
             <div className="flex h-16 items-center justify-between border-b border-line px-4">
               <span className="text-base font-extrabold tracking-tight text-ink-900">
-                China<span className="text-brand-600">Mart</span>
+                Ba<span className="text-brand-600">zari</span>
               </span>
               <button
                 type="button"

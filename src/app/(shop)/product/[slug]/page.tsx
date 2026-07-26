@@ -10,7 +10,6 @@ import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { Price } from "@/components/ui/Price";
-import { Rating } from "@/components/ui/Rating";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
 
@@ -61,7 +60,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const related = await prisma.product.findMany({
     where: { isActive: true, categoryId: product.categoryId, NOT: { id: product.id } },
     select: productCardSelect,
-    orderBy: { rating: "desc" },
+    orderBy: { createdAt: "desc" },
     take: 4,
   });
 
@@ -138,13 +137,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <h1 className="mt-1.5 text-2xl leading-tight font-extrabold tracking-tight text-ink-900">
             {name}
           </h1>
-
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Rating value={product.rating} size={16} />
-            <span className="text-sm text-ink-400">
-              {fill(t.product.reviews, { count: product.reviewCount })}
-            </span>
-          </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Price value={product.price} oldValue={product.oldPrice} size="xl" />

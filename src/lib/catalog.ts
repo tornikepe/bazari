@@ -8,15 +8,17 @@ function buildWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
   const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
 
   if (filters.q) {
-    // SQLite `LIKE` is case-insensitive for ASCII, and Georgian is caseless,
-    // so both locales match without Prisma's `mode` (unsupported on SQLite).
+    // Postgres `LIKE` is case-sensitive, so `mode: "insensitive"` is required
+    // for "anker" to match "Anker". (Georgian is caseless and unaffected.)
+    const contains = { contains: filters.q, mode: "insensitive" } as const;
+
     and.push({
       OR: [
-        { nameKa: { contains: filters.q } },
-        { nameEn: { contains: filters.q } },
-        { brand: { contains: filters.q } },
-        { descriptionKa: { contains: filters.q } },
-        { descriptionEn: { contains: filters.q } },
+        { nameKa: contains },
+        { nameEn: contains },
+        { brand: contains },
+        { descriptionKa: contains },
+        { descriptionEn: contains },
       ],
     });
   }
@@ -25,7 +27,6 @@ function buildWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
   if (filters.brands.length) and.push({ brand: { in: filters.brands } });
   if (filters.minPrice !== null) and.push({ price: { gte: filters.minPrice } });
   if (filters.maxPrice !== null) and.push({ price: { lte: filters.maxPrice } });
-  if (filters.rating !== null) and.push({ rating: { gte: filters.rating } });
   if (filters.inStock) and.push({ stock: { gt: 0 } });
   if (filters.onSale) and.push({ oldPrice: { not: null } });
 
@@ -40,10 +41,8 @@ function buildOrderBy(sort: Sort): Prisma.ProductOrderByWithRelationInput[] {
       return [{ price: "asc" }, { id: "asc" }];
     case "price-desc":
       return [{ price: "desc" }, { id: "asc" }];
-    case "rating":
-      return [{ rating: "desc" }, { reviewCount: "desc" }, { id: "asc" }];
-    case "popular":
-      return [{ reviewCount: "desc" }, { rating: "desc" }, { id: "asc" }];
+    case "name":
+      return [{ nameKa: "asc" }, { id: "asc" }];
     default:
       return [{ createdAt: "desc" }, { id: "asc" }];
   }
@@ -59,8 +58,6 @@ export const productCardSelect = {
   stock: true,
   image: true,
   brand: true,
-  rating: true,
-  reviewCount: true,
   shippingDays: true,
 } satisfies Prisma.ProductSelect;
 

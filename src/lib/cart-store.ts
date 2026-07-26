@@ -19,7 +19,7 @@ export type CartItem = {
   quantity: number;
 };
 
-const STORAGE_KEY = "chinamart.cart.v1";
+const STORAGE_KEY = "bazari.cart.v1";
 
 /** Stable reference — `getSnapshot` must never return a fresh array. */
 const EMPTY: CartItem[] = [];

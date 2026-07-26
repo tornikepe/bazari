@@ -15,10 +15,10 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <Link href="/" className="mb-6 flex items-center justify-center gap-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-control bg-brand-600 text-lg font-black text-white">
-            忠
+            ბ
           </span>
           <span className="text-xl font-extrabold tracking-tight text-ink-900">
-            China<span className="text-brand-600">Mart</span>
+            Ba<span className="text-brand-600">zari</span>
           </span>
         </Link>
 
@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
                 type="email"
                 required
                 autoComplete="username"
-                defaultValue="admin@chinamart.ge"
+                defaultValue="admin@bazari.ge"
                 className="field"
               />
             </div>
@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
 
         <p className="mt-4 text-center text-xs text-ink-400">
           {/* Demo project — the seeded credentials are shown on purpose. */}
-          admin@chinamart.ge / admin123
+          admin@bazari.ge / admin123
         </p>
 
         <div className="mt-2 text-center">

@@ -67,14 +67,6 @@ export function ActiveFilterChips({
     });
   }
 
-  if (filters.rating !== null) {
-    chips.push({
-      key: "rating",
-      label: `${filters.rating}★ ${t.catalog.andUp}`,
-      onRemove: () => remove({ rating: null }),
-    });
-  }
-
   if (filters.inStock) {
     chips.push({
       key: "stock",
@@ -109,7 +101,7 @@ export function ActiveFilterChips({
 
       <button
         type="button"
-        onClick={() => remove({ ...filters, q: "", category: "", brands: [], minPrice: null, maxPrice: null, rating: null, inStock: false, onSale: false })}
+        onClick={() => remove({ ...filters, q: "", category: "", brands: [], minPrice: null, maxPrice: null, inStock: false, onSale: false })}
         className="text-xs font-semibold text-brand-600 underline-offset-2 hover:underline"
       >
         {t.catalog.clear}

@@ -25,12 +25,12 @@ const notoGeorgian = Noto_Sans_Georgian({
 });
 
 const DESCRIPTION =
-  "ChinaMart — ხარისხიანი ტექნიკა, აქსესუარები და საყოფაცხოვრებო ნივთები პირდაპირ ჩინელი მწარმოებლებისგან, შუამავლების გარეშე.";
+  "Bazari — ტექნიკა, აქსესუარები და საყოფაცხოვრებო ნივთები. გაფილტრე კატეგორიით, ფასით ან ბრენდით და შეუკვეთე ონლაინ.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — პროდუქცია პირდაპირ ჩინეთიდან`,
+    default: `${SITE_NAME} — ონლაინ მაღაზია`,
     template: `%s · ${SITE_NAME}`,
   },
   description: DESCRIPTION,
@@ -38,13 +38,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — პროდუქცია პირდაპირ ჩინეთიდან`,
+    title: `${SITE_NAME} — ონლაინ მაღაზია`,
     description: DESCRIPTION,
     url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — პროდუქცია პირდაპირ ჩინეთიდან`,
+    title: `${SITE_NAME} — ონლაინ მაღაზია`,
     description: DESCRIPTION,
   },
 };

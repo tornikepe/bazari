@@ -5,7 +5,7 @@
  * through `useSyncExternalStore` with no mount effect and no hydration
  * mismatch, and syncs across tabs.
  */
-const STORAGE_KEY = "chinamart.favorites.v1";
+const STORAGE_KEY = "bazari.favorites.v1";
 
 /** Stable reference — `getSnapshot` must never return a fresh array. */
 const EMPTY: string[] = [];

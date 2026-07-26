@@ -8,7 +8,7 @@
 
 export const PAGE_SIZE = 12;
 
-export const SORT_OPTIONS = ["newest", "price-asc", "price-desc", "rating", "popular"] as const;
+export const SORT_OPTIONS = ["newest", "price-asc", "price-desc", "name"] as const;
 export type Sort = (typeof SORT_OPTIONS)[number];
 
 export type CatalogFilters = {
@@ -17,7 +17,6 @@ export type CatalogFilters = {
   brands: string[];
   minPrice: number | null;
   maxPrice: number | null;
-  rating: number | null;
   inStock: boolean;
   onSale: boolean;
   sort: Sort;
@@ -60,15 +59,12 @@ export function parseFilters(params: RawSearchParams): CatalogFilters {
     [minPrice, maxPrice] = [maxPrice, minPrice];
   }
 
-  const rating = positiveNumber(one(params.rating));
-
   return {
     q: one(params.q),
     category: one(params.category),
     brands: many(params.brand),
     minPrice,
     maxPrice,
-    rating: rating !== null && rating > 0 ? Math.min(rating, 5) : null,
     inStock: one(params.stock) === "1",
     onSale: one(params.sale) === "1",
     sort: SORT_OPTIONS.includes(sortParam) ? sortParam : "newest",
@@ -82,7 +78,6 @@ export const EMPTY_FILTERS: CatalogFilters = {
   brands: [],
   minPrice: null,
   maxPrice: null,
-  rating: null,
   inStock: false,
   onSale: false,
   sort: "newest",
@@ -97,7 +92,6 @@ export function hasActiveFilters(filters: CatalogFilters) {
       filters.brands.length ||
       filters.minPrice !== null ||
       filters.maxPrice !== null ||
-      filters.rating !== null ||
       filters.inStock ||
       filters.onSale,
   );
@@ -108,7 +102,6 @@ export function countActiveFilters(filters: CatalogFilters) {
     (filters.category ? 1 : 0) +
     filters.brands.length +
     (filters.minPrice !== null || filters.maxPrice !== null ? 1 : 0) +
-    (filters.rating !== null ? 1 : 0) +
     (filters.inStock ? 1 : 0) +
     (filters.onSale ? 1 : 0)
   );
@@ -133,7 +126,6 @@ export function buildQuery(
   for (const brand of next.brands) params.append("brand", brand);
   if (next.minPrice !== null) params.set("min", String(next.minPrice));
   if (next.maxPrice !== null) params.set("max", String(next.maxPrice));
-  if (next.rating !== null) params.set("rating", String(next.rating));
   if (next.inStock) params.set("stock", "1");
   if (next.onSale) params.set("sale", "1");
   if (next.sort !== "newest") params.set("sort", next.sort);

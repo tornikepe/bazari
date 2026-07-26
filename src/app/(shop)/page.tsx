@@ -15,7 +15,7 @@ import {
 export default async function HomePage() {
   const { locale, t } = await getI18n();
 
-  const [categories, featured, newArrivals, productCount] = await Promise.all([
+  const [categories, featured, newArrivals, productCount, brands] = await Promise.all([
     prisma.category.findMany({
       orderBy: [{ sortOrder: "asc" }],
       include: { _count: { select: { products: { where: { isActive: true } } } } },
@@ -23,7 +23,7 @@ export default async function HomePage() {
     prisma.product.findMany({
       where: { isActive: true, isFeatured: true },
       select: productCardSelect,
-      orderBy: { rating: "desc" },
+      orderBy: { createdAt: "desc" },
       take: 8,
     }),
     prisma.product.findMany({
@@ -33,6 +33,12 @@ export default async function HomePage() {
       take: 4,
     }),
     prisma.product.count({ where: { isActive: true } }),
+    // Every hero stat is a real count from the database — nothing invented.
+    prisma.product.findMany({
+      where: { isActive: true, brand: { not: "" } },
+      distinct: ["brand"],
+      select: { brand: true },
+    }),
   ]);
 
   const name = (row: { nameKa: string; nameEn: string }) =>
@@ -92,7 +98,7 @@ export default async function HomePage() {
               {[
                 { value: `${productCount}+`, label: t.home.statProducts },
                 { value: String(categories.length), label: t.home.statCategories },
-                { value: "12-18", label: t.home.statDelivery },
+                { value: String(brands.length), label: t.home.statBrands },
               ].map((stat) => (
                 <div key={stat.label}>
                   <dt className="text-2xl font-extrabold tracking-tight">
@@ -159,7 +165,7 @@ export default async function HomePage() {
           <SectionHeading
             title={t.home.featured}
             hint={t.home.featuredHint}
-            href="/catalog?sort=popular"
+            href="/catalog"
             linkLabel={t.home.viewAll}
           />
 
@@ -188,9 +194,9 @@ export default async function HomePage() {
                 {t.nav.deals}
               </p>
               <h2 className="mt-2 max-w-lg text-2xl leading-tight font-extrabold tracking-tight">
-                {t.home.why2Title}
+                {t.home.dealsTitle}
               </h2>
-              <p className="mt-2 max-w-md text-sm text-brand-100">{t.home.why2Text}</p>
+              <p className="mt-2 max-w-md text-sm text-brand-100">{t.home.dealsText}</p>
             </div>
 
             <Link

@@ -59,7 +59,9 @@ export default function CartPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}
-        <div className="flex flex-col gap-3">
+        {/* `min-w-0`: grid children default to `min-width: auto`, which stops
+            the rows below from shrinking and overflows narrow phones. */}
+        <div className="flex min-w-0 flex-col gap-3">
           {items.map((item) => {
             const name = locale === "ka" ? item.nameKa : item.nameEn;
             const max = Math.max(1, item.stock);
@@ -134,7 +136,8 @@ export default function CartPage() {
             );
           })}
 
-          <div className="flex justify-between">
+          {/* Wraps rather than overflowing — both labels are long in Georgian. */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Link href="/catalog" className="btn btn-ghost btn-sm">
               {t.cart.continueShopping}
             </Link>
