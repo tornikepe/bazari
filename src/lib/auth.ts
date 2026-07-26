@@ -6,8 +6,8 @@ import { prisma } from "@/lib/prisma";
 
 export { hashPassword, verifyPassword } from "@/lib/auth-hash";
 
-const SESSION_COOKIE = "cm_session";
-const SESSION_MAX_AGE = 60 * 60 * 8; // 8 hours
+const SESSION_COOKIE = "bz_session";
+const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 function secret() {
   const value = process.env.AUTH_SECRET;
@@ -61,8 +61,22 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-/** Returns the signed-in admin, or `null`. Never throws on a bad cookie. */
-export async function getCurrentAdmin() {
+/* ------------------------------------------------------------------ */
+/* Current user                                                        */
+/* ------------------------------------------------------------------ */
+
+export type SessionUser = {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  city: string;
+  address: string;
+  role: "customer" | "admin";
+};
+
+/** The signed-in user, or `null`. Never throws on a malformed cookie. */
+export async function getCurrentUser(): Promise<SessionUser | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -70,8 +84,32 @@ export async function getCurrentAdmin() {
   const userId = readToken(token);
   if (!userId) return null;
 
-  return prisma.adminUser.findUnique({
+  return prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, name: true },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      phone: true,
+      city: true,
+      address: true,
+      role: true,
+    },
   });
+}
+
+/**
+ * The signed-in user, but only when they're staff.
+ *
+ * Every admin Server Action calls this rather than trusting the dashboard
+ * layout's redirect — actions are reachable by direct POST.
+ */
+export async function getCurrentAdmin() {
+  const user = await getCurrentUser();
+  return user?.role === "admin" ? user : null;
+}
+
+/** Where a user belongs after signing in. */
+export function homeFor(role: "customer" | "admin") {
+  return role === "admin" ? "/dashboard" : "/account";
 }

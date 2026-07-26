@@ -218,7 +218,7 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
     return { ok: false, error: "failed" };
   }
 
-  revalidatePath("/admin/orders");
-  revalidatePath(`/admin/orders/${id}`);
+  revalidatePath("/dashboard/orders");
+  revalidatePath(`/dashboard/orders/${id}`);
   return { ok: true };
 }

@@ -4,6 +4,7 @@ import { getI18n } from "@/lib/locale";
 import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Reveal } from "@/components/ui/Reveal";
 import {
   ArrowRightIcon,
   PackageIcon,
@@ -54,7 +55,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ------------------------------- hero ------------------------------ */}
-      <section className="relative overflow-hidden bg-ink-900 text-white">
+      <section className="relative overflow-hidden bg-panel text-panel-fg">
         {/* Decorative wash — pointer-events-none so it never eats clicks. */}
         <div
           aria-hidden="true"
@@ -66,7 +67,7 @@ export default async function HomePage() {
         />
 
         <div className="page-container relative grid items-center gap-10 py-14 lg:grid-cols-2 lg:py-20">
-          <div>
+          <div className="animate-rise">
             <span className="badge bg-white/10 text-brand-200 ring-1 ring-white/15 backdrop-blur-sm">
               {t.home.heroBadge}
             </span>
@@ -111,7 +112,7 @@ export default async function HomePage() {
           </div>
 
           {/* Category quick-links, doubling as the hero's visual block */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
+          <div className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
             {categories.slice(0, 6).map((category) => (
               <Link
                 key={category.slug}
@@ -132,7 +133,7 @@ export default async function HomePage() {
       </section>
 
       {/* ----------------------------- categories -------------------------- */}
-      <section className="page-container py-12">
+      <Reveal as="section" className="page-container py-12">
         <SectionHeading
           title={t.home.shopByCategory}
           hint={t.home.shopByCategoryHint}
@@ -145,7 +146,7 @@ export default async function HomePage() {
             <Link
               key={category.slug}
               href={`/catalog?category=${category.slug}`}
-              className="card flex flex-col items-center gap-2 p-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
+              className="card hover-lift flex flex-col items-center gap-2 p-4 text-center hover:border-brand-200"
             >
               <span className="text-3xl" aria-hidden="true">
                 {category.icon}
@@ -157,11 +158,11 @@ export default async function HomePage() {
             </Link>
           ))}
         </div>
-      </section>
+      </Reveal>
 
       {/* ------------------------------ featured --------------------------- */}
       {featured.length > 0 && (
-        <section className="page-container py-4 pb-12">
+        <Reveal as="section" className="page-container py-4 pb-12">
           <SectionHeading
             title={t.home.featured}
             hint={t.home.featuredHint}
@@ -174,11 +175,11 @@ export default async function HomePage() {
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        </section>
+        </Reveal>
       )}
 
       {/* ---------------------------- deals banner ------------------------- */}
-      <section className="page-container pb-12">
+      <Reveal as="section" className="page-container pb-12">
         <div className="relative overflow-hidden rounded-card bg-brand-600 px-6 py-10 text-white sm:px-10 sm:py-12">
           <div
             aria-hidden="true"
@@ -208,11 +209,11 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* ---------------------------- new arrivals ------------------------- */}
       {newArrivals.length > 0 && (
-        <section className="page-container pb-12">
+        <Reveal as="section" className="page-container pb-12">
           <SectionHeading
             title={t.home.newArrivals}
             hint={t.home.newArrivalsHint}
@@ -225,11 +226,11 @@ export default async function HomePage() {
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        </section>
+        </Reveal>
       )}
 
       {/* -------------------------------- why ------------------------------ */}
-      <section className="border-t border-line bg-surface">
+      <Reveal as="section" className="border-t border-line bg-surface">
         <div className="page-container py-12">
           <h2 className="mb-6 text-xl font-extrabold tracking-tight text-ink-900">
             {t.home.whyTitle}
@@ -247,7 +248,7 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </Reveal>
     </>
   );
 }

@@ -151,7 +151,7 @@ export default async function AdminProductsPage({
           <span className="ml-2 text-sm font-medium text-ink-400">{total}</span>
         </h1>
 
-        <Link href="/admin/products/new" className="btn btn-primary btn-sm">
+        <Link href="/dashboard/products/new" className="btn btn-primary btn-sm">
           <PlusIcon size={15} />
           {t.admin.newProduct}
         </Link>
@@ -159,7 +159,7 @@ export default async function AdminProductsPage({
 
       <div className="mt-4">
         <AdminToolbar
-          basePath="/admin/products"
+          basePath="/dashboard/products"
           search={query}
           filters={filters}
           hasActive={Boolean(query || status || category || sort !== "newest")}
@@ -174,7 +174,7 @@ export default async function AdminProductsPage({
           <p className="text-sm text-ink-500">
             {query || status || category ? t.admin.noMatches : t.admin.noProducts}
           </p>
-          <Link href="/admin/products/new" className="btn btn-primary btn-sm mt-1">
+          <Link href="/dashboard/products/new" className="btn btn-primary btn-sm mt-1">
             <PlusIcon size={15} />
             {t.admin.newProduct}
           </Link>
@@ -200,7 +200,7 @@ export default async function AdminProductsPage({
 
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <Link
-                    href={`/admin/products/${product.id}`}
+                    href={`/dashboard/products/${product.id}`}
                     className="clamp-2 text-sm font-semibold text-ink-900"
                   >
                     {locale === "ka" ? product.nameKa : product.nameEn}
@@ -260,7 +260,7 @@ export default async function AdminProductsPage({
 
                         <div className="min-w-0">
                           <Link
-                            href={`/admin/products/${product.id}`}
+                            href={`/dashboard/products/${product.id}`}
                             className="line-clamp-1 text-sm font-semibold text-ink-900 hover:text-brand-600"
                           >
                             {locale === "ka" ? product.nameKa : product.nameEn}
@@ -305,7 +305,7 @@ export default async function AdminProductsPage({
           </div>
 
           <AdminPagination
-            basePath="/admin/products"
+            basePath="/dashboard/products"
             params={{ q: query, status, category, sort: sort === "newest" ? "" : sort }}
             page={page}
             pageCount={pageCount}

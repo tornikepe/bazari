@@ -7,6 +7,7 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { LOCALES, type Locale } from "@/lib/i18n";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   CartIcon,
   CloseIcon,
@@ -24,7 +25,15 @@ export type HeaderCategory = {
   icon: string;
 };
 
-export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
+export type HeaderUser = { name: string; role: "customer" | "admin" } | null;
+
+export function HeaderBar({
+  categories,
+  user,
+}: {
+  categories: HeaderCategory[];
+  user: HeaderUser;
+}) {
   const { locale, t, setLocale } = useI18n();
   const { count, hydrated } = useCart();
   const favorites = useFavorites();
@@ -79,6 +88,14 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
     searchRef.current?.blur();
   }
 
+  // Signed out -> sign in; customer -> their account; staff -> the dashboard.
+  const accountHref = !user ? "/login" : user.role === "admin" ? "/dashboard" : "/account";
+  const accountLabel = !user
+    ? t.auth.signIn
+    : user.role === "admin"
+      ? t.admin.dashboard
+      : t.account.title;
+
   const categoryName = (category: HeaderCategory) =>
     locale === "ka" ? category.nameKa : category.nameEn;
 
@@ -94,7 +111,7 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
   return (
     <header className="sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]">
       {/* Announcement strip */}
-      <div className="hidden bg-ink-900 text-white lg:block">
+      <div className="hidden bg-panel text-panel-fg lg:block">
         <div className="page-container flex h-9 items-center justify-between text-xs">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5">
@@ -104,24 +121,24 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
             <span className="text-ink-400">{t.topbar.delivery}</span>
           </div>
 
-          <div className="flex items-center gap-5">
-            <div className="flex items-center gap-1">
-              {LOCALES.map((code: Locale) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => setLocale(code)}
-                  aria-pressed={locale === code}
-                  className={`rounded px-1.5 py-0.5 font-semibold transition-colors ${
-                    locale === code
-                      ? "bg-white/15 text-white"
-                      : "text-ink-400 hover:text-white"
-                  }`}
-                >
-                  {code === "ka" ? "ქარ" : "EN"}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-1">
+            {LOCALES.map((code: Locale) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLocale(code)}
+                aria-pressed={locale === code}
+                // Fixed width: "ქარ" and "EN" are different lengths, and
+                // without this the strip's contents shuffle on every switch.
+                className={`w-11 rounded py-0.5 text-center font-semibold transition-colors ${
+                  locale === code
+                    ? "bg-panel-fg/15 text-panel-fg"
+                    : "text-panel-muted hover:text-panel-fg"
+                }`}
+              >
+                {code === "ka" ? "ქარ" : "EN"}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -163,25 +180,31 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
           />
           <button
             type="submit"
-            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 hidden h-8 -translate-y-1/2 rounded-pill sm:inline-flex"
+            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 hidden h-8 w-20 -translate-y-1/2 rounded-pill px-0 sm:inline-flex"
           >
             {t.nav.search}
           </button>
         </form>
 
         <div className="flex shrink-0 items-center gap-1">
+          <ThemeToggle className="btn btn-ghost" />
+
+          {/* Icon-only, so the cluster's width doesn't depend on how long
+              "ანგარიში" vs "Account" happens to be. */}
           <Link
-            href="/admin"
-            className="btn btn-ghost hidden h-10 rounded-control px-3 text-sm lg:inline-flex"
+            href={accountHref}
+            aria-label={accountLabel}
+            title={accountLabel}
+            className="btn btn-ghost h-10 w-10 rounded-control p-0"
           >
-            <UserIcon size={18} />
-            {t.nav.admin}
+            <UserIcon size={19} />
           </Link>
 
           <Link
             href="/favorites"
+            title={t.favorites.title}
             aria-label={t.favorites.title}
-            className="btn btn-ghost relative h-10 rounded-control px-3 text-sm"
+            className="btn btn-ghost relative h-10 w-10 rounded-control p-0"
           >
             <span className="relative">
               <HeartIcon size={20} />
@@ -197,7 +220,8 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
           <Link
             href="/cart"
             aria-label={t.nav.cart}
-            className="btn btn-ghost relative h-10 rounded-control px-3 text-sm"
+            title={t.nav.cart}
+            className="btn btn-ghost relative h-10 w-10 rounded-control p-0"
           >
             <span className="relative">
               <CartIcon size={21} />
@@ -208,7 +232,6 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
                 </span>
               )}
             </span>
-            <span className="hidden lg:inline">{t.nav.cart}</span>
           </Link>
         </div>
       </div>
@@ -248,7 +271,7 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
             type="button"
             aria-label={t.nav.close}
             onClick={() => setMenuOpen(false)}
-            className="absolute inset-0 bg-ink-900/50 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim backdrop-blur-[2px]"
           />
 
           <div className="absolute inset-y-0 left-0 flex w-[19rem] max-w-[85vw] flex-col bg-surface shadow-pop">
@@ -301,11 +324,11 @@ export function HeaderBar({ categories }: { categories: HeaderCategory[] }) {
                 ))}
                 <li>
                   <Link
-                    href="/admin"
+                    href={accountHref}
                     className="flex items-center gap-2 rounded-control px-2.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100"
                   >
                     <UserIcon size={16} />
-                    {t.nav.admin}
+                    {accountLabel}
                   </Link>
                 </li>
               </ul>

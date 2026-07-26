@@ -4,6 +4,9 @@ import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { getLocale } from "@/lib/locale";
+import { getTheme } from "@/lib/server-theme";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
@@ -58,22 +61,35 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Read the locale once here so the first server render is already in the
-  // right language — no flash of the default locale.
-  const locale = await getLocale();
+  // Locale and theme are both read here so the very first server render is
+  // already correct — no flash of the wrong language or a white flash before
+  // the dark theme applies.
+  const [locale, theme] = await Promise.all([getLocale(), getTheme()]);
 
   return (
     <html
       lang={locale}
+      data-theme={theme}
+      // The pre-paint script below may change `data-theme` before React
+      // hydrates, which is expected — this stops React flagging it.
+      suppressHydrationWarning
       // Opts smooth scrolling out of route transitions, which would otherwise
       // animate the jump to the top of each new page.
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} h-full antialiased`}
     >
+      <head>
+        {/* Runs before paint: falls back to the OS preference for a visitor
+            who has never picked a theme. Once they have, the cookie decides
+            and this is a no-op. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
-        <I18nProvider locale={locale}>
-          <CartProvider>{children}</CartProvider>
-        </I18nProvider>
+        <ThemeProvider>
+          <I18nProvider locale={locale}>
+            <CartProvider>{children}</CartProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -57,7 +57,7 @@ export function ProductRowActions({
       </button>
 
       <Link
-        href={`/admin/products/${id}`}
+        href={`/dashboard/products/${id}`}
         aria-label={t.admin.edit}
         title={t.admin.edit}
         className="btn btn-ghost h-8 w-8 rounded-control p-0"

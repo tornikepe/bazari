@@ -1,14 +1,23 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 import { HeaderBar } from "@/components/layout/HeaderBar";
 
 async function HeaderContent() {
-  const categories = await prisma.category.findMany({
-    orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
-    select: { slug: true, nameKa: true, nameEn: true, icon: true },
-  });
+  const [categories, user] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
+      select: { slug: true, nameKa: true, nameEn: true, icon: true },
+    }),
+    getCurrentUser(),
+  ]);
 
-  return <HeaderBar categories={categories} />;
+  return (
+    <HeaderBar
+      categories={categories}
+      user={user ? { name: user.name, role: user.role } : null}
+    />
+  );
 }
 
 export function Header() {

@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       // Nothing here is useful in an index, and order pages contain
       // customer details.
-      disallow: ["/admin", "/admin/", "/checkout", "/cart", "/order/"],
+      disallow: ["/dashboard", "/dashboard/", "/checkout", "/cart", "/order/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

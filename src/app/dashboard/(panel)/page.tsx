@@ -45,28 +45,28 @@ export default async function AdminDashboardPage() {
       label: t.admin.totalProducts,
       value: String(productCount),
       icon: PackageIcon,
-      href: "/admin/products",
+      href: "/dashboard/products",
       tone: "bg-info-soft text-info",
     },
     {
       label: t.admin.totalOrders,
       value: String(orderCount),
       icon: BagIcon,
-      href: "/admin/orders",
+      href: "/dashboard/orders",
       tone: "bg-brand-100 text-brand-700",
     },
     {
       label: t.admin.pendingOrders,
       value: String(pendingCount),
       icon: TruckIcon,
-      href: "/admin/orders?status=pending",
+      href: "/dashboard/orders?status=pending",
       tone: "bg-warning-soft text-warning",
     },
     {
       label: t.admin.revenue,
       value: formatPrice(revenue._sum.total ?? 0, locale),
       icon: TagIcon,
-      href: "/admin/orders",
+      href: "/dashboard/orders",
       tone: "bg-success-soft text-success",
     },
   ];
@@ -104,7 +104,7 @@ export default async function AdminDashboardPage() {
           <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.recentOrders}</h2>
             <Link
-              href="/admin/orders"
+              href="/dashboard/orders"
               className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"
             >
               {t.home.viewAll}
@@ -119,7 +119,7 @@ export default async function AdminDashboardPage() {
               {recentOrders.map((order) => (
                 <li key={order.id}>
                   <Link
-                    href={`/admin/orders/${order.id}`}
+                    href={`/dashboard/orders/${order.id}`}
                     className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-ink-50"
                   >
                     <div className="min-w-0 flex-1">
@@ -162,7 +162,7 @@ export default async function AdminDashboardPage() {
               {lowStock.map((product) => (
                 <li key={product.id}>
                   <Link
-                    href={`/admin/products/${product.id}`}
+                    href={`/dashboard/products/${product.id}`}
                     className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-ink-50"
                   >
                     <span className="line-clamp-1 flex-1 text-xs text-ink-700">

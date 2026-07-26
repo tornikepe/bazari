@@ -36,7 +36,7 @@ export default async function AdminOrderDetailPage({
   return (
     <div className="mx-auto max-w-4xl">
       <Link
-        href="/admin/orders"
+        href="/dashboard/orders"
         className="mb-3 inline-flex items-center gap-1 text-xs text-ink-500 hover:text-brand-600"
       >
         <ChevronLeftIcon size={14} />

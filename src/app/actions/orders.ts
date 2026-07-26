@@ -2,6 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
 
 export type PlaceOrderInput = {
@@ -43,6 +44,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
   if (wanted.size === 0) return { ok: false, error: "empty" };
 
+  // Attach the order to the signed-in customer, if there is one — guests can
+  // still check out, their orders simply have no owner.
+  const user = await getCurrentUser();
+
   const products = await prisma.product.findMany({
     where: { id: { in: [...wanted.keys()], }, isActive: true },
   });
@@ -68,6 +73,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         const created = await tx.order.create({
           data: {
             number: generateOrderNumber(),
+            userId: user?.role === "customer" ? user.id : null,
             customerName,
             phone,
             email: input.email?.trim() ?? "",

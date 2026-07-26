@@ -34,7 +34,7 @@ export function SortSelect({ filters }: { filters: CatalogFilters }) {
             });
           })
         }
-        className="field h-9 w-full min-w-0 text-xs sm:w-auto sm:min-w-[10.5rem]"
+        className="field h-9 w-full min-w-0 text-xs sm:w-56"
       >
         {SORT_OPTIONS.map((option) => (
           <option key={option} value={option}>

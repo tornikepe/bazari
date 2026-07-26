@@ -22,7 +22,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const lowStock = !soldOut && product.stock <= LOW_STOCK_THRESHOLD;
 
   return (
-    <article className="card group relative flex flex-col overflow-hidden transition-shadow duration-200 hover:shadow-lift">
+    <article className="card hover-lift group relative flex flex-col overflow-hidden">
       <Link
         href={`/product/${product.slug}`}
         className="relative block aspect-square overflow-hidden bg-ink-50"
@@ -44,7 +44,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             </span>
           )}
           {soldOut && (
-            <span className="badge bg-ink-900/85 text-white backdrop-blur-sm">
+            <span className="badge bg-panel/85 text-panel-fg backdrop-blur-sm">
               {t.product.outOfStock}
             </span>
           )}

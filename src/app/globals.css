@@ -59,6 +59,15 @@
   --color-canvas: #f6f7f9;
   --color-line: #e6e9ef;
 
+  /* Deliberately dark in *both* themes — the hero, the dashboard rail and the
+     secondary button are dark panels by design. They can't use `ink-900`,
+     because the ink ramp inverts under the dark theme and would turn them
+     white-on-white. `scrim` is the modal backdrop, for the same reason. */
+  --color-panel: #161a23;
+  --color-panel-fg: #ffffff;
+  --color-panel-muted: #98a1b3;
+  --color-scrim: rgb(9 11 16 / 0.55);
+
   /* Radii */
   --radius-card: 0.875rem;
   --radius-control: 0.625rem;
@@ -111,6 +120,63 @@
 /* ==========================================================================
    Base
    ========================================================================== */
+
+/* ==========================================================================
+   Dark theme
+   --------------------------------------------------------------------------
+   Only the token values change. Tailwind's utilities all resolve through
+   `var(--color-…)`, so overriding them here re-themes every component at once
+   — no `dark:` variant is written anywhere in the app.
+
+   The ink ramp inverts (ink-900 becomes the lightest text), which is why the
+   `panel` and `scrim` tokens above exist for surfaces that must stay dark.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --color-surface: #171a21;
+  --color-canvas: #0f1116;
+  --color-line: #282e3a;
+
+  --color-ink-50: #1c212a;
+  --color-ink-100: #232936;
+  --color-ink-200: #2f3644;
+  --color-ink-300: #454d5e;
+  --color-ink-400: #737c90;
+  --color-ink-500: #949cad;
+  --color-ink-600: #b3bac7;
+  --color-ink-700: #ccd2dd;
+  --color-ink-800: #e3e7ee;
+  --color-ink-900: #f4f6fa;
+
+  /* Slightly lifted off the canvas so dark panels stay distinguishable. */
+  --color-panel: #1c212b;
+
+  /* Brand and semantics are brightened a step: the light-mode shades don't
+     carry enough contrast against a dark canvas. */
+  --color-brand-50: #2a1417;
+  --color-brand-100: #3d1a1e;
+  --color-brand-600: #f04b4f;
+  --color-brand-700: #e5353a;
+
+  --color-accent-50: #2a1f0c;
+  --color-accent-800: #ffca6a;
+  --color-accent-900: #ffe0a3;
+
+  --color-success: #4ade80;
+  --color-success-soft: #12331f;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #33260c;
+  --color-danger: #f87171;
+  --color-danger-soft: #3a1a1a;
+  --color-info: #60a5fa;
+  --color-info-soft: #14243d;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.45);
+  --shadow-pop: 0 8px 32px rgb(0 0 0 / 0.6);
+
+  color-scheme: dark;
+}
 
 @layer base {
   * {
@@ -247,12 +313,12 @@
   }
 
   .btn-secondary {
-    background: var(--color-ink-900);
-    color: #fff;
+    background: var(--color-panel);
+    color: var(--color-panel-fg);
   }
 
   .btn-secondary:hover:not(:disabled) {
-    background: var(--color-ink-800);
+    background: color-mix(in oklab, var(--color-panel) 85%, white);
   }
 
   .btn-outline {
@@ -383,6 +449,137 @@
   }
 }
 
+/* ==========================================================================
+   Motion
+   --------------------------------------------------------------------------
+   Deliberately restrained: short durations, small distances, no bounce and no
+   colour flashing. The intent is that the page feels alive when it settles,
+   not that anything demands attention. Every rule here is switched off by the
+   reduced-motion block at the bottom of the file.
+   ========================================================================== */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.625rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* A slow, low-contrast sheen used only on loading skeletons. */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade {
+  animation: fade 0.4s ease both;
+}
+
+/* Staggers a grid or list so items settle in sequence rather than as one
+   block. Capped at 8 — beyond that the last card feels late. */
+.stagger > * {
+  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.1s; }
+.stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger > *:nth-child(6) { animation-delay: 0.22s; }
+.stagger > *:nth-child(7) { animation-delay: 0.26s; }
+.stagger > *:nth-child(n + 8) { animation-delay: 0.3s; }
+
+/* Revealed by an IntersectionObserver as the section scrolls into view. */
+.reveal {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Interactive lift, shared by product and category cards. */
+.hover-lift {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s ease;
+}
+
+@media (hover: hover) {
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+/* Theme-toggle icons: driven by the root attribute so they're always in sync
+   with the actual theme, including the pre-paint script's choice. */
+.theme-icon-sun,
+.theme-icon-moon {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-icon-moon {
+  opacity: 0;
+  transform: scale(0.5) rotate(-30deg);
+}
+
+[data-theme="dark"] .theme-icon-sun {
+  opacity: 0;
+  transform: scale(0.5) rotate(30deg);
+}
+
+[data-theme="dark"] .theme-icon-moon {
+  opacity: 1;
+  transform: none;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-ink-100);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-surface) 60%, transparent),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -394,5 +591,20 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* Scroll reveals must not leave content invisible when the transition that
+     would have shown it is disabled. */
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .hover-lift:hover {
+    transform: none;
+  }
+
+  .skeleton::after {
+    display: none;
   }
 }

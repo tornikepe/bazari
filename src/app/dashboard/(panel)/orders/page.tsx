@@ -76,7 +76,7 @@ export default async function AdminOrdersPage({
     if (value) search.set("status", value);
     if (query) search.set("q", query);
     const qs = search.toString();
-    return qs ? `/admin/orders?${qs}` : "/admin/orders";
+    return qs ? `/dashboard/orders?${qs}` : "/dashboard/orders";
   };
 
   return (
@@ -95,7 +95,7 @@ export default async function AdminOrdersPage({
             aria-current={(status ?? "") === tab.value ? "page" : undefined}
             className={`flex shrink-0 items-center gap-1.5 rounded-control px-3 py-1.5 text-sm font-medium transition-colors ${
               (status ?? "") === tab.value
-                ? "bg-ink-900 text-white"
+                ? "bg-panel text-panel-fg"
                 : "border border-line bg-surface text-ink-600 hover:bg-ink-50"
             }`}
           >
@@ -113,7 +113,7 @@ export default async function AdminOrdersPage({
 
       <div className="mt-3">
         <AdminToolbar
-          basePath="/admin/orders"
+          basePath="/dashboard/orders"
           search={query}
           searchPlaceholder={t.admin.searchOrders}
           filters={[
@@ -157,7 +157,7 @@ export default async function AdminOrdersPage({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
-                      href={`/admin/orders/${order.id}`}
+                      href={`/dashboard/orders/${order.id}`}
                       className="font-mono text-sm font-bold text-ink-900"
                     >
                       {order.number}
@@ -205,7 +205,7 @@ export default async function AdminOrdersPage({
                   <tr key={order.id} className="transition-colors hover:bg-ink-50">
                     <td className="px-4 py-2.5">
                       <Link
-                        href={`/admin/orders/${order.id}`}
+                        href={`/dashboard/orders/${order.id}`}
                         className="font-mono text-xs font-bold text-ink-900 hover:text-brand-600"
                       >
                         {order.number}
@@ -244,7 +244,7 @@ export default async function AdminOrdersPage({
           </div>
 
           <AdminPagination
-            basePath="/admin/orders"
+            basePath="/dashboard/orders"
             params={{ q: query, status: status ?? "" }}
             page={page}
             pageCount={pageCount}

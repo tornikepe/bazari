@@ -203,7 +203,7 @@ export default function CheckoutPage() {
                     sizes="48px"
                     className="object-cover"
                   />
-                  <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-pill bg-ink-900 px-1 text-xs font-bold text-white">
+                  <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-pill bg-panel px-1 text-xs font-bold text-panel-fg">
                     {item.quantity}
                   </span>
                 </div>

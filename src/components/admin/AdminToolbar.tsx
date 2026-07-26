@@ -102,7 +102,7 @@ export function AdminToolbar({
           onChange={(event) =>
             startTransition(() => router.push(urlWith({ [filter.name]: event.target.value })))
           }
-          className="field h-9 w-full min-w-0 text-sm sm:w-auto sm:min-w-[9rem]"
+          className="field h-9 w-full min-w-0 text-sm sm:w-44"
         >
           {filter.options.map((option) => (
             <option key={option.value} value={option.value}>

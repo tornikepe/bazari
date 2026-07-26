@@ -710,15 +710,31 @@ async function main() {
 
   const email = process.env.ADMIN_EMAIL ?? "admin@bazari.ge";
   const password = process.env.ADMIN_PASSWORD ?? "admin123";
-  await prisma.adminUser.upsert({
+  await prisma.user.upsert({
     where: { email },
-    update: { password: hashPassword(password) },
-    create: { email, name: "Store admin", password: hashPassword(password) },
+    update: { password: hashPassword(password), role: "admin" },
+    create: { email, name: "Store admin", password: hashPassword(password), role: "admin" },
+  });
+
+  // A ready-made customer, so the account area can be tried without signing up.
+  const demoEmail = "user@bazari.ge";
+  await prisma.user.upsert({
+    where: { email: demoEmail },
+    update: { password: hashPassword("user1234"), role: "customer" },
+    create: {
+      email: demoEmail,
+      name: "Demo customer",
+      phone: "+995 599 00 00 00",
+      city: "თბილისი",
+      password: hashPassword("user1234"),
+      role: "customer",
+    },
   });
 
   console.log(
     `\n✓ done — ${categories.length} categories, ${products.length} products.\n` +
-      `  admin login: ${email} / ${password}\n`,
+      `  admin:    ${email} / ${password}\n` +
+      `  customer: ${demoEmail} / user1234\n`,
   );
 }
 

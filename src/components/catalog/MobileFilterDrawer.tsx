@@ -62,7 +62,7 @@ export function MobileFilterDrawer({
             type="button"
             aria-label={t.nav.close}
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-ink-900/50 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim backdrop-blur-[2px]"
           />
 
           <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-card bg-surface shadow-pop">

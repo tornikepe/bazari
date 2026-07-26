@@ -9,7 +9,7 @@ export default async function NewProductPage() {
   });
 
   // A product needs a category, so send the admin to create one first.
-  if (categories.length === 0) redirect("/admin/categories");
+  if (categories.length === 0) redirect("/dashboard/categories");
 
   return <ProductForm categories={categories} />;
 }

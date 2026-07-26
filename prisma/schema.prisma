@@ -10,6 +10,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  customer
+  admin
+}
+
 enum OrderStatus {
   pending
   confirmed
@@ -57,6 +62,9 @@ model Product {
 model Order {
   id           String      @id @default(cuid())
   number       String      @unique
+  /// Null for guest checkout — an account isn't required to order.
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   customerName String
   phone        String
   email        String      @default("")
@@ -71,6 +79,7 @@ model Order {
 
   @@index([status])
   @@index([createdAt])
+  @@index([userId])
 }
 
 /// Name/price are snapshotted so an order stays readable after a product edit.
@@ -89,10 +98,20 @@ model OrderItem {
   @@index([orderId])
 }
 
-model AdminUser {
+/// Both customers and staff live here — `role` is what separates the customer
+/// account area from the admin dashboard.
+model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String   @default("Admin")
+  name      String   @default("")
+  phone     String   @default("")
+  city      String   @default("")
+  address   String   @default("")
   password  String
+  role      Role     @default(customer)
+  orders    Order[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
 }

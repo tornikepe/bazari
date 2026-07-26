@@ -63,7 +63,7 @@ export function ProductForm({
         return;
       }
 
-      router.push("/admin/products");
+      router.push("/dashboard/products");
       router.refresh();
     });
   }
@@ -76,7 +76,7 @@ export function ProductForm({
         </h1>
 
         <div className="flex items-center gap-2">
-          <Link href="/admin/products" className="btn btn-outline btn-sm">
+          <Link href="/dashboard/products" className="btn btn-outline btn-sm">
             {t.admin.cancel}
           </Link>
           <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
