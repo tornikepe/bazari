@@ -15,7 +15,7 @@ async function HeaderContent() {
   return (
     <HeaderBar
       categories={categories}
-      user={user ? { name: user.name, role: user.role } : null}
+      user={user ? { name: user.name, email: user.email, role: user.role } : null}
     />
   );
 }

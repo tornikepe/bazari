@@ -8,10 +8,13 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { LOCALES, type Locale } from "@/lib/i18n";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { AccountMenu } from "@/components/layout/AccountMenu";
+import { logout } from "@/app/actions/auth";
 import {
   CartIcon,
   CloseIcon,
   HeartIcon,
+  LogoutIcon,
   MenuIcon,
   SearchIcon,
   TruckIcon,
@@ -25,7 +28,7 @@ export type HeaderCategory = {
   icon: string;
 };
 
-export type HeaderUser = { name: string; role: "customer" | "admin" } | null;
+export type HeaderUser = { name: string; email: string; role: "customer" | "admin" } | null;
 
 export function HeaderBar({
   categories,
@@ -210,14 +213,7 @@ export function HeaderBar({
 
           {/* Icon-only, so the cluster's width doesn't depend on how long
               "ანგარიში" vs "Account" happens to be. */}
-          <Link
-            href={accountHref}
-            aria-label={accountLabel}
-            title={accountLabel}
-            className="btn btn-ghost h-10 w-10 rounded-control p-0"
-          >
-            <UserIcon size={19} />
-          </Link>
+          <AccountMenu user={user} />
 
           <Link
             href="/favorites"
@@ -389,7 +385,19 @@ export function HeaderBar({
               </ul>
             </div>
 
-            <div className="border-t border-line p-4">
+            <div className="flex flex-col gap-3 border-t border-line p-4">
+              {user && (
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="btn btn-outline btn-sm w-full hover:border-danger hover:text-danger"
+                  >
+                    <LogoutIcon size={15} />
+                    {t.auth.signOut}
+                  </button>
+                </form>
+              )}
+
               <div className="flex items-center gap-1.5">
                 {LOCALES.map((code: Locale) => (
                   <button

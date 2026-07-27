@@ -85,7 +85,7 @@ export default async function AccountPage({
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         {/* ------------------------------ orders ----------------------------- */}
-        <section className="card overflow-hidden">
+        <section id="orders" className="card overflow-hidden scroll-mt-[calc(var(--header-h)+1rem)]">
           <h2 className="border-b border-line px-5 py-3.5 text-sm font-bold text-ink-900">
             {t.account.myOrders}
           </h2>

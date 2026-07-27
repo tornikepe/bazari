@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getI18n } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
-import { RefreshIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
 
 export async function Footer() {
   const { locale, t } = await getI18n();
@@ -11,12 +10,6 @@ export async function Footer() {
     take: 6,
     select: { slug: true, nameKa: true, nameEn: true },
   });
-
-  const perks = [
-    { icon: TruckIcon, label: t.topbar.shipping },
-    { icon: ShieldIcon, label: t.home.why4Title },
-    { icon: RefreshIcon, label: t.home.why3Title },
-  ];
 
   const companyLinks = [
     { href: "/about", label: t.nav.about },
@@ -35,22 +28,6 @@ export async function Footer() {
 
   return (
     <footer className="mt-16 border-t border-line bg-surface">
-      {/* Perks strip */}
-      <div className="border-b border-line bg-ink-50">
-        <div className="page-container grid gap-4 py-6 sm:grid-cols-3">
-          {perks.map((perk) => (
-            <div key={perk.label} className="flex items-center gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-surface text-brand-600 shadow-card">
-                <perk.icon size={19} />
-              </span>
-              <span className="text-xs leading-snug font-medium text-ink-700">
-                {perk.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="page-container grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Link href="/" className="mb-4 inline-flex items-center gap-2.5">

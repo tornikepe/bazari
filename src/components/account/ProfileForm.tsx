@@ -17,7 +17,7 @@ export function ProfileForm({
   const [, formAction, pending] = useActionState<AuthState, FormData>(updateProfile, {});
 
   return (
-    <section className="card p-5">
+    <section id="profile" className="card scroll-mt-[calc(var(--header-h)+1rem)] p-5">
       <h2 className="text-sm font-bold text-ink-900">{t.account.profile}</h2>
       <p className="mt-1 text-xs text-ink-500">{t.account.profileHint}</p>
 
