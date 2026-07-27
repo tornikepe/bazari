@@ -8,7 +8,6 @@ import { logout } from "@/app/actions/auth";
 import {
   BagIcon,
   DashboardIcon,
-  HeartIcon,
   LogoutIcon,
   PackageIcon,
   UserIcon,
@@ -76,7 +75,6 @@ export function AccountMenu({ user }: { user: MenuUser }) {
         { href: "/account", label: t.account.title, icon: UserIcon },
         { href: "/account#orders", label: t.account.myOrders, icon: PackageIcon },
         { href: "/account#profile", label: t.account.settings, icon: BagIcon },
-        { href: "/favorites", label: t.favorites.title, icon: HeartIcon },
       ];
 
   return (

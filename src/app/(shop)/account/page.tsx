@@ -7,7 +7,6 @@ import { fill } from "@/lib/i18n";
 import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ProfileForm } from "@/components/account/ProfileForm";
-import { SignOutButton } from "@/components/account/SignOutButton";
 import { VerifyBanner } from "@/components/account/VerifyBanner";
 import { BagIcon, HeartIcon, PackageIcon, TagIcon } from "@/components/ui/icons";
 import type { RawSearchParams } from "@/lib/filters";
@@ -44,15 +43,11 @@ export default async function AccountPage({
 
   return (
     <div className="page-container py-6 lg:py-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-ink-500">{t.account.title}</p>
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
-            {fill(t.account.greeting, { name: user.name || user.email })}
-          </h1>
-        </div>
-
-        <SignOutButton label={t.auth.signOut} />
+      <div>
+        <p className="text-sm text-ink-500">{t.account.title}</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
+          {fill(t.account.greeting, { name: user.name || user.email })}
+        </h1>
       </div>
 
       {!user.emailVerified && <VerifyBanner email={user.email} />}
