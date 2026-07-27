@@ -105,11 +105,15 @@ model StockMovement {
   /// Stock level after this movement, so history survives later edits.
   balance   Int
   note      String      @default("")
+  /// Set when the movement came from an order, so the ledger row can be
+  /// traced back to the sale or cancellation that caused it.
   orderId   String?
+  order     Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
   createdAt DateTime    @default(now())
 
   @@index([productId])
   @@index([createdAt])
+  @@index([orderId])
 }
 
 /// Percentage or fixed-amount discount codes.
@@ -163,6 +167,7 @@ model Order {
 
   items        OrderItem[]
   events       OrderEvent[]
+  movements    StockMovement[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 

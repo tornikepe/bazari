@@ -73,6 +73,7 @@ export type SessionUser = {
   city: string;
   address: string;
   role: "customer" | "admin";
+  emailVerified: boolean;
 };
 
 /** The signed-in user, or `null`. Never throws on a malformed cookie. */
@@ -94,6 +95,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       city: true,
       address: true,
       role: true,
+      emailVerified: true,
     },
   });
 }

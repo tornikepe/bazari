@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { StockLedger } from "@/components/admin/StockLedger";
 
 export default async function EditProductPage({
   params,
@@ -19,5 +20,10 @@ export default async function EditProductPage({
 
   if (!product) notFound();
 
-  return <ProductForm product={product} categories={categories} />;
+  return (
+    <>
+      <ProductForm product={product} categories={categories} />
+      <StockLedger productId={product.id} />
+    </>
+  );
 }

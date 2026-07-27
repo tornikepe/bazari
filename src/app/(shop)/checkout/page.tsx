@@ -9,7 +9,20 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { Price } from "@/components/ui/Price";
 import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
 import { formatPrice } from "@/lib/format";
-import { placeOrder } from "@/app/actions/orders";
+import type { Dictionary } from "@/lib/i18n";
+import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/orders";
+import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
+
+/** Maps a rejection reason to the matching translated message. */
+const COUPON_ERRORS: Record<
+  Exclude<CouponPreview, { ok: true }>["reason"],
+  (t: Dictionary) => string
+> = {
+  "not-found": (t) => t.checkout.couponNotFound,
+  expired: (t) => t.checkout.couponExpired,
+  "used-up": (t) => t.checkout.couponUsedUp,
+  "min-total": (t) => t.checkout.couponMinTotal,
+};
 
 type FieldErrors = Partial<Record<"customerName" | "phone" | "city" | "address", string>>;
 
@@ -26,9 +39,30 @@ export default function CheckoutPage() {
     address: "",
     note: "",
   });
+  const [payment, setPayment] = useState<PaymentMethod>("cash_on_delivery");
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<CouponPreview | null>(null);
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const discount = coupon?.ok ? coupon.discount : 0;
+  const payable = Math.round((total - discount) * 100) / 100;
+
+  async function applyCoupon() {
+    const code = couponInput.trim();
+    if (!code || checkingCoupon) return;
+
+    setCheckingCoupon(true);
+    try {
+      setCoupon(await previewCoupon(code, subtotal));
+    } catch {
+      setCoupon({ ok: false, reason: "not-found" });
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
 
   function update(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -65,6 +99,8 @@ export default function CheckoutPage() {
       const result = await placeOrder({
         ...form,
         items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+        couponCode: coupon?.ok ? coupon.code : undefined,
+        paymentMethod: payment,
       });
 
       if (!result.ok) {
@@ -182,6 +218,35 @@ export default function CheckoutPage() {
             </div>
           </fieldset>
 
+          {/* ---------------------------- payment --------------------------- */}
+          <fieldset className="card p-5">
+            <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.payment}</legend>
+
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+              {PAYMENT_METHODS.map((method) => (
+                <label
+                  key={method}
+                  className={`flex cursor-pointer items-center gap-2.5 rounded-control border px-3.5 py-3 text-sm transition-colors ${
+                    payment === method
+                      ? "border-brand-600 bg-brand-50 font-semibold text-brand-700"
+                      : "border-line text-ink-700 hover:border-ink-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={method}
+                    checked={payment === method}
+                    onChange={() => setPayment(method)}
+                    className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
+                  />
+                  <span className="min-w-0 leading-snug">{t.payment[method]}</span>
+                </label>
+              ))}
+            </div>
+
+            <p className="mt-3 text-xs text-ink-500">{t.checkout.paymentNote}</p>
+          </fieldset>
         </div>
 
         {/* ----------------------------- summary ---------------------------- */}
@@ -204,7 +269,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
-                <span className="line-clamp-2 flex-1 text-xs leading-snug text-ink-700">
+                <span className="clamp-2-xs flex-1 text-xs leading-snug text-ink-700">
                   {locale === "ka" ? item.nameKa : item.nameEn}
                 </span>
 
@@ -214,6 +279,60 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
+
+          <div className="my-4 h-px bg-line" />
+
+          {/* ----------------------------- coupon ---------------------------- */}
+          <div>
+            <label className="field-label" htmlFor="coupon">
+              {t.checkout.couponLabel}
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="coupon"
+                value={couponInput}
+                placeholder={t.checkout.couponPlaceholder}
+                autoComplete="off"
+                disabled={coupon?.ok}
+                onChange={(event) => {
+                  setCouponInput(event.target.value.toUpperCase());
+                  setCoupon(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    // The box lives inside the checkout form — don't submit it.
+                    event.preventDefault();
+                    void applyCoupon();
+                  }
+                }}
+                className="field min-w-0 flex-1 font-mono tracking-wide uppercase"
+              />
+              <button
+                type="button"
+                disabled={checkingCoupon || (!coupon?.ok && !couponInput.trim())}
+                onClick={() => {
+                  if (coupon?.ok) {
+                    setCoupon(null);
+                    setCouponInput("");
+                  } else {
+                    void applyCoupon();
+                  }
+                }}
+                className="btn btn-ghost btn-md shrink-0"
+              >
+                {checkingCoupon && <SpinnerIcon size={15} />}
+                {coupon?.ok ? t.checkout.couponRemove : t.checkout.couponApply}
+              </button>
+            </div>
+
+            {coupon && (
+              <p
+                className={`mt-1.5 text-xs leading-snug ${coupon.ok ? "text-success" : "text-danger"}`}
+              >
+                {coupon.ok ? t.checkout.couponApplied : COUPON_ERRORS[coupon.reason](t)}
+              </p>
+            )}
+          </div>
 
           <div className="my-4 h-px bg-line" />
 
@@ -232,11 +351,19 @@ export default function CheckoutPage() {
                 )}
               </dd>
             </div>
+            {discount > 0 && (
+              <div className="flex items-center justify-between">
+                <dt className="text-ink-500">{t.cart.discount}</dt>
+                <dd className="font-semibold text-success">
+                  −{formatPrice(discount, locale)}
+                </dd>
+              </div>
+            )}
             <div className="my-1 h-px bg-line" />
             <div className="flex items-center justify-between">
               <dt className="text-base font-bold text-ink-900">{t.cart.total}</dt>
               <dd>
-                <Price value={total} size="lg" />
+                <Price value={payable} size="lg" />
               </dd>
             </div>
           </dl>

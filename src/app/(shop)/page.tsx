@@ -113,11 +113,17 @@ export default async function HomePage() {
               <Link
                 key={category.slug}
                 href={`/catalog?category=${category.slug}`}
-                className="group rounded-card border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-white/10"
+                className="group flex flex-col rounded-card border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/10"
               >
-                <span className="text-2xl" aria-hidden="true">
+                {/* Chip keeps the icon a fixed size, so tiles stay aligned
+                    whatever emoji a category uses. */}
+                <span
+                  aria-hidden="true"
+                  className="grid h-9 w-9 place-items-center rounded-control bg-white/10 text-lg transition-colors group-hover:bg-white/20"
+                >
                   {category.icon}
                 </span>
+
                 <p className="clamp-2 mt-2.5 text-sm font-semibold">{name(category)}</p>
                 <p className="mt-0.5 text-xs text-ink-400">
                   {category._count.products} {t.admin.productCount}

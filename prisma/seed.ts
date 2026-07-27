@@ -616,12 +616,26 @@ const customerPool = [
   { name: "მარიამ გელაშვილი", phone: "+995 591 22 33 44", city: "თბილისი", address: "პეკინის ქ. 5, ბინა 40" },
   { name: "დავით ლომიძე", phone: "+995 574 65 43 21", city: "გორი", address: "სტალინის გამზ. 22" },
   { name: "სოფიო თავაძე", phone: "+995 592 10 20 30", city: "ზუგდიდი", address: "რუსთაველის ქ. 47" },
-  { name: "ირakli ნადირაძე", phone: "+995 597 55 66 77", city: "თბილისი", address: "ალ. ყაზბეგის გამზ. 18" },
-  { name: "თამარ ჯaფარიძე", phone: "+995 595 81 19 28", city: "ფოთი", address: "დავით აღმაშენებლის ქ. 3" },
+  { name: "ირაკლი ნადირაძე", phone: "+995 597 55 66 77", city: "თბილისი", address: "ალ. ყაზბეგის გამზ. 18" },
+  { name: "თამარ ჯაფარიძე", phone: "+995 595 81 19 28", city: "ფოთი", address: "დავით აღმაშენებლის ქ. 3" },
   { name: "ზურაბ კიკნაძე", phone: "+995 596 44 55 66", city: "თელავი", address: "ერეკლე II-ის გამზ. 9" },
   { name: "ეკა ბოლქვაძე", phone: "+995 593 77 88 99", city: "ბათუმი", address: "გორგასალის ქ. 61" },
   { name: "ნიკა ღვინიაშვილი", phone: "+995 599 34 12 90", city: "მცხეთა", address: "არაგვის ქ. 12" },
 ];
+
+/**
+ * Order numbers must not be guessable: the confirmation page is reachable by
+ * URL, so sequential numbers would let anyone walk the list and read every
+ * buyer's name, phone and address. Same shape as `generateOrderNumber()` in
+ * the checkout action, but driven by the seeded PRNG so runs stay reproducible.
+ */
+function seededOrderNumber(random: () => number) {
+  let hex = "";
+  for (let i = 0; i < 8; i++) {
+    hex += Math.floor(random() * 16).toString(16).toUpperCase();
+  }
+  return `BZ-${hex}`;
+}
 
 const coupons = [
   { code: "WELCOME10", percentOff: 10, minOrderTotal: 50, maxUses: 500, isActive: true },
@@ -838,7 +852,7 @@ async function main() {
 
       const order = await prisma.order.create({
         data: {
-          number: `BZ-${String(100000 + i * 7 + Math.floor(random() * 6)).slice(-6)}`,
+          number: seededOrderNumber(random),
           userId: isDemoCustomer ? demoCustomer.id : null,
           customerName: isDemoCustomer ? demoCustomer.name : person.name,
           phone: isDemoCustomer ? demoCustomer.phone : person.phone,
@@ -947,6 +961,14 @@ async function main() {
         await prisma.stockMovement.update({ where: { id: move.id }, data: { balance } });
       }
     }
+  }
+
+  // `usedCount` is the counter the checkout limit is enforced against, so it
+  // has to agree with the orders that actually reference each coupon.
+  console.log("→ reconciling coupon usage…");
+  for (const coupon of await prisma.coupon.findMany({ select: { id: true } })) {
+    const usedCount = await prisma.order.count({ where: { couponId: coupon.id } });
+    await prisma.coupon.update({ where: { id: coupon.id }, data: { usedCount } });
   }
 
   const [orderCount, movementCount, couponCount] = await Promise.all([

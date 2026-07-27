@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getI18n } from "@/lib/locale";
@@ -7,6 +8,7 @@ import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
+import { VerifyBanner } from "@/components/account/VerifyBanner";
 import { BagIcon, HeartIcon, PackageIcon, TagIcon } from "@/components/ui/icons";
 import type { RawSearchParams } from "@/lib/filters";
 
@@ -19,8 +21,10 @@ export default async function AccountPage({
   const params = await searchParams;
   const justSaved = params.saved === "1";
 
-  // The layout already guarantees a signed-in customer.
-  const user = (await getCurrentUser())!;
+  // The layout redirects anonymous visitors, but this page renders in the same
+  // pass — so it has to handle the null itself rather than assert it away.
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/account");
 
   const orders = await prisma.order.findMany({
     where: { userId: user.id },
@@ -50,6 +54,8 @@ export default async function AccountPage({
 
         <SignOutButton label={t.auth.signOut} />
       </div>
+
+      {!user.emailVerified && <VerifyBanner email={user.email} />}
 
       {/* -------------------------------- stats ------------------------------ */}
       <div className="mt-6 grid gap-3 sm:grid-cols-3">

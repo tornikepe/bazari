@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AlertIcon, PackageIcon, SearchIcon, SpinnerIcon } from "@/components/ui/icons";
 import { formatDate, formatPrice } from "@/lib/format";
 import { trackOrder, type TrackResult } from "@/app/actions/track";
 
-export default function TrackOrderPage() {
+function TrackOrderForm() {
   const { locale, t } = useI18n();
   const [isPending, startTransition] = useTransition();
+  const params = useSearchParams();
 
-  const [orderNumber, setOrderNumber] = useState("");
+  // Someone who opened a confirmation link they can't prove is theirs is sent
+  // here with the number already filled in — they just add the phone number.
+  const [orderNumber, setOrderNumber] = useState(params.get("number") ?? "");
   const [phone, setPhone] = useState("");
   const [result, setResult] = useState<TrackResult | null>(null);
 
@@ -132,5 +136,15 @@ export default function TrackOrderPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function TrackOrderPage() {
+  // `useSearchParams` needs a Suspense boundary so it can't block the static
+  // shell from rendering.
+  return (
+    <Suspense fallback={<div className="page-container py-10 lg:py-14" />}>
+      <TrackOrderForm />
+    </Suspense>
   );
 }

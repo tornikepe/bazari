@@ -4,6 +4,9 @@ import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
+import { checkCoupon } from "@/lib/coupons";
+import { isPaymentMethod } from "@/lib/payment";
+import { rememberReceipt } from "@/lib/order-access";
 
 export type PlaceOrderInput = {
   customerName: string;
@@ -14,6 +17,9 @@ export type PlaceOrderInput = {
   note: string;
   /** Only ids and quantities — prices are re-read from the database. */
   items: { productId: string; quantity: number }[];
+  /** Optional discount code; re-validated server-side before it's applied. */
+  couponCode?: string;
+  paymentMethod?: string;
 };
 
 export type PlaceOrderResult =
@@ -65,7 +71,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const subtotal =
     Math.round(lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0) * 100) / 100;
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = Math.round((subtotal + shipping) * 100) / 100;
+
+  // The discount is recomputed here rather than trusted from the client, so a
+  // tampered request can't invent one.
+  let discount = 0;
+  let couponId: string | null = null;
+  if (input.couponCode) {
+    const coupon = await checkCoupon(input.couponCode, subtotal);
+    if (coupon.ok) {
+      discount = coupon.discount;
+      couponId = coupon.id;
+    }
+  }
+
+  const total = Math.round((subtotal + shipping - discount) * 100) / 100;
 
   // A few attempts in case two orders draw the same random number.
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -85,8 +104,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             // if prices or the shipping rules change.
             subtotal,
             shipping,
-            discount: 0,
+            discount,
+            couponId,
             total,
+            paymentMethod: isPaymentMethod(input.paymentMethod)
+              ? input.paymentMethod
+              : "cash_on_delivery",
             status: "pending",
             items: {
               create: lines.map(({ product, quantity }) => ({
@@ -126,8 +149,21 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           });
         }
 
+        // Usage is counted inside the transaction, so a coupon can't exceed
+        // `maxUses` under concurrent checkouts.
+        if (couponId) {
+          await tx.coupon.update({
+            where: { id: couponId },
+            data: { usedCount: { increment: 1 } },
+          });
+        }
+
         return created;
       });
+
+      // Lets this browser view the confirmation page for an order placed
+      // without an account.
+      await rememberReceipt(order.number);
 
       return { ok: true, number: order.number };
     } catch (error) {
@@ -145,4 +181,21 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
 
   return { ok: false, error: "failed" };
+}
+
+/* ------------------------------------------------------------------ */
+
+export type CouponPreview =
+  | { ok: true; code: string; discount: number }
+  | { ok: false; reason: "not-found" | "expired" | "used-up" | "min-total" };
+
+/**
+ * Checkout's "apply code" button. Returns what the discount *would* be; the
+ * real one is recalculated when the order is placed.
+ */
+export async function previewCoupon(code: string, subtotal: number): Promise<CouponPreview> {
+  const result = await checkCoupon(code, Number(subtotal) || 0);
+  return result.ok
+    ? { ok: true, code: result.code, discount: result.discount }
+    : { ok: false, reason: result.reason };
 }

@@ -134,6 +134,7 @@ const ka = {
     itemsTotal: "პროდუქტები",
     shipping: "მიწოდება",
     freeShipping: "უფასო",
+    discount: "ფასდაკლება",
     total: "სულ გადასახდელი",
     checkout: "შეკვეთის გაფორმება",
     freeShippingHint: "დაამატე კიდევ {amount} უფასო მიწოდებისთვის",
@@ -158,6 +159,16 @@ const ka = {
     emptyCart: "კალათა ცარიელია — ჯერ დაამატე პროდუქტი.",
     failed: "შეკვეთის გაფორმება ვერ მოხერხდა. სცადე თავიდან.",
     paymentNote: "გადახდა კურიერთან, პროდუქტის მიღებისას.",
+    payment: "გადახდის მეთოდი",
+    couponLabel: "ფასდაკლების კოდი",
+    couponPlaceholder: "შეიყვანე კოდი",
+    couponApply: "გამოყენება",
+    couponRemove: "მოხსნა",
+    couponApplied: "კოდი გააქტიურდა",
+    couponNotFound: "ასეთი კოდი არ არსებობს",
+    couponExpired: "კოდს ვადა გაუვიდა",
+    couponUsedUp: "კოდი ამოწურულია",
+    couponMinTotal: "შეკვეთის ჯამი ამ კოდისთვის საკმარისი არ არის",
   },
 
   orderDone: {
@@ -372,6 +383,9 @@ const ka = {
     topProductsHint: "გაყიდვების მიხედვით",
     soldUnits: "ცალი",
     stockLedger: "მარაგის მოძრაობა",
+    stockLedgerHint: "მარაგის ყველა ცვლილება, უახლესიდან",
+    noStockMovements: "მოძრაობა ჯერ არ არის",
+    stockBalance: "ნაშთი",
     coupons: "კუპონები",
     couponUses: "გამოყენება",
     noSales: "გაყიდვები ჯერ არ არის",
@@ -381,6 +395,7 @@ const ka = {
     lowStockAtField: "მარაგის ზღვარი",
     skuTaken: "ასეთი SKU უკვე გამოყენებულია",
     orderTimeline: "შეკვეთის ისტორია",
+    payment: "გადახდა",
     paymentMethod: "გადახდის მეთოდი",
     paymentStatus: "გადახდის სტატუსი",
     orderSubtotal: "პროდუქტები",
@@ -402,6 +417,13 @@ const ka = {
     resetFilters: "ფილტრების მოხსნა",
     searchOrders: "ნომერი, სახელი ან ტელეფონი…",
     noMatches: "შედეგი ვერ მოიძებნა",
+  },
+
+  stockReason: {
+    restock: "შევსება",
+    sale: "გაყიდვა",
+    correction: "კორექცია",
+    return_to_stock: "დაბრუნება მარაგში",
   },
 
   payment: {
@@ -564,6 +586,7 @@ const en: Dictionary = {
     itemsTotal: "Items",
     shipping: "Shipping",
     freeShipping: "Free",
+    discount: "Discount",
     total: "Total",
     checkout: "Checkout",
     freeShippingHint: "Add {amount} more for free shipping",
@@ -588,6 +611,16 @@ const en: Dictionary = {
     emptyCart: "Your cart is empty — add a product first.",
     failed: "We couldn't place your order. Please try again.",
     paymentNote: "Cash on delivery, paid to the courier.",
+    payment: "Payment method",
+    couponLabel: "Discount code",
+    couponPlaceholder: "Enter code",
+    couponApply: "Apply",
+    couponRemove: "Remove",
+    couponApplied: "Code applied",
+    couponNotFound: "No such code",
+    couponExpired: "This code has expired",
+    couponUsedUp: "This code has been fully used",
+    couponMinTotal: "Your order total is too low for this code",
   },
 
   orderDone: {
@@ -802,6 +835,9 @@ const en: Dictionary = {
     topProductsHint: "By units sold",
     soldUnits: "units",
     stockLedger: "Stock movements",
+    stockLedgerHint: "Every change to this product's stock, newest first",
+    noStockMovements: "No movements yet",
+    stockBalance: "Balance",
     coupons: "Coupons",
     couponUses: "uses",
     noSales: "No sales yet",
@@ -811,6 +847,7 @@ const en: Dictionary = {
     lowStockAtField: "Low-stock threshold",
     skuTaken: "That SKU is already in use",
     orderTimeline: "Order history",
+    payment: "Payment",
     paymentMethod: "Payment method",
     paymentStatus: "Payment status",
     orderSubtotal: "Items",
@@ -832,6 +869,13 @@ const en: Dictionary = {
     resetFilters: "Reset filters",
     searchOrders: "Number, name or phone…",
     noMatches: "No matches found",
+  },
+
+  stockReason: {
+    restock: "Restock",
+    sale: "Sale",
+    correction: "Correction",
+    return_to_stock: "Returned to stock",
   },
 
   payment: {
