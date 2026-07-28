@@ -720,7 +720,17 @@ async function main() {
 
   /* ---------------------------- users ------------------------------ */
   const email = process.env.ADMIN_EMAIL ?? "admin@bazari.ge";
-  const password = process.env.ADMIN_PASSWORD ?? "admin123";
+
+  // No fallback on purpose: a default admin password that ships in the repo is
+  // a default admin password on every deployment that forgets to override it.
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password || password.length < 12) {
+    throw new Error(
+      "ADMIN_PASSWORD must be set to at least 12 characters before seeding.\n" +
+        "Generate one with:\n" +
+        '  node -e "console.log(require(\'crypto\').randomBytes(18).toString(\'base64url\'))"',
+    );
+  }
   const admin = await prisma.user.upsert({
     where: { email },
     update: { password: hashPassword(password), role: "admin", emailVerified: true },

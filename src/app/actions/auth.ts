@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { consumeCode, issueCode } from "@/lib/verification";
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/auth-emails";
+import { getLocale } from "@/lib/locale";
 import {
   createSession,
   destroySession,
@@ -14,8 +16,6 @@ import {
 
 export type AuthState = {
   error?: "invalid" | "taken" | "weak" | "failed" | "mismatch" | "expired" | "too-many-attempts";
-  /** Demo only — see `issueCode`. Lets the UI show the code that was "sent". */
-  demoCode?: string;
   sent?: boolean;
 };
 
@@ -81,7 +81,11 @@ export async function register(_previous: AuthState, formData: FormData): Promis
   await createSession(user.id);
 
   const { code } = await issueCode(user.id, "email_verification");
-  redirect(`/verify?email=${encodeURIComponent(email)}&code=${code}`);
+  // Emailed, never placed in the URL — a code in the query string survives in
+  // browser history, server logs and the Referer header.
+  await sendVerificationEmail(email, code, await getLocale());
+
+  redirect(`/verify?email=${encodeURIComponent(email)}`);
 }
 
 /* ------------------------------------------------------------------ */
@@ -119,7 +123,9 @@ export async function resendVerification(
   if (!user) return { sent: true };
 
   const { code } = await issueCode(user.id, "email_verification");
-  return { sent: true, demoCode: code };
+  await sendVerificationEmail(email, code, await getLocale());
+
+  return { sent: true };
 }
 
 /* ------------------------------------------------------------------ */
@@ -141,7 +147,11 @@ export async function requestPasswordReset(
   if (!user) return { sent: true };
 
   const { code } = await issueCode(user.id, "password_reset");
-  return { sent: true, demoCode: code };
+  await sendPasswordResetEmail(email, code, await getLocale());
+
+  // Same shape as the "no such user" branch above, and deliberately says
+  // nothing about whether delivery actually succeeded.
+  return { sent: true };
 }
 
 /** Step 2 — exchange the code for a new password. */

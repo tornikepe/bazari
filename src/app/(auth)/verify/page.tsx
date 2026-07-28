@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
-import { DemoCodeNotice } from "@/components/auth/DemoCodeNotice";
 import { resendVerification, verifyEmail, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
 import { fill } from "@/lib/i18n";
@@ -15,9 +14,6 @@ function VerifyForm() {
   const params = useSearchParams();
 
   const email = params.get("email") ?? "";
-  // Sign-up passes the freshly issued code straight through, so the demo
-  // doesn't require copying it from anywhere.
-  const initialCode = params.get("code") ?? "";
 
   const [state, formAction, pending] = useActionState<AuthState, FormData>(verifyEmail, {});
   const [resendState, resendAction, resending] = useActionState<AuthState, FormData>(
@@ -42,11 +38,6 @@ function VerifyForm() {
         </Link>
       }
     >
-      <DemoCodeNotice
-        code={resendState.demoCode ?? initialCode}
-        label={t.auth.demoCodeNote}
-      />
-
       <form action={formAction} className="mt-4 flex flex-col gap-4">
         <input type="hidden" name="email" value={email} />
 
@@ -61,7 +52,7 @@ function VerifyForm() {
             autoComplete="one-time-code"
             maxLength={6}
             required
-            defaultValue={initialCode}
+            autoFocus
             className="field text-center font-mono text-lg tracking-[0.4em]"
           />
           <p className="mt-1 text-xs text-ink-400">{t.auth.codeHint}</p>
@@ -85,6 +76,15 @@ function VerifyForm() {
 
       <form action={resendAction} className="mt-3">
         <input type="hidden" name="email" value={email} />
+
+        {/* Says the same thing whether or not the address is registered — the
+            action deliberately can't tell us, so neither can this. */}
+        {resendState.sent && !resending && (
+          <p className="mb-2 text-center text-xs font-semibold text-success">
+            {t.auth.codeResent}
+          </p>
+        )}
+
         <button type="submit" disabled={resending} className="btn btn-ghost btn-sm w-full">
           {resending && <SpinnerIcon size={15} />}
           {t.auth.resend}

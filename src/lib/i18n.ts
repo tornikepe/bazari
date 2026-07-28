@@ -215,6 +215,7 @@ const ka = {
     sending: "იგზავნება…",
     codeSent: "კოდი გაიგზავნა ელფოსტაზე",
     code: "კოდი",
+    codeResent: "ახალი კოდი გაიგზავნა — შეამოწმე ელფოსტა.",
     codeHint: "6-ნიშნა კოდი, მოქმედებს 15 წუთი",
     newPassword: "ახალი პაროლი",
     resetPassword: "პაროლის შეცვლა",
@@ -228,10 +229,9 @@ const ka = {
     tooManyAttempts: "ბევრი მცდელობა — გამოითხოვე ახალი კოდი",
     backToSignIn: "შესვლაზე დაბრუნება",
     skipForNow: "მოგვიანებით",
-    demoCodeNote: "დემო რეჟიმი — ელფოსტა არ იგზავნება. შენი კოდი:",
     unverified: "ელფოსტა დაუდასტურებელია",
     verifyNow: "დადასტურება",
-    demoNote: "სატესტო ადმინი: admin@bazari.ge / admin123",
+    demoNote: "სატესტო მომხმარებელი: user@bazari.ge / user1234",
   },
 
   account: {
@@ -667,6 +667,7 @@ const en: Dictionary = {
     sending: "Sending…",
     codeSent: "A code has been sent to your email",
     code: "Code",
+    codeResent: "A new code is on its way — check your inbox.",
     codeHint: "6-digit code, valid for 15 minutes",
     newPassword: "New password",
     resetPassword: "Change password",
@@ -680,10 +681,9 @@ const en: Dictionary = {
     tooManyAttempts: "Too many attempts — request a new code",
     backToSignIn: "Back to sign in",
     skipForNow: "Later",
-    demoCodeNote: "Demo mode — no email is sent. Your code:",
     unverified: "Email not verified",
     verifyNow: "Verify",
-    demoNote: "Demo admin: admin@bazari.ge / admin123",
+    demoNote: "Demo customer: user@bazari.ge / user1234",
   },
 
   account: {

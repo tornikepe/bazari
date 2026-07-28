@@ -92,12 +92,17 @@ npm run dev
 - Storefront → [localhost:3000](http://localhost:3000)
 - Dashboard  → [localhost:3000/dashboard](http://localhost:3000/dashboard)
 
-Seeded logins (change them in `.env` before deploying anywhere public):
+Seeded logins:
 
 ```
-admin@bazari.ge / admin123     → admin dashboard
-user@bazari.ge  / user1234     → customer account
+user@bazari.ge / user1234      → customer account
 ```
+
+The admin account is `admin@bazari.ge`, and its password is whatever you put in
+`ADMIN_PASSWORD` before seeding — there is no default, and the seed refuses to
+run without one. The live demo's admin password is deliberately not published:
+a dashboard that can edit prices and cancel orders should not be open to anyone
+who reads this file.
 
 ---
 

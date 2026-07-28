@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
-import { DemoCodeNotice } from "@/components/auth/DemoCodeNotice";
 import { requestPasswordReset, resetPassword, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
 
@@ -86,7 +85,6 @@ export default function ForgotPasswordPage() {
             {t.auth.codeSent}
           </p>
 
-          <DemoCodeNotice code={requestState.demoCode} label={t.auth.demoCodeNote} />
 
           <input type="hidden" name="email" value={email} />
 
