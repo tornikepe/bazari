@@ -11,15 +11,15 @@ Status legend: `[ ]` not started · `[~]` partially there · `[x]` done
 
 ## Phase 0 — Security blockers (do these first)
 
-Nothing else matters until these are closed. Today the live site can be taken
-over by anyone who reads the README.
+Nothing else matters until these are closed. The account-takeover hole (0.1) is
+fixed and deployed; 0.3–0.5 are still open.
 
 ### 0.1 Password-reset codes are returned to the caller — **critical** ✅ done
 
 `requestPasswordReset` and `resendVerification` in `src/app/actions/auth.ts`
-return the one-time code in the response body as `demoCode`. That was a
-deliberate shortcut so the flow could be demoed without an email provider, but
-in production it means:
+*used to* return the one-time code in the response body as `demoCode`. That was
+a deliberate shortcut so the flow could be demoed without an email provider,
+but in production it meant:
 
 1. Anyone submits `admin@bazari.ge` (published in the README and the seed).
 2. The reset code comes straight back in the server-action response.
