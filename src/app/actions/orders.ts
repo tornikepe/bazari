@@ -7,6 +7,7 @@ import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
 import { checkCoupon } from "@/lib/coupons";
 import { isPaymentMethod } from "@/lib/payment";
 import { rememberReceipt } from "@/lib/order-access";
+import { clientIp, consume } from "@/lib/rate-limit";
 
 export type PlaceOrderInput = {
   customerName: string;
@@ -24,7 +25,15 @@ export type PlaceOrderInput = {
 
 export type PlaceOrderResult =
   | { ok: true; number: string }
-  | { ok: false; error: "empty" | "invalid" | "unavailable" | "failed" };
+  | { ok: false; error: "empty" | "invalid" | "unavailable" | "failed" | "rate-limited" };
+
+/** Thrown inside the order transaction when a line can no longer be filled. */
+class OutOfStockError extends Error {
+  constructor() {
+    super("out of stock");
+    this.name = "OutOfStockError";
+  }
+}
 
 /** `BZ-` + 8 random hex chars; retried on the (unique) `number` column. */
 function generateOrderNumber() {
@@ -36,6 +45,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const phone = input.phone?.trim() ?? "";
   const city = input.city?.trim() ?? "";
   const address = input.address?.trim() ?? "";
+
+  const throttle = await consume(`order:ip:${await clientIp()}`, 10, 60 * 60);
+  if (!throttle.ok) return { ok: false, error: "rate-limited" };
 
   if (!customerName || !phone || !city || !address) return { ok: false, error: "invalid" };
   if (!Array.isArray(input.items) || input.items.length === 0) return { ok: false, error: "empty" };
@@ -130,9 +142,23 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         });
 
         for (const { product, quantity } of lines) {
-          const updated = await tx.product.update({
-            where: { id: product.id },
+          // Conditional decrement: the `gte` guard is evaluated by the database
+          // as part of the write, so two shoppers racing for the last unit
+          // cannot both succeed. A plain `update` would read-then-write and let
+          // both through, driving stock negative.
+          const claimed = await tx.product.updateMany({
+            where: { id: product.id, stock: { gte: quantity } },
             data: { stock: { decrement: quantity } },
+          });
+
+          if (claimed.count === 0) {
+            // Someone else took it between the price read and here; the whole
+            // transaction rolls back, so no partial order is left behind.
+            throw new OutOfStockError();
+          }
+
+          const updated = await tx.product.findUniqueOrThrow({
+            where: { id: product.id },
             select: { stock: true },
           });
 
@@ -167,6 +193,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
       return { ok: true, number: order.number };
     } catch (error) {
+      if (error instanceof OutOfStockError) return { ok: false, error: "unavailable" };
+
       const isDuplicateNumber =
         typeof error === "object" &&
         error !== null &&
@@ -187,13 +215,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
 export type CouponPreview =
   | { ok: true; code: string; discount: number }
-  | { ok: false; reason: "not-found" | "expired" | "used-up" | "min-total" };
+  | { ok: false; reason: "not-found" | "expired" | "used-up" | "min-total" | "rate-limited" };
 
 /**
  * Checkout's "apply code" button. Returns what the discount *would* be; the
  * real one is recalculated when the order is placed.
  */
 export async function previewCoupon(code: string, subtotal: number): Promise<CouponPreview> {
+  // Without this, the codes are short enough to simply enumerate.
+  const throttle = await consume(`coupon:ip:${await clientIp()}`, 20, 60);
+  if (!throttle.ok) return { ok: false, reason: "rate-limited" };
+
   const result = await checkCoupon(code, Number(subtotal) || 0);
   return result.ok
     ? { ok: true, code: result.code, discount: result.discount }

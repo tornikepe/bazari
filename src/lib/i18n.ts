@@ -169,6 +169,7 @@ const ka = {
     couponExpired: "კოდს ვადა გაუვიდა",
     couponUsedUp: "კოდი ამოწურულია",
     couponMinTotal: "შეკვეთის ჯამი ამ კოდისთვის საკმარისი არ არის",
+    rateLimited: "ძალიან ბევრი მცდელობა. სცადე ცოტა ხანში.",
   },
 
   orderDone: {
@@ -227,6 +228,7 @@ const ka = {
     resend: "კოდის ხელახლა გაგზავნა",
     expired: "კოდს ვადა გაუვიდა — გამოითხოვე ახალი",
     tooManyAttempts: "ბევრი მცდელობა — გამოითხოვე ახალი კოდი",
+    rateLimited: "ძალიან ბევრი მცდელობა. სცადე {minutes} წუთში.",
     backToSignIn: "შესვლაზე დაბრუნება",
     skipForNow: "მოგვიანებით",
     unverified: "ელფოსტა დაუდასტურებელია",
@@ -621,6 +623,7 @@ const en: Dictionary = {
     couponExpired: "This code has expired",
     couponUsedUp: "This code has been fully used",
     couponMinTotal: "Your order total is too low for this code",
+    rateLimited: "Too many attempts. Please try again shortly.",
   },
 
   orderDone: {
@@ -679,6 +682,7 @@ const en: Dictionary = {
     resend: "Send a new code",
     expired: "That code expired — request a new one",
     tooManyAttempts: "Too many attempts — request a new code",
+    rateLimited: "Too many attempts. Try again in {minutes} min.",
     backToSignIn: "Back to sign in",
     skipForNow: "Later",
     unverified: "Email not verified",

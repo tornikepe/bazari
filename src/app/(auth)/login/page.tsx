@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { fill } from "@/lib/i18n";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { login, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
@@ -67,7 +68,9 @@ export default function LoginPage() {
             className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
           >
             <AlertIcon size={15} className="shrink-0" />
-            {t.auth.invalid}
+            {state.error === "rate-limited"
+              ? fill(t.auth.rateLimited, { minutes: String(state.retryMinutes ?? 15) })
+              : t.auth.invalid}
           </p>
         )}
 

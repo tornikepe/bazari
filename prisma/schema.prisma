@@ -250,3 +250,19 @@ model VerificationToken {
   @@index([userId, purpose])
   @@index([expiresAt])
 }
+
+/// Fixed-window counters for rate limiting.
+///
+/// Kept in Postgres rather than Redis so the app needs no second datastore:
+/// auth endpoints see little traffic, and one indexed upsert per attempt is
+/// cheap. The counter is bumped atomically, so concurrent attempts from the
+/// same client can't slip past the limit.
+model RateLimit {
+  /// "<action>:<scope>:<identifier>", e.g. "login:ip:1.2.3.4".
+  key      String   @id
+  count    Int      @default(0)
+  /// Start of the window the count belongs to.
+  windowAt DateTime @default(now())
+
+  @@index([windowAt])
+}

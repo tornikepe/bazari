@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { consumeCode, issueCode } from "@/lib/verification";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/auth-emails";
 import { getLocale } from "@/lib/locale";
+import { clientIp, consume, reset } from "@/lib/rate-limit";
 import {
   createSession,
   destroySession,
@@ -15,8 +16,18 @@ import {
 } from "@/lib/auth";
 
 export type AuthState = {
-  error?: "invalid" | "taken" | "weak" | "failed" | "mismatch" | "expired" | "too-many-attempts";
+  error?:
+    | "invalid"
+    | "taken"
+    | "weak"
+    | "failed"
+    | "mismatch"
+    | "expired"
+    | "too-many-attempts"
+    | "rate-limited";
   sent?: boolean;
+  /** Minutes until a rate-limited caller may retry. */
+  retryMinutes?: number;
 };
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -34,10 +45,24 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
 
   if (!email || !password) return { error: "invalid" };
 
+  // Per IP *and* per email: the first stops one host spraying many accounts,
+  // the second stops a botnet grinding one account.
+  const ip = await clientIp();
+  for (const key of [`login:ip:${ip}`, `login:email:${email}`]) {
+    const limit = await consume(key, 5, 15 * 60);
+    if (!limit.ok) {
+      return { error: "rate-limited", retryMinutes: Math.ceil(limit.retryAfter / 60) };
+    }
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !verifyPassword(password, user.password)) {
     return { error: "invalid" };
   }
+
+  // A correct password clears the counters, so yesterday's typos don't count.
+  await reset(`login:ip:${ip}`);
+  await reset(`login:email:${email}`);
 
   await createSession(user.id);
   redirect(homeFor(user.role));
@@ -116,6 +141,17 @@ export async function resendVerification(
   formData: FormData,
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+
+  for (const [key, limit] of [
+    [`resend:email:${email}`, 3],
+    [`resend:ip:${await clientIp()}`, 10],
+  ] as const) {
+    const result = await consume(key, limit, 60 * 60);
+    if (!result.ok) {
+      return { error: "rate-limited", retryMinutes: Math.ceil(result.retryAfter / 60) };
+    }
+  }
+
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
 
   // Always reports success: telling an anonymous caller whether an address is
@@ -139,6 +175,18 @@ export async function requestPasswordReset(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!email || !email.includes("@")) return { error: "invalid" };
+
+  // Checked before the user lookup so the limit applies to unknown addresses
+  // too — otherwise the throttle itself reveals which accounts exist.
+  for (const [key, limit] of [
+    [`reset:email:${email}`, 3],
+    [`reset:ip:${await clientIp()}`, 10],
+  ] as const) {
+    const result = await consume(key, limit, 60 * 60);
+    if (!result.ok) {
+      return { error: "rate-limited", retryMinutes: Math.ceil(result.retryAfter / 60) };
+    }
+  }
 
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
 

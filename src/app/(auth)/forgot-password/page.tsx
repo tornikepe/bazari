@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { fill } from "@/lib/i18n";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { requestPasswordReset, resetPassword, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
@@ -33,7 +34,9 @@ export default function ForgotPasswordPage() {
           ? t.auth.expired
           : state.error === "too-many-attempts"
             ? t.auth.tooManyAttempts
-            : t.auth.invalid;
+            : state.error === "rate-limited"
+              ? fill(t.auth.rateLimited, { minutes: String(state.retryMinutes ?? 60) })
+              : t.auth.invalid;
 
   return (
     <AuthCard

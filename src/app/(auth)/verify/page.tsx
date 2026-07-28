@@ -26,7 +26,9 @@ function VerifyForm() {
       ? t.auth.expired
       : state.error === "too-many-attempts"
         ? t.auth.tooManyAttempts
-        : t.auth.invalid;
+        : state.error === "rate-limited"
+          ? fill(t.auth.rateLimited, { minutes: String(state.retryMinutes ?? 60) })
+          : t.auth.invalid;
 
   return (
     <AuthCard

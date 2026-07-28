@@ -22,6 +22,7 @@ const COUPON_ERRORS: Record<
   expired: (t) => t.checkout.couponExpired,
   "used-up": (t) => t.checkout.couponUsedUp,
   "min-total": (t) => t.checkout.couponMinTotal,
+  "rate-limited": (t) => t.checkout.rateLimited,
 };
 
 type FieldErrors = Partial<Record<"customerName" | "phone" | "city" | "address", string>>;
@@ -104,7 +105,13 @@ export default function CheckoutPage() {
       });
 
       if (!result.ok) {
-        setFormError(result.error === "empty" ? t.checkout.emptyCart : t.checkout.failed);
+        setFormError(
+          result.error === "empty"
+            ? t.checkout.emptyCart
+            : result.error === "rate-limited"
+              ? t.checkout.rateLimited
+              : t.checkout.failed,
+        );
         return;
       }
 

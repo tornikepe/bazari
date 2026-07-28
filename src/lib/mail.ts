@@ -27,7 +27,9 @@ function fromAddress() {
   // A verified sender on your own domain. Resend's shared `onboarding@resend.dev`
   // only delivers to the account owner, so it is fine for a first smoke test
   // but not for real customers.
-  return process.env.MAIL_FROM ?? "Bazari <onboarding@resend.dev>";
+  // `||`, not `??`: an env var that exists but is empty must still fall back,
+  // otherwise the provider rejects the message for a blank sender.
+  return process.env.MAIL_FROM || "Bazari <onboarding@resend.dev>";
 }
 
 /**
@@ -37,7 +39,7 @@ function fromAddress() {
  * @returns whether the provider accepted the message.
  */
 export async function sendMail(input: MailInput): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
 
   if (!apiKey) {
     if (process.env.NODE_ENV === "production") {

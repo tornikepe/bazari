@@ -10,9 +10,12 @@ const nextConfig: NextConfig = {
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; frame-src 'none'; sandbox;",
 
-    // Admins paste product image URLs by hand, so any HTTPS host is allowed.
-    // Narrow this to the real CDN hostnames before going to production.
-    remotePatterns: [{ protocol: "https", hostname: "**" }],
+    // Only hosts we actually serve images from. A wildcard here turns the
+    // image optimiser into an open proxy that will fetch any URL a visitor
+    // asks for, on our bandwidth and from our IP.
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
   },
 };
 

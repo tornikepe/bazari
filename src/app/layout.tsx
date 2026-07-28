@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { getLocale } from "@/lib/locale";
+import { headers } from "next/headers";
 import { getTheme } from "@/lib/server-theme";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -65,6 +66,10 @@ export default async function RootLayout({
   // the dark theme applies.
   const [locale, theme] = await Promise.all([getLocale(), getTheme()]);
 
+  // Set by `proxy.ts`. The CSP forbids inline script without it, so the
+  // pre-paint theme script below would simply not run.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html
       lang={locale}
@@ -81,7 +86,7 @@ export default async function RootLayout({
         {/* Runs before paint: falls back to the OS preference for a visitor
             who has never picked a theme. Once they have, the cookie decides
             and this is a no-op. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeProvider>

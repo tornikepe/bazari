@@ -11,8 +11,8 @@ Status legend: `[ ]` not started · `[~]` partially there · `[x]` done
 
 ## Phase 0 — Security blockers (do these first)
 
-Nothing else matters until these are closed. The account-takeover hole (0.1) is
-fixed and deployed; 0.3–0.5 are still open.
+All of Phase 0 is done except rotating the production `AUTH_SECRET`, which is
+left for you because it signs out every logged-in user.
 
 ### 0.1 Password-reset codes are returned to the caller — **critical** ✅ done
 
@@ -56,39 +56,57 @@ reset, and order confirmations.
 
 **Effort:** ~1 day including DNS propagation.
 
-### 0.3 Rate limiting
+### 0.3 Rate limiting ✅ done
 
 Every auth endpoint is unthrottled. Login, reset-request and the coupon
 preview can all be hammered for free.
 
-- [ ] `@upstash/ratelimit` + Upstash Redis (works on Vercel's edge, free tier)
-- [ ] Login: 5 attempts / 15 min per IP **and** per email
-- [ ] Reset + resend verification: 3 / hour per email
-- [ ] Coupon preview: 20 / min per IP (stops code-guessing)
-- [ ] `placeOrder`: 10 / hour per IP
-- [ ] Return a clear "too many attempts, try later" message in both languages
+- [x] ~~Upstash Redis~~ → **Postgres-backed** (`src/lib/rate-limit.ts`). No second
+      managed service: auth endpoints are low-volume and one indexed atomic
+      upsert per attempt is cheap. Fails *open* if the DB is unreachable.
+- [x] Login: 5 attempts / 15 min per IP **and** per email; a correct password
+      clears both counters
+- [x] Reset + resend verification: 3 / hour per email, 10 / hour per IP —
+      checked *before* the user lookup so the throttle can't be used to probe
+      which addresses exist
+- [x] Coupon preview: 20 / min per IP
+- [x] `placeOrder`: 10 / hour per IP
+- [x] Localised "too many attempts, try again in N min" in both languages
 
 **Effort:** ~half a day.
 
-### 0.4 Secrets and headers
+### 0.4 Secrets and headers ✅ mostly done
 
-- [ ] Rotate `AUTH_SECRET` (it has been in a dev `.env` all along) and confirm
-      it is ≥32 random bytes
-- [ ] Confirm `.env` is git-ignored and never committed — audit history
-- [ ] Security headers in `next.config.ts`: HSTS, `X-Content-Type-Options`,
-      `Referrer-Policy`, `X-Frame-Options`, and a Content-Security-Policy
-- [ ] Verify Server Action origin checks are on (Next's default; don't disable)
+- [x] Local `AUTH_SECRET` rotated to 48 random bytes
+- [ ] **Rotate the production `AUTH_SECRET`** — signs every session cookie, so
+      doing it logs everyone out. Left for you to run.
+- [x] Confirmed `.env` is git-ignored and appears nowhere in git history
+- [x] Security headers via `src/proxy.ts` (this Next version renames
+      `middleware.ts` → `proxy.ts`): HSTS, `X-Content-Type-Options`,
+      `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`, and a
+      **nonce-based CSP** — `strict-dynamic` with a fresh nonce per request, so
+      inline script is forbidden except the pre-paint theme script, which reads
+      the nonce from `x-nonce`
+- [x] Server Action origin checks left at Next's default (not disabled)
+- [x] **Also found:** `next.config.ts` allowed images from *any* HTTPS host,
+      which makes the image optimiser an open proxy fetching arbitrary URLs on
+      our bandwidth. Narrowed to the Blob storage hostname.
 
-### 0.5 Stock race at checkout
+`style-src` keeps `'unsafe-inline'` on purpose: React sets `style` attributes
+(the hero gradient among them). Inline *style* is a much smaller risk than
+inline script, which is fully locked down.
+
+### 0.5 Stock race at checkout ✅ done
 
 `placeOrder` reads stock, then decrements it. Two shoppers buying the last unit
 at the same moment can both succeed and drive stock negative.
 
-- [ ] Make the decrement conditional inside the transaction
-      (`updateMany` with `where: { stock: { gte: qty } }`) and fail the order if
-      it matches zero rows
-- [ ] Add a DB `CHECK (stock >= 0)` constraint as a backstop
-- [ ] Regression test for two concurrent orders on one unit
+- [x] Conditional decrement inside the transaction — `updateMany` with
+      `where: { stock: { gte: qty } }`; zero rows matched throws
+      `OutOfStockError`, rolling the whole order back
+- [x] `CHECK ("stock" >= 0)` on `Product` as a backstop
+- [x] Regression test run: two buyers racing for one unit → exactly one sale,
+      final stock 0, never negative
 
 ---
 
