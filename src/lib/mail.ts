@@ -23,6 +23,30 @@ export type MailInput = {
 
 const API_URL = "https://api.resend.com/emails";
 
+/**
+ * The API key, tolerant of a fumbled copy-paste.
+ *
+ * Pasting into `vercel env add` easily picks up a trailing newline, or the
+ * value twice. Either makes the `Authorization` header outright invalid and
+ * `fetch` throws before any request is sent, so take the first whitespace-
+ * delimited token and warn loudly rather than failing on every send.
+ */
+function readApiKey(): string | undefined {
+  const raw = process.env.RESEND_API_KEY;
+  if (!raw) return undefined;
+
+  const first = raw.trim().split(/\s+/)[0];
+  if (!first) return undefined;
+
+  if (first !== raw.trim()) {
+    console.warn(
+      "[mail] RESEND_API_KEY contained whitespace or repeated content — using the first token. Re-add it as a single line.",
+    );
+  }
+
+  return first;
+}
+
 function fromAddress() {
   // A verified sender on your own domain. Resend's shared `onboarding@resend.dev`
   // only delivers to the account owner, so it is fine for a first smoke test
@@ -39,7 +63,7 @@ function fromAddress() {
  * @returns whether the provider accepted the message.
  */
 export async function sendMail(input: MailInput): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const apiKey = readApiKey();
 
   if (!apiKey) {
     if (process.env.NODE_ENV === "production") {
