@@ -14,7 +14,7 @@ Status legend: `[ ]` not started · `[~]` partially there · `[x]` done
 Nothing else matters until these are closed. Today the live site can be taken
 over by anyone who reads the README.
 
-### 0.1 Password-reset codes are returned to the caller — **critical**
+### 0.1 Password-reset codes are returned to the caller — **critical** ✅ done
 
 `requestPasswordReset` and `resendVerification` in `src/app/actions/auth.ts`
 return the one-time code in the response body as `demoCode`. That was a
@@ -25,25 +25,34 @@ in production it means:
 2. The reset code comes straight back in the server-action response.
 3. They call `resetPassword` with it and own the admin account.
 
-- [ ] Delete `demoCode` from `AuthState` and every return site
-- [ ] Send the code by email instead (see 0.2)
-- [ ] Remove the `DemoCodeNotice` component and its usages
-- [ ] Change the seeded admin password, and stop documenting a real one
+- [x] Delete `demoCode` from `AuthState` and every return site
+- [x] Send the code by email instead (see 0.2)
+- [x] Remove the `DemoCodeNotice` component and its usages
+- [x] Change the seeded admin password, and stop documenting a real one
+- [x] **Also found:** `register` redirected to `/verify?…&code=<code>`, leaking
+      the code into browser history, access logs and the Referer header
+- [x] **Also found:** the login page rendered the admin password on screen; it
+      now advertises the demo customer instead
 
-**Effort:** ~1 hour once email works. **Blocking:** everything.
+The mail layer landed with it (`src/lib/mail.ts`, `src/lib/auth-emails.ts`), so
+0.2 is mostly done — **all that remains is adding `RESEND_API_KEY` and
+`MAIL_FROM` in Vercel and verifying a sending domain.** Until then production
+sends nothing: reset codes are refused rather than leaked, so password reset is
+unavailable but not exploitable. Sign-up and sign-in are unaffected.
 
 ### 0.2 Real transactional email
 
 There is no mail provider wired up at all. Needed for verification, password
 reset, and order confirmations.
 
-- [ ] Pick a provider — [Resend](https://resend.com) is the least friction on
+- [x] Pick a provider — [Resend](https://resend.com) is the least friction on
       Vercel (generous free tier, good DX)
+- [ ] **Create the account, add `RESEND_API_KEY` + `MAIL_FROM` in Vercel**
 - [ ] Verify a sending domain (SPF + DKIM DNS records) so mail isn't spam-filed
-- [ ] `src/lib/mail.ts` with a typed `sendMail()` wrapper
-- [ ] Templates: verify address, reset password, order received, order shipped
-- [ ] Both languages — the templates must respect the user's locale
-- [ ] Fail soft: a mail outage must never break checkout
+- [x] `src/lib/mail.ts` with a typed `sendMail()` wrapper
+- [x] Templates: verify address, reset password — *order emails still to do (1.3)*
+- [x] Both languages — the templates must respect the user's locale
+- [x] Fail soft: a mail outage must never break checkout
 
 **Effort:** ~1 day including DNS propagation.
 
