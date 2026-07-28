@@ -28,6 +28,29 @@ enum PaymentMethod {
   bank_transfer
 }
 
+/// Which gateway handled a payment. `manual` covers cash on delivery and
+/// bank transfer, where no gateway is involved at all; real adapters are added
+/// here as they are integrated.
+enum PaymentProvider {
+  manual
+}
+
+/// Lifecycle of one payment attempt. An order can have several — a failed card
+/// attempt followed by a successful one is normal.
+enum PaymentState {
+  /// Created; the shopper has not come back from the gateway yet.
+  pending
+  /// Funds reserved but not taken (providers that separate the two).
+  authorized
+  /// Money actually taken — this is what flips the order to `paid`.
+  captured
+  failed
+  cancelled
+  /// Nobody came back and the window elapsed.
+  expired
+  refunded
+}
+
 enum PaymentStatus {
   unpaid
   paid
@@ -168,6 +191,7 @@ model Order {
   items        OrderItem[]
   events       OrderEvent[]
   movements    StockMovement[]
+  payments     Payment[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -265,4 +289,62 @@ model RateLimit {
   windowAt DateTime @default(now())
 
   @@index([windowAt])
+}
+
+/// One attempt to collect money for an order.
+///
+/// Amounts are held in **minor units** (tetri) as integers. The rest of the
+/// schema uses Float for prices, which is fine for display but must never
+/// decide what a card is charged — 0.1 + 0.2 is not 0.3 in binary floating
+/// point, and a payment that disagrees with the gateway by a tetri is a
+/// reconciliation problem.
+model Payment {
+  id          String          @id @default(cuid())
+  orderId     String
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  provider    PaymentProvider
+  /// The gateway's own identifier for this attempt, once it has issued one.
+  providerRef String?
+  state       PaymentState    @default(pending)
+
+  /// Charged amount in tetri, copied from the order when the attempt starts.
+  amount      Int
+  currency    String          @default("GEL")
+  /// Set once money has actually moved back out again.
+  refunded    Int             @default(0)
+
+  /// Attempts that are never completed are swept to `expired` after this.
+  expiresAt   DateTime
+  capturedAt  DateTime?
+  failReason  String          @default("")
+
+  events      PaymentEvent[]
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([state])
+  @@unique([provider, providerRef])
+}
+
+/// Raw gateway callbacks, kept so a payment can always be explained.
+///
+/// `externalId` is unique: gateways retry webhooks, and replaying one must not
+/// capture an order twice.
+model PaymentEvent {
+  id         String   @id @default(cuid())
+  paymentId  String
+  payment    Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  /// The gateway's event id, or a hash of the body when it doesn't send one.
+  externalId String
+  state      PaymentState
+  /// Verbatim payload, for disputes and debugging.
+  payload    String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@unique([paymentId, externalId])
+  @@index([paymentId])
 }

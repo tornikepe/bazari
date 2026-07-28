@@ -8,6 +8,7 @@ import { checkCoupon } from "@/lib/coupons";
 import { isPaymentMethod } from "@/lib/payment";
 import { rememberReceipt } from "@/lib/order-access";
 import { clientIp, consume } from "@/lib/rate-limit";
+import { toMinor, PAYMENT_WINDOW_MINUTES } from "@/lib/payments";
 
 export type PlaceOrderInput = {
   customerName: string;
@@ -138,6 +139,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             // Opens the order's timeline; the dashboard appends to it on every
             // status change.
             events: { create: [{ status: "pending", note: "Order placed" }] },
+
+            // Every order gets a payment row from the start, so "is this paid?"
+            // has one answer regardless of how the money arrives. Card orders
+            // will hand this to a gateway; cash stays `pending` until an admin
+            // marks it received.
+            payments: {
+              create: [
+                {
+                  provider: "manual",
+                  amount: toMinor(total),
+                  expiresAt: new Date(Date.now() + PAYMENT_WINDOW_MINUTES * 60_000),
+                },
+              ],
+            },
           },
         });
 

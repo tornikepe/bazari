@@ -6,6 +6,7 @@ import { getI18n } from "@/lib/locale";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
+import { PaymentPanel } from "@/components/admin/PaymentPanel";
 import {
   ChevronLeftIcon,
   MailIcon,
@@ -29,6 +30,7 @@ export default async function AdminOrderDetailPage({
       items: true,
       coupon: { select: { code: true } },
       events: { orderBy: { createdAt: "asc" } },
+      payments: { orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -184,6 +186,19 @@ export default async function AdminOrderDetailPage({
               ))}
             </dl>
           </section>
+
+          <PaymentPanel
+            payments={order.payments.map((p) => ({
+              id: p.id,
+              provider: p.provider,
+              state: p.state,
+              amount: p.amount,
+              refunded: p.refunded,
+              createdAt: p.createdAt,
+              capturedAt: p.capturedAt,
+              failReason: p.failReason,
+            }))}
+          />
 
           {/* ----------------------------- timeline -------------------------- */}
           <section className="card p-5">

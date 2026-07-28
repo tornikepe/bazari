@@ -112,18 +112,43 @@ at the same moment can both succeed and drive stock negative.
 
 ## Phase 1 — Things a real shop cannot open without
 
-### 1.1 Payments
+### 1.1 Payments — framework done, adapter pending
 
 `paymentMethod` is currently just a label on the order; no money moves.
 
-- [ ] Decide: **Bank of Georgia** or **TBC** e-commerce (local cards, GEL,
-      what Georgian customers expect) vs **Stripe** (better DX, weaker local
-      card coverage)
-- [ ] Server-side payment intent — never trust an amount from the client
-- [ ] Webhook to flip `paymentStatus` to `paid`; make it idempotent
-- [ ] Handle failure, timeout and abandoned payments
-- [ ] Keep cash-on-delivery as an option
-- [ ] Refund path that writes a `refunded` `paymentStatus` and a stock movement
+- [ ] **Decide the provider.** Note **Stripe cannot pay out to a Georgian
+      entity** — it is not a supported country — so realistically this is Bank
+      of Georgia, TBC, or an aggregator like PayZe (simpler onboarding for a
+      small shop, covers both banks' cards). Start the merchant application
+      early; the paperwork is the long pole, not the code.
+- [x] Server-side amount — `startPayment` reads the total from the order row
+      and the webhook **refuses to capture** if the gateway reports a different
+      figure, marking the attempt failed instead
+- [x] Idempotent webhook — `/api/payments/[provider]/webhook`. A unique index
+      on `(paymentId, externalId)` inside the same transaction as the capture
+      means a redelivered event is a no-op, and it still answers 200 so the
+      gateway stops retrying
+- [x] Failure, timeout and abandoned — `PaymentState` covers
+      `failed`/`cancelled`/`expired`, and `expireStalePayments()` sweeps
+      attempts nobody returned to after 30 minutes
+- [x] Cash on delivery kept — the `manual` adapter records the attempt with no
+      gateway, and an admin marks it received from the dashboard
+- [x] Refund writes `paymentStatus: refunded`, cancels the order and returns
+      every line through the stock ledger. Verified: stock +2, ledger balance
+      matches, order flipped
+- [x] `Payment` / `PaymentEvent` tables, amounts in **tetri as integers** —
+      float must never decide what a card is charged
+
+**Adding a gateway is now one file.** Implement `Adapter` from
+`src/lib/payments/types.ts` (three methods: `start`, `parseWebhook`, `refund`),
+add its id to the `PaymentProvider` enum, register it in
+`src/lib/payments/index.ts`. Everything else — the payment row, idempotency,
+the order transition, the ledger — is already written and tested.
+
+**Known gap:** `Product.price` and `Order.total` are `Float`. Fine for display,
+but money in floats is a latent rounding bug; `Payment.amount` is integer tetri
+for exactly that reason. Converting the rest is a wide but mechanical change,
+worth doing before real money moves.
 
 **Effort:** ~3–5 days including bank paperwork, which is the slow part — start
 the merchant application early, it can take weeks.

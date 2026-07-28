@@ -398,6 +398,11 @@ const ka = {
     skuTaken: "ასეთი SKU უკვე გამოყენებულია",
     orderTimeline: "შეკვეთის ისტორია",
     payment: "გადახდა",
+    markPaid: "გადახდილად მონიშვნა",
+    refund: "თანხის დაბრუნება",
+    refundConfirm: "დარწმუნებული ხარ? პროდუქტები მარაგში დაბრუნდება.",
+    paymentAttempts: "გადახდის მცდელობები",
+    noPayments: "გადახდის ჩანაწერი არ არის",
     paymentMethod: "გადახდის მეთოდი",
     paymentStatus: "გადახდის სტატუსი",
     orderSubtotal: "პროდუქტები",
@@ -419,6 +424,16 @@ const ka = {
     resetFilters: "ფილტრების მოხსნა",
     searchOrders: "ნომერი, სახელი ან ტელეფონი…",
     noMatches: "შედეგი ვერ მოიძებნა",
+  },
+
+  paymentState: {
+    pending: "მოლოდინში",
+    authorized: "დაჯავშნილი",
+    captured: "ჩარიცხული",
+    failed: "ჩაიშალა",
+    cancelled: "გაუქმებული",
+    expired: "ვადაგასული",
+    refunded: "დაბრუნებული",
   },
 
   stockReason: {
@@ -852,6 +867,11 @@ const en: Dictionary = {
     skuTaken: "That SKU is already in use",
     orderTimeline: "Order history",
     payment: "Payment",
+    markPaid: "Mark as paid",
+    refund: "Refund",
+    refundConfirm: "Are you sure? The items go back into stock.",
+    paymentAttempts: "Payment attempts",
+    noPayments: "No payment record",
     paymentMethod: "Payment method",
     paymentStatus: "Payment status",
     orderSubtotal: "Items",
@@ -873,6 +893,16 @@ const en: Dictionary = {
     resetFilters: "Reset filters",
     searchOrders: "Number, name or phone…",
     noMatches: "No matches found",
+  },
+
+  paymentState: {
+    pending: "Pending",
+    authorized: "Authorized",
+    captured: "Captured",
+    failed: "Failed",
+    cancelled: "Cancelled",
+    expired: "Expired",
+    refunded: "Refunded",
   },
 
   stockReason: {
