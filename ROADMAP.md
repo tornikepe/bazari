@@ -153,25 +153,36 @@ worth doing before real money moves.
 **Effort:** ~3–5 days including bank paperwork, which is the slow part — start
 the merchant application early, it can take weeks.
 
-### 1.2 Real product images
+### 1.2 Real product images — blocked on you
 
 All 40 products share `public/products/placeholder.svg`. This is the single
 most visible thing holding the design back.
 
 - [ ] Image upload in the dashboard — [Vercel Blob](https://vercel.com/docs/vercel-blob)
-      or UploadThing
+      or UploadThing. **Needs a Blob store and `BLOB_READ_WRITE_TOKEN`**, which
+      only you can create.
+- [ ] **The photos themselves.** This is the real blocker: I cannot source
+      genuine product photography, and reusing brand or marketplace images
+      would be someone else's copyright on a site that takes money.
 - [ ] Multiple images per product with a gallery on the product page
 - [ ] Serve via `next/image` with proper `sizes`, AVIF/WebP
 - [ ] Validate type and size on upload; strip EXIF
 - [ ] Alt text per image, in both languages, for a11y and SEO
 
-### 1.3 Order lifecycle emails
+### 1.3 Order lifecycle emails ✅ done
 
-- [ ] "We got your order" immediately after checkout
-- [ ] "Your order shipped" when an admin moves it to `shipped`
-- [ ] Include the tracking link and the order number
+- [x] "We got your order" — sent after the order transaction commits, so a
+      mail outage cannot turn a completed basket into an error
+- [x] "Your order shipped" — fires only on the real transition;
+      `updateOrderStatus` returns early when the status is unchanged, so
+      re-saving cannot mail the customer twice
+- [x] Tracking link and order number in both, localised, each with a
+      plain-text twin. A blank address is a silent no-op — email is optional
+      at checkout
+- [x] Verified end to end on production: order placed → confirmation, moved to
+      shipped → notice, both accepted by the provider
 
-### 1.4 Legal pages with real content
+### 1.4 Legal pages with real content — blocked on you
 
 `/privacy`, `/terms`, `/returns`, `/warranty`, `/shipping` exist but are
 placeholders. For a real Georgian shop these are legally required.
@@ -179,7 +190,9 @@ placeholders. For a real Georgian shop these are legally required.
 - [ ] Privacy policy naming the actual data collected and the processors
       (Vercel, Prisma, the mail and payment providers)
 - [ ] Terms of sale, refund and returns policy per Georgian consumer law
-- [ ] Business details: legal entity, tax ID, real contact address
+- [ ] Business details: legal entity, tax ID, real contact address. **I will
+      not invent these** — a made-up tax ID or address on a page that governs a
+      sale is worse than no page. Send them and I will write the pages.
 - [ ] Cookie consent if you add any non-essential tracking
 
 ---
