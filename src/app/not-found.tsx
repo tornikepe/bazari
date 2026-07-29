@@ -20,7 +20,22 @@ export default async function NotFound() {
             <h1 className="mt-3 text-xl font-bold text-ink-900">{t.common.notFoundTitle}</h1>
             <p className="mt-2 text-sm text-ink-500">{t.common.notFoundText}</p>
 
-            <div className="mt-6 flex gap-3">
+            {/* A dead end is a bad empty state — most people arriving here
+                were looking for a product, so let them search from here. */}
+            <form action="/catalog" className="mt-6 flex w-full max-w-sm gap-2">
+              <input
+                type="search"
+                name="q"
+                aria-label={t.nav.search}
+                placeholder={t.nav.searchPlaceholder}
+                className="field min-w-0 flex-1"
+              />
+              <button type="submit" className="btn btn-primary btn-md shrink-0">
+                {t.nav.search}
+              </button>
+            </form>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
               <Link href="/" className="btn btn-primary btn-md">
                 {t.common.goHome}
               </Link>

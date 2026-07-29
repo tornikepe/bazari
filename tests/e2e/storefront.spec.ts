@@ -98,3 +98,21 @@ test("nothing overflows horizontally on a narrow phone", async ({ page }) => {
     expect(overflows, `${path} scrolls sideways at 320px`).toBe(false);
   }
 });
+
+test("any unknown path renders the 404 page, not a crash", async ({ page }) => {
+  for (const path of ["/nope", "/catalog/nope", "/product/does-not-exist", "/a/b/c"]) {
+    const response = await page.goto(path);
+    expect(response?.status(), `${path} should 404`).toBe(404);
+    await expect(page.getByText("404")).toBeVisible();
+  }
+});
+
+test("the 404 page offers a way onwards", async ({ page }) => {
+  await page.goto("/nope");
+  // The header has a search box too; this one is inside the page body.
+  const form = page.locator('main form[action="/catalog"]');
+  await form.getByRole("searchbox").fill("anker");
+  await form.getByRole("button", { name: /search|ძებნა/i }).click();
+
+  await expect(page).toHaveURL(/\/catalog\?q=anker/);
+});

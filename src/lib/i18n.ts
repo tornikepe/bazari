@@ -473,6 +473,9 @@ const ka = {
     notFoundTitle: "გვერდი ვერ მოიძებნა",
     notFoundText: "შესაძლოა ბმული შეიცვალა ან პროდუქტი აღარ იყიდება.",
     goHome: "მთავარ გვერდზე",
+    errorTitle: "რაღაც შეგვეშალა",
+    errorText: "გვერდის ჩატვირთვა ვერ მოხერხდა. სცადე თავიდან.",
+    tryAgain: "თავიდან ცდა",
   },
 } as const;
 
@@ -942,6 +945,9 @@ const en: Dictionary = {
     notFoundTitle: "Page not found",
     notFoundText: "The link may have changed, or the product is no longer for sale.",
     goHome: "Go to homepage",
+    errorTitle: "Something went wrong",
+    errorText: "We couldn't load this page. Please try again.",
+    tryAgain: "Try again",
   },
 };
 
