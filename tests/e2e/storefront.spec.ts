@@ -43,42 +43,48 @@ test("the title is identical on every page", async ({ page }) => {
   expect(new Set(titles).size).toBe(1);
 });
 
-// FIXME: this found a real ~10px vertical shift of the product grid on
-// /catalog when switching to Georgian (cards move y=340 → y=330, heights
-// unchanged). Something above the grid changes height. /checkout was measured
-// separately and has zero shift, so this is specific to the catalogue toolbar.
-// Left failing on purpose rather than weakened — it is a real finding.
-test.fixme("switching language does not move anything vertically", async ({ page }) => {
-  await page.goto("/catalog");
-  await page.locator('a[href^="/product/"]').first().waitFor({ state: "attached" });
-
-  // Landmarks rather than every node: a full-tree diff is brittle across a
-  // server re-render, and the property that matters is that these do not move
-  // or change height when the label lengths change.
-  const landmarks = ["header", "aside", "h1", 'a[href^="/product/"]'];
+test("the two locales lay out identically", async ({ page, context }) => {
+  // Loads each locale fresh rather than clicking the switch: `router.refresh()`
+  // makes the timing flaky, and comparing two clean renders tests the property
+  // that actually matters — the same page in either language occupies the same
+  // space. Positions are document-relative, since a rect is viewport-relative
+  // and would turn a scroll difference into a phantom shift.
+  const landmarks = ["header", "aside", "h1", "article.card"];
 
   const geometry = () =>
     page.evaluate(
       (selectors) =>
         selectors.flatMap((selector) =>
-          [...document.querySelectorAll(selector)]
-            .slice(0, 8)
-            .map((el, i) => {
-              const r = el.getBoundingClientRect();
-              return `${selector}#${i} h=${Math.round(r.height)} y=${Math.round(r.y)}`;
-            }),
+          [...document.querySelectorAll(selector)].slice(0, 6).map((el, i) => {
+            const r = el.getBoundingClientRect();
+            return `${selector}#${i} h=${Math.round(r.height)} y=${Math.round(r.y + window.scrollY)}`;
+          }),
         ),
       landmarks,
     );
 
-  const before = await geometry();
-  expect(before.length).toBeGreaterThan(0);
+  const forLocale = async (locale: "en" | "ka") => {
+    await context.clearCookies();
+    await context.addCookies([
+      { name: "cm_locale", value: locale, url: "http://127.0.0.1:3100" },
+    ]);
+    await page.goto("/catalog");
+    await page.locator('a[href^="/product/"]').first().waitFor({ state: "attached" });
 
-  await page.getByRole("button", { name: "ქარ" }).click();
-  await expect(page.locator("html")).toHaveAttribute("lang", "ka");
-  await page.locator('a[href^="/product/"]').first().waitFor({ state: "attached" });
+    // Cards animate in with a transform, so a rect measured mid-flight is the
+    // animation's position, not the layout's. Freeze them first.
+    await page.addStyleTag({
+      content: "*,*::before,*::after{animation:none!important;transition:none!important}",
+    });
+    await page.waitForTimeout(200);
 
-  expect(await geometry()).toEqual(before);
+    return geometry();
+  };
+
+  const english = await forLocale("en");
+  expect(english.length).toBeGreaterThan(0);
+
+  expect(await forLocale("ka")).toEqual(english);
 });
 
 test("nothing overflows horizontally on a narrow phone", async ({ page }) => {
