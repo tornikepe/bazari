@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { sendOrderShippedEmail } from "@/lib/order-emails";
+import { getLocale } from "@/lib/locale";
 import { slugify } from "@/lib/format";
 import { isOrderStatus } from "@/lib/order-status";
 import type { Prisma } from "@/generated/prisma/client";
@@ -226,7 +228,15 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
 
   const order = await prisma.order.findUnique({
     where: { id },
-    select: { status: true, items: { select: { productId: true, quantity: true } } },
+    select: {
+      status: true,
+      number: true,
+      email: true,
+      total: true,
+      items: {
+        select: { productId: true, quantity: true, nameKa: true, nameEn: true, price: true },
+      },
+    },
   });
   if (!order) return { ok: false, error: "failed" };
   if (order.status === status) return { ok: true };
@@ -279,6 +289,24 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
   } catch (error) {
     console.error("updateOrderStatus failed", error);
     return { ok: false, error: "failed" };
+  }
+
+  // Sent after the transaction commits, and only on the actual transition —
+  // re-saving an order that is already `shipped` returns early above, so the
+  // customer cannot be mailed the same notice twice.
+  if (status === "shipped") {
+    await sendOrderShippedEmail({
+      to: order.email,
+      number: order.number,
+      total: order.total,
+      items: order.items.map((item) => ({
+        nameKa: item.nameKa,
+        nameEn: item.nameEn,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      locale: await getLocale(),
+    });
   }
 
   revalidatePath("/dashboard/orders");

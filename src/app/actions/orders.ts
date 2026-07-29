@@ -9,6 +9,8 @@ import { isPaymentMethod } from "@/lib/payment";
 import { rememberReceipt } from "@/lib/order-access";
 import { clientIp, consume } from "@/lib/rate-limit";
 import { toMinor, PAYMENT_WINDOW_MINUTES } from "@/lib/payments";
+import { sendOrderPlacedEmail } from "@/lib/order-emails";
+import { getLocale } from "@/lib/locale";
 
 export type PlaceOrderInput = {
   customerName: string;
@@ -205,6 +207,21 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       // Lets this browser view the confirmation page for an order placed
       // without an account.
       await rememberReceipt(order.number);
+
+      // Deliberately not awaited into the failure path: the order is already
+      // committed, and a mail outage must not turn a paid basket into an error.
+      await sendOrderPlacedEmail({
+        to: input.email?.trim() ?? "",
+        number: order.number,
+        total,
+        items: lines.map(({ product, quantity }) => ({
+          nameKa: product.nameKa,
+          nameEn: product.nameEn,
+          quantity,
+          price: product.price,
+        })),
+        locale: await getLocale(),
+      });
 
       return { ok: true, number: order.number };
     } catch (error) {
