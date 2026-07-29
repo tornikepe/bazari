@@ -56,21 +56,51 @@ export default async function HomePage() {
     <>
       {/* ------------------------------- hero ------------------------------ */}
       <section className="relative overflow-hidden bg-panel text-panel-fg">
-        {/* Decorative wash — pointer-events-none so it never eats clicks. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-70"
-          style={{
-            backgroundImage:
-              "radial-gradient(60rem 30rem at 85% -10%, rgba(222,31,36,0.45), transparent 60%), radial-gradient(40rem 24rem at 5% 110%, rgba(249,141,7,0.28), transparent 65%)",
-          }}
-        />
+        {/* Decorative only, and pointer-events-none so it can never eat a
+            click. Two blurred orbs drift on long, offset cycles, which reads
+            as movement without ever drawing the eye away from the copy. Both
+            animate transform alone, so they cannot shift the layout. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="hero-orb hero-orb-a -top-32 -right-24 h-[28rem] w-[28rem]"
+            style={{ background: "radial-gradient(circle, rgba(222,31,36,0.55), transparent 68%)" }}
+          />
+          <div
+            className="hero-orb hero-orb-b -bottom-40 -left-28 h-[26rem] w-[26rem]"
+            style={{ background: "radial-gradient(circle, rgba(249,141,7,0.34), transparent 68%)" }}
+          />
+
+          {/* A faint grid gives the dark panel some structure up close. */}
+          <div
+            className="absolute inset-0 opacity-[0.055]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)",
+              backgroundSize: "64px 64px",
+              maskImage: "radial-gradient(60% 60% at 50% 40%, #000, transparent)",
+              WebkitMaskImage: "radial-gradient(60% 60% at 50% 40%, #000, transparent)",
+            }}
+          />
+        </div>
 
         <div className="page-container relative grid items-center gap-10 py-14 lg:grid-cols-2 lg:py-20">
           <div className="animate-rise">
-            <h1 className="text-3xl leading-[1.15] font-extrabold tracking-tight">
-              {t.home.heroTitle}
-            </h1>
+            {/* The sheen is a clipped highlight that sweeps across the words
+                every few seconds. `relative` + `overflow-hidden` keeps it
+                inside the heading, and it never affects layout. */}
+            <div className="relative overflow-hidden">
+              <h1 className="text-3xl leading-[1.15] font-extrabold tracking-tight">
+                {t.home.heroTitle}
+              </h1>
+              <span
+                aria-hidden="true"
+                className="hero-sheen pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)",
+                }}
+              />
+            </div>
 
             <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-300">
               {t.home.heroSubtitle}
@@ -132,6 +162,33 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+
+        {/* Brand strip. Every name is a real `brand` value counted from the
+            catalogue — nothing here is decorative filler. Rendered twice so
+            the loop has no visible seam; the copy is hidden from screen
+            readers and the list is not focusable, so it reads once. */}
+        {brands.length > 0 && (
+          <div className="marquee relative border-t border-white/10 py-4">
+            <div className="marquee-track gap-10">
+              {[0, 1].map((copy) => (
+                <div
+                  key={copy}
+                  aria-hidden={copy === 1 || undefined}
+                  className="flex shrink-0 items-center gap-10 pr-10"
+                >
+                  {brands.map(({ brand }) => (
+                    <span
+                      key={`${copy}-${brand}`}
+                      className="text-sm font-semibold whitespace-nowrap text-ink-400"
+                    >
+                      {brand}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ----------------------------- categories -------------------------- */}

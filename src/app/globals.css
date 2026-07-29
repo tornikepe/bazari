@@ -572,6 +572,101 @@
 }
 
 /* A slow, low-contrast sheen used only on loading skeletons. */
+/* ------------------------------------------------------------------ */
+/* Landing hero motion                                                  */
+/*                                                                      */
+/* Everything here is slow, low-contrast and looping — the brief was    */
+/* "moving, but not bright". All of it is decorative and sits behind    */
+/* `prefers-reduced-motion`, so nothing that carries meaning depends on */
+/* motion, and none of it can shift layout: the elements are absolutely */
+/* positioned and animate only transform and opacity.                   */
+/* ------------------------------------------------------------------ */
+
+@keyframes drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, -4%, 0) scale(1.12);
+  }
+}
+
+@keyframes drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  50% {
+    transform: translate3d(-7%, 5%, 0) scale(1);
+  }
+}
+
+/* A soft sweep of light across the headline area. */
+@keyframes sheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+/* The logo strip scrolls one full copy, then snaps back — the list is
+   rendered twice, so the seam is invisible. */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.hero-orb-a {
+  animation: drift-a 22s ease-in-out infinite;
+}
+
+.hero-orb-b {
+  animation: drift-b 28s ease-in-out infinite;
+}
+
+.hero-sheen {
+  animation: sheen 7s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+
+/* Pausing on hover lets someone actually read a name they spotted. */
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Fades both ends so items enter and leave instead of being cut off.
+   `overflow: hidden` is load-bearing: the track is `width: max-content`, so
+   without it the whole page scrolls sideways. */
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

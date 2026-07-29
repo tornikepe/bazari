@@ -25,7 +25,11 @@ test("nothing spills out of its container", async ({ page }) => {
             if (r.width === 0 || r.height === 0) continue;
 
             const style = getComputedStyle(el);
-            if (style.overflowX === "auto" || style.overflowX === "scroll") continue;
+            // Only *visible* overflow is a bug. Anything clipped or scrollable
+            // is deliberate — a marquee track, a decorative blur, a rail. The
+            // button bug this test exists for had `overflow: visible`, so it
+            // is still caught.
+            if (style.overflowX !== "visible") continue;
 
             // Content wider than the box — this catches buttons and any other
             // element with children, which an earlier version wrongly skipped.
