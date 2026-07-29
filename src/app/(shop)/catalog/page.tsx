@@ -97,7 +97,7 @@ export default async function CatalogPage({
             </div>
           ) : (
             <>
-              <div className="stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+              <div className="stagger grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 xl:grid-cols-3">
                 {items.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

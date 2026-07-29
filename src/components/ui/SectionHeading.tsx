@@ -12,8 +12,10 @@ export function SectionHeading({
   href?: string;
   linkLabel?: string;
 }) {
+  // Wraps rather than spilling: the Georgian heading plus the "view all" link
+  // together are wider than a 320px screen.
   return (
-    <div className="mb-5 flex items-end justify-between gap-4">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
       <div>
         <h2 className="text-xl font-extrabold tracking-tight text-ink-900">{title}</h2>
         {hint && <p className="mt-1 text-sm text-ink-500">{hint}</p>}
