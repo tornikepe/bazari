@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  # A new push supersedes the run already in flight for the same branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint · types · unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `prisma generate` runs on postinstall and needs no database.
+      - run: npm ci
+
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bazari_test
+        ports: ["5432:5432"]
+        # Without this the job races the container and the first query fails.
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bazari_test
+      AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789abcdef
+      ADMIN_EMAIL: admin@bazari.ge
+      ADMIN_PASSWORD: ci-only-admin-password
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+      # No RESEND_API_KEY on purpose: mail must degrade, not break the suite.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Runs the real migrations against a throwaway database, so a migration
+      # that only works on an already-populated schema fails here.
+      - run: npx prisma migrate deploy
+      - run: npm run db:seed
+
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

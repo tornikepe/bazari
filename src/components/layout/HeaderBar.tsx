@@ -150,7 +150,7 @@ export function HeaderBar({
       </div>
 
       {/* Main bar */}
-      <div className="page-container flex h-16 items-center gap-3 lg:h-20 lg:gap-6">
+      <div className="page-container flex h-16 items-center gap-2 sm:gap-3 lg:h-20 lg:gap-6">
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
@@ -219,7 +219,9 @@ export function HeaderBar({
             href="/favorites"
             title={t.favorites.title}
             aria-label={t.favorites.title}
-            className="btn btn-ghost relative h-10 w-10 rounded-control p-0"
+            // Hidden on the narrowest phones: five icon buttons plus the logo
+            // overflow 320px. The drawer still links to it.
+            className="btn btn-ghost relative hidden h-10 w-10 rounded-control p-0 min-[360px]:flex"
           >
             <span className="relative">
               <HeartIcon size={20} />
