@@ -300,13 +300,40 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   privacy: {
     ka: {
       title: "კონფიდენციალურობა",
-      intro: "რა მონაცემებს ინახავს აპლიკაცია სინამდვილეში.",
+      intro: "რა მონაცემებს ინახავს აპლიკაცია სინამდვილეში, სად მიდის და რამდენ ხანს.",
       sections: [
         {
           heading: "რას ვინახავთ",
           body: [
-            "შეკვეთის გაფორმებისას ბაზაში ინახება სახელი, ტელეფონი, ქალაქი, მისამართი და — თუ შეავსებ — ელფოსტა.",
+            "შეკვეთის გაფორმებისას ბაზაში ინახება სახელი, ტელეფონი, ქალაქი, მისამართი, კომენტარი და — თუ შეავსებ — ელფოსტა.",
+            "ანგარიშის შექმნისას: ელფოსტა, სახელი, ტელეფონი და პაროლის კრიპტოგრაფიული ჰეში. პაროლი ღია ტექსტად არასდროს ინახება.",
             "კალათა და რჩეულები მხოლოდ შენს ბრაუზერშია (localStorage) და სერვერზე არ იგზავნება.",
+          ],
+        },
+        {
+          heading: "Cookie-ები",
+          body: [
+            "bz_session — შესვლის სესია, ხელმოწერილი, httpOnly, 7 დღე. მისი გარეშე ანგარიშში შესვლა შეუძლებელია.",
+            "bz_receipts — ხელმოწერილი სია იმ შეკვეთების, რომლებიც ამ ბრაუზერიდან გააფორმე, 30 დღე. ის უზრუნველყოფს, რომ შენს შეკვეთას მხოლოდ შენ ხედავ.",
+            "cm_locale — არჩეული ენა. bz_theme — არჩეული თემა. ერთი წელი.",
+            "ანალიტიკის ან რეკლამის cookie არ გვაქვს, ამიტომ თანხმობის ფანჯარაც არ არის საჭირო.",
+          ],
+        },
+        {
+          heading: "ვის გადაეცემა",
+          body: [
+            "Vercel — ჰოსტინგი. ამუშავებს ყველა მოთხოვნას და ინახავს სერვერის ლოგებს (IP მისამართი, გვერდი, დრო).",
+            "Prisma Postgres — ბაზა. აქ ინახება შეკვეთები და ანგარიშები.",
+            "Resend — ელფოსტის გაგზავნა. იღებს მიმღების მისამართს და წერილის შიგთავსს (დადასტურების კოდი, შეკვეთის დეტალები).",
+            "სხვა მხარეს მონაცემები არ გადაეცემა და არ იყიდება.",
+          ],
+        },
+        {
+          heading: "რამდენ ხანს",
+          body: [
+            "ერთჯერადი კოდები (დადასტურება, პაროლის აღდგენა) — 15 წუთი, შემდეგ ძალადაკარგულია.",
+            "შეკვეთები — განუსაზღვრელი ვადით, რადგან ისინი ბუღალტრული ჩანაწერია.",
+            "ანგარიშის წაშლა ან მონაცემების ასლის მოთხოვნა — მოგვწერე საკონტაქტო გვერდიდან.",
           ],
         },
         {
@@ -319,13 +346,40 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
     },
     en: {
       title: "Privacy",
-      intro: "What the application actually stores.",
+      intro: "What the application actually stores, where it goes, and for how long.",
       sections: [
         {
           heading: "What we store",
           body: [
-            "Placing an order stores your name, phone, city, address and — if you provide one — an email address.",
+            "Placing an order stores your name, phone, city, address, any note and — if you provide one — an email address.",
+            "Creating an account stores your email, name, phone and a cryptographic hash of your password. The password itself is never stored.",
             "The cart and wishlist live only in your browser (localStorage) and are never sent to the server.",
+          ],
+        },
+        {
+          heading: "Cookies",
+          body: [
+            "bz_session — your sign-in session. Signed, httpOnly, 7 days. Without it you cannot stay signed in.",
+            "bz_receipts — a signed list of orders placed from this browser, 30 days. It is what stops anyone else opening your order.",
+            "cm_locale — your chosen language. bz_theme — your chosen theme. One year.",
+            "There are no analytics or advertising cookies, which is why there is no consent banner.",
+          ],
+        },
+        {
+          heading: "Who else sees it",
+          body: [
+            "Vercel — hosting. Handles every request and keeps server logs (IP address, path, timestamp).",
+            "Prisma Postgres — the database. Orders and accounts live here.",
+            "Resend — email delivery. Receives the recipient address and the message body (a verification code, or order details).",
+            "Nothing is shared with anyone else, and nothing is sold.",
+          ],
+        },
+        {
+          heading: "How long",
+          body: [
+            "One-time codes (verification, password reset) expire after 15 minutes.",
+            "Orders are kept indefinitely, because they are accounting records.",
+            "To delete an account or request a copy of your data, write to us from the contact page.",
           ],
         },
         {

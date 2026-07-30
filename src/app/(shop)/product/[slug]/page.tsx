@@ -12,6 +12,8 @@ import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel"
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SITE_TITLE, SITE_URL } from "@/lib/site";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -84,8 +86,52 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     { icon: ShieldIcon, text: t.home.why4Title },
   ];
 
+  // Structured data. Only facts already on the page: no rating or review
+  // fields, because the shop deliberately has neither and inventing them in
+  // markup is exactly the kind of thing Google penalises.
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name,
+    description: locale === "ka" ? product.descriptionKa : product.descriptionEn,
+    sku: product.sku,
+    image: `${SITE_URL}${product.image}`,
+    ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
+    category: categoryName,
+    offers: {
+      "@type": "Offer",
+      url: `${SITE_URL}/product/${product.slug}`,
+      priceCurrency: "GEL",
+      price: product.price.toFixed(2),
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: SITE_TITLE },
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: t.nav.home, item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: t.catalog.title, item: `${SITE_URL}/catalog` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: categoryName,
+        item: `${SITE_URL}/catalog?category=${product.category.slug}`,
+      },
+      { "@type": "ListItem", position: 4, name },
+    ],
+  };
+
   return (
     <div className="page-container py-6 lg:py-8">
+      <JsonLd data={productSchema} />
+      <JsonLd data={breadcrumbSchema} />
+
       <nav aria-label="breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-ink-400">
         <Link href="/" className="transition-colors hover:text-brand-600">
           {t.nav.home}

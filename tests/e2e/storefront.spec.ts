@@ -116,3 +116,25 @@ test("the 404 page offers a way onwards", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/catalog\?q=anker/);
 });
+
+test("the product page carries valid structured data", async ({ page }) => {
+  await page.goto("/product/ugreen-usb-c-hub-9in1");
+
+  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  expect(blocks.length).toBeGreaterThanOrEqual(2);
+
+  const parsed = blocks.map((b) => JSON.parse(b));
+  const product = parsed.find((p) => p["@type"] === "Product");
+  const crumbs = parsed.find((p) => p["@type"] === "BreadcrumbList");
+
+  expect(product).toBeTruthy();
+  expect(product.offers.priceCurrency).toBe("GEL");
+  expect(product.offers.price).toMatch(/^\d+\.\d{2}$/);
+  expect(product.sku).toBeTruthy();
+
+  // The shop has no ratings or reviews, so the markup must not claim any.
+  expect(product.aggregateRating).toBeUndefined();
+  expect(product.review).toBeUndefined();
+
+  expect(crumbs.itemListElement).toHaveLength(4);
+});

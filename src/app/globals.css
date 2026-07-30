@@ -796,3 +796,70 @@
     display: none;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Print                                                               */
+/*                                                                     */
+/* People print an order confirmation as a receipt. Without this they   */
+/* get the header, the footer, the theme toggle and a dark background   */
+/* that empties an ink cartridge.                                      */
+/* ------------------------------------------------------------------ */
+
+@media print {
+  /* Always on white, whatever theme the screen was in. */
+  :root,
+  :root[data-theme="dark"] {
+    --color-surface: #ffffff;
+    --color-panel: #ffffff;
+    --color-panel-fg: #000000;
+    --color-ink-900: #000000;
+    --color-ink-800: #1a1a1a;
+    --color-ink-700: #333333;
+    --color-ink-600: #444444;
+    --color-ink-500: #555555;
+    --color-ink-400: #666666;
+    --color-ink-100: #eeeeee;
+    --color-ink-50: #f7f7f7;
+    --color-line: #cccccc;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  /* Chrome and controls have no meaning on paper. */
+  header,
+  footer,
+  nav,
+  button,
+  .btn,
+  [role="menu"],
+  .marquee,
+  .hero-orb {
+    display: none !important;
+  }
+
+  /* Cards become plain blocks — shadows print as grey mud. */
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+    break-inside: avoid;
+  }
+
+  /* A table row split across a page break is unreadable. */
+  li,
+  tr {
+    break-inside: avoid;
+  }
+
+  /* Spell out where a link pointed, since it cannot be clicked. */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555555;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
+}
