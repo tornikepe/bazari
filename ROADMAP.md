@@ -2,10 +2,13 @@
 
 | | |
 | --- | --- |
-| **Security (Phase 0)** | ✅ complete, deployed |
-| **Shop foundations (Phase 1)** | 🟡 half — payments framework and emails done, gateway and photos missing |
-| **Testing** | ❌ none at all |
-| **Can it take a real order today?** | **No** — see A1 and A2 |
+| **Security (Phase 0)** | ✅ complete |
+| **Payments** | 🟡 framework done and tested · no gateway |
+| **Email** | 🟡 works · only reaches your own inbox until a domain is verified |
+| **Testing** | ✅ 64 unit · 26 e2e · CI on every push |
+| **Product photos** | ❌ one placeholder for all 40 |
+| **Legal pages** | 🟡 technical half written · business details missing |
+| **Can it take a real order today?** | **No** — A1 and A2 below |
 
 ---
 
@@ -62,7 +65,26 @@ refund returns stock with a matching ledger balance.
 | ✅ | Shipped notice — fires only on the real transition, so re-saving cannot mail twice |
 | ❌ | **Delivery to anyone but you** — see **A1** |
 
-## 1.4 Earlier in the build
+## 1.4 SEO, print and legal
+
+| # | Item |
+| --- | --- |
+| ✅ | `Product` + `BreadcrumbList` JSON-LD on product pages, carrying the CSP nonce so the tag is not blocked. No rating or review fields — the shop has neither, and claiming otherwise in markup is penalised |
+| ✅ | Print stylesheet — an order confirmation prints as ink on white, without header, footer or buttons |
+| ✅ | Privacy policy, technical half — every stored field, all four cookies with lifetimes, the three processors, retention periods |
+| ✅ | Per-page descriptions and Open Graph on product and info pages |
+
+## 1.5 Design and responsive
+
+| # | Item |
+| --- | --- |
+| ✅ | Animated landing hero — drifting orbs, masked grid, headline sheen, live brand strip from real catalogue rows. Transform/opacity only, behind `prefers-reduced-motion` |
+| ✅ | **Fixed: text spilled out of buttons on phones.** `.btn` had `white-space: nowrap` on a fixed height, so long Georgian labels escaped the button. Buttons now wrap and grow; type size untouched |
+| ✅ | **Fixed: product grid was 2 columns at 320px**, leaving cards ~130px wide — nothing fitted. Single column below 380px |
+| ✅ | Designed 404 (with a search box, not a dead end) and a 500 error page |
+| ✅ | Responsive regression test — 10 pages × 3 widths × both locales, fails on any visible overflow |
+
+## 1.6 Earlier in the build
 
 Coupons wired into checkout · order-detail data exposure closed (order numbers
 were sequential and the page was public) · database integrity audit clean ·
@@ -122,55 +144,24 @@ worse than having no page.
 
 ---
 
-## Section B — Mine. Say which and I start.
+## Section B — Mine. Nothing blocking; say which.
 
-### 🟡 B1. Privacy policy, technical half — **no blocker, can start now**
+Ordered by what I would do next.
 
-What data is collected, which processors touch it (Vercel, Prisma Postgres,
-Resend), retention, and every cookie the site sets. Leaves gaps only for A4.
+### 🟡 B3. Money as integers — **the one with a deadline**
 
-**Effort:** ~2 hours
+`Product.price`, `Product.costPrice`, `Order.total`, `Order.subtotal`,
+`Order.shipping`, `Order.discount`, `OrderItem.price` and `Coupon.amountOff` are
+all `Float`. Fine for display, wrong for charging: two unit tests in this repo
+pin the proof — `(5.555).toFixed(2)` is `"5.55"`, and `1.005 * 100` rounds down
+while `8.115 * 100` rounds up. `Payment.amount` is already integer tetri for
+exactly this reason.
 
-### 🟡 B2. Tests and CI — **no blocker, highest engineering value**
+Wide but mechanical: a migration, a formatting boundary, and the tests already
+cover the maths. **Must land before A2 does** — once a gateway is live, a
+rounding difference is a reconciliation problem with a bank.
 
-There is currently **no test of any kind and no CI**. Every regression so far
-was caught by hand.
-
-- **Playwright** — guest checkout with a coupon · signed-in checkout · register
-  → verify → sign in → sign out · forgot password → reset → sign in · admin
-  moves an order through every status · a customer cannot reach `/dashboard`
-  and a stranger cannot open someone else's order
-- **Vitest** — coupon maths (percent, fixed, minimum, expiry, exhausted,
-  capped) · cart totals and the free-shipping boundary · `formatPrice` in both
-  locales (this has broken hydration before) · password hashing and session
-  tokens
-- **GitHub Actions** — lint, typecheck, build, tests on every PR; migrations
-  against a throwaway Postgres; merges blocked on red
-
-**Effort:** ~2 days
-
-### 🟡 B3. Money as integers — **do before real money moves**
-
-`Product.price` and `Order.total` are `Float`. Fine for display, a latent
-rounding bug for charging — `Payment.amount` is integer tetri for exactly that
-reason. Wide but mechanical.
-
-**Effort:** ~1 day · **Deadline:** before A2 lands
-
-### 🟡 B4. Product images *(needs A3's token)*
-
-Dashboard upload · multiple images per product with a gallery · `next/image`
-with proper `sizes` and AVIF/WebP · type and size validation · EXIF stripped ·
-alt text in both languages.
-
-**Effort:** ~1 day
-
-### 🟡 B5. Payment adapter *(needs A2's credentials)*
-
-Implement `Adapter` from `src/lib/payments/types.ts` — three methods: `start`,
-`parseWebhook`, `refund`. Everything else is written and tested.
-
-**Effort:** ~1 day
+**Effort:** ~1 day · **Risk:** medium, touches every price
 
 ### 🟡 B6. Contact chatbot
 
@@ -180,10 +171,40 @@ Implement `Adapter` from `src/lib/payments/types.ts` — three methods: `start`,
 | Rule-based FAQ bot | 2–3 days | On-brand, no running cost, limited |
 | **LLM on the Claude API** ⭐ | ~1 week | Best result, doubles as a portfolio piece |
 
-The recommended option: streaming `/api/chat` · retrieval over your catalogue
-and FAQ so answers cite real stock and prices · an order-lookup tool locked to
-the signed-in owner · strict scope · per-session rate limit and a monthly spend
-cap · both languages · never able to change an order or move money.
+Recommended option: streaming `/api/chat` · retrieval over your catalogue and
+FAQ so answers cite real stock and prices · an order-lookup tool locked to the
+signed-in owner · strict scope · per-session rate limit and a monthly spend cap
+· both languages · never able to change an order or move money.
+
+### 🟡 B7. Remaining design polish
+
+Sticky buy box on the product page · loading skeletons instead of layout jumps
+· add-to-cart confirmation and optimistic quantity updates · empty states that
+suggest a next action · WCAG AA contrast audit in both themes.
+
+**Effort:** ~1 day. Most of it is cosmetic until A3 lands — real photos change
+the product page more than any of this.
+
+### 🟡 B8. Rest of SEO
+
+Generated OG images per product · `hreflang` for the two locales · `Organization`
+and `WebSite` JSON-LD on the home page.
+
+> **One decision for you.** Every page renders the identical `<title>`, exactly
+> as you asked — and it is the site's biggest remaining SEO weakness, since
+> search engines lean on it heavily. A compromise: keep
+> `Bazari - ონლაინ მაღაზია` on the home page, append the product or category
+> name elsewhere (`Anker PowerCore 20000mAh — Bazari`). Stays as you asked until
+> you say otherwise.
+
+### 🟡 B9. Blocked only on your inputs
+
+- **B4 product images** *(needs A3)* — dashboard upload, gallery, `next/image`
+  with AVIF/WebP, type and size validation, EXIF stripped, alt text in both
+  languages. ~1 day once the token exists.
+- **B5 payment adapter** *(needs A2)* — implement `Adapter` from
+  `src/lib/payments/types.ts`: `start`, `parseWebhook`, `refund`. Everything
+  else is written and tested. ~1 day.
 
 ---
 
@@ -198,30 +219,10 @@ session revocation via `sessionVersion` so a password change invalidates old
 cookies · **custom domain** (`bazari.ge` reads far better than a `vercel.app`
 subdomain on a CV) · staging database so migrations are rehearsed.
 
-### 🟢 C2. Design
-
-Product page gallery, clearer delivery estimate, sticky buy box · empty states
-that suggest a next action · loading skeletons instead of layout jumps ·
-add-to-cart confirmation and optimistic quantity updates · print stylesheet for
-the order confirmation · designed 404 and 500 · WCAG AA contrast audit in both
-themes.
-
-### 🟢 C3. SEO
-
-Per-page descriptions and Open Graph · generated OG images per product ·
-`Product` and `BreadcrumbList` JSON-LD · `hreflang` for both locales.
-
-> **One decision for you.** Every page renders the identical `<title>`, exactly
-> as you asked — but that is the site's biggest SEO weakness, since search
-> engines lean on it heavily. A compromise: keep `Bazari - ონლაინ მაღაზია` on
-> the home page, append the product or category name elsewhere
-> (`Anker PowerCore 20000mAh — Bazari`). Stays as you asked until you say
-> otherwise.
-
 ### 🟢 C4. Legal extras
 
 Cookie consent — only if you add non-essential tracking. Nothing on the site
-needs it today.
+needs it today, and the privacy page says so.
 
 ---
 
@@ -229,17 +230,17 @@ needs it today.
 
 | Step | Who | What | Why now |
 | --- | --- | --- | --- |
-| 1 | **You** | A1 — sending domain | Customer email is broken until this is done |
-| 2 | **You** | A2 — merchant application | Weeks of waiting; start the clock |
-| 3 | **Me** | B2 — tests and CI | Before the codebase grows further |
-| 4 | **You** | A3 — photos | Largest visible improvement available |
-| 5 | **Me** | B4 — image upload | Follows A3 |
-| 6 | **Me** | B3 — money as integers | Must land before A2 does |
-| 7 | **Me** | B5 — payment adapter | When credentials arrive |
-| 8 | Both | A4 + B1 — legal pages | Before taking public orders |
-| 9 | **Me** | C1 → C2 → C3 → B6 | Polish and growth |
+| 1 | **You** | A1 — sending domain | No customer can receive an email until this is done |
+| 2 | **You** | A2 — merchant application | Weeks of waiting; start the clock today |
+| 3 | **Me** | B3 — money as integers | Must land *before* a gateway does |
+| 4 | **You** | A3 — photos + Blob token | Largest visible improvement available |
+| 5 | **Me** | B4 — image upload and gallery | Follows A3 |
+| 6 | **Me** | B5 — payment adapter | When credentials arrive |
+| 7 | **You + me** | A4 + legal pages finished | Before taking public orders |
+| 8 | **Me** | B7 design polish · B8 SEO · B6 chatbot | Once the shop actually works |
+| 9 | **Me** | C1 operations | Before real traffic |
 
-**Can start in parallel right now:** you on A1 and A2, me on B1 or B2.
+**Right now, in parallel:** you on A1 and A2 · me on B3.
 
 ---
 
