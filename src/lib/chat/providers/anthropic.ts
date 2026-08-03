@@ -3,7 +3,12 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { CHAT_TOOLS, isChatToolName, runChatTool } from "@/lib/chat/tools";
 import { readKey } from "@/lib/chat/providers/key";
-import type { ChatProvider, RunInput } from "@/lib/chat/providers/types";
+import {
+  ProviderRateLimitError,
+  isUpstreamRateLimit,
+  type ChatProvider,
+  type RunInput,
+} from "@/lib/chat/providers/types";
 import type { TokenUsage } from "@/lib/chat/pricing";
 
 /**
@@ -108,7 +113,15 @@ export const anthropicProvider: ChatProvider = {
         }
       }
 
-      const message = await response.finalMessage();
+      let message: Anthropic.Message;
+      try {
+        message = await response.finalMessage();
+      } catch (error) {
+        // Same distinction as Gemini: being throttled is not a failure the
+        // visitor caused, and it is worth a different sentence.
+        if (isUpstreamRateLimit(error)) throw new ProviderRateLimitError("anthropic");
+        throw error;
+      }
 
       totals.inputTokens += message.usage.input_tokens;
       totals.outputTokens += message.usage.output_tokens;

@@ -21,6 +21,48 @@ import type { Locale } from "@/lib/i18n";
 
 export type ProviderId = "gemini" | "anthropic";
 
+/**
+ * The upstream model provider refused us for volume, not the visitor.
+ *
+ * Worth its own type because it is the difference between two very different
+ * messages: "something went wrong" — which invites a pointless retry — and
+ * "we're busy, try again in a moment", which is true and actionable.
+ *
+ * This is not a rare edge. Gemini's free tier allows **five requests a
+ * minute** for the whole shop, and one question can spend two of them when a
+ * tool call is involved. Three visitors asking at once is enough.
+ *
+ * Each adapter recognises its own SDK's shape and rethrows this, so the route
+ * doesn't have to know what an Anthropic error looks like versus a Google one.
+ */
+export class ProviderRateLimitError extends Error {
+  /** Seconds the provider asked us to wait, when it said. */
+  readonly retryAfter: number | null;
+
+  constructor(provider: ProviderId, retryAfter: number | null = null) {
+    super(`${provider} rate limit reached`);
+    this.name = "ProviderRateLimitError";
+    this.retryAfter = retryAfter;
+  }
+}
+
+/** Whether an SDK error is an upstream 429, whichever SDK threw it. */
+export function isUpstreamRateLimit(error: unknown): boolean {
+  const status = (error as { status?: unknown })?.status;
+  return status === 429;
+}
+
+/** The `retryDelay` Google returns, in whole seconds, when present. */
+export function retryAfterSeconds(error: unknown): number | null {
+  const message = (error as { message?: unknown })?.message;
+  if (typeof message !== "string") return null;
+
+  const match = /"retryDelay":\s*"(\d+(?:\.\d+)?)s"/.exec(message);
+  if (!match) return null;
+
+  return Math.ceil(Number(match[1]));
+}
+
 /** One turn of the conversation, as the browser sent it. */
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 

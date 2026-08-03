@@ -1,4 +1,4 @@
-import { activeProvider, type ChatProvider } from "@/lib/chat/providers";
+import { activeProvider, ProviderRateLimitError, type ChatProvider } from "@/lib/chat/providers";
 import { buildSystemPrompt } from "@/lib/chat/prompt";
 import { callerHasOrders } from "@/lib/chat/order-lookup";
 import { checkBudget, recordUsage, type TokenUsage } from "@/lib/chat/budget";
@@ -172,10 +172,24 @@ function runConversation({
       } catch (error) {
         // An aborted request is someone closing the widget, not a fault.
         const aborted = signal.aborted || (error as { name?: string })?.name === "AbortError";
-        if (!aborted) {
-          console.error(`[chat] ${provider.id} conversation failed`, error);
-          send({ type: "error", code: "failed" });
+        if (aborted) return;
+
+        if (error instanceof ProviderRateLimitError) {
+          // Being throttled by the model provider is not the visitor's doing
+          // and not a bug. "Try again in a moment" is both true and useful;
+          // "something went wrong" invites an immediate retry that will fail
+          // for exactly the same reason. On the free tier — five requests a
+          // minute for the whole shop — this is ordinary busy-hour traffic.
+          console.warn(
+            `[chat] ${provider.id} throttled us` +
+              (error.retryAfter === null ? "" : `; retry in ~${error.retryAfter}s`),
+          );
+          send({ type: "error", code: "rate_limited" });
+          return;
         }
+
+        console.error(`[chat] ${provider.id} conversation failed`, error);
+        send({ type: "error", code: "failed" });
       } finally {
         controller.close();
         // Recorded even on failure, and even when no tokens were produced: on

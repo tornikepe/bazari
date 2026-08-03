@@ -117,3 +117,31 @@ describe("provider pricing", () => {
     expect(paid.pricing.cacheRead).toBeLessThan(paid.pricing.input);
   });
 });
+
+describe("upstream throttling is its own thing", () => {
+  it("recognises a 429 from either SDK's error shape", async () => {
+    const { isUpstreamRateLimit, retryAfterSeconds, ProviderRateLimitError } = await import(
+      "@/lib/chat/providers/types"
+    );
+
+    // Google throws an ApiError with a status; the Anthropic SDK's
+    // RateLimitError carries one too. Both are 429, which is all we need.
+    expect(isUpstreamRateLimit({ status: 429 })).toBe(true);
+    expect(isUpstreamRateLimit({ status: 500 })).toBe(false);
+    expect(isUpstreamRateLimit(new Error("nope"))).toBe(false);
+    expect(isUpstreamRateLimit(null)).toBe(false);
+
+    // Google buries the wait in the message body.
+    const googleError = {
+      status: 429,
+      message: '{"error":{"details":[{"retryDelay": "40.556207827s"}]}}',
+    };
+    expect(retryAfterSeconds(googleError)).toBe(41);
+    expect(retryAfterSeconds({ status: 429, message: "no delay here" })).toBeNull();
+    expect(retryAfterSeconds({})).toBeNull();
+
+    const thrown = new ProviderRateLimitError("gemini", 41);
+    expect(thrown).toBeInstanceOf(Error);
+    expect(thrown.retryAfter).toBe(41);
+  });
+});

@@ -3,7 +3,13 @@ import "server-only";
 import { GoogleGenAI, type Content, type Part } from "@google/genai";
 import { CHAT_TOOLS, isChatToolName, runChatTool } from "@/lib/chat/tools";
 import { readKey } from "@/lib/chat/providers/key";
-import type { ChatProvider, RunInput } from "@/lib/chat/providers/types";
+import {
+  ProviderRateLimitError,
+  isUpstreamRateLimit,
+  retryAfterSeconds,
+  type ChatProvider,
+  type RunInput,
+} from "@/lib/chat/providers/types";
 import type { TokenUsage } from "@/lib/chat/pricing";
 
 /**
@@ -46,6 +52,18 @@ const FUNCTION_DECLARATIONS = CHAT_TOOLS.map((tool) => ({
 
 let client: GoogleGenAI | null = null;
 
+/** Translates Google's 429 into the shared type, leaving everything else. */
+async function generateOrRateLimit<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    if (isUpstreamRateLimit(error)) {
+      throw new ProviderRateLimitError("gemini", retryAfterSeconds(error));
+    }
+    throw error;
+  }
+}
+
 function apiKey() {
   return readKey("GEMINI_API_KEY");
 }
@@ -65,7 +83,13 @@ export const geminiProvider: ChatProvider = {
     return apiKey() !== undefined;
   },
 
-  async run({ system, messages, locale, signal, onEvent }: RunInput): Promise<TokenUsage> {
+  async run({
+    system,
+    messages,
+    locale,
+    signal,
+    onEvent,
+  }: RunInput): Promise<TokenUsage> {
     const key = apiKey();
     if (!key) throw new Error("GEMINI_API_KEY is not set");
 
@@ -85,22 +109,31 @@ export const geminiProvider: ChatProvider = {
     }));
 
     for (let turn = 0; turn < MAX_TOOL_TURNS; turn += 1) {
-      const stream = await client.models.generateContentStream({
-        model: MODEL,
-        contents,
-        config: {
-          abortSignal: signal,
-          systemInstruction: system,
-          maxOutputTokens: MAX_OUTPUT_TOKENS,
-          tools: [{ functionDeclarations: FUNCTION_DECLARATIONS }],
-          // A shop question does not need deliberation, and thinking tokens
-          // count against `maxOutputTokens` — spending them here would truncate
-          // the answer the visitor is actually waiting for.
-          thinkingConfig: { thinkingBudget: 0 },
-        },
-      });
+      // The free tier allows five requests a minute for the whole shop, and a
+      // question that needs a tool spends two of them. Hitting this is normal
+      // traffic, not a fault, so it is reported as its own thing.
+      const stream = await generateOrRateLimit(() =>
+        client!.models.generateContentStream({
+          model: MODEL,
+          contents,
+          config: {
+            abortSignal: signal,
+            systemInstruction: system,
+            maxOutputTokens: MAX_OUTPUT_TOKENS,
+            tools: [{ functionDeclarations: FUNCTION_DECLARATIONS }],
+            // A shop question does not need deliberation, and thinking tokens
+            // count against `maxOutputTokens` — spending them here would truncate
+            // the answer the visitor is actually waiting for.
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        }),
+      );
 
-      const calls: { id?: string; name: string; args: Record<string, unknown> }[] = [];
+      const calls: {
+        id?: string;
+        name: string;
+        args: Record<string, unknown>;
+      }[] = [];
       /** The model's own turn, rebuilt so it can be echoed back with the results. */
       const modelParts: Part[] = [];
 
@@ -125,7 +158,8 @@ export const geminiProvider: ChatProvider = {
           totals.inputTokens = usage.promptTokenCount ?? totals.inputTokens;
           totals.outputTokens =
             (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0);
-          totals.cacheReadTokens = usage.cachedContentTokenCount ?? totals.cacheReadTokens;
+          totals.cacheReadTokens =
+            usage.cachedContentTokenCount ?? totals.cacheReadTokens;
         }
       }
 
@@ -135,7 +169,8 @@ export const geminiProvider: ChatProvider = {
 
       const responses: Part[] = [];
       for (const call of calls) {
-        if (isChatToolName(call.name)) onEvent({ type: "tool", name: call.name });
+        if (isChatToolName(call.name))
+          onEvent({ type: "tool", name: call.name });
 
         const result = await runChatTool(call.name, call.args, locale);
         responses.push({
