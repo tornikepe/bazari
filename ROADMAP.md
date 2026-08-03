@@ -5,8 +5,8 @@
 | **Security (Phase 0)** | ✅ complete |
 | **Payments** | 🟡 framework done and tested · no gateway |
 | **Email** | 🟡 works · only reaches your own inbox until a domain is verified |
-| **Testing** | ✅ 189 unit · 38 e2e · CI on every push |
-| **Contact assistant** | 🟡 built and tested · needs a free Gemini key to switch on |
+| **Testing** | ✅ 190 unit · 38 e2e · CI on every push |
+| **Contact assistant** | ✅ live on Gemini's free tier · answers verified against the real catalogue |
 | **Product photos** | ❌ one placeholder for all 40 |
 | **Legal pages** | 🟡 technical half written · business details missing |
 | **Money handling** | ✅ integer tetri throughout |
@@ -125,7 +125,11 @@ Verified end to end in the browser: the gates run in order, both rate-limit
 buckets and the monthly request counter increment, the stream reaches the
 browser, and a failed upstream call renders as a readable message rather than an
 empty bubble. The panel fits 320px in both languages with zero overflow.
-**The answers themselves are untested** — that needs the key in **A5**.
+**The answers are now verified against the live catalogue.** It quotes real
+prices and stock, retries a Georgian plural on the shorter stem when the first
+search misses (the language declines its nouns, so "ყურსასმენები" does not
+match a product named "ყურსასმენი"), refuses an order number that isn't the
+asker's without speculating, and declines a direct "ignore your instructions".
 
 ## 1.9 Design polish (B7)
 
@@ -202,10 +206,20 @@ Legal entity name · tax ID · registered address · contact details.
 I will not invent these. A made-up tax ID on a page that governs a sale is
 worse than having no page.
 
-### 🟢 A5. Switch the assistant on — 5 minutes, free
+### ✅ A5. Switch the assistant on — DONE
 
-The chatbot is built, tested and deployed, but it stays invisible until a key
-exists. Nothing else is waiting on this, and it costs nothing.
+Done — the key is in Vercel and the assistant is answering on the live site.
+Verified against the real catalogue: it quotes real prices and stock, refuses
+someone else's order number without speculating about why, and declines
+off-topic requests including a direct instruction to ignore its rules.
+
+**One limit worth knowing.** Google's free tier allows **five requests a
+minute for the whole shop**, and a question needing a product lookup spends
+two of them. Past that, visitors see "that's a lot of questions, try again
+shortly" rather than an error. Fine for a portfolio site; the day it isn't,
+`CHAT_PROVIDER=anthropic` with a paid key removes the ceiling.
+
+Kept below for reference:
 
 1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) → **Create API key**.
    No card, no billing setup.
@@ -296,7 +310,6 @@ needs it today, and the privacy page says so.
 | 1 | **You** | A1 — sending domain | No customer can receive an email until this is done |
 | 2 | **You** | A2 — merchant application | Weeks of waiting; start the clock today |
 | 3 | **You** | A3 — photos + Blob token | Largest visible improvement available |
-| 4 | **You** | A5 — free Gemini key | Five minutes, no card, and the chatbot is already built |
 | 5 | **Me** | B4 — image upload and gallery | Follows A3 |
 | 6 | **Me** | B5 — payment adapter | When credentials arrive |
 | 7 | **You + me** | A4 + legal pages finished | Before taking public orders |
