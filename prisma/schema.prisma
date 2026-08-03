@@ -335,6 +335,30 @@ model Payment {
   @@unique([provider, providerRef])
 }
 
+/// Token spend for the contact assistant, one row per calendar month.
+///
+/// The assistant calls a metered API, so without a ceiling a scripted client
+/// could run up a bill overnight. Rate limiting caps *requests* per browser;
+/// this caps *money* for the whole shop, which is the number that actually
+/// matters. Both are needed — a thousand people asking one question each
+/// passes every per-browser limit there is.
+///
+/// Counted rather than estimated: the figures come from `usage` on each API
+/// response, so the cap tracks the real bill instead of a guess about it.
+model ChatUsage {
+  /// "YYYY-MM" in UTC. A new month is a new row, so the budget resets itself.
+  month            String   @id
+  requests         Int      @default(0)
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  /// Cached prefixes are billed differently, so they're counted separately —
+  /// folding them into `inputTokens` would overstate the bill by ~10x on a
+  /// cache hit and understate it on a write.
+  cacheWriteTokens Int      @default(0)
+  cacheReadTokens  Int      @default(0)
+  updatedAt        DateTime @updatedAt
+}
+
 /// Raw gateway callbacks, kept so a payment can always be explained.
 ///
 /// `externalId` is unique: gateways retry webhooks, and replaying one must not

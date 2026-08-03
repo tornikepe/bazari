@@ -268,6 +268,19 @@ export const AlertIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const ChatIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.9 9.9 0 0 1-3.9-.7L3 21l1.9-4.6A8.1 8.1 0 0 1 4 11.5 8.4 8.4 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z" />
+  </Icon>
+);
+
+export const SendIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4.5 12h7" />
+    <path d="M4.1 5.6 19.7 12 4.1 18.4l1.8-6.4-1.8-6.4z" />
+  </Icon>
+);
+
 export const SpinnerIcon = ({ size = "1em", ...p }: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

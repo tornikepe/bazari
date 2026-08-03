@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the template. The README opens with `cp .env.example .env`, so a
+# clone that doesn't contain it starts with a file-not-found. It holds only
+# placeholders — every secret in it is an empty string.
+!.env.example
 
 # vercel
 .vercel

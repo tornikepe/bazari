@@ -5,7 +5,8 @@
 | **Security (Phase 0)** | ✅ complete |
 | **Payments** | 🟡 framework done and tested · no gateway |
 | **Email** | 🟡 works · only reaches your own inbox until a domain is verified |
-| **Testing** | ✅ 64 unit · 26 e2e · CI on every push |
+| **Testing** | ✅ 97 unit · 31 e2e · CI on every push |
+| **Contact assistant** | 🟡 built and tested · needs your API key to switch on |
 | **Product photos** | ❌ one placeholder for all 40 |
 | **Legal pages** | 🟡 technical half written · business details missing |
 | **Money handling** | ✅ integer tetri throughout |
@@ -98,7 +99,30 @@ refund returns stock with a matching ledger balance.
 | ✅ | Cart key bumped to `v2`: a v1 basket held lari and would have priced ₾149 at ₾1.49 |
 | ✅ | Verified on live data — every amount whole, every order reconciles |
 
-## 1.7 Earlier in the build
+## 1.7 Contact assistant (B6)
+
+Claude Opus 5, streamed from `/api/chat` as newline-delimited JSON.
+
+| # | Item | Detail |
+| --- | --- | --- |
+| ✅ | Answers from the shop, not from memory | The category list, product count, price range and the information pages go into the system prompt, all **counted from the database**. Prices and stock come from live tool calls, so a figure it quotes is the one in the table when it was asked |
+| ✅ | Four tools, **all reads** | `search_products` · `get_product` · `list_categories` · `lookup_order`. There is no tool that writes — the promise that a conversation can't change an order or move money is enforced by the absence of the capability, not by asking the model nicely |
+| ✅ | Order lookup locked to the owner | The model passes an order number and never an identity. Ownership is resolved from the request's own cookies — a signed-in account, or the signed receipt cookie a guest checkout leaves behind. An **admin session grants nothing here**; staff have the dashboard. Someone else's real order reads exactly like a made-up one, so the chat can't be used to probe which numbers exist |
+| ✅ | Never leaks a customer's details | The lookup selects status, dates, items and total. Name, phone, email and street address are not selected at all, so they cannot reach a transcript even for the order's own owner |
+| ✅ | Rate limit | 30 messages/hour per browser, 90/hour per address, on the same Postgres limiter the auth endpoints use |
+| ✅ | Monthly spend cap | Counted from the token usage the API reports — input, output, cache read and cache write priced separately, because folding a cache read into input overstates a cached conversation about tenfold. Fails **closed**: if the counter can't be read the request is declined, since the failure mode here is an unbounded bill |
+| ✅ | Prompt caching | The standing context is cached per locale for five minutes so the prefix stays byte-identical between messages — a prefix that changes is a cache that never hits |
+| ✅ | Both languages | Answers in the site's language by default, and switches to whatever the visitor writes in |
+| ✅ | Off by default | No API key, no launcher. Decided on the server and passed down, so an unconfigured deployment shows nothing rather than a button that fails |
+| ✅ | Strict scope | Shop questions only, and tool output is treated as data — a product description that reads like an instruction is still a product description |
+| ✅ | Links are same-origin by construction | Paths in an answer are linked only against an allowlist of routes the app actually has, so nothing the model writes can become an off-site destination |
+
+Verified end to end against the live site: the gates run in order, the session and
+address counters increment, the stream reaches the browser, and a failed upstream
+call renders as a message rather than an empty bubble. **The answers themselves
+are untested** — that needs the key in **A5**.
+
+## 1.8 Earlier in the build
 
 Coupons wired into checkout · order-detail data exposure closed (order numbers
 were sequential and the page was public) · database integrity audit clean ·
@@ -156,24 +180,35 @@ Legal entity name · tax ID · registered address · contact details.
 I will not invent these. A made-up tax ID on a page that governs a sale is
 worse than having no page.
 
+### 🟢 A5. Switch the assistant on — 5 minutes
+
+The chatbot is built, tested and deployed, but it stays invisible until a key
+exists. Nothing else is waiting on this.
+
+1. [console.anthropic.com](https://console.anthropic.com) → **API Keys** → create one
+2. Add credit under **Billing** (a few dollars is a lot of shop questions)
+3. Add it to Vercel — **paste it once**, on a single line:
+
+```bash
+npx vercel env add ANTHROPIC_API_KEY production
+```
+
+4. Optionally set the ceiling (defaults to $5/month):
+
+```bash
+npx vercel env add CHAT_MONTHLY_BUDGET_USD production
+```
+
+5. Redeploy
+
+The key never passes through me. Once it is in, the launcher appears by itself
+and I can check the answers against the real catalogue.
+
 ---
 
 ## Section B — Mine. Nothing blocking; say which.
 
 Ordered by what I would do next.
-
-### 🟡 B6. Contact chatbot
-
-| Option | Effort | Trade-off |
-| --- | --- | --- |
-| Widget (Crisp, Tawk.to) | 1 day | Generic look, another company's script on your page |
-| Rule-based FAQ bot | 2–3 days | On-brand, no running cost, limited |
-| **LLM on the Claude API** ⭐ | ~1 week | Best result, doubles as a portfolio piece |
-
-Recommended option: streaming `/api/chat` · retrieval over your catalogue and
-FAQ so answers cite real stock and prices · an order-lookup tool locked to the
-signed-in owner · strict scope · per-session rate limit and a monthly spend cap
-· both languages · never able to change an order or move money.
 
 ### 🟡 B7. Remaining design polish
 
@@ -232,14 +267,16 @@ needs it today, and the privacy page says so.
 | 1 | **You** | A1 — sending domain | No customer can receive an email until this is done |
 | 2 | **You** | A2 — merchant application | Weeks of waiting; start the clock today |
 | 3 | **You** | A3 — photos + Blob token | Largest visible improvement available |
-| 4 | **Me** | B4 — image upload and gallery | Follows A3 |
-| 5 | **Me** | B5 — payment adapter | When credentials arrive |
-| 6 | **You + me** | A4 + legal pages finished | Before taking public orders |
-| 7 | **Me** | B7 design polish · B8 SEO · B6 chatbot | Once the shop actually works |
-| 8 | **Me** | C1 operations | Before real traffic |
+| 4 | **You** | A5 — Anthropic key | Five minutes, and the chatbot is already built |
+| 5 | **Me** | B4 — image upload and gallery | Follows A3 |
+| 6 | **Me** | B5 — payment adapter | When credentials arrive |
+| 7 | **You + me** | A4 + legal pages finished | Before taking public orders |
+| 8 | **Me** | B7 design polish · B8 SEO | Once the shop actually works |
+| 9 | **Me** | C1 operations | Before real traffic |
 
-**Right now:** you on A1, A2 and A3 — every remaining item of mine waits on
-one of them, except the chatbot, the design polish and the rest of the SEO.
+**Right now:** you on A1, A2 and A3 — every remaining item of mine waits on one
+of them, except the design polish and the rest of the SEO. A5 is five minutes
+whenever you feel like it.
 
 ---
 
@@ -255,4 +292,8 @@ A reviewer looks for judgement, not feature count.
   - A hydration mismatch on prices, from `Intl.NumberFormat` disagreeing between Node and the browser
   - Sequential order numbers on a public page exposing every customer's address
   - A doubled API key that made *every* email fail with an invalid header
+- The chatbot is the best single thing to talk about in an interview: it is the
+  one feature where the interesting work is all in what it is *not allowed* to
+  do — no tool that writes, ownership resolved from cookies rather than from
+  anything the model says, and a spend cap that fails closed
 - A green CI badge, and a live link that loads fast on a phone

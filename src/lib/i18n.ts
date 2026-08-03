@@ -460,6 +460,35 @@ const ka = {
     cancelled: "გაუქმებული",
   },
 
+  chat: {
+    launch: "დახმარება",
+    title: "მაღაზიის ასისტენტი",
+    subtitle: "პროდუქტები, მიწოდება, შეკვეთის სტატუსი",
+    close: "დახურვა",
+    clear: "საუბრის გასუფთავება",
+    placeholder: "დაწერე შეკითხვა…",
+    send: "გაგზავნა",
+    stop: "შეჩერება",
+    greeting:
+      "გამარჯობა. დაგეხმარები პროდუქტის მოძებნაში, მიწოდებისა და გადახდის წესებში და შენი შეკვეთის სტატუსში.",
+    suggestionsLabel: "სცადე:",
+    suggestion1: "რა კატეგორიები გაქვთ?",
+    suggestion2: "როგორ მუშაობს მიწოდება?",
+    suggestion3: "მაჩვენე მარაგში არსებული ყურსასმენები",
+    thinking: "ვფიქრობ…",
+    // What the assistant is doing, shown while a lookup runs.
+    toolSearchProducts: "ვეძებ კატალოგში…",
+    toolGetProduct: "ვნახულობ პროდუქტს…",
+    toolListCategories: "ვნახულობ კატეგორიებს…",
+    toolLookupOrder: "ვამოწმებ შეკვეთას…",
+    errorFailed: "პასუხის მიღება ვერ მოხერხდა. სცადე თავიდან.",
+    errorRateLimited: "ძალიან ბევრი შეკითხვაა. სცადე ცოტა ხანში.",
+    errorBudget: "ასისტენტი ამ თვეში მიუწვდომელია. სცადე მოგვიანებით.",
+    errorUnavailable: "ასისტენტი ამჟამად მიუწვდომელია.",
+    // Says out loud what the assistant is not, so nobody waits for a reply.
+    disclaimer: "ავტომატური პასუხები. შეკვეთის შეცვლა ან გაუქმება არ შემიძლია.",
+  },
+
   common: {
     loading: "იტვირთება…",
     error: "დაფიქსირდა შეცდომა",
@@ -930,6 +959,33 @@ const en: Dictionary = {
     shipped: "Shipped",
     delivered: "Delivered",
     cancelled: "Cancelled",
+  },
+
+  chat: {
+    launch: "Help",
+    title: "Shop assistant",
+    subtitle: "Products, delivery, order status",
+    close: "Close",
+    clear: "Clear conversation",
+    placeholder: "Ask a question…",
+    send: "Send",
+    stop: "Stop",
+    greeting:
+      "Hello. I can help you find products, explain delivery and payment, and check the status of your order.",
+    suggestionsLabel: "Try:",
+    suggestion1: "What categories do you have?",
+    suggestion2: "How does delivery work?",
+    suggestion3: "Show me headphones in stock",
+    thinking: "Thinking…",
+    toolSearchProducts: "Searching the catalogue…",
+    toolGetProduct: "Looking up the product…",
+    toolListCategories: "Reading the categories…",
+    toolLookupOrder: "Checking the order…",
+    errorFailed: "Couldn't get an answer. Please try again.",
+    errorRateLimited: "That's a lot of questions. Please try again shortly.",
+    errorBudget: "The assistant is unavailable for the rest of this month.",
+    errorUnavailable: "The assistant is currently unavailable.",
+    disclaimer: "Automated answers. I can't change or cancel an order.",
   },
 
   common: {
