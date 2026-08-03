@@ -8,6 +8,7 @@
 | **Testing** | ✅ 64 unit · 26 e2e · CI on every push |
 | **Product photos** | ❌ one placeholder for all 40 |
 | **Legal pages** | 🟡 technical half written · business details missing |
+| **Money handling** | ✅ integer tetri throughout |
 | **Can it take a real order today?** | **No** — A1 and A2 below |
 
 ---
@@ -84,7 +85,20 @@ refund returns stock with a matching ledger balance.
 | ✅ | Designed 404 (with a search box, not a dead end) and a 500 error page |
 | ✅ | Responsive regression test — 10 pages × 3 widths × both locales, fails on any visible overflow |
 
-## 1.6 Earlier in the build
+## 1.6 Money as integers
+
+| # | Item |
+| --- | --- |
+| ✅ | Every amount — product prices, cost, order totals, coupon values, line items — is now **integer tetri**, not `Float` |
+| ✅ | Migration rounds before casting, so a stored `149.98999999999998` becomes `14999` rather than `14998` |
+| ✅ | `formatPrice` is the single place that divides by 100, using integer division |
+| ✅ | `placeOrder` needs no rounding at all: whole price × integer quantity is exact |
+| ✅ | Admin form still takes lari (what a person thinks in); one conversion on the write path |
+| ✅ | Catalogue URLs keep lari — `?minPrice=100` is what you would share |
+| ✅ | Cart key bumped to `v2`: a v1 basket held lari and would have priced ₾149 at ₾1.49 |
+| ✅ | Verified on live data — every amount whole, every order reconciles |
+
+## 1.7 Earlier in the build
 
 Coupons wired into checkout · order-detail data exposure closed (order numbers
 were sequential and the page was public) · database integrity audit clean ·
@@ -147,21 +161,6 @@ worse than having no page.
 ## Section B — Mine. Nothing blocking; say which.
 
 Ordered by what I would do next.
-
-### 🟡 B3. Money as integers — **the one with a deadline**
-
-`Product.price`, `Product.costPrice`, `Order.total`, `Order.subtotal`,
-`Order.shipping`, `Order.discount`, `OrderItem.price` and `Coupon.amountOff` are
-all `Float`. Fine for display, wrong for charging: two unit tests in this repo
-pin the proof — `(5.555).toFixed(2)` is `"5.55"`, and `1.005 * 100` rounds down
-while `8.115 * 100` rounds up. `Payment.amount` is already integer tetri for
-exactly this reason.
-
-Wide but mechanical: a migration, a formatting boundary, and the tests already
-cover the maths. **Must land before A2 does** — once a gateway is live, a
-rounding difference is a reconciliation problem with a bank.
-
-**Effort:** ~1 day · **Risk:** medium, touches every price
 
 ### 🟡 B6. Contact chatbot
 
@@ -232,15 +231,15 @@ needs it today, and the privacy page says so.
 | --- | --- | --- | --- |
 | 1 | **You** | A1 — sending domain | No customer can receive an email until this is done |
 | 2 | **You** | A2 — merchant application | Weeks of waiting; start the clock today |
-| 3 | **Me** | B3 — money as integers | Must land *before* a gateway does |
-| 4 | **You** | A3 — photos + Blob token | Largest visible improvement available |
-| 5 | **Me** | B4 — image upload and gallery | Follows A3 |
-| 6 | **Me** | B5 — payment adapter | When credentials arrive |
-| 7 | **You + me** | A4 + legal pages finished | Before taking public orders |
-| 8 | **Me** | B7 design polish · B8 SEO · B6 chatbot | Once the shop actually works |
-| 9 | **Me** | C1 operations | Before real traffic |
+| 3 | **You** | A3 — photos + Blob token | Largest visible improvement available |
+| 4 | **Me** | B4 — image upload and gallery | Follows A3 |
+| 5 | **Me** | B5 — payment adapter | When credentials arrive |
+| 6 | **You + me** | A4 + legal pages finished | Before taking public orders |
+| 7 | **Me** | B7 design polish · B8 SEO · B6 chatbot | Once the shop actually works |
+| 8 | **Me** | C1 operations | Before real traffic |
 
-**Right now, in parallel:** you on A1 and A2 · me on B3.
+**Right now:** you on A1, A2 and A3 — every remaining item of mine waits on
+one of them, except the chatbot, the design polish and the rest of the SEO.
 
 ---
 
