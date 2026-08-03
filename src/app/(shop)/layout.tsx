@@ -1,7 +1,7 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-import { isChatConfigured } from "@/lib/chat/client";
+import { isChatConfigured } from "@/lib/chat/providers";
 
 /** Storefront chrome. The admin section deliberately sits outside this group. */
 export default function ShopLayout({ children }: { children: React.ReactNode }) {

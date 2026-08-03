@@ -10,8 +10,8 @@ import { expect, test, type Page } from "@playwright/test";
  * opens, closes, keeps the keyboard usable, and fits on a 320px screen in both
  * languages.
  *
- * The suite runs with a placeholder `ANTHROPIC_API_KEY` (see
- * `playwright.config.ts`) purely so the launcher is rendered at all.
+ * The suite runs with a placeholder provider key (see `playwright.config.ts`)
+ * purely so the launcher is rendered at all.
  */
 
 const BASE = "http://127.0.0.1:3100";
@@ -123,6 +123,16 @@ test("the open panel fits a phone in both languages", async ({ page }) => {
   }
 
   expect(findings, `the chat panel spills out:\n${findings.join("\n")}`).toEqual([]);
+});
+
+test("the assistant is not mounted on the staff dashboard", async ({ page }) => {
+  await applyLocale(page, "en");
+  await page.goto("/dashboard");
+
+  // The dashboard sits outside the storefront layout on purpose. Staff already
+  // have the real data; a chat window onto it would only widen what a hijacked
+  // session can reach, for no benefit.
+  await expect(launcher(page)).toHaveCount(0);
 });
 
 test("the launcher does not cover the footer links it sits over", async ({ page }) => {

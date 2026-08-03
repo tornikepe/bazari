@@ -41,11 +41,12 @@ Bilingual (ქართული · English) · Next.js 16 App Router · Postgre
   first paint so there is no flash of the wrong theme
 - ✨ **Restrained motion** — scroll reveals, staggered grids and hover lifts, all switched off
   under `prefers-reduced-motion`
-- 💬 **Contact assistant** — a streaming chat widget on the Claude API that answers from the
-  live catalogue rather than from memory, so a price or a stock level it quotes is the one in
-  the database. Four read-only tools; it cannot change an order or move money, and the
-  order-lookup tool resolves ownership from the request's own cookies, so no prompt can make it
-  read someone else's. Per-browser rate limit and a counted monthly spend cap.
+- 💬 **Contact assistant** — a streaming chat widget that answers from the live catalogue
+  rather than from memory, so a price or a stock level it quotes is the one in the database.
+  Four read-only tools; it cannot change an order or move money, and the order-lookup tool
+  resolves ownership from the request's own cookies, so no prompt can make it read someone
+  else's. The model provider sits behind one interface — Gemini's free tier by default, Claude
+  a key swap away — with a per-browser rate limit and two counted monthly ceilings.
 - ❤️ **Wishlist** and 📦 **order tracking** (order number + phone as a second factor)
 - 🧾 **Server-side order totals** — the cart lives in `localStorage`, so prices are re-read from
   the database when an order is placed and never trusted from the client
@@ -67,7 +68,7 @@ Bilingual (ქართული · English) · Next.js 16 App Router · Postgre
 | **State** | `useSyncExternalStore` over `localStorage` for cart and wishlist |
 | **i18n** | Cookie-driven dictionaries, type-checked so `en` can't drift from `ka` |
 | **Icons** | Hand-rolled inline SVG set — no icon dependency |
-| **Assistant** | Claude Opus 5 via `@anthropic-ai/sdk`, streamed as NDJSON from a route handler |
+| **Assistant** | Pluggable provider (`@google/genai` free tier, or `@anthropic-ai/sdk`), streamed as NDJSON from a route handler |
 
 ---
 

@@ -43,11 +43,15 @@ export default defineConfig({
     stdout: "pipe",
     stderr: "pipe",
     env: {
-      // The chat launcher is only rendered when a key is configured, so the
-      // widget would be untestable without one. This placeholder is enough to
-      // render it: the suite exercises opening, closing and layout, and never
-      // sends a message, so no request is ever made with it.
-      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? "e2e-render-only",
+      // The chat launcher is only rendered when a provider is configured, so
+      // the widget would be untestable without a key. This placeholder is
+      // enough to render it: the suite exercises opening, closing and layout,
+      // and never sends a message, so no request is ever made with it.
+      //
+      // Pinned to one provider rather than inherited, so the suite tests the
+      // same thing on a machine that happens to have a real key in `.env`.
+      GEMINI_API_KEY: "e2e-render-only",
+      CHAT_PROVIDER: "gemini",
     },
   },
 });

@@ -462,8 +462,10 @@ const ka = {
 
   chat: {
     launch: "დახმარება",
-    title: "მაღაზიის ასისტენტი",
-    subtitle: "პროდუქტები, მიწოდება, შეკვეთის სტატუსი",
+    // Both fit a 296px panel at 320px screen width without truncating —
+    // `truncate` is there as a safety net, not as the expected rendering.
+    title: "ასისტენტი",
+    subtitle: "პროდუქტები, შეკვეთები",
     close: "დახურვა",
     clear: "საუბრის გასუფთავება",
     placeholder: "დაწერე შეკითხვა…",
@@ -963,8 +965,8 @@ const en: Dictionary = {
 
   chat: {
     launch: "Help",
-    title: "Shop assistant",
-    subtitle: "Products, delivery, order status",
+    title: "Assistant",
+    subtitle: "Products, orders",
     close: "Close",
     clear: "Clear conversation",
     placeholder: "Ask a question…",

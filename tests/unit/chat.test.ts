@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { parseMessages } from "@/lib/chat/messages";
 import { splitLinks, LINKABLE_ROUTES } from "@/lib/chat/links";
-import { costUsd, currentMonth, monthlyBudgetUsd } from "@/lib/chat/pricing";
+import {
+  costUsd,
+  currentMonth,
+  monthlyBudgetUsd,
+  monthlyRequestCap,
+} from "@/lib/chat/pricing";
 import { MAX_HISTORY, MAX_MESSAGE_LENGTH } from "@/lib/chat/config";
 
 /**
@@ -150,36 +155,80 @@ describe("splitLinks", () => {
 
 describe("costUsd", () => {
   const zero = { inputTokens: 0, outputTokens: 0, cacheWriteTokens: 0, cacheReadTokens: 0 };
+  // The Anthropic rates. Written out rather than imported so a typo in the
+  // provider's own table can't quietly agree with a typo here.
+  const paid = { input: 5, output: 25, cacheWrite: 6.25, cacheRead: 0.5 };
 
   it("prices a million input tokens at the list rate", () => {
-    expect(costUsd({ ...zero, inputTokens: 1_000_000 })).toBeCloseTo(5, 6);
+    expect(costUsd({ ...zero, inputTokens: 1_000_000 }, paid)).toBeCloseTo(5, 6);
   });
 
   it("prices output five times higher than input", () => {
-    expect(costUsd({ ...zero, outputTokens: 1_000_000 })).toBeCloseTo(25, 6);
+    expect(costUsd({ ...zero, outputTokens: 1_000_000 }, paid)).toBeCloseTo(25, 6);
   });
 
   it("bills a cache read at a tenth of input, not at full price", () => {
     // Folding cache reads into `inputTokens` would overstate a cached
     // conversation about tenfold, and the cap would fire long before the
     // money was actually spent.
-    expect(costUsd({ ...zero, cacheReadTokens: 1_000_000 })).toBeCloseTo(0.5, 6);
-    expect(costUsd({ ...zero, cacheWriteTokens: 1_000_000 })).toBeCloseTo(6.25, 6);
+    expect(costUsd({ ...zero, cacheReadTokens: 1_000_000 }, paid)).toBeCloseTo(0.5, 6);
+    expect(costUsd({ ...zero, cacheWriteTokens: 1_000_000 }, paid)).toBeCloseTo(6.25, 6);
   });
 
   it("adds the four counters together", () => {
     expect(
-      costUsd({
-        inputTokens: 200_000,
-        outputTokens: 40_000,
-        cacheWriteTokens: 100_000,
-        cacheReadTokens: 800_000,
-      }),
+      costUsd(
+        {
+          inputTokens: 200_000,
+          outputTokens: 40_000,
+          cacheWriteTokens: 100_000,
+          cacheReadTokens: 800_000,
+        },
+        paid,
+      ),
     ).toBeCloseTo(1 + 1 + 0.625 + 0.4, 6);
   });
 
   it("is zero for a request that used nothing", () => {
-    expect(costUsd(zero)).toBe(0);
+    expect(costUsd(zero, paid)).toBe(0);
+  });
+
+  it("is zero on a free tier however many tokens are burned", () => {
+    // This is why the request cap exists. On a free provider the money cap is
+    // not a small number — it is structurally unreachable, so it cannot be the
+    // only ceiling.
+    const free = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 };
+    const huge = {
+      inputTokens: 50_000_000,
+      outputTokens: 50_000_000,
+      cacheWriteTokens: 0,
+      cacheReadTokens: 0,
+    };
+    expect(costUsd(huge, free)).toBe(0);
+  });
+});
+
+describe("monthlyRequestCap", () => {
+  it("is unset by default, and only counts a sane positive integer", () => {
+    const original = process.env.CHAT_MONTHLY_REQUEST_CAP;
+
+    for (const value of [undefined, "", "lots", "0", "-10"]) {
+      if (value === undefined) delete process.env.CHAT_MONTHLY_REQUEST_CAP;
+      else process.env.CHAT_MONTHLY_REQUEST_CAP = value;
+
+      // `null` means "not enforced". A typo must not become a cap of zero,
+      // which would switch the assistant off for the rest of the month.
+      expect(monthlyRequestCap()).toBeNull();
+    }
+
+    process.env.CHAT_MONTHLY_REQUEST_CAP = "2500";
+    expect(monthlyRequestCap()).toBe(2500);
+
+    process.env.CHAT_MONTHLY_REQUEST_CAP = "99.7";
+    expect(monthlyRequestCap()).toBe(99);
+
+    if (original === undefined) delete process.env.CHAT_MONTHLY_REQUEST_CAP;
+    else process.env.CHAT_MONTHLY_REQUEST_CAP = original;
   });
 });
 

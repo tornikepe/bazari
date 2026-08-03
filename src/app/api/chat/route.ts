@@ -1,15 +1,5 @@
-import type Anthropic from "@anthropic-ai/sdk";
-
-import {
-  CHAT_EFFORT,
-  CHAT_MAX_TOKENS,
-  CHAT_MAX_TOOL_TURNS,
-  CHAT_MODEL,
-  getChatClient,
-  isChatConfigured,
-} from "@/lib/chat/client";
+import { activeProvider, type ChatProvider } from "@/lib/chat/providers";
 import { buildSystemPrompt } from "@/lib/chat/prompt";
-import { CHAT_TOOLS, isChatToolName, runChatTool } from "@/lib/chat/tools";
 import { callerHasOrders } from "@/lib/chat/order-lookup";
 import { checkBudget, recordUsage, type TokenUsage } from "@/lib/chat/budget";
 import {
@@ -23,6 +13,7 @@ import {
 import { parseMessages, type ClientMessage } from "@/lib/chat/messages";
 import { clientIp, consume } from "@/lib/rate-limit";
 import { getLocale } from "@/lib/locale";
+import type { Locale } from "@/lib/i18n";
 
 /**
  * The contact assistant.
@@ -35,16 +26,14 @@ import { getLocale } from "@/lib/locale";
  * Four gates stand in front of the model, in this order — cheapest first, so a
  * request that is going to be refused costs as little as possible:
  *
- *   1. Is the assistant configured at all?
+ *   1. Is any provider configured?
  *   2. Is the body a conversation?
  *   3. Has this browser (and this address) asked too often this hour?
- *   4. Is there budget left this month?
+ *   4. Is there ceiling left this month?
  *
- * The loop underneath is written by hand rather than with the SDK's tool
- * runner. Both would work; this one is explicit about the two things that
- * matter here — a hard ceiling on tool round-trips, and usage accumulated
- * across every turn so the spend cap sees the true cost of one question, not
- * just the last leg of it.
+ * Which company runs the model is decided in `@/lib/chat/providers` and does
+ * not appear below this line — the gates, the ownership rules and the widget
+ * are the same either way.
  */
 
 /** Sessions are what the per-browser rate limit counts. */
@@ -55,12 +44,9 @@ function fail(code: ChatErrorCode, status: number) {
   return Response.json({ error: code }, { status });
 }
 
-/* ------------------------------------------------------------------ */
-/* Handler                                                             */
-/* ------------------------------------------------------------------ */
-
 export async function POST(request: Request) {
-  if (!isChatConfigured()) return fail("unavailable", 503);
+  const provider = activeProvider();
+  if (!provider) return fail("unavailable", 503);
 
   let body: unknown;
   try {
@@ -97,10 +83,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const budget = await checkBudget();
-  if (!budget.withinBudget) {
+  const budget = await checkBudget(provider.pricing);
+  if (!budget.ok) {
     console.warn(
-      `[chat] monthly budget reached: $${budget.spentUsd.toFixed(2)} of $${budget.budgetUsd.toFixed(2)}`,
+      `[chat] monthly ceiling reached (${budget.reason}): $${budget.spentUsd.toFixed(2)} of ` +
+        `$${budget.budgetUsd.toFixed(2)}, ${budget.requests} requests` +
+        (budget.requestCap === null ? "" : ` of ${budget.requestCap}`),
     );
     return fail("budget_exhausted", 503);
   }
@@ -109,6 +97,7 @@ export async function POST(request: Request) {
   const system = await buildSystemPrompt(locale, { callerHasOrders: hasOrders });
 
   const stream = runConversation({
+    provider,
     system,
     messages,
     locale,
@@ -135,23 +124,20 @@ export async function POST(request: Request) {
   return new Response(stream, { headers });
 }
 
-/* ------------------------------------------------------------------ */
-/* The conversation loop                                               */
-/* ------------------------------------------------------------------ */
-
 function runConversation({
+  provider,
   system,
   messages,
   locale,
   signal,
 }: {
+  provider: ChatProvider;
   system: string;
   messages: ClientMessage[];
-  locale: Awaited<ReturnType<typeof getLocale>>;
+  locale: Locale;
   signal: AbortSignal;
 }): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
-  const client = getChatClient();
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -159,113 +145,43 @@ function runConversation({
         controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
       };
 
-      const totals: TokenUsage = {
+      let streamedText = false;
+      let usage: TokenUsage = {
         inputTokens: 0,
         outputTokens: 0,
         cacheWriteTokens: 0,
         cacheReadTokens: 0,
       };
 
-      const conversation: Anthropic.MessageParam[] = messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      }));
-
-      let streamedText = false;
-
       try {
-        for (let turn = 0; turn < CHAT_MAX_TOOL_TURNS; turn += 1) {
-          const response = client.messages.stream(
-            {
-              model: CHAT_MODEL,
-              max_tokens: CHAT_MAX_TOKENS,
-              // Adaptive thinking at low effort. See `client.ts` for why
-              // thinking is not simply switched off.
-              thinking: { type: "adaptive" },
-              output_config: { effort: CHAT_EFFORT },
-              system: [
-                {
-                  type: "text",
-                  text: system,
-                  // The shop facts and the information pages are the same
-                  // bytes for every visitor in a locale, so the whole prefix
-                  // — tools included, since they render first — is cached.
-                  cache_control: { type: "ephemeral" },
-                },
-              ],
-              tools: CHAT_TOOLS,
-              messages: conversation,
-            },
-            { signal },
-          );
-
-          for await (const event of response) {
-            if (
-              event.type === "content_block_delta" &&
-              event.delta.type === "text_delta" &&
-              event.delta.text
-            ) {
-              streamedText = true;
-              send({ type: "text", value: event.delta.text });
-            }
-          }
-
-          const message = await response.finalMessage();
-
-          totals.inputTokens += message.usage.input_tokens;
-          totals.outputTokens += message.usage.output_tokens;
-          totals.cacheWriteTokens += message.usage.cache_creation_input_tokens ?? 0;
-          totals.cacheReadTokens += message.usage.cache_read_input_tokens ?? 0;
-
-          if (message.stop_reason !== "tool_use") break;
-
-          // The assistant's turn goes back verbatim — the tool_use blocks are
-          // part of it, and a tool_result without its matching tool_use is
-          // rejected by the API.
-          conversation.push({ role: "assistant", content: message.content });
-
-          const results: Anthropic.ToolResultBlockParam[] = [];
-          for (const block of message.content) {
-            if (block.type !== "tool_use") continue;
-
-            if (isChatToolName(block.name)) send({ type: "tool", name: block.name });
-            results.push({
-              type: "tool_result",
-              tool_use_id: block.id,
-              content: await runChatTool(block.name, block.input, locale),
-            });
-          }
-
-          conversation.push({ role: "user", content: results });
-        }
+        usage = await provider.run({
+          system,
+          messages,
+          locale,
+          signal,
+          onEvent: (event) => {
+            if (event.type === "text") streamedText = true;
+            send(event);
+          },
+        });
 
         // A turn that ends with nothing visible — a refusal, a reply that was
         // all thinking, or a tool loop that ran out of turns — must not leave
         // an empty bubble on screen with no explanation.
-        if (!streamedText) {
-          send({ type: "error", code: "failed" });
-        } else {
-          send({ type: "done" });
-        }
+        send(streamedText ? { type: "done" } : { type: "error", code: "failed" });
       } catch (error) {
         // An aborted request is someone closing the widget, not a fault.
         const aborted = signal.aborted || (error as { name?: string })?.name === "AbortError";
         if (!aborted) {
-          console.error("[chat] conversation failed", error);
+          console.error(`[chat] ${provider.id} conversation failed`, error);
           send({ type: "error", code: "failed" });
         }
       } finally {
         controller.close();
-        // Recorded even on failure: a request that errored halfway still
-        // generated tokens, and a cap that ignores them is not a cap.
-        if (
-          totals.inputTokens ||
-          totals.outputTokens ||
-          totals.cacheReadTokens ||
-          totals.cacheWriteTokens
-        ) {
-          await recordUsage(totals);
-        }
+        // Recorded even on failure, and even when no tokens were produced: on
+        // a free tier the request count is the ceiling that does the work, and
+        // a failed call still consumed a slot of the shared quota.
+        await recordUsage(usage);
       }
     },
   });

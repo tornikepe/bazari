@@ -5,8 +5,8 @@
 | **Security (Phase 0)** | ✅ complete |
 | **Payments** | 🟡 framework done and tested · no gateway |
 | **Email** | 🟡 works · only reaches your own inbox until a domain is verified |
-| **Testing** | ✅ 97 unit · 31 e2e · CI on every push |
-| **Contact assistant** | 🟡 built and tested · needs your API key to switch on |
+| **Testing** | ✅ 124 unit · 36 e2e · CI on every push |
+| **Contact assistant** | 🟡 built and tested · needs a free Gemini key to switch on |
 | **Product photos** | ❌ one placeholder for all 40 |
 | **Legal pages** | 🟡 technical half written · business details missing |
 | **Money handling** | ✅ integer tetri throughout |
@@ -101,7 +101,9 @@ refund returns stock with a matching ledger balance.
 
 ## 1.7 Contact assistant (B6)
 
-Claude Opus 5, streamed from `/api/chat` as newline-delimited JSON.
+Streamed from `/api/chat` as newline-delimited JSON. **Gemini on Google's free
+tier by default**, so it costs nothing to run; Claude Opus 5 is a key swap away
+when you want the better answer.
 
 | # | Item | Detail |
 | --- | --- | --- |
@@ -110,17 +112,20 @@ Claude Opus 5, streamed from `/api/chat` as newline-delimited JSON.
 | ✅ | Order lookup locked to the owner | The model passes an order number and never an identity. Ownership is resolved from the request's own cookies — a signed-in account, or the signed receipt cookie a guest checkout leaves behind. An **admin session grants nothing here**; staff have the dashboard. Someone else's real order reads exactly like a made-up one, so the chat can't be used to probe which numbers exist |
 | ✅ | Never leaks a customer's details | The lookup selects status, dates, items and total. Name, phone, email and street address are not selected at all, so they cannot reach a transcript even for the order's own owner |
 | ✅ | Rate limit | 30 messages/hour per browser, 90/hour per address, on the same Postgres limiter the auth endpoints use |
-| ✅ | Monthly spend cap | Counted from the token usage the API reports — input, output, cache read and cache write priced separately, because folding a cache read into input overstates a cached conversation about tenfold. Fails **closed**: if the counter can't be read the request is declined, since the failure mode here is an unbounded bill |
+| ✅ | Two monthly ceilings | **Money**, counted from the token usage each response reports — input, output, cache read and cache write priced separately, because folding a cache read into input overstates a cached conversation about tenfold. And **requests**, optional, because on a free tier the money cap is not a small number but a structurally unreachable one: nothing multiplied by any number of requests is still nothing. Both fail **closed** — if the counter can't be read the request is declined, since the failure mode here is an unbounded bill |
+| ✅ | Provider is pluggable | One `ChatProvider` interface, same idiom as the payments `Adapter`. Gemini and Claude behind it; adding a third is writing an adapter and registering it. Selected by which key is present — and naming a provider whose key is missing switches the assistant **off** rather than quietly falling back, so a forgotten key is visible instead of being served by the free tier for months |
+| ✅ | Free tier disclosed, not glossed over | Google states that free-tier content is used to improve its products, so the privacy page names Google as a processor, says exactly what the assistant receives, and tells visitors not to type real personal details |
 | ✅ | Prompt caching | The standing context is cached per locale for five minutes so the prefix stays byte-identical between messages — a prefix that changes is a cache that never hits |
 | ✅ | Both languages | Answers in the site's language by default, and switches to whatever the visitor writes in |
 | ✅ | Off by default | No API key, no launcher. Decided on the server and passed down, so an unconfigured deployment shows nothing rather than a button that fails |
 | ✅ | Strict scope | Shop questions only, and tool output is treated as data — a product description that reads like an instruction is still a product description |
 | ✅ | Links are same-origin by construction | Paths in an answer are linked only against an allowlist of routes the app actually has, so nothing the model writes can become an off-site destination |
 
-Verified end to end against the live site: the gates run in order, the session and
-address counters increment, the stream reaches the browser, and a failed upstream
-call renders as a message rather than an empty bubble. **The answers themselves
-are untested** — that needs the key in **A5**.
+Verified end to end in the browser: the gates run in order, both rate-limit
+buckets and the monthly request counter increment, the stream reaches the
+browser, and a failed upstream call renders as a readable message rather than an
+empty bubble. The panel fits 320px in both languages with zero overflow.
+**The answers themselves are untested** — that needs the key in **A5**.
 
 ## 1.8 Earlier in the build
 
@@ -180,29 +185,43 @@ Legal entity name · tax ID · registered address · contact details.
 I will not invent these. A made-up tax ID on a page that governs a sale is
 worse than having no page.
 
-### 🟢 A5. Switch the assistant on — 5 minutes
+### 🟢 A5. Switch the assistant on — 5 minutes, free
 
 The chatbot is built, tested and deployed, but it stays invisible until a key
-exists. Nothing else is waiting on this.
+exists. Nothing else is waiting on this, and it costs nothing.
 
-1. [console.anthropic.com](https://console.anthropic.com) → **API Keys** → create one
-2. Add credit under **Billing** (a few dollars is a lot of shop questions)
-3. Add it to Vercel — **paste it once**, on a single line:
-
-```bash
-npx vercel env add ANTHROPIC_API_KEY production
-```
-
-4. Optionally set the ceiling (defaults to $5/month):
+1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) → **Create API key**.
+   No card, no billing setup.
+2. Add it to Vercel — **paste it once**, on a single line. A key pasted twice
+   arrives with a newline in it, and that is exactly how `RESEND_API_KEY` broke
+   every email on this project for an afternoon:
 
 ```bash
-npx vercel env add CHAT_MONTHLY_BUDGET_USD production
+npx vercel env add GEMINI_API_KEY production
 ```
 
-5. Redeploy
+3. Optionally cap the month. On the free tier the money cap can never fire, so
+   this is the one that does the work:
+
+```bash
+npx vercel env add CHAT_MONTHLY_REQUEST_CAP production
+```
+
+4. Redeploy
 
 The key never passes through me. Once it is in, the launcher appears by itself
 and I can check the answers against the real catalogue.
+
+**One thing to know before you switch it on.** Google's free tier states that
+conversations are used to improve Google's products. For a demo shop on seeded
+data that is fine, and the privacy page now says so plainly. It stops being fine
+the day the shop takes real orders — at that point either move to a paid tier or
+switch to Claude, which is one variable:
+
+```bash
+npx vercel env add ANTHROPIC_API_KEY production
+npx vercel env add CHAT_PROVIDER production   # "anthropic"
+```
 
 ---
 
@@ -267,7 +286,7 @@ needs it today, and the privacy page says so.
 | 1 | **You** | A1 — sending domain | No customer can receive an email until this is done |
 | 2 | **You** | A2 — merchant application | Weeks of waiting; start the clock today |
 | 3 | **You** | A3 — photos + Blob token | Largest visible improvement available |
-| 4 | **You** | A5 — Anthropic key | Five minutes, and the chatbot is already built |
+| 4 | **You** | A5 — free Gemini key | Five minutes, no card, and the chatbot is already built |
 | 5 | **Me** | B4 — image upload and gallery | Follows A3 |
 | 6 | **Me** | B5 — payment adapter | When credentials arrive |
 | 7 | **You + me** | A4 + legal pages finished | Before taking public orders |
