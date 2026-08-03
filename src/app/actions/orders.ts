@@ -83,8 +83,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   if (lines.some((line) => line.quantity < 1)) return { ok: false, error: "unavailable" };
 
-  const subtotal =
-    Math.round(lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0) * 100) / 100;
+  // Tetri throughout: price is a whole number and quantity is an integer, so
+  // this sum is exact and needs no rounding at all.
+  const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
 
   // The discount is recomputed here rather than trusted from the client, so a
@@ -99,7 +100,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
   }
 
-  const total = Math.round((subtotal + shipping - discount) * 100) / 100;
+  const total = subtotal + shipping - discount;
 
   // A few attempts in case two orders draw the same random number.
   for (let attempt = 0; attempt < 5; attempt++) {

@@ -9,43 +9,32 @@ import { isPaymentMethod, isPaymentStatus } from "@/lib/payment";
  * wrong, so the awkward cases are pinned.
  */
 describe("toMinor", () => {
-  it("converts whole lari", () => {
-    expect(toMinor(149)).toBe(14900);
+  // Since the integer refactor an order total is already whole tetri, so this
+  // is the identity. It stays as a named boundary: a gateway that wants a
+  // different unit gets one obvious place to convert.
+  it("passes a whole tetri amount straight through", () => {
+    expect(toMinor(14_900)).toBe(14_900);
+    expect(toMinor(0)).toBe(0);
+    expect(toMinor(1)).toBe(1);
   });
 
-  it("converts a two-decimal price", () => {
-    expect(toMinor(149.99)).toBe(14999);
-  });
-
-  it("handles values that are not exact in binary floating point", () => {
-    // 0.1 + 0.2 is 0.30000000000000004; without the round() this would be
-    // 30.000000000000004 tetri and the gateway would reject it outright.
-    expect(toMinor(0.1 + 0.2)).toBe(30);
-  });
-
-  it("rounds two look-alike halfway prices in opposite directions", () => {
-    // Both read as "half a tetri", but 1.005 * 100 is 100.49999999999999
-    // while 8.115 * 100 is exactly 811.5. This is why the *source* of an
-    // amount should be an integer, not a Float that is rounded on the way
-    // out — see Payment.amount.
-    expect(toMinor(1.005)).toBe(100);
-    expect(toMinor(8.115)).toBe(812);
-  });
-
-  it("is exact for a large basket", () => {
-    expect(toMinor(12345.67)).toBe(1234567);
-  });
-
-  it("round-trips through fromMinor", () => {
-    for (const amount of [0, 1, 149.99, 1234.56, 99999.99]) {
-      expect(fromMinor(toMinor(amount))).toBeCloseTo(amount, 2);
-    }
-  });
-
-  it("never returns a fraction", () => {
-    for (const amount of [1.111, 2.999, 0.005, 33.335]) {
+  it("never lets a fraction reach a gateway", () => {
+    // Nothing upstream should produce one, but an amount charged to a card is
+    // the last place to find out that something did.
+    for (const amount of [1.4, 2.5, 99.99, 1234.567]) {
       expect(Number.isInteger(toMinor(amount))).toBe(true);
     }
+  });
+
+  it("round-trips through fromMinor for display", () => {
+    expect(fromMinor(toMinor(14_999))).toBe(149.99);
+    expect(fromMinor(0)).toBe(0);
+  });
+
+  it("is exact for a large basket, where a float would drift", () => {
+    // 1,234,567 tetri is ₾12,345.67 — a figure a float cannot hold exactly.
+    expect(toMinor(1_234_567)).toBe(1_234_567);
+    expect(fromMinor(1_234_567)).toBeCloseTo(12_345.67, 2);
   });
 });
 

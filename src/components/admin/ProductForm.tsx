@@ -158,7 +158,7 @@ export function ProductForm({
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={product?.price ?? ""}
+                defaultValue={product ? product.price / 100 : ""}
                 required
               />
               <Text
@@ -167,7 +167,7 @@ export function ProductForm({
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={product?.oldPrice ?? ""}
+                defaultValue={product?.oldPrice != null ? product.oldPrice / 100 : ""}
                 hint={t.admin.oldPriceHint}
               />
               <Text
@@ -183,7 +183,7 @@ export function ProductForm({
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={product?.costPrice ?? 0}
+                defaultValue={product ? product.costPrice / 100 : 0}
               />
               <Text
                 name="lowStockAt"

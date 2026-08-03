@@ -49,7 +49,8 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const discount = coupon?.ok ? coupon.discount : 0;
-  const payable = Math.round((total - discount) * 100) / 100;
+  // Both are tetri, so this is exact.
+  const payable = total - discount;
 
   async function applyCoupon() {
     const code = couponInput.trim();

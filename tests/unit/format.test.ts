@@ -11,44 +11,45 @@ describe("formatPrice", () => {
   // Georgian uses U+00A0 (non-breaking space) both between thousands and
   // before the symbol, so a price can never wrap onto two lines.
   it("uses a comma decimal and a non-breaking space before the symbol in Georgian", () => {
-    expect(formatPrice(149, "ka")).toBe("149,00\u00a0₾");
+    expect(formatPrice(14_900, "ka")).toBe("149,00\u00a0₾");
   });
 
   it("uses a dot decimal and a leading symbol in English", () => {
-    expect(formatPrice(149, "en")).toBe("₾149.00");
+    expect(formatPrice(14_900, "en")).toBe("₾149.00");
   });
 
   it("always shows two decimal places", () => {
-    expect(formatPrice(5, "en")).toBe("₾5.00");
-    expect(formatPrice(5.5, "en")).toBe("₾5.50");
+    expect(formatPrice(500, "en")).toBe("₾5.00");
+    expect(formatPrice(550, "en")).toBe("₾5.50");
   });
 
   it("rounds to two places", () => {
-    expect(formatPrice(5.554, "en")).toBe("₾5.55");
-    expect(formatPrice(5.556, "en")).toBe("₾5.56");
+    expect(formatPrice(555, "en")).toBe("₾5.55");
+    expect(formatPrice(556, "en")).toBe("₾5.56");
   });
 
-  it("rounds a halfway value the way the float actually is, not the way it reads", () => {
-    // 5.555 is not exactly 5.555 in binary floating point — it is a hair
-    // below — so `toFixed` gives 5.55 rather than the 5.56 the decimal
-    // suggests. Pinned here because it is surprising, and because it is the
-    // reason `Payment.amount` is stored as integer tetri: this rounding must
-    // never be what decides an amount charged to a card.
-    expect(formatPrice(5.555, "en")).toBe("₾5.55");
-    expect(formatPrice(5.565, "en")).toBe("₾5.57");
+  it("never sees a fraction, because the input is already whole tetri", () => {
+    // This is the point of the integer refactor. Previously the input was a
+    // Float in lari and `toFixed` decided the last digit — `(5.555).toFixed(2)`
+    // is "5.55", not "5.56", because the float sits below the decimal. Now the
+    // amount arrives already rounded and formatting is pure integer division.
+    expect(formatPrice(556, "en")).toBe("₾5.56");
+    expect(formatPrice(555, "en")).toBe("₾5.55");
+    // A stray fraction is rounded rather than truncated or printed.
+    expect(formatPrice(555.6, "en")).toBe("₾5.56");
   });
 
   it("groups thousands per locale", () => {
-    expect(formatPrice(1234567.89, "en")).toBe("₾1,234,567.89");
-    expect(formatPrice(1234567.89, "ka")).toBe("1\u00a0234\u00a0567,89\u00a0₾");
+    expect(formatPrice(123_456_789, "en")).toBe("₾1,234,567.89");
+    expect(formatPrice(123_456_789, "ka")).toBe("1\u00a0234\u00a0567,89\u00a0₾");
   });
 
   it("does not group a three-digit number", () => {
-    expect(formatPrice(999, "en")).toBe("₾999.00");
+    expect(formatPrice(99_900, "en")).toBe("₾999.00");
   });
 
   it("groups a four-digit number", () => {
-    expect(formatPrice(1000, "en")).toBe("₾1,000.00");
+    expect(formatPrice(100_000, "en")).toBe("₾1,000.00");
   });
 
   it("handles zero", () => {
@@ -56,7 +57,7 @@ describe("formatPrice", () => {
   });
 
   it("puts the minus before the digits, not the separator", () => {
-    expect(formatPrice(-1234.5, "en")).toBe("₾-1,234.50");
+    expect(formatPrice(-123_450, "en")).toBe("₾-1,234.50");
   });
 
   it("falls back to zero for NaN and Infinity rather than printing them", () => {
@@ -66,12 +67,12 @@ describe("formatPrice", () => {
   });
 
   it("defaults to Georgian", () => {
-    expect(formatPrice(1)).toBe(formatPrice(1, "ka"));
+    expect(formatPrice(100)).toBe(formatPrice(100, "ka"));
   });
 
   it("produces the same string on every call — no locale or timezone drift", () => {
     // The property that actually protects hydration.
-    const runs = Array.from({ length: 50 }, () => formatPrice(1234.56, "ka"));
+    const runs = Array.from({ length: 50 }, () => formatPrice(123_456, "ka"));
     expect(new Set(runs).size).toBe(1);
   });
 });

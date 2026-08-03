@@ -19,7 +19,10 @@ export type CartItem = {
   quantity: number;
 };
 
-const STORAGE_KEY = "bazari.cart.v1";
+// v2: prices moved from lari to tetri. A v1 cart read under the new rules
+// would price a ₾149 item at ₾1.49, so the key is bumped rather than migrated
+// — an abandoned cart is not worth a migration path.
+const STORAGE_KEY = "bazari.cart.v2";
 
 /** Stable reference — `getSnapshot` must never return a fresh array. */
 const EMPTY: CartItem[] = [];

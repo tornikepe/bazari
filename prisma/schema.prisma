@@ -84,6 +84,12 @@ model Category {
   createdAt DateTime  @default(now())
 }
 
+/// Money is stored in **tetri as whole numbers**, never as a float.
+///
+/// 0.1 + 0.2 is not 0.3 in binary floating point, and `(5.555).toFixed(2)` is
+/// "5.55" rather than "5.56" because the value sits a hair below the decimal.
+/// Neither is acceptable for deciding what a card is charged, so every amount
+/// in this schema is an integer and only the display layer divides by 100.
 model Product {
   id            String      @id @default(cuid())
   slug          String      @unique
@@ -92,10 +98,10 @@ model Product {
   descriptionKa String      @default("")
   descriptionEn String      @default("")
   sku           String      @unique
-  price         Float
-  oldPrice      Float?
+  price         Int
+  oldPrice      Int?
   /// What the shop paid. Drives the margin figures in the dashboard.
-  costPrice     Float       @default(0)
+  costPrice     Int       @default(0)
   stock         Int         @default(0)
   /// Alert threshold — below this the dashboard flags the product.
   lowStockAt    Int         @default(10)
@@ -145,8 +151,8 @@ model Coupon {
   code          String    @unique
   /// Percent off when `percentOff` is set, otherwise a flat `amountOff`.
   percentOff    Int?
-  amountOff     Float?
-  minOrderTotal Float     @default(0)
+  amountOff     Int?
+  minOrderTotal Int     @default(0)
   maxUses       Int?
   usedCount     Int       @default(0)
   expiresAt     DateTime?
@@ -172,10 +178,10 @@ model Order {
 
   /// Money is stored broken down, not just as a total, so an invoice can be
   /// reproduced exactly even after prices or shipping rules change.
-  subtotal     Float       @default(0)
-  shipping     Float       @default(0)
-  discount     Float       @default(0)
-  total        Float
+  subtotal     Int       @default(0)
+  shipping     Int       @default(0)
+  discount     Int       @default(0)
+  total        Int
 
   couponId     String?
   coupon       Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
@@ -226,10 +232,10 @@ model OrderItem {
   nameEn    String
   sku       String   @default("")
   image     String   @default("/products/placeholder.svg")
-  price     Float
+  price     Int
   /// Snapshotted alongside the price so past margins don't move when the
   /// product's cost is later updated.
-  costPrice Float    @default(0)
+  costPrice Int    @default(0)
   quantity  Int
 
   @@index([orderId])

@@ -680,11 +680,18 @@ async function main() {
     // derived from the index so re-seeding doesn't churn the numbers.
     const sku = `BZ-${String(index + 1).padStart(4, "0")}`;
     const margin = 0.58 + ((index * 7) % 11) / 100;
-    const costPrice = Math.round(product.price * margin * 100) / 100;
+
+    // The product table above is written in lari because that is how the
+    // catalogue reads; the database stores whole tetri. Convert here, once.
+    const price = Math.round(product.price * 100);
+    const oldPrice = product.oldPrice != null ? Math.round(product.oldPrice * 100) : null;
+    const costPrice = Math.round(price * margin);
 
     const data = {
       ...product,
       sku,
+      price,
+      oldPrice,
       costPrice,
       lowStockAt: 10,
       image: IMAGE,
@@ -711,10 +718,19 @@ async function main() {
 
   console.log("→ seeding coupons…");
   for (const coupon of coupons) {
+    // Same conversion as the products: readable lari above, tetri in the row.
+    const data = {
+      ...coupon,
+      minOrderTotal: Math.round(coupon.minOrderTotal * 100),
+      ...("amountOff" in coupon && coupon.amountOff != null
+        ? { amountOff: Math.round(coupon.amountOff * 100) }
+        : {}),
+    };
+
     await prisma.coupon.upsert({
       where: { code: coupon.code },
-      update: coupon,
-      create: coupon,
+      update: data,
+      create: data,
     });
   }
 
@@ -813,15 +829,16 @@ async function main() {
         const eligible = couponRows.filter((c) => subtotal >= c.minOrderTotal);
         const coupon = eligible[Math.floor(random() * eligible.length)];
         if (coupon) {
+          // Tetri in, tetri out — same rounding rule as `checkCoupon`.
           discount = coupon.percentOff
-            ? Math.round(subtotal * (coupon.percentOff / 100) * 100) / 100
+            ? Math.round((subtotal * coupon.percentOff) / 100)
             : (coupon.amountOff ?? 0);
           discount = Math.min(discount, subtotal);
           couponId = coupon.id;
         }
       }
 
-      const total = Math.round((subtotal + shipping - discount) * 100) / 100;
+      const total = subtotal + shipping - discount;
 
       // Older orders have had time to complete; recent ones are still moving.
       const roll = random();

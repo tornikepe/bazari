@@ -11,7 +11,7 @@ export type PaymentRow = {
   id: string;
   provider: string;
   state: PaymentState;
-  /** Tetri. */
+  /** Tetri, like every other amount. */
   amount: number;
   refunded: number;
   createdAt: Date;
@@ -60,7 +60,7 @@ export function PaymentPanel({ payments }: { payments: PaymentRow[] }) {
                   {t.paymentState[payment.state]}
                 </span>
                 <span className="text-sm font-bold text-ink-900">
-                  {formatPrice(payment.amount / 100, locale)}
+                  {formatPrice(payment.amount, locale)}
                 </span>
               </div>
 

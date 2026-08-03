@@ -25,8 +25,11 @@ function buildWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
 
   if (filters.category) and.push({ category: { slug: filters.category } });
   if (filters.brands.length) and.push({ brand: { in: filters.brands } });
-  if (filters.minPrice !== null) and.push({ price: { gte: filters.minPrice } });
-  if (filters.maxPrice !== null) and.push({ price: { lte: filters.maxPrice } });
+  // The URL carries lari, because `?minPrice=100` is what a person expects to
+  // see and to share. Prices are stored in tetri, so convert here — this is the
+  // only place the two units meet on the read path.
+  if (filters.minPrice !== null) and.push({ price: { gte: filters.minPrice * 100 } });
+  if (filters.maxPrice !== null) and.push({ price: { lte: filters.maxPrice * 100 } });
   if (filters.inStock) and.push({ stock: { gt: 0 } });
   if (filters.onSale) and.push({ oldPrice: { not: null } });
 
@@ -127,7 +130,8 @@ export async function getPriceBounds() {
   });
 
   return {
-    min: Math.floor(result._min.price ?? 0),
-    max: Math.ceil(result._max.price ?? 1000),
+    // Handed to the filter inputs, which work in lari like the URL does.
+    min: Math.floor((result._min.price ?? 0) / 100),
+    max: Math.ceil((result._max.price ?? 100_000) / 100),
   };
 }

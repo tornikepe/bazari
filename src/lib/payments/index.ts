@@ -28,18 +28,17 @@ export function availableProviders(): PaymentProvider[] {
 }
 
 /**
- * Converts a display price to tetri.
- *
- * The rest of the schema stores prices as Float, which cannot represent most
- * decimals exactly. Rounding here — once, at the boundary — is what stops a
- * charge from drifting a tetri away from the total the shopper was shown.
+ * Order totals are already whole tetri, so this is the identity — kept as a
+ * named boundary so a gateway adapter that needs a different unit has one
+ * obvious place to convert, and so call sites still read as a conversion.
  */
-export function toMinor(amount: number): Minor {
-  return Math.round(amount * 100);
+export function toMinor(tetri: number): Minor {
+  return Math.round(tetri);
 }
 
-export function fromMinor(amount: Minor): number {
-  return amount / 100;
+/** Tetri to lari, for a human-readable note. Never for an amount charged. */
+export function fromMinor(tetri: Minor): number {
+  return tetri / 100;
 }
 
 /** How long an unfinished attempt stays open before the sweeper expires it. */

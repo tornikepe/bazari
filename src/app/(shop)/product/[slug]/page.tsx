@@ -102,7 +102,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       "@type": "Offer",
       url: `${SITE_URL}/product/${product.slug}`,
       priceCurrency: "GEL",
-      price: product.price.toFixed(2),
+      // schema.org wants the human price, not tetri.
+      price: (product.price / 100).toFixed(2),
       availability:
         product.stock > 0
           ? "https://schema.org/InStock"

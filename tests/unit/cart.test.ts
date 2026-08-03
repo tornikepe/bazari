@@ -4,6 +4,7 @@ import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
 
 type Item = Parameters<typeof cartTotals>[0][number];
 
+/** `price` is tetri, like every amount in the app. */
 function item(price: number, quantity = 1): Item {
   return {
     productId: `p${price}`,
@@ -27,11 +28,11 @@ describe("cartTotals", () => {
   });
 
   it("multiplies price by quantity", () => {
-    expect(cartTotals([item(10, 3)]).subtotal).toBe(30);
+    expect(cartTotals([item(1_000, 3)]).subtotal).toBe(3_000);
   });
 
   it("counts units, not lines", () => {
-    expect(cartTotals([item(10, 3), item(20, 2)]).count).toBe(5);
+    expect(cartTotals([item(1_000, 3), item(2_000, 2)]).count).toBe(5);
   });
 
   it("charges shipping below the free threshold", () => {
@@ -55,9 +56,20 @@ describe("cartTotals", () => {
   });
 
   it("reaches the threshold across several lines", () => {
-    const totals = cartTotals([item(150), item(60)]);
+    // ₾150 + ₾60 clears the ₾200 free-shipping threshold.
+    const totals = cartTotals([item(15_000), item(6_000)]);
 
-    expect(totals.subtotal).toBe(210);
+    expect(totals.subtotal).toBe(21_000);
     expect(totals.shipping).toBe(0);
+  });
+
+  it("keeps every total a whole number of tetri", () => {
+    // The reason for the integer refactor: no sum of prices can produce a
+    // fraction, so nothing downstream has to round.
+    const totals = cartTotals([item(3_333, 3), item(1_667, 7)]);
+
+    expect(Number.isInteger(totals.subtotal)).toBe(true);
+    expect(Number.isInteger(totals.total)).toBe(true);
+    expect(totals.subtotal).toBe(3_333 * 3 + 1_667 * 7);
   });
 });

@@ -36,6 +36,18 @@ function number(formData: FormData, key: string, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+/**
+ * A money field, converted from what the admin typed to what is stored.
+ *
+ * The form takes lari with decimals because that is what a person thinks in;
+ * everything past this line is whole tetri. This is the only place in the
+ * write path where a decimal exists at all.
+ */
+function tetri(formData: FormData, key: string, fallback = 0) {
+  const parsed = Number(formData.get(key));
+  return Number.isFinite(parsed) ? Math.round(parsed * 100) : fallback;
+}
+
 function checkbox(formData: FormData, key: string) {
   return formData.get(key) === "on" || formData.get(key) === "true";
 }
@@ -62,7 +74,7 @@ async function readProductForm(
   const nameKa = text(formData, "nameKa");
   const nameEn = text(formData, "nameEn");
   const categoryId = text(formData, "categoryId");
-  const price = number(formData, "price");
+  const price = tetri(formData, "price");
 
   if (!nameKa || !nameEn || !categoryId || price <= 0) return { ok: false, error: "invalid" };
 
@@ -74,7 +86,7 @@ async function readProductForm(
   if (clash && clash.id !== currentId) return { ok: false, error: "slug-taken" };
 
   const oldPriceRaw = text(formData, "oldPrice");
-  const oldPrice = oldPriceRaw ? Number(oldPriceRaw) : null;
+  const oldPrice = oldPriceRaw ? Math.round(Number(oldPriceRaw) * 100) : null;
 
   // SKU falls back to the slug so the field can be left blank, and is checked
   // for collisions the same way the slug is.
@@ -95,7 +107,7 @@ async function readProductForm(
       // An "old price" below the current one would render a negative discount.
       oldPrice: oldPrice !== null && Number.isFinite(oldPrice) && oldPrice > price ? oldPrice : null,
       stock: Math.max(0, Math.floor(number(formData, "stock"))),
-      costPrice: Math.max(0, number(formData, "costPrice")),
+      costPrice: Math.max(0, tetri(formData, "costPrice")),
       lowStockAt: Math.max(0, Math.floor(number(formData, "lowStockAt", 10))),
       image: text(formData, "image") || DEFAULT_IMAGE,
       brand: text(formData, "brand"),

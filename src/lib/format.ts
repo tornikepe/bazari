@@ -5,16 +5,23 @@ export const CURRENCY = "₾";
 /**
  * `1 250,00 ₾` in Georgian, `₾1,250.00` in English.
  *
+ * **Takes tetri**, not lari — every amount in the database and in the cart is
+ * a whole number of tetri, and this is the single place that divides by 100.
+ * Keeping the split here means no arithmetic anywhere else can round.
+ *
  * Grouping is done by hand rather than with `Intl.NumberFormat`: Node and the
  * browser ship different ICU data for `ka-GE` (comma vs dot decimal), so the
  * server and client rendered different text and hydration failed. Same reason
  * `formatDate` below avoids `Intl`.
  */
-export function formatPrice(value: number, locale: Locale = "ka") {
-  const safe = Number.isFinite(value) ? value : 0;
+export function formatPrice(tetri: number, locale: Locale = "ka") {
+  const safe = Number.isFinite(tetri) ? Math.round(tetri) : 0;
   const negative = safe < 0;
 
-  const [whole, fraction] = Math.abs(safe).toFixed(2).split(".");
+  // Integer division, so the decimal part is exact by construction.
+  const units = Math.abs(safe);
+  const whole = String(Math.floor(units / 100));
+  const fraction = String(units % 100).padStart(2, "0");
   const groupSeparator = locale === "ka" ? " " : ",";
   const decimalSeparator = locale === "ka" ? "," : ".";
 
