@@ -16,6 +16,7 @@ export function AddToCartButton({
   variant = "primary",
   fullWidth = false,
   showIcon = true,
+  disabled = false,
 }: {
   product: Omit<CartItem, "quantity">;
   quantity?: number;
@@ -23,6 +24,8 @@ export function AddToCartButton({
   variant?: "primary" | "outline";
   fullWidth?: boolean;
   showIcon?: boolean;
+  /** Separate from sold-out: used to take a hidden copy out of the tab order. */
+  disabled?: boolean;
 }) {
   const { add } = useCart();
   const { t } = useI18n();
@@ -53,7 +56,7 @@ export function AddToCartButton({
     <button
       type="button"
       onClick={handleClick}
-      disabled={soldOut}
+      disabled={soldOut || disabled}
       aria-live="polite"
       className={[
         "btn",

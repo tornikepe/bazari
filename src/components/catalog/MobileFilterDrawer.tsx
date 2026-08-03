@@ -50,7 +50,7 @@ export function MobileFilterDrawer({
         <FilterIcon size={15} />
         {t.catalog.filters}
         {activeCount > 0 && (
-          <span className="grid h-4 min-w-4 place-items-center rounded-pill bg-brand-600 px-1 text-xs font-bold text-white">
+          <span className="grid h-4 min-w-4 place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid">
             {activeCount}
           </span>
         )}

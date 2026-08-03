@@ -31,7 +31,7 @@ export async function Footer() {
       <div className="page-container grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Link href="/" className="mb-4 inline-flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-600 text-base font-black text-white">
+            <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-solid text-base font-black text-brand-on-solid">
               ბ
             </span>
             <span className="text-lg font-extrabold tracking-tight text-ink-900">

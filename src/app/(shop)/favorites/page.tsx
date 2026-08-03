@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { ProductCard } from "@/components/product/ProductCard";
-import { ProductGridSkeleton } from "@/components/ui/ProductGridSkeleton";
+import { ProductGridSkeleton, PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { HeartIcon, TrashIcon } from "@/components/ui/icons";
 import { clearFavorites } from "@/lib/favorites-store";
 import { fill } from "@/lib/i18n";
@@ -84,7 +84,7 @@ export default function FavoritesPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <div className={PRODUCT_GRID_WIDE}>
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

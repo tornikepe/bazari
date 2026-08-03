@@ -254,7 +254,7 @@ function CheckboxRow({
       <span
         aria-hidden="true"
         className={`grid h-4 w-4 shrink-0 place-items-center rounded border transition-colors ${
-          checked ? "border-brand-600 bg-brand-600 text-white" : "border-ink-300 bg-surface"
+          checked ? "border-brand-solid bg-brand-solid text-brand-on-solid" : "border-ink-300 bg-surface"
         }`}
       >
         {checked && <CheckIcon size={11} strokeWidth={3.5} />}

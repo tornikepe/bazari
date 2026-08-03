@@ -39,7 +39,7 @@ export function FavoriteButton({
       title={isFavorite ? t.favorites.remove : t.favorites.add}
       className={`grid h-8 w-8 place-items-center rounded-pill backdrop-blur-sm transition-colors ${
         isFavorite
-          ? "bg-brand-600 text-white"
+          ? "bg-brand-solid text-brand-on-solid"
           : "bg-surface/85 text-ink-500 hover:bg-surface hover:text-brand-600"
       } ${className}`}
     >

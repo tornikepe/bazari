@@ -39,7 +39,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
         <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1.5">
           {discount > 0 && (
-            <span className="badge bg-brand-600 text-white shadow-sm">
+            <span className="badge bg-brand-solid text-brand-on-solid shadow-sm">
               {fill(t.product.sale, { percent: discount })}
             </span>
           )}

@@ -128,7 +128,7 @@ export function ChatWidget({ available }: { available: boolean }) {
           className="chat-panel card flex flex-col overflow-hidden shadow-pop"
         >
           <header className="flex shrink-0 items-center gap-2.5 bg-panel px-3.5 py-3 text-panel-fg">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-brand-600 text-white">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-brand-solid text-brand-on-solid">
               <ChatIcon size={17} />
             </span>
 
@@ -265,7 +265,7 @@ export function ChatWidget({ available }: { available: boolean }) {
                   type="submit"
                   disabled={!draft.trim()}
                   aria-label={t.chat.send}
-                  className="chat-send bg-brand-600 text-white disabled:bg-ink-200 disabled:text-ink-400"
+                  className="chat-send bg-brand-solid text-brand-on-solid disabled:bg-ink-200 disabled:text-ink-400"
                 >
                   <SendIcon size={17} />
                 </button>

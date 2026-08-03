@@ -162,7 +162,7 @@ export function HeaderBar({
         </button>
 
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-600 text-base font-black text-white shadow-sm">
+          <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-solid text-base font-black text-brand-on-solid shadow-sm">
             ბ
           </span>
           <span className="hidden text-lg leading-none font-extrabold tracking-tight text-ink-900 sm:block">
@@ -227,7 +227,7 @@ export function HeaderBar({
               <HeartIcon size={20} />
               {/* Only after hydration — the server can't know the wishlist. */}
               {hydrated && favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-600 px-1 text-xs font-bold text-white">
+                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid">
                   {favorites.length > 99 ? "99+" : favorites.length}
                 </span>
               )}
@@ -244,7 +244,7 @@ export function HeaderBar({
               <CartIcon size={21} />
               {/* Rendered only after hydration — the server has no cart. */}
               {hydrated && count > 0 && (
-                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-600 px-1 text-xs font-bold text-white">
+                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid">
                   {count > 99 ? "99+" : count}
                 </span>
               )}

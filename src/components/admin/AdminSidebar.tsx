@@ -35,7 +35,7 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
   const nav = (
     <>
       <div className="flex items-center gap-2.5 px-2 pb-5">
-        <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-600 text-base font-black text-white">
+        <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-solid text-base font-black text-brand-on-solid">
           ბ
         </span>
         <div className="min-w-0">
@@ -54,7 +54,7 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
               onClick={() => setOpen(false)}
               aria-current={active ? "page" : undefined}
               className={`flex items-center gap-2.5 rounded-control px-3 py-2.5 text-sm font-medium transition-colors ${
-                active ? "bg-brand-600 text-white" : "text-panel-muted hover:bg-panel-fg/10 hover:text-panel-fg"
+                active ? "bg-brand-solid text-brand-on-solid" : "text-panel-muted hover:bg-panel-fg/10 hover:text-panel-fg"
               }`}
             >
               <link.icon size={17} className="shrink-0" />

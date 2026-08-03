@@ -99,6 +99,16 @@ test("nothing overflows horizontally on a narrow phone", async ({ page }) => {
   }
 });
 
+/**
+ * A withdrawn product must answer 404, not 200.
+ *
+ * This is also the guard on a mistake that is easy to make twice: adding a
+ * `loading.tsx` to `product/[slug]` starts the response streaming, and once
+ * headers are sent the status can no longer change — so `notFound()` renders
+ * the 404 page under a 200. Next marks it `noindex` so it isn't indexed, but
+ * it still reads as a soft 404 to analytics and to anything checking status.
+ * The skeleton is not worth that; the route stays unstreamed.
+ */
 test("any unknown path renders the 404 page, not a crash", async ({ page }) => {
   for (const path of ["/nope", "/catalog/nope", "/product/does-not-exist", "/a/b/c"]) {
     const response = await page.goto(path);

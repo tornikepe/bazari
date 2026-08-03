@@ -239,7 +239,7 @@ export default async function HomePage() {
 
       {/* ---------------------------- deals banner ------------------------- */}
       <Reveal as="section" className="page-container pb-12">
-        <div className="relative overflow-hidden rounded-card bg-brand-600 px-6 py-10 text-white sm:px-10 sm:py-12">
+        <div className="relative overflow-hidden rounded-card bg-brand-solid px-6 py-10 text-brand-on-solid sm:px-10 sm:py-12">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 opacity-60"

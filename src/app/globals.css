@@ -33,31 +33,59 @@
   --color-accent-800: #94360c;
   --color-accent-900: #7a2d0d;
 
-  /* Ink — neutral text and surfaces */
+  /* Ink — neutral text and surfaces.
+     --------------------------------------------------------------------
+     400 through 900 are text colours and every one of them clears WCAG AA
+     (4.5:1) against BOTH surface and canvas. They used to not: ink-400 sat
+     at 2.42:1 on canvas, which is unreadable, and it is the shade the site
+     uses for its smallest labels — the worst place to put the worst
+     contrast. The ramp is compressed at the light end as a result; that is
+     the cost of the ramp doubling as a text scale.
+
+     50 through 300 are backgrounds and borders, never text. */
   --color-ink-50: #f7f8fa;
   --color-ink-100: #eef0f4;
   --color-ink-200: #dfe3ea;
   --color-ink-300: #c6ccd8;
-  --color-ink-400: #98a1b3;
-  --color-ink-500: #6b7488;
-  --color-ink-600: #4d5567;
+  --color-ink-400: #6c727f; /* 4.50 on canvas */
+  --color-ink-500: #5f6675; /* 5.38 on canvas */
+  --color-ink-600: #4d5567; /* 6.97 on canvas */
   --color-ink-700: #3b4252;
   --color-ink-800: #262c39;
   --color-ink-900: #161a23;
 
-  /* Semantic */
-  --color-success: #16a34a;
+  /* Semantic.
+     The `-soft` shades are badge backgrounds and the solid shade is the
+     text on them, so each pair has to clear 4.5:1 against the other — the
+     original greens and ambers were nearer 3:1, which reads as decoration
+     rather than as a status anyone can act on. */
+  --color-success: #11813a;
   --color-success-soft: #dcfce7;
-  --color-warning: #d97706;
+  --color-warning: #a75c05;
   --color-warning-soft: #fef3c7;
-  --color-danger: #dc2626;
+  --color-danger: #ca2323;
   --color-danger-soft: #fee2e2;
-  --color-info: #2563eb;
+  --color-info: #245fe2;
   --color-info-soft: #dbeafe;
 
   --color-surface: #ffffff;
   --color-canvas: #f6f7f9;
   --color-line: #e6e9ef;
+
+  /* A form field's border is the only thing saying "you can type here", so
+     it is held to the 3:1 that WCAG asks of a UI component's boundary —
+     unlike `line`, which merely separates cards and is decorative. */
+  --color-field-border: #939599;
+
+  /* Solid brand surfaces: the button background and the text on it.
+     --------------------------------------------------------------------
+     Split from `brand-600` because that token has to do two opposite jobs
+     in dark mode — be light enough to read as a link ON a dark surface,
+     and dark enough for white text to read on TOP of it. One value cannot
+     do both, so it doesn't have to. */
+  --color-brand-solid: #de1f24;
+  --color-brand-solid-hover: #bb161c;
+  --color-brand-on-solid: #ffffff;
 
   /* Deliberately dark in *both* themes — the hero, the dashboard rail and the
      secondary button are dark panels by design. They can't use `ink-900`,
@@ -145,7 +173,7 @@
   --color-ink-100: #232936;
   --color-ink-200: #2f3644;
   --color-ink-300: #454d5e;
-  --color-ink-400: #737c90;
+  --color-ink-400: #7a8396; /* 4.57 on surface — was 4.16, just under AA */
   --color-ink-500: #949cad;
   --color-ink-600: #b3bac7;
   --color-ink-700: #ccd2dd;
@@ -159,8 +187,17 @@
      carry enough contrast against a dark canvas. */
   --color-brand-50: #2a1417;
   --color-brand-100: #3d1a1e;
+  /* Light enough to read as a link on a dark surface (4.83:1). */
   --color-brand-600: #f04b4f;
   --color-brand-700: #e5353a;
+
+  /* Dark enough that white text on the button clears AA (4.53:1). The
+     bright brand-600 above only manages 3.61:1 under white, which is why
+     these are separate tokens rather than one. */
+  --color-brand-solid: #d34246;
+  --color-brand-solid-hover: #c4262b;
+
+  --color-field-border: #62666f;
 
   --color-accent-50: #2a1f0c;
   --color-accent-800: #ffca6a;
@@ -343,13 +380,16 @@
   }
 
   .btn-primary {
-    background: var(--color-brand-600);
-    color: #fff;
+    /* Not `brand-600`: in dark mode that shade is tuned to be readable *as*
+       text on a dark surface, which leaves white text on top of it at
+       3.61:1. `brand-solid` is the same red where white actually passes. */
+    background: var(--color-brand-solid);
+    color: var(--color-brand-on-solid);
     box-shadow: 0 1px 2px rgb(222 31 36 / 0.24);
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--color-brand-700);
+    background: var(--color-brand-solid-hover);
   }
 
   .btn-secondary {
@@ -412,7 +452,10 @@
     height: 2.75rem;
     padding-inline: 0.875rem;
     background: var(--color-surface);
-    border: 1px solid var(--color-line);
+    /* Not `line`: an input's border is the only thing telling someone they
+       can type here, so WCAG holds it to 3:1 against the background. `line`
+       sits at 1.22:1 — fine for separating cards, invisible as an edge. */
+    border: 1px solid var(--color-field-border);
     border-radius: var(--radius-control);
     font-size: var(--text-sm);
     color: var(--color-ink-900);
@@ -798,6 +841,42 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Sticky buy bar                                                      */
+/*                                                                     */
+/* Appears once the real purchase panel has scrolled past. Translated  */
+/* rather than unmounted so it can animate, and so its height can be   */
+/* measured while hidden.                                              */
+/* ------------------------------------------------------------------ */
+
+.buy-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 50;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-line);
+  box-shadow: var(--shadow-pop);
+  /* Clears the home indicator on a phone without adding space elsewhere. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transform: translateY(100%);
+  visibility: hidden;
+  transition:
+    transform 0.22s ease,
+    visibility 0.22s;
+}
+
+.buy-bar[data-shown="true"] {
+  transform: none;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buy-bar {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Contact assistant                                                   */
 /*                                                                     */
 /* Anchored to the corner of the viewport. Sizes are in `dvh` so a      */
@@ -822,7 +901,11 @@
 .chat-launcher {
   position: absolute;
   right: 0.75rem;
-  bottom: 0.75rem;
+  /* Steps over the sticky buy bar when there is one — two fixed elements in
+     the same corner otherwise cover each other, and which one wins comes
+     down to stylesheet order rather than to intent. */
+  bottom: calc(0.75rem + var(--buy-bar-h, 0px));
+  transition: bottom 0.22s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -831,8 +914,8 @@
   min-width: 3rem;
   padding-inline: 0.875rem;
   border-radius: var(--radius-pill);
-  background: var(--color-brand-600);
-  color: #ffffff;
+  background: var(--color-brand-solid);
+  color: var(--color-brand-on-solid);
   font-size: var(--text-sm);
   font-weight: 700;
   box-shadow: var(--shadow-pop);
@@ -843,7 +926,7 @@
 }
 
 .chat-launcher:hover {
-  background: var(--color-brand-700);
+  background: var(--color-brand-solid-hover);
 }
 
 .chat-launcher:active {
@@ -859,7 +942,7 @@
 @media (min-width: 640px) {
   .chat-launcher {
     right: 1.5rem;
-    bottom: 1.5rem;
+    bottom: calc(1.5rem + var(--buy-bar-h, 0px));
   }
 
   .chat-launcher-label {
@@ -871,7 +954,7 @@
   position: absolute;
   left: 0.75rem;
   right: 0.75rem;
-  bottom: 4.5rem;
+  bottom: calc(4.5rem + var(--buy-bar-h, 0px));
   height: 32rem;
   /* `height` with a `max-height` rather than a `min()`: the panel wants to be
      32rem, but on a short screen it must stop before it reaches the header
@@ -885,7 +968,7 @@
   .chat-panel {
     left: auto;
     right: 1.5rem;
-    bottom: 5.5rem;
+    bottom: calc(5.5rem + var(--buy-bar-h, 0px));
     width: 23.5rem;
     height: 34rem;
     /* Clears the whole sticky header: the top bar, `--header-h`, and the
@@ -932,8 +1015,9 @@
 
 .chat-bubble-user {
   align-self: flex-end;
-  background: var(--color-brand-600);
-  color: #ffffff;
+  /* Solid brand surface carrying white text — see `--color-brand-solid`. */
+  background: var(--color-brand-solid);
+  color: var(--color-brand-on-solid);
   border-bottom-right-radius: 0.25rem;
   white-space: pre-wrap;
 }
@@ -967,7 +1051,7 @@
   min-width: 0;
   max-height: 6rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-field-border);
   border-radius: var(--radius-control);
   background: var(--color-canvas);
   font-size: var(--text-sm);
@@ -1105,6 +1189,7 @@
   [role="menu"],
   .marquee,
   .hero-orb,
+  .buy-bar,
   /* The launcher is a `button` and already hidden; the open panel is not. */
   .chat-root {
     display: none !important;

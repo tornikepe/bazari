@@ -4,6 +4,7 @@ import { fill } from "@/lib/i18n";
 import { parseFilters, type RawSearchParams } from "@/lib/filters";
 import { getBrands, getCategoriesWithCounts, getFilteredProducts, getPriceBounds } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
+import { PRODUCT_GRID } from "@/components/ui/ProductGridSkeleton";
 import { FilterSidebar } from "@/components/catalog/FilterSidebar";
 import { MobileFilterDrawer } from "@/components/catalog/MobileFilterDrawer";
 import { ActiveFilterChips } from "@/components/catalog/ActiveFilterChips";
@@ -97,7 +98,7 @@ export default async function CatalogPage({
             </div>
           ) : (
             <>
-              <div className="stagger grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+              <div className={`stagger ${PRODUCT_GRID}`}>
                 {items.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

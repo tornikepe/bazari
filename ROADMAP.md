@@ -5,7 +5,7 @@
 | **Security (Phase 0)** | ✅ complete |
 | **Payments** | 🟡 framework done and tested · no gateway |
 | **Email** | 🟡 works · only reaches your own inbox until a domain is verified |
-| **Testing** | ✅ 124 unit · 36 e2e · CI on every push |
+| **Testing** | ✅ 189 unit · 38 e2e · CI on every push |
 | **Contact assistant** | 🟡 built and tested · needs a free Gemini key to switch on |
 | **Product photos** | ❌ one placeholder for all 40 |
 | **Legal pages** | 🟡 technical half written · business details missing |
@@ -127,6 +127,23 @@ browser, and a failed upstream call renders as a readable message rather than an
 empty bubble. The panel fits 320px in both languages with zero overflow.
 **The answers themselves are untested** — that needs the key in **A5**.
 
+## 1.9 Design polish (B7)
+
+| # | Item | Detail |
+| --- | --- | --- |
+| ✅ | WCAG AA contrast, both themes | A real audit, not a glance. It failed: `ink-400` — the shade used for the site's *smallest* text — sat at **2.42:1** on the page background, and every status badge was nearer 3:1 than 4.5:1. In dark mode white-on-brand managed 3.61:1. All 52 pairs now pass, and a test parses the values out of `globals.css` so a future edit can't quietly undo it |
+| ✅ | `--color-brand-solid` split out | `brand-600` was doing two opposite jobs in dark mode: light enough to read *as* a link on a dark surface, dark enough for white text to read *on top* of it. One value cannot do both, so now it doesn't have to |
+| ✅ | Form-field borders | Held to the 3:1 that WCAG asks of a component's boundary — an input's border is the only thing saying "you can type here". Card borders stay decorative at 1.22:1, which is correct |
+| ✅ | Sticky buy bar | Appears once the real purchase panel scrolls away, on the product page where the description and related items are long. Publishes its height so the chat launcher steps over it rather than being covered — two fixed elements in one corner otherwise fight, and stylesheet order decides the winner |
+| ✅ | Skeleton matched its grid | The skeleton hardcoded two columns from zero width while the catalogue renders one below 380px — so on a narrow phone the page reflowed the moment data arrived. A layout jump caused by the thing meant to prevent one. Both now read the same constant |
+| ✅ | Add-to-cart confirmation · optimistic quantity · empty states | Already built earlier — verified rather than rewritten. The cart is `localStorage`, so quantity changes are already instant; there is no round trip to be optimistic about |
+
+**Deliberately not done: a skeleton for the product page.** A `loading.tsx`
+there starts the response streaming, and once headers are sent `notFound()`
+can no longer set a status — a withdrawn product would answer **200**. Next
+marks it `noindex`, so it isn't indexed, but it still reads as a soft 404. The
+skeleton is not worth that. The e2e test says so, next to the assertion.
+
 ## 1.8 Earlier in the build
 
 Coupons wired into checkout · order-detail data exposure closed (order numbers
@@ -229,14 +246,7 @@ npx vercel env add CHAT_PROVIDER production   # "anthropic"
 
 Ordered by what I would do next.
 
-### 🟡 B7. Remaining design polish
 
-Sticky buy box on the product page · loading skeletons instead of layout jumps
-· add-to-cart confirmation and optimistic quantity updates · empty states that
-suggest a next action · WCAG AA contrast audit in both themes.
-
-**Effort:** ~1 day. Most of it is cosmetic until A3 lands — real photos change
-the product page more than any of this.
 
 ### 🟡 B8. Rest of SEO
 
@@ -290,7 +300,7 @@ needs it today, and the privacy page says so.
 | 5 | **Me** | B4 — image upload and gallery | Follows A3 |
 | 6 | **Me** | B5 — payment adapter | When credentials arrive |
 | 7 | **You + me** | A4 + legal pages finished | Before taking public orders |
-| 8 | **Me** | B7 design polish · B8 SEO | Once the shop actually works |
+| 8 | **Me** | B8 SEO — OG images, hreflang, Organization JSON-LD | Once the shop actually works |
 | 9 | **Me** | C1 operations | Before real traffic |
 
 **Right now:** you on A1, A2 and A3 — every remaining item of mine waits on one

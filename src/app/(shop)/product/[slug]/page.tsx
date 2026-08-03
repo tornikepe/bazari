@@ -9,6 +9,7 @@ import { discountPercent } from "@/lib/format";
 import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
+import { StickyBuyBar } from "@/components/product/StickyBuyBar";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
@@ -154,7 +155,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
         {/* ------------------------------ gallery ---------------------------- */}
-        <div className="card relative aspect-square overflow-hidden bg-ink-50">
+        <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
           <Image
             src={product.image}
             alt={name}
@@ -165,7 +166,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           />
 
           {discount > 0 && (
-            <span className="badge absolute top-4 left-4 bg-brand-600 text-sm text-white shadow-sm">
+            <span className="badge absolute top-4 left-4 bg-brand-solid text-sm text-brand-on-solid shadow-sm">
               {fill(t.product.sale, { percent: discount })}
             </span>
           )}
@@ -211,7 +212,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <p className="mt-5 text-base leading-relaxed text-ink-600">{description}</p>
           )}
 
-          <div className="mt-6">
+          <div className="mt-6" id="buy-panel">
             <ProductPurchasePanel
               product={{
                 productId: product.id,
@@ -266,6 +267,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </section>
       )}
+
+      {/* Follows the visitor down the page once the panel above is gone. */}
+      <StickyBuyBar
+        watchId="buy-panel"
+        product={{
+          productId: product.id,
+          slug: product.slug,
+          nameKa: product.nameKa,
+          nameEn: product.nameEn,
+          image: product.image,
+          price: product.price,
+          stock: product.stock,
+        }}
+      />
     </div>
   );
 }

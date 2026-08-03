@@ -17,7 +17,7 @@ export function AuthCard({
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
       <div className="w-full max-w-sm animate-rise">
         <Link href="/" className="mb-6 flex items-center justify-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-control bg-brand-600 text-lg font-black text-white">
+          <span className="grid h-10 w-10 place-items-center rounded-control bg-brand-solid text-lg font-black text-brand-on-solid">
             ბ
           </span>
           <span className="text-xl font-extrabold tracking-tight text-ink-900">

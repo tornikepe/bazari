@@ -67,7 +67,7 @@ export function Pagination({
               aria-current={entry === page ? "page" : undefined}
               className={`grid h-9 min-w-9 place-items-center rounded-control px-2.5 text-sm font-semibold transition-colors ${
                 entry === page
-                  ? "bg-brand-600 text-white"
+                  ? "bg-brand-solid text-brand-on-solid"
                   : "border border-line bg-surface text-ink-700 hover:border-ink-300 hover:bg-ink-50"
               }`}
             >
