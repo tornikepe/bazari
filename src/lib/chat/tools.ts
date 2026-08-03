@@ -101,15 +101,39 @@ export function isChatToolName(name: string): name is ChatToolName {
 }
 
 /**
- * Runs one tool call and returns the text handed back to the model.
+ * Every tool result carries one of these, as a field rather than as prose.
+ *
+ * The distinction between "the shop has none" and "the lookup didn't run" is
+ * the most important thing a tool can tell this model, and the two must never
+ * be expressible in the same sentence. A database outage once came back to a
+ * customer as "no headphones found" — a statement about the shop's stock that
+ * was simply untrue, produced by an assistant that had learned nothing about
+ * the shop's stock at all.
+ *
+ * Prose invites paraphrase. A `status` field does not.
+ */
+type ToolStatus =
+  /** The lookup ran and found something. */
+  | "ok"
+  /** The lookup ran and the answer is genuinely nothing. */
+  | "empty"
+  /** The lookup did not run. Says nothing about the shop. */
+  | "unavailable";
+
+function result(status: ToolStatus, payload: Record<string, unknown>): string {
+  return JSON.stringify({ status, ...payload });
+}
+
+/**
+ * Runs one tool call and returns the JSON handed back to the model.
  *
  * Ownership for `lookup_order` is resolved inside `lookupOrder` from the
  * request's cookies — the model's arguments never carry an identity, so it
  * cannot ask for someone else's order however it is prompted.
  *
- * Failures return a sentence rather than throwing: a tool that blows up ends
- * the conversation, whereas a tool that says "that didn't work" lets the
- * assistant apologise and offer the person a page that does work.
+ * Failures return a value rather than throwing: a tool that blows up ends the
+ * conversation, whereas one that reports `unavailable` lets the assistant say
+ * so honestly and offer a page that does work.
  */
 export async function runChatTool(
   name: string,
@@ -131,36 +155,53 @@ export async function runChatTool(
         });
 
         if (matches.length === 0) {
-          return `No product matches "${query}". Say so plainly and offer the catalogue at /catalog.`;
+          return result("empty", {
+            query,
+            note:
+              "The catalogue was searched and holds nothing matching this wording. " +
+              "Before concluding the shop doesn't sell it, try search_products once more " +
+              "with a shorter or more general term — Georgian words change ending by case, " +
+              "so a plural may not match a singular stored in the catalogue.",
+          });
         }
-        return JSON.stringify({ matches });
+        return result("ok", { matches });
       }
 
       case "get_product": {
         const product = await getProductBySlug(String(args.slug ?? ""), locale);
-        if (!product) return "No such product. It may have been withdrawn from sale.";
-        return JSON.stringify({ product });
+        if (!product) {
+          return result("empty", { note: "No such product. It may have been withdrawn from sale." });
+        }
+        return result("ok", { product });
       }
 
       case "list_categories":
-        return JSON.stringify({ categories: await listCategories(locale) });
+        return result("ok", { categories: await listCategories(locale) });
 
       case "lookup_order": {
-        const result = await lookupOrder(String(args.order_number ?? ""), locale);
-        if (!result.found) {
-          return JSON.stringify({
-            found: false,
+        const lookup = await lookupOrder(String(args.order_number ?? ""), locale);
+        if (!lookup.found) {
+          return result("empty", {
             note: "No order with that number belongs to this person. Do not speculate about why. Point them at /track.",
           });
         }
-        return JSON.stringify({ order: result });
+        return result("ok", { order: lookup });
       }
 
       default:
-        return `Unknown tool "${name}".`;
+        return result("unavailable", { note: `Unknown tool "${name}".` });
     }
   } catch (error) {
+    // Almost always the database being unreachable. What matters is that this
+    // is reported as *our* failure and never as a fact about the catalogue.
     console.error(`[chat] tool ${name} failed`, error);
-    return "That lookup failed. Tell the person it didn't work and suggest they browse /catalog or use /track.";
+    return result("unavailable", {
+      note:
+        "This lookup could not run — a technical problem on our side. " +
+        "You have learned NOTHING about the catalogue or the order from this. " +
+        "Say plainly that you can't check right now and suggest /catalog or /track. " +
+        "Do NOT say the shop has no such product, that it is out of stock, or that " +
+        "the order does not exist.",
+    });
   }
 }
