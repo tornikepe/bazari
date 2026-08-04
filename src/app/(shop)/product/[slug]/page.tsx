@@ -166,7 +166,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           />
 
           {discount > 0 && (
-            <span className="badge absolute top-4 left-4 bg-brand-solid text-sm text-brand-on-solid shadow-sm">
+            <span className="badge absolute top-4 left-4 bg-brand-solid text-sm text-brand-on-solid">
               {fill(t.product.sale, { percent: discount })}
             </span>
           )}

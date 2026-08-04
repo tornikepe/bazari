@@ -253,7 +253,7 @@ function CheckboxRow({
       <input type="checkbox" checked={checked} onChange={onToggle} className="sr-only" />
       <span
         aria-hidden="true"
-        className={`grid h-4 w-4 shrink-0 place-items-center rounded border transition-colors ${
+        className={`grid h-4 w-4 shrink-0 place-items-center border transition-colors ${
           checked ? "border-brand-solid bg-brand-solid text-brand-on-solid" : "border-ink-300 bg-surface"
         }`}
       >

@@ -62,10 +62,10 @@ export function MobileFilterDrawer({
             type="button"
             aria-label={t.nav.close}
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-scrim backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim"
           />
 
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-card bg-surface shadow-pop">
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col border-t border-line bg-surface">
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <h2 className="text-base font-bold text-ink-900">{t.catalog.filters}</h2>
               <button

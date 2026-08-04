@@ -61,16 +61,21 @@ export default function CartPage() {
         {/* ------------------------------- items ----------------------------- */}
         {/* `min-w-0`: grid children default to `min-width: auto`, which stops
             the rows below from shrinking and overflows narrow phones. */}
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-col border border-line bg-surface">
           {items.map((item) => {
             const name = locale === "ka" ? item.nameKa : item.nameEn;
             const max = Math.max(1, item.stock);
 
             return (
-              <article key={item.productId} className="card flex gap-3 p-3 sm:gap-4 sm:p-4">
+              // Rows share the same rule as everything else. The container draws the
+              // outer edge, so the first row must not draw one above itself.
+              <article
+                key={item.productId}
+                className="flex gap-3 border-line p-3 not-first:border-t sm:gap-4 sm:p-4"
+              >
                 <Link
                   href={`/product/${item.slug}`}
-                  className="relative h-24 w-24 shrink-0 overflow-hidden rounded-control bg-ink-50 sm:h-28 sm:w-28"
+                  className="relative h-24 w-24 shrink-0 overflow-hidden bg-ink-50 sm:h-28 sm:w-28"
                 >
                   <Image src={item.image} alt={name} fill sizes="112px" className="object-cover" />
                 </Link>

@@ -136,7 +136,7 @@ export function HeaderBar({
                 aria-pressed={locale === code}
                 // Fixed width: "ქარ" and "EN" are different lengths, and
                 // without this the strip's contents shuffle on every switch.
-                className={`w-11 rounded py-0.5 text-center font-semibold transition-colors ${
+                className={`w-11 py-0.5 text-center font-semibold transition-colors ${
                   locale === code
                     ? "bg-panel-fg/15 text-panel-fg"
                     : "text-panel-muted hover:text-panel-fg"
@@ -162,7 +162,7 @@ export function HeaderBar({
         </button>
 
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-solid text-base font-black text-brand-on-solid shadow-sm">
+          <span className="grid h-9 w-9 place-items-center bg-brand-solid text-base font-black text-brand-on-solid">
             ბ
           </span>
           <span className="hidden text-lg leading-none font-extrabold tracking-tight text-ink-900 sm:block">
@@ -296,7 +296,7 @@ export function HeaderBar({
             type="button"
             aria-label={t.nav.close}
             onClick={() => setMenuOpen(false)}
-            className="absolute inset-0 bg-scrim backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim"
           />
 
           <div className="absolute inset-y-0 left-0 flex w-[19rem] max-w-[85vw] flex-col bg-surface shadow-pop">

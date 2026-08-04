@@ -259,6 +259,13 @@
     color: var(--color-ink-800);
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
+    /* Georgian does not hyphenate and builds long compounds:
+       "კონფიდენციალურობა" is seventeen characters with no break opportunity,
+       and at heading size it is wider than a 320px phone column — it pushed
+       the whole privacy page sideways. Latin has the same problem with a
+       long URL or an SKU. Breaking inside a word is worse typography than
+       not needing to; a page that scrolls sideways is worse than both. */
+    overflow-wrap: break-word;
   }
 
   /* Georgian has no uppercase — `text-transform` on mixed UI only adds
@@ -404,7 +411,6 @@
        3.61:1. `brand-solid` is the same red where white actually passes. */
     background: var(--color-brand-solid);
     color: var(--color-brand-on-solid);
-    box-shadow: 0 1px 2px rgb(222 31 36 / 0.24);
   }
 
   .btn-primary:hover:not(:disabled) {

@@ -136,7 +136,7 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
             type="button"
             aria-label={t.nav.close}
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-scrim backdrop-blur-[2px]"
+            className="absolute inset-0 bg-scrim"
           />
           <div className="absolute inset-y-0 left-0 flex w-64 max-w-[85vw] flex-col bg-panel p-4">
             <button

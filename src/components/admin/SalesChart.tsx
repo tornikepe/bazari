@@ -39,7 +39,7 @@ export function SalesChart({
               title={`${day.date} · ${formatPrice(day.total, locale)}`}
             >
               <div
-                className="absolute bottom-0 w-full rounded-t bg-brand-600/80 transition-all duration-300 group-hover:bg-brand-600"
+                className="absolute bottom-0 w-full bg-brand-solid transition-colors group-hover:bg-brand-solid-hover"
                 style={{ height: `${height}%` }}
               />
             </div>
