@@ -1,3 +1,9 @@
+// Playwright runs its config, global setup and specs in its own Node process,
+// which — unlike the Next server — does not load `.env`. Without this,
+// `DATABASE_URL` is undefined here and every piece of database housekeeping
+// silently no-ops. That is not hypothetical: `global-setup.ts` exists to clear
+// the rate-limit counters between runs and had never once done so.
+import "dotenv/config";
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3100;

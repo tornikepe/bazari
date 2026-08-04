@@ -16,7 +16,7 @@
   --color-brand-300: #ff9d9d;
   --color-brand-400: #fb6565;
   --color-brand-500: #f23b3b;
-  --color-brand-600: #de1f24;
+  --color-brand-600: #dc1f24;
   --color-brand-700: #bb161c;
   --color-brand-800: #9a161b;
   --color-brand-900: #80191d;
@@ -47,7 +47,7 @@
   --color-ink-100: #eef0f4;
   --color-ink-200: #dfe3ea;
   --color-ink-300: #c6ccd8;
-  --color-ink-400: #6c727f; /* 4.50 on canvas */
+  --color-ink-400: #6a707d; /* 4.55 on canvas */
   --color-ink-500: #5f6675; /* 5.38 on canvas */
   --color-ink-600: #4d5567; /* 6.97 on canvas */
   --color-ink-700: #3b4252;
@@ -69,8 +69,13 @@
   --color-info-soft: #dbeafe;
 
   --color-surface: #ffffff;
-  --color-canvas: #f6f7f9;
-  --color-line: #e6e9ef;
+  /* A shade cooler and closer to the surface than before: with the shadows
+     gone the page is read as one sheet with rules drawn on it, not as a
+     tray holding cards. */
+  --color-canvas: #f4f5f7;
+  /* Lines now carry the structure that shadows used to, so they have to be
+     seen. The old #e6e9ef was a suggestion of an edge. */
+  --color-line: #d7dbe2;
 
   /* A form field's border is the only thing saying "you can type here", so
      it is held to the 3:1 that WCAG asks of a UI component's boundary —
@@ -83,7 +88,7 @@
      in dark mode — be light enough to read as a link ON a dark surface,
      and dark enough for white text to read on TOP of it. One value cannot
      do both, so it doesn't have to. */
-  --color-brand-solid: #de1f24;
+  --color-brand-solid: #dc1f24;
   --color-brand-solid-hover: #bb161c;
   --color-brand-on-solid: #ffffff;
 
@@ -96,15 +101,29 @@
   --color-panel-muted: #98a1b3;
   --color-scrim: rgb(9 11 16 / 0.55);
 
-  /* Radii */
-  --radius-card: 0.875rem;
-  --radius-control: 0.625rem;
+  /* Radii.
+     --------------------------------------------------------------------
+     Square. The structure is carried by rules and alignment, not by
+     rounded, floating objects — a hairline that meets another hairline at a
+     right angle reads as a grid, and the same corner rounded reads as a
+     sticker. `pill` survives for the two things that are genuinely round:
+     a count badge and the chat launcher. */
+  --radius-card: 0;
+  --radius-control: 0;
   --radius-pill: 999px;
 
-  /* Shadows — soft and layered rather than dark */
-  --shadow-card: 0 1px 2px rgb(22 26 35 / 0.04), 0 4px 12px rgb(22 26 35 / 0.05);
-  --shadow-lift: 0 2px 4px rgb(22 26 35 / 0.05), 0 12px 28px rgb(22 26 35 / 0.1);
-  --shadow-pop: 0 8px 32px rgb(22 26 35 / 0.16);
+  /* Shadows.
+     --------------------------------------------------------------------
+     Gone from anything that sits *in* the page. A card is a region marked
+     out by rules, not an object hovering above the paper, and a soft blur
+     under every panel is what made the old design read as generic.
+
+     `pop` survives because a chat panel and a sticky bar genuinely float
+     over the content and need to be told apart from it — and even there it
+     is tighter and darker than a diffuse glow. */
+  --shadow-card: none;
+  --shadow-lift: none;
+  --shadow-pop: 0 1px 2px rgb(22 26 35 / 0.16), 0 10px 24px rgb(22 26 35 / 0.14);
 
   /* Typography — Geist has no Georgian glyphs, so Noto Sans Georgian picks
      up those characters per-glyph through the fallback chain. */
@@ -165,9 +184,9 @@
    ========================================================================== */
 
 [data-theme="dark"] {
-  --color-surface: #171a21;
-  --color-canvas: #0f1116;
-  --color-line: #282e3a;
+  --color-surface: #14171d;
+  --color-canvas: #0d0f13;
+  --color-line: #2f3644;
 
   --color-ink-50: #1c212a;
   --color-ink-100: #232936;
@@ -402,9 +421,11 @@
   }
 
   .btn-outline {
-    background: var(--color-surface);
-    color: var(--color-ink-800);
-    border: 1px solid var(--color-line);
+    background: transparent;
+    color: var(--color-ink-900);
+    /* Against the ink, not the decorative rule — a control's edge has to be
+       seen, and `line` is deliberately quiet. */
+    border: 1px solid var(--color-ink-300);
   }
 
   .btn-outline:hover:not(:disabled) {
@@ -436,7 +457,6 @@
     background: var(--color-surface);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-card);
   }
 
   .field-label {
@@ -492,12 +512,38 @@
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    border-radius: var(--radius-pill);
-    padding: 0.25rem 0.625rem;
+    gap: 0.3125rem;
+    border-radius: var(--radius-card);
+    padding: 0.1875rem 0.5rem;
     font-size: var(--text-xs);
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.25;
+    /* Status reads as a stamp rather than as a word floating in colour. */
+    letter-spacing: 0.02em;
+  }
+
+  /* ------------------------------------------------------------------
+     The small tracked capital.
+     ------------------------------------------------------------------
+     The workhorse of this style: section eyebrows, table headers, meta
+     labels. Wide tracking is what stops uppercase at 13px from reading as
+     a shout, and it is the one place the type gets to be decorative.
+
+     Georgian has no letter case, so `uppercase` is a no-op there — but the
+     tracking and the weight still separate it from body text, which is the
+     job. That is why the rule leans on tracking rather than on case. */
+  .label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--color-ink-500);
+  }
+
+  /* A full-width hairline used to divide sections, so the page reads as
+     one ruled sheet rather than as a stack of separate boxes. */
+  .rule {
+    border-top: 1px solid var(--color-line);
   }
 
   /* Two-line clamp that *reserves* both lines even when the text only fills
@@ -531,58 +577,6 @@
     display: none;
   }
 
-  /* Rails that *should* advertise that they scroll: a thin themed bar that
-     only appears on hover, plus snap points so items stop cleanly. */
-  .rail {
-    scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: 1rem;
-    transition: scrollbar-color 0.2s ease;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .rail:hover,
-  .rail:focus-within {
-    scrollbar-color: var(--color-ink-300) transparent;
-  }
-
-  .rail > * {
-    scroll-snap-align: start;
-  }
-
-  .rail::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .rail::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .rail::-webkit-scrollbar-thumb {
-    background: transparent;
-    border-radius: var(--radius-pill);
-  }
-
-  .rail:hover::-webkit-scrollbar-thumb,
-  .rail:focus-within::-webkit-scrollbar-thumb {
-    background: var(--color-ink-300);
-  }
-
-  /* Fades the rail's edges so a cut-off item reads as "there is more". */
-  .rail-fade {
-    position: relative;
-  }
-
-  .rail-fade::after {
-    content: "";
-    position: absolute;
-    inset-block: 0;
-    right: 0;
-    width: 3rem;
-    pointer-events: none;
-    background: linear-gradient(to right, transparent, var(--color-surface));
-  }
 }
 
 /* ==========================================================================
@@ -754,16 +748,15 @@
 
 /* Interactive lift, shared by product and category cards. */
 .hover-lift {
-  transition:
-    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.25s ease;
+  /* Was a translate plus a growing shadow. In a design held together by
+     alignment, a card that lifts off the grid on hover breaks the one thing
+     doing the work — so the response is the edge darkening instead. */
+  transition: border-color 0.18s ease;
 }
 
 @media (hover: hover) {
   .hover-lift:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lift);
+    border-color: var(--color-ink-400);
   }
 }
 
@@ -831,13 +824,106 @@
     transform: none;
   }
 
-  .hover-lift:hover {
-    transform: none;
-  }
-
   .skeleton::after {
     display: none;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* The grid                                                            */
+/*                                                                     */
+/* The hero is built on a visible 12-column rule set rather than on a   */
+/* decorative background. The lines are the design: they are what makes */
+/* the page read as constructed rather than as arranged.               */
+/* ------------------------------------------------------------------ */
+
+.grid-field {
+  position: relative;
+}
+
+/* Vertical rules drawn behind the content, fading out at the bottom so
+   they read as an underlay rather than as a table. Hidden on phones,
+   where twelve columns is a texture, not a structure. */
+.grid-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-line) 0 1px,
+    transparent 1px calc(100% / 12)
+  );
+  background-size: 100% 100%;
+  mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  /* Present enough to read as structure, faint enough that the headline and
+     the buttons sit on top of it rather than in it. */
+  opacity: 0.4;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .grid-field::before {
+    display: block;
+  }
+}
+
+/* A number set at display size. Tabular figures so a column of them lines
+   up on the decimal, which is the whole point of putting them in a row. */
+.figure {
+  font-size: var(--text-4xl);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The display line. Tight tracking is what keeps a large grotesque from
+   looking like a stretched-out headline; Georgian needs the extra leading
+   because its ascenders and descenders both run long. */
+.display {
+  font-size: var(--text-4xl);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+@media (min-width: 1024px) {
+  .display {
+    font-size: 3.25rem;
+  }
+}
+
+/* An index row — the numbered list of categories under the hero. The
+   number is set in the margin, which is the oldest trick in this style
+   and still the one that reads as "designed" rather than "styled". */
+.index-row {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 0;
+  border-top: 1px solid var(--color-line);
+  transition: background-color 0.15s ease;
+}
+
+.index-row:last-child {
+  border-bottom: 1px solid var(--color-line);
+}
+
+@media (hover: hover) {
+  .index-row:hover {
+    background: var(--color-ink-50);
+  }
+}
+
+.index-num {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-400);
 }
 
 /* ------------------------------------------------------------------ */
@@ -913,16 +999,14 @@
   min-height: 3rem;
   min-width: 3rem;
   padding-inline: 0.875rem;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-control);
   background: var(--color-brand-solid);
   color: var(--color-brand-on-solid);
   font-size: var(--text-sm);
   font-weight: 700;
   box-shadow: var(--shadow-pop);
   cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    transform 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .chat-launcher:hover {
@@ -930,7 +1014,7 @@
 }
 
 .chat-launcher:active {
-  transform: scale(0.96);
+  background: var(--color-brand-solid-hover);
 }
 
 /* Below 640px the label is dropped and the launcher is a circle: on a 320px
@@ -1026,8 +1110,8 @@
   align-self: flex-start;
   max-width: 100%;
   padding: 0.4375rem 0.75rem;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-ink-300);
+  border-radius: var(--radius-control);
   background: var(--color-surface);
   font-size: var(--text-xs);
   font-weight: 600;

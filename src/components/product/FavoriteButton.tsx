@@ -37,10 +37,10 @@ export function FavoriteButton({
       aria-pressed={isFavorite}
       aria-label={isFavorite ? t.favorites.remove : t.favorites.add}
       title={isFavorite ? t.favorites.remove : t.favorites.add}
-      className={`grid h-8 w-8 place-items-center rounded-pill backdrop-blur-sm transition-colors ${
+      className={`grid h-8 w-8 place-items-center transition-colors ${
         isFavorite
           ? "bg-brand-solid text-brand-on-solid"
-          : "bg-surface/85 text-ink-500 hover:bg-surface hover:text-brand-600"
+          : "bg-surface text-ink-500 hover:text-brand-600"
       } ${className}`}
     >
       <HeartIcon size={16} filled={isFavorite} />

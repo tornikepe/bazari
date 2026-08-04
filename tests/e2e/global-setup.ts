@@ -12,7 +12,12 @@ import { Client } from "pg";
  */
 export default async function globalSetup() {
   const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) return;
+  if (!connectionString) {
+    // Loudly, because a silent skip here looks exactly like a passing setup —
+    // and the tests that depend on it fail much later, somewhere else.
+    console.warn("[e2e] DATABASE_URL is not set — rate limits NOT cleared");
+    return;
+  }
 
   const client = new Client({ connectionString });
   try {

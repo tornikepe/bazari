@@ -185,11 +185,11 @@ export function HeaderBar({
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t.nav.searchPlaceholder}
             aria-label={t.nav.search}
-            className="field h-11 rounded-pill pl-10 pr-24"
+            className="field h-11 pl-10 pr-24"
           />
           <button
             type="submit"
-            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 h-8 w-20 -translate-y-1/2 rounded-pill px-0"
+            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 h-8 w-20 -translate-y-1/2 px-0"
           >
             {t.nav.search}
           </button>
@@ -253,34 +253,6 @@ export function HeaderBar({
         </div>
       </div>
 
-      {/* Category rail */}
-      <nav className="rail-fade hidden border-t border-line lg:block">
-        <div className="page-container rail flex h-11 items-center gap-1 overflow-x-auto">
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={`/catalog?category=${category.slug}`}
-              className="flex shrink-0 items-center gap-1.5 rounded-control px-3 py-1.5 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
-            >
-              <span aria-hidden="true">{category.icon}</span>
-              {categoryName(category)}
-            </Link>
-          ))}
-
-          <span className="mx-2 h-4 w-px shrink-0 bg-line" />
-
-          {navLinks.slice(1).map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="shrink-0 rounded-control px-3 py-1.5 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
-
       {/* Mobile search overlay */}
       {searchOpen && (
         <div className="absolute inset-x-0 top-0 z-50 bg-surface p-3 shadow-card md:hidden">
@@ -297,11 +269,11 @@ export function HeaderBar({
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={t.nav.searchPlaceholder}
                 aria-label={t.nav.search}
-                className="field h-11 rounded-pill pl-10"
+                className="field h-11 pl-10"
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-md shrink-0 rounded-pill">
+            <button type="submit" className="btn btn-primary btn-md shrink-0">
               {t.nav.search}
             </button>
 

@@ -48,3 +48,36 @@ export async function useEnglish(page: Page) {
     { name: "cm_locale", value: "en", url: "http://127.0.0.1:3100" },
   ]);
 }
+
+/**
+ * Clears the rate-limit counters mid-run.
+ *
+ * `global-setup.ts` clears them once before the suite, which is enough for
+ * most tests. It is not enough for the ones that deliberately hammer the
+ * reset endpoint: the limit is 10 requests an hour per address, and a single
+ * full run makes more than that between them. The result was a security test
+ * failing with "Too many attempts" and looking exactly like an enumeration
+ * leak — the worst kind of false alarm, because the honest reading of a red
+ * security test is to believe it.
+ *
+ * Uses `pg` rather than the Prisma client for the same reason global-setup
+ * does: the generated client is ESM and this file is loaded as CommonJS.
+ */
+export async function clearRateLimits() {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.warn("[e2e] DATABASE_URL is not set — rate limits NOT cleared");
+    return;
+  }
+
+  const { Client } = await import("pg");
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    await client.query('DELETE FROM "RateLimit"');
+  } catch {
+    // Housekeeping must never fail a test on its own.
+  } finally {
+    await client.end().catch(() => {});
+  }
+}

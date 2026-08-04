@@ -22,7 +22,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const lowStock = !soldOut && product.stock <= LOW_STOCK_THRESHOLD;
 
   return (
-    <article className="card hover-lift group relative flex flex-col overflow-hidden">
+    <article className="group relative flex flex-col overflow-hidden bg-surface transition-colors hover:bg-ink-50">
       <Link
         href={`/product/${product.slug}`}
         className="relative block aspect-square overflow-hidden bg-ink-50"
@@ -32,19 +32,19 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           alt={name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover"
         />
 
         <FavoriteButton productId={product.id} className="absolute top-2.5 right-2.5 z-10" />
 
         <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1.5">
           {discount > 0 && (
-            <span className="badge bg-brand-solid text-brand-on-solid shadow-sm">
+            <span className="badge bg-brand-solid text-brand-on-solid">
               {fill(t.product.sale, { percent: discount })}
             </span>
           )}
           {soldOut && (
-            <span className="badge bg-panel/85 text-panel-fg backdrop-blur-sm">
+            <span className="badge bg-panel text-panel-fg">
               {t.product.outOfStock}
             </span>
           )}
@@ -54,7 +54,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       <div className="flex flex-1 flex-col gap-2.5 p-3.5">
         {/* Always rendered, even when empty — a missing brand would otherwise
             pull this card's title up out of line with its neighbours. */}
-        <span className="truncate text-xs font-semibold tracking-wide text-ink-400 uppercase">
+        <span className="label truncate text-ink-400">
           {product.brand || " "}
         </span>
 

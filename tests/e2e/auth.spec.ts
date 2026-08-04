@@ -1,7 +1,22 @@
 import { expect, test } from "@playwright/test";
-import { uniqueEmail, useEnglish } from "./helpers";
+import { uniqueEmail, useEnglish, clearRateLimits } from "./helpers";
 
 test.beforeEach(async ({ page }) => useEnglish(page));
+
+/**
+ * The page's own alert, excluding the framework's.
+ *
+ * Next renders a `<div role="alert" id="__next-route-announcer__">` for screen
+ * readers on every route. A document-wide `getByRole("alert")` matches it as
+ * well as the real error and trips Playwright's strict mode — intermittently,
+ * depending on whether the announcer had been populated yet.
+ *
+ * Excluding it by id rather than scoping to `main`: the auth pages are in
+ * their own route group and have no `main` element at all.
+ */
+function pageAlert(page: import("@playwright/test").Page) {
+  return page.locator('[role="alert"]:not(#__next-route-announcer__)');
+}
 
 test("register → signed in → sign out", async ({ page }) => {
   const email = uniqueEmail("signup");
@@ -51,7 +66,7 @@ test("signing up twice with the same address is refused", async ({ page }) => {
     if (attempt === 0) await expect(page).toHaveURL(/\/verify/);
   }
 
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(pageAlert(page)).toBeVisible();
   await expect(page).not.toHaveURL(/\/verify/);
 });
 
@@ -63,11 +78,16 @@ test("mismatched passwords are caught before an account is made", async ({ page 
   await page.getByLabel(/confirm/i).fill("somethingelse456");
   await page.getByRole("button", { name: /sign up|create/i }).click();
 
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(pageAlert(page)).toBeVisible();
   await expect(page).not.toHaveURL(/\/verify/);
 });
 
 test("a password reset request never says whether the address exists", async ({ page }) => {
+  // Both requests have to reach the endpoint for the comparison to mean
+  // anything — a throttled second attempt renders "too many attempts" and
+  // looks identical to a leak.
+  await clearRateLimits();
+
   // Same response either way, or this endpoint enumerates the user list.
   const responses: string[] = [];
 

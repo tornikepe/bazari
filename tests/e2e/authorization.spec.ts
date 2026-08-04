@@ -57,7 +57,9 @@ test("an unknown order number 404s rather than erroring", async ({ page }) => {
 test("the sign-in form does not reveal which field was wrong", async ({ page }) => {
   await signIn(page, "nobody@example.test", "wrongpassword");
 
-  const alert = page.getByRole("alert");
+  // Next's route announcer is also role="alert" and lives outside any layout,
+  // so it is excluded by id rather than by scoping to a container.
+  const alert = page.locator('[role="alert"]:not(#__next-route-announcer__)');
   await expect(alert).toBeVisible();
   await expect(alert).not.toContainText(/no such (user|account)|unknown email/i);
 });

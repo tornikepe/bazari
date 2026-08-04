@@ -13,14 +13,24 @@
  * value and seeing both call sites.
  */
 
-/** The catalogue's grid. One column on the narrowest phones — at 320px two
- *  columns leave about 130px per card, and nothing fits in that. */
+/**
+ * The catalogue's grid.
+ *
+ * `gap-px` over a line-coloured background, with a border closing the outside:
+ * the cards are divided by the same one-pixel rule that runs everywhere else
+ * on the site, rather than floating apart on gaps and shadows. The cards
+ * themselves carry no border — the gap *is* the border, so interior rules
+ * never double up.
+ *
+ * One column on the narrowest phones: at 320px, two columns leave about 130px
+ * per card and nothing fits in that.
+ */
 export const PRODUCT_GRID =
-  "grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 xl:grid-cols-3";
+  "grid grid-cols-1 gap-px border border-line bg-line min-[380px]:grid-cols-2 xl:grid-cols-3";
 
 /** The wishlist's grid, which goes one wider because it has no sidebar. */
 export const PRODUCT_GRID_WIDE =
-  "grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 xl:grid-cols-4";
+  "grid grid-cols-1 gap-px border border-line bg-line min-[380px]:grid-cols-2 xl:grid-cols-4";
 
 export function ProductGridSkeleton({
   count = 12,
@@ -32,7 +42,7 @@ export function ProductGridSkeleton({
   return (
     <div className={className}>
       {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="card overflow-hidden">
+        <div key={index} className="overflow-hidden bg-surface">
           <div className="skeleton aspect-square" />
           <div className="flex flex-col gap-2.5 p-3.5">
             <div className="h-3 w-1/3 animate-pulse rounded bg-ink-100" />
