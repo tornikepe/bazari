@@ -211,9 +211,13 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
           <p className="text-sm text-ink-500">{t.admin.noCategories}</p>
         </div>
       ) : (
+        // `min-w-0` on the rows: a grid item's default `min-width: auto`
+        // refuses to shrink below its content, so the truncation on the name
+        // inside never got a chance to apply and the row pushed the whole page
+        // sideways at 390px in Georgian, where the names run longer.
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {categories.map((category) => (
-            <li key={category.id} className="card flex items-center gap-3 p-4">
+            <li key={category.id} className="card flex min-w-0 items-center gap-3 p-4">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-control bg-ink-50 text-xl">
                 {category.icon}
               </span>
