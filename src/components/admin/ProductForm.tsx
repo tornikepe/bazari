@@ -117,7 +117,16 @@ export function ProductForm({
                 defaultValue={product?.slug}
                 hint={t.admin.slugHint}
               />
-              <Text name="sku" label={t.admin.skuField} defaultValue={product?.sku} />
+              {/* Blank is the normal case for a new product — the server
+                  generates one. The hint says so, so the field does not read
+                  as something the shop owner is expected to invent. */}
+              <Text
+                name="sku"
+                label={t.admin.skuField}
+                defaultValue={product?.sku}
+                hint={product ? undefined : t.admin.skuHint}
+                placeholder={product ? undefined : "TEL-K7M2Q"}
+              />
 
               <div className="sm:col-span-2">
                 <label className="field-label" htmlFor="descriptionKa">

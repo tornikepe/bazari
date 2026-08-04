@@ -6,6 +6,7 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { sendOrderShippedEmail } from "@/lib/order-emails";
 import { getLocale } from "@/lib/locale";
 import { slugify } from "@/lib/format";
+import { generateSku } from "@/lib/sku";
 import { isOrderStatus } from "@/lib/order-status";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -88,11 +89,31 @@ async function readProductForm(
   const oldPriceRaw = text(formData, "oldPrice");
   const oldPrice = oldPriceRaw ? Math.round(Number(oldPriceRaw) * 100) : null;
 
-  // SKU falls back to the slug so the field can be left blank, and is checked
-  // for collisions the same way the slug is.
-  const sku = (text(formData, "sku") || slug).toUpperCase().slice(0, 32);
-  const skuClash = await prisma.product.findUnique({ where: { sku }, select: { id: true } });
-  if (skuClash && skuClash.id !== currentId) return { ok: false, error: "sku-taken" };
+  // A blank SKU is generated rather than filled in from the slug. The slug is
+  // a URL — it changes when the product is renamed, it can be 60 characters of
+  // transliterated Georgian, and neither is any use written on a box. The
+  // owner of this shop should never have to know what an SKU is.
+  const typed = text(formData, "sku").toUpperCase().slice(0, 32);
+  const taken = async (candidate: string) => {
+    const clash = await prisma.product.findUnique({
+      where: { sku: candidate },
+      select: { id: true },
+    });
+    return clash !== null && clash.id !== currentId;
+  };
+
+  let sku = typed;
+  if (!sku) {
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+      select: { slug: true },
+    });
+    const generated = await generateSku(category?.slug ?? "gen", taken);
+    if (!generated) return { ok: false, error: "sku-taken" };
+    sku = generated;
+  } else if (await taken(sku)) {
+    return { ok: false, error: "sku-taken" };
+  }
 
   return {
     ok: true,
