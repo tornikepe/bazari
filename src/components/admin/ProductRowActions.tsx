@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { deleteProduct, toggleProductActive } from "@/app/actions/admin";
 import { PencilIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
 
@@ -16,6 +17,7 @@ export function ProductRowActions({
 }) {
   const { t } = useI18n();
   const router = useRouter();
+  const canWrite = useCanWrite();
   const [isPending, startTransition] = useTransition();
 
   function onToggle() {
@@ -32,6 +34,19 @@ export function ProductRowActions({
       await deleteProduct(id);
       router.refresh();
     });
+  }
+
+  // A viewer keeps the information the row carries — whether the product is
+  // live — and loses only the controls. Rendering a disabled switch instead
+  // would still read as "you could turn this on", which is not true for them.
+  if (!canWrite) {
+    return (
+      <div className="flex items-center justify-end">
+        <span className={`badge ${isActive ? "bg-success-soft text-success" : "bg-ink-100 text-ink-600"}`}>
+          {isActive ? t.admin.filterActive : t.admin.filterInactive}
+        </span>
+      </div>
+    );
   }
 
   return (

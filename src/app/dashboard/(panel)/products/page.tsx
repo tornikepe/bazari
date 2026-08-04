@@ -5,6 +5,8 @@ import { getI18n } from "@/lib/locale";
 import { formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
 import { AdminToolbar, type SelectFilter } from "@/components/admin/AdminToolbar";
+import { WriteOnly } from "@/components/admin/StaffRoleProvider";
+import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { ProductRowActions } from "@/components/admin/ProductRowActions";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { PackageIcon, PlusIcon } from "@/components/ui/icons";
@@ -145,16 +147,20 @@ export default async function AdminProductsPage({
 
   return (
     <div className="mx-auto max-w-6xl">
+      <ReadOnlyNotice />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
           {t.admin.products}
           <span className="ml-2 text-sm font-medium text-ink-400">{total}</span>
         </h1>
 
+        <WriteOnly>
         <Link href="/dashboard/products/new" className="btn btn-primary btn-sm">
           <PlusIcon size={15} />
           {t.admin.newProduct}
         </Link>
+        </WriteOnly>
       </div>
 
       <div className="mt-4">
@@ -174,10 +180,12 @@ export default async function AdminProductsPage({
           <p className="text-sm text-ink-500">
             {query || status || category ? t.admin.noMatches : t.admin.noProducts}
           </p>
+          <WriteOnly>
           <Link href="/dashboard/products/new" className="btn btn-primary btn-sm mt-1">
             <PlusIcon size={15} />
             {t.admin.newProduct}
           </Link>
+          </WriteOnly>
         </div>
       ) : (
         <>

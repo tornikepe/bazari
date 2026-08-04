@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
 import { Popover } from "@/components/ui/Overlay";
+import { isStaff, type Role } from "@/lib/auth-roles";
 import {
   BagIcon,
   DashboardIcon,
@@ -14,7 +15,7 @@ import {
   UserIcon,
 } from "@/components/ui/icons";
 
-export type MenuUser = { name: string; email: string; role: "customer" | "admin" } | null;
+export type MenuUser = { name: string; email: string; role: Role } | null;
 
 /**
  * The header's account control.
@@ -68,9 +69,7 @@ export function AccountMenu({ user }: { user: MenuUser }) {
     );
   }
 
-  const isAdmin = user.role === "admin";
-
-  const links = isAdmin
+  const links = isStaff(user.role)
     ? [{ href: "/dashboard", label: t.admin.dashboard, icon: DashboardIcon }]
     : [
         { href: "/account", label: t.account.title, icon: UserIcon },

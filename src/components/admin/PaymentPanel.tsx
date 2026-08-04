@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { markPaymentReceived, refundPayment } from "@/app/actions/payments";
+import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { SpinnerIcon } from "@/components/ui/icons";
 import type { PaymentState } from "@/lib/payments/types";
@@ -31,6 +32,7 @@ const TONE: Record<PaymentState, string> = {
 };
 
 export function PaymentPanel({ payments }: { payments: PaymentRow[] }) {
+  const canWrite = useCanWrite();
   const { locale, t } = useI18n();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -74,7 +76,7 @@ export function PaymentPanel({ payments }: { payments: PaymentRow[] }) {
 
               <div className="mt-2.5 flex flex-wrap gap-2">
                 {/* Cash is collected by a human, so a human confirms it. */}
-                {payment.provider === "manual" && payment.state !== "captured" && (
+                {canWrite && payment.provider === "manual" && payment.state !== "captured" && (
                   <button
                     type="button"
                     disabled={pending}
@@ -86,7 +88,7 @@ export function PaymentPanel({ payments }: { payments: PaymentRow[] }) {
                   </button>
                 )}
 
-                {payment.state === "captured" && (
+                {canWrite && payment.state === "captured" && (
                   <button
                     type="button"
                     disabled={pending}

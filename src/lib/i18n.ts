@@ -425,6 +425,47 @@ const ka = {
     resetFilters: "ფილტრების მოხსნა",
     searchOrders: "ნომერი, სახელი ან ტელეფონი…",
     noMatches: "შედეგი ვერ მოიძებნა",
+
+    // roles and permissions
+    roleAdmin: "ადმინისტრატორი",
+    roleViewer: "დამკვირვებელი",
+    roleCustomer: "მომხმარებელი",
+    readOnly: "მხოლოდ ნახვა",
+    readOnlyTitle: "შენ მხოლოდ ნახვის უფლება გაქვს",
+    readOnlyBody:
+      "ყველა გვერდი და მონაცემი გიჩანს, მაგრამ შეცვლა, დამატება ან წაშლა არ შეგიძლია.",
+    noPermission: "ამის უფლება არ გაქვს",
+
+    // customers
+    customers: "მომხმარებლები",
+    customersHint: "რეგისტრირებული ანგარიშები და მათი შეკვეთები",
+    searchCustomers: "სახელი, ელფოსტა ან ტელეფონი…",
+    noCustomers: "მომხმარებელი ვერ მოიძებნა",
+    customerSince: "რეგისტრაცია",
+    customerOrders: "შეკვეთა",
+    customerSpend: "დახარჯული",
+    verified: "დადასტურებული",
+    unverified: "დაუდასტურებელი",
+    role: "როლი",
+    lastOrder: "ბოლო შეკვეთა",
+    noOrdersYet: "შეკვეთა ჯერ არ გაუკეთებია",
+    contactDetails: "საკონტაქტო მონაცემები",
+    customerProfile: "მომხმარებლის ბარათი",
+    totalCustomers: "სულ მომხმარებელი",
+    newThisMonth: "ახალი ამ თვეში",
+    withOrders: "შეკვეთით",
+
+    // sales chart
+    chartHint: "დღიური შემოსავალი",
+    chartPeak: "მაქსიმუმი",
+    chartAverage: "საშუალო დღეში",
+    chartTotal: "ჯამი",
+    chartToday: "დღეს",
+    chartNoRevenue: "ამ დღეს შემოსავალი არ ყოფილა",
+
+    // sku
+    skuHint: "ცარიელი დატოვე — თავად შეიქმნება",
+    skuGenerate: "ახლის გენერაცია",
   },
 
   paymentState: {
@@ -929,6 +970,47 @@ const en: Dictionary = {
     resetFilters: "Reset filters",
     searchOrders: "Number, name or phone…",
     noMatches: "No matches found",
+
+    // roles and permissions
+    roleAdmin: "Administrator",
+    roleViewer: "Viewer",
+    roleCustomer: "Customer",
+    readOnly: "View only",
+    readOnlyTitle: "You have view-only access",
+    readOnlyBody:
+      "Every page and figure here is visible to you, but you cannot add, change or delete anything.",
+    noPermission: "You do not have permission to do that",
+
+    // customers
+    customers: "Customers",
+    customersHint: "Registered accounts and the orders they have placed",
+    searchCustomers: "Name, email or phone…",
+    noCustomers: "No customers found",
+    customerSince: "Joined",
+    customerOrders: "Orders",
+    customerSpend: "Spent",
+    verified: "Verified",
+    unverified: "Not verified",
+    role: "Role",
+    lastOrder: "Last order",
+    noOrdersYet: "No orders yet",
+    contactDetails: "Contact details",
+    customerProfile: "Customer",
+    totalCustomers: "Customers",
+    newThisMonth: "New this month",
+    withOrders: "With orders",
+
+    // sales chart
+    chartHint: "Daily revenue",
+    chartPeak: "Peak",
+    chartAverage: "Daily average",
+    chartTotal: "Total",
+    chartToday: "Today",
+    chartNoRevenue: "No revenue on this day",
+
+    // sku
+    skuHint: "Leave blank — one is generated for you",
+    skuGenerate: "Generate a new one",
   },
 
   paymentState: {

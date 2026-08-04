@@ -7,6 +7,7 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { LOCALES, type Locale } from "@/lib/i18n";
+import { isStaff, type Role } from "@/lib/auth-roles";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LocaleToggle } from "@/components/ui/LocaleToggle";
 import { LogoMark } from "@/components/ui/Logo";
@@ -31,7 +32,7 @@ export type HeaderCategory = {
   icon: string;
 };
 
-export type HeaderUser = { name: string; email: string; role: "customer" | "admin" } | null;
+export type HeaderUser = { name: string; email: string; role: Role } | null;
 
 export function HeaderBar({
   categories,
@@ -83,10 +84,10 @@ export function HeaderBar({
   }
 
   // Signed out -> sign in; customer -> their account; staff -> the dashboard.
-  const accountHref = !user ? "/login" : user.role === "admin" ? "/dashboard" : "/account";
+  const accountHref = !user ? "/login" : isStaff(user.role) ? "/dashboard" : "/account";
   const accountLabel = !user
     ? t.auth.signIn
-    : user.role === "admin"
+    : isStaff(user.role)
       ? t.admin.dashboard
       : t.account.title;
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { getI18n } from "@/lib/locale";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
@@ -81,6 +82,8 @@ export default async function AdminOrdersPage({
 
   return (
     <div className="mx-auto max-w-6xl">
+      <ReadOnlyNotice />
+
       <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
         {t.admin.orders}
         <span className="ml-2 text-sm font-medium text-ink-400">{allCount}</span>

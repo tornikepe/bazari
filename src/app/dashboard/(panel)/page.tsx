@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { getI18n } from "@/lib/locale";
 import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -100,6 +101,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
+      <ReadOnlyNotice />
+
       <h1 className="text-xl font-extrabold tracking-tight text-ink-900">{t.admin.overview}</h1>
 
       {/* ------------------------------- stats ------------------------------ */}

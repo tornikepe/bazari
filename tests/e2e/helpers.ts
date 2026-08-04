@@ -6,17 +6,33 @@ export const ADMIN = {
   email: process.env.ADMIN_EMAIL ?? "admin@bazari.ge",
   password: process.env.ADMIN_PASSWORD ?? "",
 };
+/** Read-only staff. Same source of truth as the admin — the seed reads these. */
+export const VIEWER = {
+  email: process.env.VIEWER_EMAIL ?? "viewer@bazari.ge",
+  password: process.env.VIEWER_PASSWORD ?? "",
+};
 
 /** A unique address per run, so re-runs never collide on the unique email. */
 export function uniqueEmail(prefix = "e2e") {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`;
 }
 
+/**
+ * Signs in and waits for the session to actually exist.
+ *
+ * The wait is the important part. `login` is a Server Action that ends in a
+ * `redirect`, so the session cookie is only set once that response lands —
+ * navigating straight afterwards races it and arrives back at /login with no
+ * session, which reads exactly like a permissions bug. It cost an afternoon
+ * once already.
+ */
 export async function signIn(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByLabel(/email|ელფოსტა/i).first().fill(email);
   await page.getByLabel(/password|პაროლი/i).first().fill(password);
   await page.getByRole("button", { name: /sign in|შესვლა/i }).click();
+
+  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 });
 }
 
 /**
@@ -47,6 +63,28 @@ export async function useEnglish(page: Page) {
   await page.context().addCookies([
     { name: "cm_locale", value: "en", url: "http://127.0.0.1:3100" },
   ]);
+}
+
+/**
+ * Reads a column straight from the database.
+ *
+ * For assertions about whether a write *happened*, as opposed to whether the
+ * UI claims it did. Parsing it back out of rendered HTML means depending on
+ * attribute order and on the very rendering the test is meant to be checking.
+ */
+export async function readProductFlag(id: string, column: "isActive"): Promise<boolean | null> {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("[e2e] DATABASE_URL is not set");
+
+  const { Client } = await import("pg");
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const result = await client.query(`SELECT "${column}" FROM "Product" WHERE id = $1`, [id]);
+    return result.rows[0]?.[column] ?? null;
+  } finally {
+    await client.end().catch(() => {});
+  }
 }
 
 /**

@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LogoMark } from "@/components/ui/Logo";
 import { Overlay } from "@/components/ui/Overlay";
 import { LOCALES, type Locale } from "@/lib/i18n";
+import type { Role } from "@/lib/auth-roles";
 import {
   BagIcon,
   CloseIcon,
@@ -17,9 +18,14 @@ import {
   LogoutIcon,
   MenuIcon,
   PackageIcon,
+  UsersIcon,
 } from "@/components/ui/icons";
 
-export function AdminSidebar({ admin }: { admin: { name: string; email: string } }) {
+export function AdminSidebar({
+  admin,
+}: {
+  admin: { name: string; email: string; role: Role };
+}) {
   const { locale, t, setLocale } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -29,6 +35,7 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
     { href: "/dashboard/products", label: t.admin.products, icon: PackageIcon },
     { href: "/dashboard/categories", label: t.admin.categories, icon: GridIcon },
     { href: "/dashboard/orders", label: t.admin.orders, icon: BagIcon },
+    { href: "/dashboard/customers", label: t.admin.customers, icon: UsersIcon },
   ];
 
   const isActive = (href: string, exact?: boolean) =>
@@ -86,6 +93,11 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
         <div className="px-2">
           <p className="truncate text-xs font-semibold text-panel-fg">{admin.name}</p>
           <p className="truncate text-xs text-panel-muted">{admin.email}</p>
+          {/* Named here rather than only on the pages: a viewer who cannot find
+              the edit buttons should be able to see why without navigating. */}
+          <p className="mt-1 text-xs font-semibold text-panel-muted">
+            {admin.role === "viewer" ? t.admin.roleViewer : t.admin.roleAdmin}
+          </p>
         </div>
 
         <Link

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { deleteCategory, saveCategory } from "@/app/actions/admin";
+import { useCanWrite } from "@/components/admin/StaffRoleProvider";
+import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { AlertIcon, CloseIcon, PencilIcon, PlusIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
 
 export type AdminCategory = {
@@ -20,6 +22,7 @@ export type AdminCategory = {
 export function CategoryManager({ categories }: { categories: AdminCategory[] }) {
   const { locale, t } = useI18n();
   const router = useRouter();
+  const canWrite = useCanWrite();
   const [isPending, startTransition] = useTransition();
 
   // `null` = closed, `"new"` = create, otherwise the category being edited.
@@ -64,23 +67,27 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
 
   return (
     <div className="mx-auto max-w-4xl">
+      <ReadOnlyNotice />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
           {t.admin.categories}
           <span className="ml-2 text-sm font-medium text-ink-400">{categories.length}</span>
         </h1>
 
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setEditing("new");
-          }}
-          className="btn btn-primary btn-sm"
-        >
-          <PlusIcon size={15} />
-          {t.admin.newCategory}
-        </button>
+        {canWrite && (
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setEditing("new");
+            }}
+            className="btn btn-primary btn-sm"
+          >
+            <PlusIcon size={15} />
+            {t.admin.newCategory}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -94,7 +101,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
       )}
 
       {/* ------------------------------- form ------------------------------- */}
-      {editing && (
+      {canWrite && editing && (
         <form onSubmit={handleSubmit} className="card mt-4 p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-ink-900">
@@ -229,27 +236,31 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                   ↗
                 </Link>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setEditing(category);
-                  }}
-                  aria-label={t.admin.edit}
-                  className="btn btn-ghost h-8 w-8 rounded-control p-0"
-                >
-                  <PencilIcon size={15} />
-                </button>
+                {canWrite && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError(null);
+                        setEditing(category);
+                      }}
+                      aria-label={t.admin.edit}
+                      className="btn btn-ghost h-8 w-8 rounded-control p-0"
+                    >
+                      <PencilIcon size={15} />
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleDelete(category)}
-                  disabled={isPending}
-                  aria-label={t.admin.delete}
-                  className="btn btn-ghost h-8 w-8 rounded-control p-0 text-ink-400 hover:bg-danger-soft hover:text-danger"
-                >
-                  <TrashIcon size={15} />
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(category)}
+                      disabled={isPending}
+                      aria-label={t.admin.delete}
+                      className="btn btn-ghost h-8 w-8 rounded-control p-0 text-ink-400 hover:bg-danger-soft hover:text-danger"
+                    >
+                      <TrashIcon size={15} />
+                    </button>
+                  </>
+                )}
               </div>
             </li>
           ))}
