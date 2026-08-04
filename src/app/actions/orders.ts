@@ -28,7 +28,10 @@ export type PlaceOrderInput = {
 
 export type PlaceOrderResult =
   | { ok: true; number: string }
-  | { ok: false; error: "empty" | "invalid" | "unavailable" | "failed" | "rate-limited" };
+  | {
+      ok: false;
+      error: "empty" | "invalid" | "unavailable" | "failed" | "rate-limited" | "sign-in-required";
+    };
 
 /** Thrown inside the order transaction when a line can no longer be filled. */
 class OutOfStockError extends Error {
@@ -65,9 +68,18 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
   if (wanted.size === 0) return { ok: false, error: "empty" };
 
-  // Attach the order to the signed-in customer, if there is one — guests can
-  // still check out, their orders simply have no owner.
+  // An account is required to buy. Guest checkout used to be allowed, which
+  // meant an order could exist with no owner: nobody could look it up later
+  // without the emailed receipt link, "my orders" was empty for the person who
+  // placed them, and a refund or a delivery question had no verified party on
+  // the other end. Checked here and not only in the form — this is a Server
+  // Action and is reachable by direct POST.
   const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "sign-in-required" };
+
+  // Staff accounts are for running the shop, not shopping in it. Letting one
+  // order would attach the order to a user the "my orders" page never shows.
+  if (user.role !== "customer") return { ok: false, error: "sign-in-required" };
 
   const products = await prisma.product.findMany({
     where: { id: { in: [...wanted.keys()], }, isActive: true },
@@ -109,7 +121,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         const created = await tx.order.create({
           data: {
             number: generateOrderNumber(),
-            userId: user?.role === "customer" ? user.id : null,
+            userId: user.id,
             customerName,
             phone,
             email: input.email?.trim() ?? "",

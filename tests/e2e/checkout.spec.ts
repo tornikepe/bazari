@@ -1,13 +1,21 @@
 import { expect, test } from "@playwright/test";
-import { seedCart, useEnglish } from "./helpers";
+import { DEMO_CUSTOMER, seedCart, signIn, useEnglish } from "./helpers";
 
-test.beforeEach(async ({ page }) => useEnglish(page));
+test.beforeEach(async ({ page }) => {
+  await useEnglish(page);
+  // Buying requires an account. It did not always, which is what these tests
+  // were originally written against.
+  await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
+});
 
-test("a guest can place an order and reach the confirmation", async ({ page }) => {
+test("a signed-in customer can place an order and reach the confirmation", async ({ page }) => {
   await seedCart(page);
   await page.goto("/checkout");
 
-  await page.getByLabel(/full name/i).fill("E2E Guest");
+  // The form arrives prefilled from the account, so this overwrites rather
+  // than fills — requiring an account and then demanding the address again
+  // would be the worst of both.
+  await page.getByLabel(/full name/i).fill("E2E Buyer");
   await page.getByLabel(/phone/i).fill("555000111");
   await page.getByLabel(/city/i).fill("Tbilisi");
   await page.getByLabel(/^address/i).fill("Rustaveli 1");
@@ -18,9 +26,25 @@ test("a guest can place an order and reach the confirmation", async ({ page }) =
   await expect(page.getByRole("heading", { name: /order received/i })).toBeVisible();
 });
 
+test("checkout sends a signed-out visitor to sign in first", async ({ page }) => {
+  await page.context().clearCookies();
+  await useEnglish(page);
+  await seedCart(page);
+
+  await page.goto("/checkout");
+
+  // And remembers where they were going.
+  await expect(page).toHaveURL(/\/login\?next=%2Fcheckout/);
+});
+
 test("checkout refuses to submit with the required fields empty", async ({ page }) => {
   await seedCart(page);
   await page.goto("/checkout");
+
+  // Cleared, because the account prefills them.
+  for (const field of [/full name/i, /phone/i, /city/i, /^address/i]) {
+    await page.getByLabel(field).fill("");
+  }
 
   await page.getByRole("button", { name: /place order/i }).click();
 
