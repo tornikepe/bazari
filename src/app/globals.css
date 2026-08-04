@@ -738,6 +738,134 @@
 .stagger > *:nth-child(7) { animation-delay: 0.26s; }
 .stagger > *:nth-child(n + 8) { animation-delay: 0.3s; }
 
+/* ---------------------------------------------------------------------------
+   Overlays — drawers and popovers
+   ---------------------------------------------------------------------------
+   Motion is defined here and the mount lifecycle in `use-overlay.ts`; the two
+   meet at `data-state`. Nothing on the site is allowed to simply appear: a
+   panel that is not on screen one frame and covering half of it the next
+   reads as a glitch, and the eye has to re-find where it came from.
+
+   Enter and exit are deliberately not symmetric. Opening is the shopper's
+   request, so it takes its time and settles — 0.34s on a decelerating curve.
+   Closing is them being finished with it, so it gets out of the way faster,
+   0.22s, accelerating. Matching the two makes dismissing feel sticky.
+
+   The exit duration must stay below the `duration` passed to `useOverlay`,
+   which is what keeps the node alive long enough to run.
+   -------------------------------------------------------------------------- */
+
+.overlay-scrim {
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+}
+
+.overlay-scrim[data-state="closed"] {
+  opacity: 0;
+  transition: opacity 0.22s ease-in;
+}
+
+.overlay-panel {
+  transform: translate3d(0, 0, 0);
+  /* `cubic-bezier(0.32, 0.72, 0, 1)` — quick off the mark, long settle. A
+     linear or plain ease slide of this distance looks mechanical. */
+  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+/* Where each side comes from, and where it goes back to. The closed rules
+   drive the exit; `@starting-style` reuses the same offsets for the entrance,
+   so the two can never disagree about which way "left" is. */
+.overlay-panel[data-state="closed"] {
+  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.overlay-panel[data-state="closed"][data-side="left"] {
+  transform: translate3d(-100%, 0, 0);
+}
+
+.overlay-panel[data-state="closed"][data-side="right"] {
+  transform: translate3d(100%, 0, 0);
+}
+
+.overlay-panel[data-state="closed"][data-side="bottom"] {
+  transform: translate3d(0, 100%, 0);
+}
+
+@starting-style {
+  .overlay-scrim {
+    opacity: 0;
+  }
+
+  .overlay-panel[data-side="left"] {
+    transform: translate3d(-100%, 0, 0);
+  }
+
+  .overlay-panel[data-side="right"] {
+    transform: translate3d(100%, 0, 0);
+  }
+
+  .overlay-panel[data-side="bottom"] {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+/* The phone search sheet, which covers the header bar it was opened from. */
+.search-sheet {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.search-sheet[data-state="closed"] {
+  opacity: 0;
+  transform: translate3d(0, -0.5rem, 0);
+  transition:
+    opacity 0.14s ease-in,
+    transform 0.14s ease-in;
+}
+
+@starting-style {
+  .search-sheet {
+    opacity: 0;
+    transform: translate3d(0, -0.5rem, 0);
+  }
+}
+
+/* A popover belongs to the button that opened it, so it grows from that
+   corner rather than drifting in from nowhere. Short — 0.16s — because a menu
+   is a response to a click, and anything slower reads as lag rather than
+   polish. */
+.popover-panel {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transform-origin: top right;
+  transition:
+    opacity 0.16s ease-out,
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.popover-panel[data-align="left"] {
+  transform-origin: top left;
+}
+
+.popover-panel[data-state="closed"] {
+  opacity: 0;
+  transform: scale(0.96) translateY(-0.35rem);
+  transition:
+    opacity 0.13s ease-in,
+    transform 0.13s ease-in;
+}
+
+@starting-style {
+  .popover-panel {
+    opacity: 0;
+    transform: scale(0.96) translateY(-0.35rem);
+  }
+}
+
 /* Revealed by an IntersectionObserver as the section scrolls into view. */
 .reveal {
   opacity: 0;
@@ -1068,7 +1196,6 @@
      the same corner otherwise cover each other, and which one wins comes
      down to stylesheet order rather than to intent. */
   bottom: calc(0.75rem + var(--buy-bar-h, 0px));
-  transition: bottom 0.22s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1083,7 +1210,12 @@
   font-weight: 700;
   box-shadow: var(--shadow-pop);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  /* One declaration, not two. `bottom` and `background-color` were listed in
+     separate `transition` lines, and the second replaced the first — so the
+     launcher jumped instead of stepping over the buy bar as it appeared. */
+  transition:
+    bottom 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 0.15s ease;
 }
 
 .chat-launcher:hover {
@@ -1122,7 +1254,30 @@
      instead of sliding underneath it. `dvh` so a mobile browser collapsing its
      address bar doesn't leave it hanging off the bottom. */
   max-height: calc(100dvh - 4.5rem - 6rem);
-  animation: chat-in 0.22s ease-out both;
+  /* Transitions rather than a one-shot animation, so the panel can close the
+     way it opened. A keyframe animation only runs on mount; the widget used to
+     slide in and then blink out of existence. */
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: bottom right;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.chat-panel[data-state="closed"] {
+  opacity: 0;
+  transform: translate3d(0, 0.75rem, 0) scale(0.98);
+  transition:
+    opacity 0.14s ease-in,
+    transform 0.16s ease-in;
+}
+
+@starting-style {
+  .chat-panel {
+    opacity: 0;
+    transform: translate3d(0, 0.75rem, 0) scale(0.98);
+  }
 }
 
 @media (min-width: 640px) {
@@ -1274,17 +1429,6 @@
 
 .chat-dots i:nth-child(3) {
   animation-delay: 0.3s;
-}
-
-@keyframes chat-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.75rem) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 @keyframes chat-dot {

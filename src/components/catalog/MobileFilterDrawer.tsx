@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { FilterSidebar, type FilterCategory } from "@/components/catalog/FilterSidebar";
+import { Overlay } from "@/components/ui/Overlay";
 import { CloseIcon, FilterIcon } from "@/components/ui/icons";
 import { countActiveFilters, type CatalogFilters } from "@/lib/filters";
 
@@ -22,23 +23,6 @@ export function MobileFilterDrawer({
   const [open, setOpen] = useState(false);
   const activeCount = countActiveFilters(filters);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
-
   return (
     <>
       <button
@@ -56,16 +40,14 @@ export function MobileFilterDrawer({
         )}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label={t.nav.close}
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-scrim"
-          />
-
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col border-t border-line bg-surface">
+      <div className="lg:hidden">
+        <Overlay
+          open={open}
+          onClose={() => setOpen(false)}
+          side="bottom"
+          closeLabel={t.nav.close}
+          className="max-h-[85vh] border-t border-line bg-surface"
+        >
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <h2 className="text-base font-bold text-ink-900">{t.catalog.filters}</h2>
               <button
@@ -87,9 +69,8 @@ export function MobileFilterDrawer({
                 onApplied={() => setOpen(false)}
               />
             </div>
-          </div>
-        </div>
-      )}
+        </Overlay>
+      </div>
     </>
   );
 }

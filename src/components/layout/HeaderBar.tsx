@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/providers/CartProvider";
@@ -10,6 +10,8 @@ import { LOCALES, type Locale } from "@/lib/i18n";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LocaleToggle } from "@/components/ui/LocaleToggle";
 import { LogoMark } from "@/components/ui/Logo";
+import { Overlay } from "@/components/ui/Overlay";
+import { useOverlay } from "@/lib/use-overlay";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { logout } from "@/app/actions/auth";
 import {
@@ -48,6 +50,9 @@ export function HeaderBar({
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const { mounted: searchMounted, state: searchState } = useOverlay(searchOpen, {
+    duration: 220,
+  });
 
   // Both of these track external values (the URL), so they're adjusted during
   // render instead of in an effect — React re-runs the component right away
@@ -68,24 +73,6 @@ export function HeaderBar({
     setMenuOpen(false);
     setSearchOpen(false);
   }
-
-  // A drawer that scrolls the page behind it feels broken on mobile.
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [menuOpen]);
 
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
@@ -224,9 +211,14 @@ export function HeaderBar({
         </div>
       </div>
 
-      {/* Mobile search overlay */}
-      {searchOpen && (
-        <div className="absolute inset-x-0 top-0 z-50 bg-surface p-3 shadow-card md:hidden">
+      {/* Mobile search overlay. Slides down over the bar rather than
+          replacing it in one frame — it covers the control that opened it, so
+          an instant swap leaves no clue where the bar went. */}
+      {searchMounted && (
+        <div
+          data-state={searchState}
+          className="search-sheet absolute inset-x-0 top-0 z-50 bg-surface p-3 shadow-card md:hidden"
+        >
           <form onSubmit={submitSearch} className="flex items-center gap-2" role="search">
             <div className="relative min-w-0 flex-1">
               <SearchIcon
@@ -261,16 +253,14 @@ export function HeaderBar({
       )}
 
       {/* Mobile drawer */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label={t.nav.close}
-            onClick={() => setMenuOpen(false)}
-            className="absolute inset-0 bg-scrim"
-          />
-
-          <div className="absolute inset-y-0 left-0 flex w-[19rem] max-w-[85vw] flex-col bg-surface shadow-pop">
+      <div className="lg:hidden">
+        <Overlay
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          side="left"
+          closeLabel={t.nav.close}
+          className="w-[19rem] max-w-[85vw] bg-surface shadow-pop"
+        >
             <div className="flex h-16 items-center justify-between border-b border-line px-4">
               <span className="flex items-center gap-2.5">
                 <LogoMark size={30} />
@@ -362,9 +352,8 @@ export function HeaderBar({
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+        </Overlay>
+      </div>
     </header>
   );
 }

@@ -6,6 +6,7 @@ import { ChatMessageText } from "@/components/chat/ChatMessageText";
 import { useChatStream } from "@/components/chat/useChatStream";
 import { MAX_MESSAGE_LENGTH, type ChatToolName } from "@/lib/chat/config";
 import { ChatIcon, CloseIcon, SendIcon, TrashIcon } from "@/components/ui/icons";
+import { useOverlay } from "@/lib/use-overlay";
 
 /**
  * The contact assistant, as a panel anchored to the corner of the storefront.
@@ -25,6 +26,9 @@ export function ChatWidget({ available }: { available: boolean }) {
   const { messages, status, activity, error, send, stop, reset } = useChatStream();
 
   const [open, setOpen] = useState(false);
+  // Long enough to cover the exit transition on `.chat-panel`, so the panel
+  // shrinks back into the launcher instead of blinking out of existence.
+  const { mounted: panelMounted, state: panelState } = useOverlay(open, { duration: 200 });
   const [draft, setDraft] = useState("");
 
   const panelId = useId();
@@ -120,11 +124,12 @@ export function ChatWidget({ available }: { available: boolean }) {
       {/* ---------------------------------------------------------- */}
       {/* Panel                                                       */}
       {/* ---------------------------------------------------------- */}
-      {open && (
+      {panelMounted && (
         <section
           id={panelId}
           role="dialog"
           aria-label={t.chat.title}
+          data-state={panelState}
           className="chat-panel card flex flex-col overflow-hidden shadow-pop"
         >
           <header className="flex shrink-0 items-center gap-2.5 bg-panel px-3.5 py-3 text-panel-fg">

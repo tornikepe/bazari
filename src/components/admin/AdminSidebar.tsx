@@ -7,6 +7,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LogoMark } from "@/components/ui/Logo";
+import { Overlay } from "@/components/ui/Overlay";
 import { LOCALES, type Locale } from "@/lib/i18n";
 import {
   BagIcon,
@@ -129,15 +130,14 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
       </aside>
 
       {/* Mobile drawer */}
-      {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label={t.nav.close}
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-scrim"
-          />
-          <div className="absolute inset-y-0 left-0 flex w-64 max-w-[85vw] flex-col bg-panel p-4">
+      <div className="lg:hidden">
+        <Overlay
+          open={open}
+          onClose={() => setOpen(false)}
+          side="left"
+          closeLabel={t.nav.close}
+          className="w-64 max-w-[85vw] bg-panel p-4 shadow-pop"
+        >
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -147,9 +147,8 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
               <CloseIcon size={18} />
             </button>
             {nav}
-          </div>
-        </div>
-      )}
+        </Overlay>
+      </div>
     </>
   );
 }

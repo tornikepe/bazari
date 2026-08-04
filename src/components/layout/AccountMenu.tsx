@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
+import { Popover } from "@/components/ui/Overlay";
 import {
   BagIcon,
   DashboardIcon,
@@ -91,11 +92,11 @@ export function AccountMenu({ user }: { user: MenuUser }) {
         <UserIcon size={19} />
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          className="animate-rise absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-card border border-line bg-surface shadow-pop"
-        >
+      <Popover
+        open={open}
+        role="menu"
+        className="mt-2 w-60 overflow-hidden rounded-card border border-line bg-surface shadow-pop"
+      >
           <div className="border-b border-line px-4 py-3">
             <p className="truncate text-sm font-bold text-ink-900">{user.name || user.email}</p>
             <p className="truncate text-xs text-ink-400">{user.email}</p>
@@ -128,8 +129,7 @@ export function AccountMenu({ user }: { user: MenuUser }) {
               {t.auth.signOut}
             </button>
           </form>
-        </div>
-      )}
+      </Popover>
     </div>
   );
 }
