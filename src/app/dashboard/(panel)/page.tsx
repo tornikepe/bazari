@@ -132,7 +132,8 @@ export default async function DashboardPage() {
       {/* ------------------------------- chart ------------------------------ */}
       <section className="card mt-4 p-5">
         <h2 className="text-sm font-bold text-ink-900">{t.admin.salesChart}</h2>
-        <SalesChart data={daily} locale={locale} emptyLabel={t.admin.noSales} />
+        <p className="mt-0.5 text-xs text-ink-500">{t.admin.chartHint}</p>
+        <SalesChart data={daily} locale={locale} t={t} />
       </section>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">

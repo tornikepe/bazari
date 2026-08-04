@@ -1,57 +1,195 @@
 import { formatPrice } from "@/lib/format";
-import type { Locale } from "@/lib/i18n";
+import type { Dictionary, Locale } from "@/lib/i18n";
 
 /**
- * Daily revenue as a plain CSS bar chart.
+ * Daily revenue over the trailing window.
  *
- * Deliberately not a charting library: it's one series of ~30 bars, and a
- * dependency would cost far more than the twenty lines it replaces. Rendered
- * on the server, so there is nothing to hydrate.
+ * Still no charting library: one series of thirty bars does not justify a
+ * dependency, and rendering on the server means there is nothing to hydrate.
+ * What it now has is the part that makes a chart a chart rather than a
+ * decorative stripe — a scale you can read values off.
+ *
+ * The previous version drew bars against an invisible axis, labelled only with
+ * the first and last date and the peak squeezed between them. You could see
+ * that Tuesday was taller than Monday and nothing else: no gridlines, no value
+ * for any single day except by hovering, and the peak figure sat mid-row where
+ * it read as belonging to whichever bar happened to be under it.
+ *
+ * ## Colour
+ *
+ * Bars are `brand-solid`, not `brand-600`: that token has to be light enough
+ * to read as a link on a dark surface, so a chart drawn in it glowed in dark
+ * mode. Gridlines are `line` and their labels `ink-400`, both of which clear
+ * contrast on canvas in either theme — checked by the contrast test, not by
+ * eye.
  */
+
+const GRIDLINES = [1, 0.75, 0.5, 0.25];
+
+/**
+ * The top of the scale: the smallest number above the busiest day that also
+ * divides into four readable gridlines.
+ *
+ * Two requirements pull against each other here. The scale has to be a number
+ * a person can quarter in their head, and it must not sit so far above the
+ * tallest bar that the chart becomes mostly empty. Rounding the *ceiling* up a
+ * 1–2–3–5 ladder satisfies neither reliably: a peak of ₾5,643 came out as
+ * ₾5,643 exactly, and a peak of ₾250 rounded to ₾250 whose quarters are
+ * ₾62.50. Rounding to the next power of ten fixes the labels and ruins the
+ * proportions — ₾5,643 would be drawn against ₾10,000.
+ *
+ * So the *interval* is what gets rounded, and the ceiling is four of them.
+ * Every gridline is then a whole multiple of a round number by construction,
+ * and the ceiling can never exceed the peak by more than one interval — which
+ * is at most a quarter of the plot, and usually far less.
+ */
+export function niceCeiling(value: number) {
+  if (value <= 0) return 100;
+
+  const quarter = value / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(quarter));
+
+  for (const step of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) {
+    const interval = Math.max(1, Math.ceil(step * magnitude));
+    if (interval * 4 >= value) return interval * 4;
+  }
+  return Math.max(4, Math.ceil(10 * magnitude) * 4);
+}
+
 export function SalesChart({
   data,
   locale,
-  emptyLabel,
+  t,
 }: {
   data: { date: string; total: number }[];
   locale: Locale;
-  emptyLabel: string;
+  t: Dictionary;
 }) {
-  const peak = Math.max(...data.map((d) => d.total), 0);
+  const peak = Math.max(...data.map((day) => day.total), 0);
+  const total = data.reduce((sum, day) => sum + day.total, 0);
+  const average = data.length > 0 ? Math.round(total / data.length) : 0;
 
   if (peak === 0) {
-    return <p className="py-10 text-center text-sm text-ink-400">{emptyLabel}</p>;
+    return <p className="py-12 text-center text-sm text-ink-400">{t.admin.noSales}</p>;
   }
 
+  const ceiling = niceCeiling(peak);
+  const today = new Date().toISOString().slice(0, 10);
+
+  // A tick every seventh day plus the last one — but only if the last is far
+  // enough from the one before it. Without that check the final two labels
+  // land on top of each other whenever the window length is not a multiple of
+  // seven, which it usually is not.
+  const lastIndex = data.length - 1;
+  const tickIndexes = data.flatMap((_, index) => (index % 7 === 0 ? [index] : []));
+  if (lastIndex - (tickIndexes.at(-1) ?? 0) >= 3) tickIndexes.push(lastIndex);
+
+
+  const summary = [
+    { label: t.admin.chartTotal, value: formatPrice(total, locale) },
+    { label: t.admin.chartAverage, value: formatPrice(average, locale) },
+    { label: t.admin.chartPeak, value: formatPrice(peak, locale) },
+  ];
+
   return (
-    <div className="mt-4">
-      <div className="flex h-40 items-end gap-1" role="img" aria-label={emptyLabel}>
-        {data.map((day) => {
-          // A floor of 2% keeps zero-revenue days visible as a baseline tick
-          // rather than vanishing entirely.
-          const height = day.total === 0 ? 2 : Math.max((day.total / peak) * 100, 4);
-
-          return (
-            <div
-              key={day.date}
-              className="group relative flex-1"
-              style={{ height: "100%" }}
-              title={`${day.date} · ${formatPrice(day.total, locale)}`}
+    <figure className="mt-4">
+      {/* The top gridline's label is centred on the line, so half of it sits
+          above the plot. This padding is what stops it being clipped. */}
+      <div className="flex gap-3 pt-2.5">
+        {/* Fixed width, so the plot does not resize when the figures gain a
+            digit — a chart that reflows as the shop grows is its own bug. */}
+        <div className="relative h-44 w-20 shrink-0">
+          {[...GRIDLINES, 0].map((fraction) => (
+            <span
+              key={fraction}
+              style={{ bottom: `${fraction * 100}%` }}
+              className="absolute right-0 translate-y-1/2 text-xs whitespace-nowrap text-ink-400 tabular-nums"
             >
-              <div
-                className="absolute bottom-0 w-full bg-brand-solid transition-colors group-hover:bg-brand-solid-hover"
-                style={{ height: `${height}%` }}
+              {formatPrice(Math.round(ceiling * fraction), locale)}
+            </span>
+          ))}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="relative h-44">
+            {GRIDLINES.map((fraction) => (
+              <span
+                key={fraction}
+                style={{ bottom: `${fraction * 100}%` }}
+                className="absolute inset-x-0 h-px bg-line"
               />
+            ))}
+            {/* The baseline is darker than the gridlines: it is the axis, not
+                another reading. */}
+            <span className="absolute inset-x-0 bottom-0 h-px bg-ink-300" />
+
+            <div className="absolute inset-0 flex items-end gap-px">
+              {data.map((day) => {
+                // A floor keeps a zero-revenue day as a visible baseline tick
+                // rather than a gap, which would read as missing data.
+                const height = day.total === 0 ? 2 : Math.max((day.total / ceiling) * 100, 3);
+
+                return (
+                  <span
+                    key={day.date}
+                    className="group relative flex h-full flex-1 items-end"
+                    title={`${day.date} · ${
+                      day.total === 0 ? t.admin.chartNoRevenue : formatPrice(day.total, locale)
+                    }`}
+                  >
+                    <span
+                      style={{ height: `${height}%` }}
+                      className={`w-full transition-colors ${
+                        day.date === today
+                          ? "bg-brand-solid-hover"
+                          : "bg-brand-solid group-hover:bg-brand-solid-hover"
+                      }`}
+                    />
+                  </span>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+
+          {/* Date axis. Positioned against the plot rather than given one cell
+              per bar: a 30-column flex row is ~20px wide per cell, and "07-05"
+              wrapped onto two lines in every one of them. */}
+          <div className="relative mt-2 h-4">
+            {tickIndexes.map((index) => {
+              const centre = ((index + 0.5) / data.length) * 100;
+
+              // Clamped by position, not by index. The final tick is often not
+              // the final bar — it is whichever multiple of seven came last —
+              // and centring a five-character date over a bar at 95% pushes
+              // half the label off the plot. This was clipped to "08-0" on a
+              // 390px screen.
+              const anchor =
+                centre > 88 ? "translateX(-100%)" : centre < 12 ? "translateX(0)" : "translateX(-50%)";
+
+              return (
+                <span
+                  key={data[index].date}
+                  style={{ left: `${centre}%`, transform: anchor }}
+                  className="absolute top-0 text-xs whitespace-nowrap text-ink-400 tabular-nums"
+                >
+                  {data[index].date.slice(5)}
+                </span>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-2 flex items-center justify-between text-xs text-ink-400">
-        <span>{data[0]?.date.slice(5)}</span>
-        <span className="font-semibold text-ink-600">{formatPrice(peak, locale)}</span>
-        <span>{data.at(-1)?.date.slice(5)}</span>
-      </div>
-    </div>
+      <figcaption className="mt-4 grid gap-px border border-line bg-line sm:grid-cols-3">
+        {summary.map((item) => (
+          <span key={item.label} className="bg-surface px-4 py-2.5">
+            <span className="label block text-ink-500">{item.label}</span>
+            <span className="mt-0.5 block text-sm font-bold text-ink-900 tabular-nums">
+              {item.value}
+            </span>
+          </span>
+        ))}
+      </figcaption>
+    </figure>
   );
 }
