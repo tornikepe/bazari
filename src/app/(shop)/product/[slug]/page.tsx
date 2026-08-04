@@ -34,7 +34,6 @@ export async function generateMetadata({
   const [product, { locale }] = await Promise.all([getProduct(slug), getI18n()]);
   if (!product) return {};
 
-  const name = locale === "ka" ? product.nameKa : product.nameEn;
   const description = (
     locale === "ka" ? product.descriptionKa : product.descriptionEn
   ).slice(0, 160);
@@ -46,7 +45,10 @@ export async function generateMetadata({
       type: "website",
       description,
       url: `/product/${product.slug}`,
-      images: [{ url: product.image, alt: name }],
+      // No `images` here on purpose: setting it overrides the generated card
+      // in `opengraph-image.tsx`, which is what actually renders the product
+      // name and price. Pointing at `product.image` sent the shared
+      // placeholder SVG instead — the same grey box for all forty products.
     },
   };
 }

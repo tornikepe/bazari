@@ -4,6 +4,8 @@ import { getI18n } from "@/lib/locale";
 import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import {
   ArrowRightIcon,
   PackageIcon,
@@ -51,8 +53,46 @@ export default async function HomePage() {
     { icon: TruckIcon, title: t.home.why4Title, text: t.home.why4Text },
   ];
 
+  /*
+   * Organization and WebSite markup.
+   *
+   * Everything here is a fact the site can back: the name, the URL, and a
+   * search endpoint that genuinely exists and genuinely works. There is no
+   * `address`, `telephone`, `logo` or `sameAs` — the shop has no registered
+   * address or phone number, and inventing one in markup that search engines
+   * read as a business record is worse than omitting it.
+   *
+   * `SearchAction` is real: /catalog?q= is the search this site actually uses.
+   */
+  const organisationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: t.home.heroSubtitle,
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: [locale === "ka" ? "ka-GE" : "en", locale === "ka" ? "en" : "ka-GE"],
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/catalog?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <>
+      <JsonLd data={organisationSchema} />
+      <JsonLd data={websiteSchema} />
+
       {/* ------------------------------- hero ------------------------------ */}
       {/*
         Built on the grid rather than on a background. The old hero leaned on

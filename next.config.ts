@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /*
+   * The OG-image routes read a font off disk at request time. Next's tracer
+   * follows imports, not `readFile(join(process.cwd(), …))`, so on a
+   * serverless deploy the file can be left out of the bundle — the route then
+   * throws ENOENT in production while working perfectly in a local build.
+   * Naming it here makes the inclusion explicit rather than lucky.
+   */
+  outputFileTracingIncludes: {
+    "/opengraph-image": ["./assets/**/*"],
+    "/product/[slug]/opengraph-image": ["./assets/**/*"],
+  },
+
   images: {
     // The bundled sample photo is an SVG. Next refuses to optimise SVG unless
     // this is on, because a hostile SVG can carry script — the CSP below is

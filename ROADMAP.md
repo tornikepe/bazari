@@ -5,7 +5,7 @@
 | **Security (Phase 0)** | ✅ complete |
 | **Payments** | 🟡 framework done and tested · no gateway |
 | **Email** | 🟡 works · only reaches your own inbox until a domain is verified |
-| **Testing** | ✅ 190 unit · 38 e2e · CI on every push |
+| **Testing** | ✅ 190 unit · 42 e2e · CI on every push |
 | **Contact assistant** | ✅ live on Gemini's free tier · answers verified against the real catalogue |
 | **Product photos** | ❌ one placeholder for all 40 |
 | **Legal pages** | 🟡 technical half written · business details missing |
@@ -262,17 +262,29 @@ Ordered by what I would do next.
 
 
 
-### 🟡 B8. Rest of SEO
+### ✅ B8. Rest of SEO — done, minus one item that does not apply
 
-Generated OG images per product · `hreflang` for the two locales · `Organization`
-and `WebSite` JSON-LD on the home page.
+| # | Item | Detail |
+| --- | --- | --- |
+| ✅ | Generated OG card per product | `opengraph-image.tsx`, rendered at request time with the product's real name, brand, price and stock. Typographic rather than photographic **because all forty products still share one placeholder** — a card built around the photo would show the same grey box every time |
+| ✅ | Georgian actually renders | `ImageResponse` draws through Satori, which has no font-fallback chain the way a browser does: without Georgian glyphs supplied as bytes, every Georgian name would come out as empty boxes. Noto Sans Georgian (OFL, 59KB) is committed rather than fetched, so a deploy never depends on Google being reachable, and named in `outputFileTracingIncludes` so the serverless bundle actually contains it |
+| ✅ | Site-level card | For every route without its own. Deliberately carries no product counts — it is generated at build time, so any figure in it would be frozen at deploy day |
+| ✅ | `Organization` + `WebSite` JSON-LD | With a `SearchAction` pointing at `/catalog?q=`, which is the search this site really uses. **No `address`, `telephone`, `logo` or `sameAs`** — the shop has none of those, and inventing them in a block search engines read as a business record is worse than omitting it. A test asserts their absence |
+| ❌ | `hreflang` | **Does not apply to this site, and adding it would be a lie.** |
 
-> **One decision for you.** Every page renders the identical `<title>`, exactly
-> as you asked — and it is the site's biggest remaining SEO weakness, since
-> search engines lean on it heavily. A compromise: keep
-> `Bazari - ონლაინ მაღაზია` on the home page, append the product or category
-> name elsewhere (`Anker PowerCore 20000mAh — Bazari`). Stays as you asked until
-> you say otherwise.
+**On hreflang.** It annotates *distinct URLs* that hold the same page in
+different languages. Bazari has no such URLs: the locale lives in the
+`cm_locale` cookie and both languages are served from the same address —
+`/catalog` is `/catalog` in Georgian and in English. Emitting
+`<link rel="alternate" hreflang="en" href="/catalog">` next to
+`hreflang="ka" href="/catalog"` tells a crawler two different things about one
+URL, which is worse than saying nothing.
+
+Making it real means giving each language its own path (`/ka/catalog`,
+`/en/catalog`) — a routing change touching every route, every internal link
+and the language switcher, plus redirects so existing links survive. Worth
+doing the day the shop targets search in both languages; not worth faking
+before then.
 
 ### 🟡 B9. Blocked only on your inputs
 
