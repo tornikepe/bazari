@@ -902,26 +902,89 @@
   }
 }
 
-/* An index row — the numbered list of categories under the hero. The
-   number is set in the margin, which is the oldest trick in this style
-   and still the one that reads as "designed" rather than "styled". */
-.index-row {
+/* An index row — the numbered list of categories under the hero.
+   ------------------------------------------------------------------
+   A contents page, not a spreadsheet. The first version set the name at
+   15px next to two small grey numbers, which is technically an index and
+   reads as a data table: nothing on the row had enough presence to be the
+   thing you came to click.
+
+   The name now carries the row at 22px. It wraps rather than truncating —
+   a category called "ტელეფონები და აქსესუარები" is not improved by being
+   cut in half, and this style has no business hiding words. The number in
+   the margin and the count on the right stay quiet on purpose: they are
+   there to be scanned, not read. */
+/* A deterministic two-column list.
+   CSS `columns` balances content itself, which left the two columns starting
+   at different heights — the rules on one side did not line up with the rules
+   on the other, which in a design held together by alignment is the one
+   mistake that shows. A grid places them. */
+.index-list {
   display: grid;
-  grid-template-columns: 2.5rem 1fr auto;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 0;
-  border-top: 1px solid var(--color-line);
-  transition: background-color 0.15s ease;
+  grid-template-columns: 1fr;
 }
 
-.index-row:last-child {
+@media (min-width: 1024px) {
+  .index-list {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 3rem;
+  }
+}
+
+.index-row {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr auto;
+  align-items: baseline;
+  gap: 0.875rem;
+  padding: 1.125rem 0.5rem 1.125rem 0;
+  /* Rows draw the rule below them; the top edge of each column is drawn by
+     the first row in that column, so both columns close symmetrically
+     however many categories there are. */
   border-bottom: 1px solid var(--color-line);
+  transition:
+    background-color 0.15s ease,
+    padding-left 0.15s ease;
+}
+
+.index-name {
+  font-size: var(--text-xl);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-ink-900);
 }
 
 @media (hover: hover) {
   .index-row:hover {
     background: var(--color-ink-50);
+    /* The row steps aside slightly under the pointer — the one piece of
+       motion here, and it moves along the grid rather than off it. */
+    padding-left: 0.5rem;
+  }
+
+  .index-row:hover .index-name {
+    color: var(--color-brand-600);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .index-row {
+    transition: background-color 0.15s ease;
+  }
+
+  .index-row:hover {
+    padding-left: 0;
+  }
+}
+
+.index-list > :first-child {
+  border-top: 1px solid var(--color-line);
+}
+
+@media (min-width: 1024px) {
+  /* Two columns means the first row of each is a starting edge. */
+  .index-list > :nth-child(-n + 2) {
+    border-top: 1px solid var(--color-line);
   }
 }
 
@@ -931,6 +994,14 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-ink-400);
 }
+
+.index-count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-500);
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Sticky buy bar                                                      */

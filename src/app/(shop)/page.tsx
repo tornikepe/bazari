@@ -168,20 +168,16 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="mt-5 lg:columns-2 lg:gap-12">
+        <div className="index-list mt-5">
           {categories.map((category, index) => (
-            <Link key={category.slug} href={`/catalog?category=${category.slug}`}>
-              <span className="index-row">
-                <span className="index-num">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="truncate text-sm font-semibold text-ink-900">
-                  {name(category)}
-                </span>
-                <span className="text-xs tabular-nums text-ink-400">
-                  {category._count.products}
-                </span>
-              </span>
+            <Link
+              key={category.slug}
+              href={`/catalog?category=${category.slug}`}
+              className="index-row"
+            >
+              <span className="index-num">{String(index + 1).padStart(2, "0")}</span>
+              <span className="index-name">{name(category)}</span>
+              <span className="index-count">{category._count.products}</span>
             </Link>
           ))}
         </div>

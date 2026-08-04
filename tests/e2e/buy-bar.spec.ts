@@ -11,11 +11,23 @@ import { expect, test, type Page } from "@playwright/test";
 
 const BASE = "http://127.0.0.1:3100";
 
+/**
+ * Opens a product that can actually be bought.
+ *
+ * `?stock=1` rather than simply the first in the catalogue: the checkout suite
+ * places real orders, so stock drains as the tests run and the newest product
+ * — the one the catalogue lists first — eventually reaches zero. The bar then
+ * correctly renders a disabled "Out of stock" button and every assertion about
+ * adding to the cart fails, describing a bug that does not exist.
+ *
+ * A test whose fixture is mutated by its own suite has to ask for what it
+ * needs, not for whatever happens to be first.
+ */
 async function openFirstProduct(page: Page) {
   await page.context().clearCookies();
   await page.context().addCookies([{ name: "cm_locale", value: "en", url: BASE }]);
 
-  await page.goto("/catalog");
+  await page.goto("/catalog?stock=1");
   const first = page.locator('a[href^="/product/"]').first();
   await first.waitFor({ state: "attached" });
   const href = await first.getAttribute("href");
@@ -41,6 +53,12 @@ test("appears once the panel has scrolled away, and goes again on the way back",
   await panel(page).scrollIntoViewIfNeeded();
   await page.mouse.wheel(0, 1200);
   await expect(bar(page)).toHaveAttribute("data-shown", "true");
+
+  // `toBeVisible`, not just the attribute: the bar animates in over 0.22s and
+  // a `visibility: hidden` subtree is excluded from the accessibility tree, so
+  // a role query fired the instant the attribute flips finds nothing. Waiting
+  // on the attribute alone made this pass on timing luck.
+  await expect(bar(page)).toBeVisible();
 
   // The price and a working button, not just a strip of colour.
   await expect(bar(page).getByRole("button", { name: /add to cart/i })).toBeEnabled();
@@ -77,7 +95,7 @@ test("lifts the chat launcher instead of covering it", async ({ page }) => {
 
   await panel(page).scrollIntoViewIfNeeded();
   await page.mouse.wheel(0, 1200);
-  await expect(bar(page)).toHaveAttribute("data-shown", "true");
+  await expect(bar(page)).toBeVisible();
 
   const raised = (await launcher.boundingBox())!;
   const barBox = (await bar(page).boundingBox())!;
@@ -93,7 +111,7 @@ test("adds to the cart from the bar itself", async ({ page }) => {
 
   await panel(page).scrollIntoViewIfNeeded();
   await page.mouse.wheel(0, 1200);
-  await expect(bar(page)).toHaveAttribute("data-shown", "true");
+  await expect(bar(page)).toBeVisible();
 
   await bar(page).getByRole("button", { name: /add to cart/i }).click();
 
@@ -108,7 +126,7 @@ test("fits a phone without pushing the page sideways", async ({ page }) => {
 
     await panel(page).scrollIntoViewIfNeeded();
     await page.mouse.wheel(0, 1200);
-    await expect(bar(page)).toHaveAttribute("data-shown", "true");
+    await expect(bar(page)).toBeVisible();
 
     const box = (await bar(page).boundingBox())!;
     expect(box.x, `bar starts off screen at ${width}px`).toBeGreaterThanOrEqual(0);
