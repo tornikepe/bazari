@@ -188,6 +188,15 @@ const ka = {
   },
 
   auth: {
+    continueWith: "გაგრძელება {provider}-ით",
+    or: "ან",
+    oauthFailed: "სოციალური ქსელით შესვლა ვერ მოხერხდა. სცადე ხელახლა.",
+    oauthUnverified:
+      "ამ ანგარიშის ელფოსტა დადასტურებული არ არის. შედი ელფოსტითა და პაროლით.",
+    oauthCancelled: "შესვლა შეწყდა.",
+    signInToOrder: "შეკვეთისთვის საჭიროა ანგარიში",
+    signInToOrderHint:
+      "შედი ან დარეგისტრირდი — ასე შეკვეთის ისტორია და მიწოდების სტატუსი ყოველთვის ხელმისაწვდომი გექნება.",
     signInTitle: "შესვლა",
     signInHint: "შედი ანგარიშში შეკვეთების სანახავად",
     signUpTitle: "რეგისტრაცია",
@@ -733,6 +742,15 @@ const en: Dictionary = {
   },
 
   auth: {
+    continueWith: "Continue with {provider}",
+    or: "or",
+    oauthFailed: "That sign-in did not complete. Please try again.",
+    oauthUnverified:
+      "That account's email address is not confirmed. Sign in with your email and password instead.",
+    oauthCancelled: "Sign-in was cancelled.",
+    signInToOrder: "An account is needed to order",
+    signInToOrderHint:
+      "Sign in or create an account, so your order history and delivery status are always there when you need them.",
     signInTitle: "Sign in",
     signInHint: "Sign in to see your orders",
     signUpTitle: "Create account",

@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, DEMO_CUSTOMER, seedCart, signIn, useEnglish } from "./helpers";
+import {
+  ADMIN,
+  DEMO_CUSTOMER,
+  seedCart,
+  signIn,
+  submitSignIn,
+  useEnglish,
+} from "./helpers";
 
 /**
  * Who can see what. These are the tests that would have caught the two real
@@ -30,6 +37,7 @@ test("a stranger cannot open an order they did not place", async ({ page, contex
   // Order numbers were once sequential and this page was public, which exposed
   // every customer's name, phone and address. The buyer keeps a signed receipt
   // cookie; anyone else is sent to /track, which demands the phone number.
+  await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
   await seedCart(page);
   await page.goto("/checkout");
   await page.getByLabel(/full name/i).fill("E2E Owner");
@@ -55,7 +63,7 @@ test("an unknown order number 404s rather than erroring", async ({ page }) => {
 });
 
 test("the sign-in form does not reveal which field was wrong", async ({ page }) => {
-  await signIn(page, "nobody@example.test", "wrongpassword");
+  await submitSignIn(page, "nobody@example.test", "wrongpassword");
 
   // Next's route announcer is also role="alert" and lives outside any layout,
   // so it is excluded by id rather than by scoping to a container.

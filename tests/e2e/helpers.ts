@@ -18,20 +18,28 @@ export function uniqueEmail(prefix = "e2e") {
 }
 
 /**
- * Signs in and waits for the session to actually exist.
+ * Fills the sign-in form and submits it, without assuming it works.
  *
- * The wait is the important part. `login` is a Server Action that ends in a
- * `redirect`, so the session cookie is only set once that response lands —
- * navigating straight afterwards races it and arrives back at /login with no
- * session, which reads exactly like a permissions bug. It cost an afternoon
- * once already.
+ * For tests about *failing* to sign in — those stay on /login by design, so
+ * they cannot use the version below.
  */
-export async function signIn(page: Page, email: string, password: string) {
+export async function submitSignIn(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByLabel(/email|ელფოსტა/i).first().fill(email);
   await page.getByLabel(/password|პაროლი/i).first().fill(password);
   await page.getByRole("button", { name: /sign in|შესვლა/i }).click();
+}
 
+/**
+ * Signs in, and waits for the session to actually exist.
+ *
+ * The wait is the important part. `login` is a Server Action ending in a
+ * `redirect`, so the session cookie only exists once that response lands;
+ * navigating straight afterwards races it and arrives back at /login with no
+ * session, which reads exactly like a permissions bug.
+ */
+export async function signIn(page: Page, email: string, password: string) {
+  await submitSignIn(page, email, password);
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 });
 }
 

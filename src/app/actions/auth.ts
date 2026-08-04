@@ -65,7 +65,24 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
   await reset(`login:email:${email}`);
 
   await createSession(user.id);
-  redirect(homeFor(user.role));
+  redirect(safeNext(formData.get("next")) ?? homeFor(user.role));
+}
+
+/**
+ * Where to send someone after signing in, when the form asked for somewhere
+ * specific — "you have to sign in to check out" should return to checkout, not
+ * to the account page.
+ *
+ * Only same-origin paths are allowed through, and only ones starting with a
+ * single slash. `//evil.example` is a protocol-relative URL that browsers
+ * treat as another origin, so a bare `startsWith("/")` check is not enough.
+ * An unvalidated `next` is an open redirect, and this value arrives in the URL
+ * where anybody can put anything in it.
+ */
+function safeNext(value: FormDataEntryValue | null): string | null {
+  const next = typeof value === "string" ? value.trim() : "";
+  if (!next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
 }
 
 /** Customer sign-up. Staff accounts are only created by seeding. */

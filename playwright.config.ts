@@ -58,6 +58,13 @@ export default defineConfig({
       // same thing on a machine that happens to have a real key in `.env`.
       GEMINI_API_KEY: "e2e-render-only",
       CHAT_PROVIDER: "gemini",
+
+      // Placeholders, so the social sign-in buttons render and the callback's
+      // guards are reachable. No request is ever made with them: every test
+      // that touches this flow is rejected at the state check, which runs long
+      // before anything is sent to Google.
+      GOOGLE_CLIENT_ID: "e2e-render-only",
+      GOOGLE_CLIENT_SECRET: "e2e-render-only",
     },
   },
 });
