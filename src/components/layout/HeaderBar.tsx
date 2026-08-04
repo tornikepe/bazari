@@ -8,6 +8,8 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { LOCALES, type Locale } from "@/lib/i18n";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LocaleToggle } from "@/components/ui/LocaleToggle";
+import { LogoMark } from "@/components/ui/Logo";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { logout } from "@/app/actions/auth";
 import {
@@ -17,7 +19,6 @@ import {
   LogoutIcon,
   MenuIcon,
   SearchIcon,
-  TruckIcon,
   UserIcon,
 } from "@/components/ui/icons";
 
@@ -116,39 +117,6 @@ export function HeaderBar({
 
   return (
     <header className="sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]">
-      {/* Announcement strip */}
-      <div className="hidden bg-panel text-panel-fg lg:block">
-        <div className="page-container flex h-9 items-center justify-between text-xs">
-          <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5">
-              <TruckIcon size={14} className="text-brand-400" />
-              {t.topbar.shipping}
-            </span>
-            <span className="text-ink-400">{t.topbar.delivery}</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {LOCALES.map((code: Locale) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => setLocale(code)}
-                aria-pressed={locale === code}
-                // Fixed width: "ქარ" and "EN" are different lengths, and
-                // without this the strip's contents shuffle on every switch.
-                className={`w-11 py-0.5 text-center font-semibold transition-colors ${
-                  locale === code
-                    ? "bg-panel-fg/15 text-panel-fg"
-                    : "text-panel-muted hover:text-panel-fg"
-                }`}
-              >
-                {code === "ka" ? "ქარ" : "EN"}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Main bar */}
       <div className="page-container flex h-16 items-center gap-2 sm:gap-3 lg:h-20 lg:gap-6">
         <button
@@ -161,10 +129,8 @@ export function HeaderBar({
           <MenuIcon size={22} />
         </button>
 
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center bg-brand-solid text-base font-black text-brand-on-solid">
-            ბ
-          </span>
+        <Link href="/" aria-label={t.nav.home} className="flex shrink-0 items-center gap-2.5">
+          <LogoMark size={36} />
           <span className="hidden text-lg leading-none font-extrabold tracking-tight text-ink-900 sm:block">
             Ba<span className="text-brand-600">zari</span>
           </span>
@@ -208,6 +174,11 @@ export function HeaderBar({
           >
             <SearchIcon size={19} />
           </button>
+
+          {/* Moved up from the strip that used to sit above this bar. Hidden
+              on phones, where the drawer carries the full-word version — five
+              icon buttons plus a two-segment control do not fit 360px. */}
+          <LocaleToggle className="mr-1 hidden sm:flex" />
 
           <ThemeToggle className="btn btn-ghost" />
 
@@ -301,8 +272,11 @@ export function HeaderBar({
 
           <div className="absolute inset-y-0 left-0 flex w-[19rem] max-w-[85vw] flex-col bg-surface shadow-pop">
             <div className="flex h-16 items-center justify-between border-b border-line px-4">
-              <span className="text-base font-extrabold tracking-tight text-ink-900">
-                Ba<span className="text-brand-600">zari</span>
+              <span className="flex items-center gap-2.5">
+                <LogoMark size={30} />
+                <span className="text-base font-extrabold tracking-tight text-ink-900">
+                  Ba<span className="text-brand-600">zari</span>
+                </span>
               </span>
               <button
                 type="button"

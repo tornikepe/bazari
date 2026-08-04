@@ -31,6 +31,7 @@ const ka = {
     cart: "კალათა",
     menu: "მენიუ",
     close: "დახურვა",
+    language: "ენა",
   },
 
   topbar: {
@@ -536,6 +537,7 @@ const en: Dictionary = {
     cart: "Cart",
     menu: "Menu",
     close: "Close",
+    language: "Language",
   },
 
   topbar: {
