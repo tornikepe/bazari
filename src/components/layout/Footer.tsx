@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/ui/Logo";
 import { getI18n } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 
@@ -27,13 +28,16 @@ export async function Footer() {
   ];
 
   return (
-    <footer className="mt-16 border-t border-line bg-surface">
-      <div className="page-container grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-5">
+    // No top margin. A margin cannot be painted, so `mt-16` left a 4rem band
+    // of the page background between two `bg-surface` blocks — on the home
+    // page that read as a black stripe above the footer in dark mode. The
+    // separation is now the footer's own top rule plus its internal padding,
+    // which is surface-coloured and therefore invisible as a seam.
+    <footer className="border-t border-line bg-surface">
+      <div className="page-container grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-5 lg:py-14">
         <div className="lg:col-span-2">
           <Link href="/" className="mb-4 inline-flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-solid text-base font-black text-brand-on-solid">
-              ბ
-            </span>
+            <LogoMark size={36} />
             <span className="text-lg font-extrabold tracking-tight text-ink-900">
               Ba<span className="text-brand-600">zari</span>
             </span>
