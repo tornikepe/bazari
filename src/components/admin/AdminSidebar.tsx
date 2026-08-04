@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LogoMark } from "@/components/ui/Logo";
 import { LOCALES, type Locale } from "@/lib/i18n";
 import {
   BagIcon,
@@ -35,9 +36,7 @@ export function AdminSidebar({ admin }: { admin: { name: string; email: string }
   const nav = (
     <>
       <div className="flex items-center gap-2.5 px-2 pb-5">
-        <span className="grid h-9 w-9 place-items-center rounded-control bg-brand-solid text-base font-black text-brand-on-solid">
-          ბ
-        </span>
+        <LogoMark size={36} />
         <div className="min-w-0">
           <p className="truncate text-sm font-extrabold tracking-tight text-panel-fg">Bazari</p>
           <p className="truncate text-xs text-panel-muted">{t.admin.dashboard}</p>

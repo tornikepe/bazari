@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/ui/Logo";
 import { SITE_NAME } from "@/lib/site";
 
 /** Shared frame for the sign-in and sign-up pages. */
@@ -17,9 +18,7 @@ export function AuthCard({
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
       <div className="w-full max-w-sm animate-rise">
         <Link href="/" className="mb-6 flex items-center justify-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-control bg-brand-solid text-lg font-black text-brand-on-solid">
-            ბ
-          </span>
+          <LogoMark size={40} />
           <span className="text-xl font-extrabold tracking-tight text-ink-900">
             Ba<span className="text-brand-600">zari</span>
           </span>
