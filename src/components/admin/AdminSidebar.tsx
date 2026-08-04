@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LocaleToggle } from "@/components/ui/LocaleToggle";
 import { LogoMark } from "@/components/ui/Logo";
 import { Overlay } from "@/components/ui/Overlay";
-import { LOCALES, type Locale } from "@/lib/i18n";
 import type { Role } from "@/lib/auth-roles";
 import {
   BagIcon,
@@ -26,7 +26,7 @@ export function AdminSidebar({
 }: {
   admin: { name: string; email: string; role: Role };
 }) {
-  const { locale, t, setLocale } = useI18n();
+  const { t } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -75,19 +75,9 @@ export function AdminSidebar({
         <div className="flex items-center gap-1">
           <ThemeToggle className="text-panel-muted hover:bg-panel-fg/10 hover:text-panel-fg" />
 
-          {LOCALES.map((code: Locale) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => setLocale(code)}
-              aria-pressed={locale === code}
-              className={`flex-1 rounded-control px-2 py-1.5 text-xs font-semibold transition-colors ${
-                locale === code ? "bg-panel-fg/15 text-panel-fg" : "text-panel-muted hover:text-panel-fg"
-              }`}
-            >
-              {code === "ka" ? "ქარ" : "EN"}
-            </button>
-          ))}
+          {/* The same control as the storefront header, in its dark-panel
+              variant — one language switch on the site, not two that drift. */}
+          <LocaleToggle tone="panel" className="ml-auto" />
         </div>
 
         <div className="px-2">
