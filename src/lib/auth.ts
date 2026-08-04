@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { isStaff, type Role } from "@/lib/auth-roles";
 
 export { hashPassword, verifyPassword } from "@/lib/auth-hash";
 
@@ -65,6 +66,8 @@ export async function destroySession() {
 /* Current user                                                        */
 /* ------------------------------------------------------------------ */
 
+export type { Role } from "@/lib/auth-roles";
+
 export type SessionUser = {
   id: string;
   email: string;
@@ -72,9 +75,11 @@ export type SessionUser = {
   phone: string;
   city: string;
   address: string;
-  role: "customer" | "admin";
+  role: Role;
   emailVerified: boolean;
 };
+
+export { isStaff } from "@/lib/auth-roles";
 
 /** The signed-in user, or `null`. Never throws on a malformed cookie. */
 export async function getCurrentUser(): Promise<SessionUser | null> {
@@ -101,17 +106,31 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 }
 
 /**
- * The signed-in user, but only when they're staff.
+ * The signed-in user, but only when they can *change* things.
  *
  * Every admin Server Action calls this rather than trusting the dashboard
- * layout's redirect — actions are reachable by direct POST.
+ * layout's redirect — actions are reachable by direct POST, so hiding a button
+ * from a `viewer` is presentation, and this is the part that actually holds.
  */
 export async function getCurrentAdmin() {
   const user = await getCurrentUser();
   return user?.role === "admin" ? user : null;
 }
 
+/**
+ * The signed-in user when they may *see* the dashboard — either staff role.
+ *
+ * Deliberately a separate function from `getCurrentAdmin` rather than a
+ * parameter on it. A read guard and a write guard that share one call site are
+ * one careless default away from letting a viewer through to a mutation, and
+ * the compiler cannot tell the two apart if they return the same shape.
+ */
+export async function getCurrentStaff() {
+  const user = await getCurrentUser();
+  return user && isStaff(user.role) ? user : null;
+}
+
 /** Where a user belongs after signing in. */
-export function homeFor(role: "customer" | "admin") {
-  return role === "admin" ? "/dashboard" : "/account";
+export function homeFor(role: Role) {
+  return isStaff(role) ? "/dashboard" : "/account";
 }

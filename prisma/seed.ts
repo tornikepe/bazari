@@ -759,6 +759,31 @@ async function main() {
     },
   });
 
+  // Read-only staff. Held to the same password rule as the admin: this account
+  // cannot change anything, but it can read every order, every customer's
+  // address and every margin in the shop, so "it's only a viewer" is not a
+  // reason to let a weak password in.
+  const viewerEmail = process.env.VIEWER_EMAIL ?? "viewer@bazari.ge";
+  const viewerPassword = process.env.VIEWER_PASSWORD;
+  if (!viewerPassword || viewerPassword.length < 12) {
+    throw new Error(
+      "VIEWER_PASSWORD must be set to at least 12 characters before seeding.\n" +
+        "Generate one with:\n" +
+        '  node -e "console.log(require(\'crypto\').randomBytes(18).toString(\'base64url\'))"',
+    );
+  }
+  await prisma.user.upsert({
+    where: { email: viewerEmail },
+    update: { password: hashPassword(viewerPassword), role: "viewer", emailVerified: true },
+    create: {
+      email: viewerEmail,
+      name: "Store viewer",
+      password: hashPassword(viewerPassword),
+      role: "viewer",
+      emailVerified: true,
+    },
+  });
+
   // A ready-made customer, so the account area can be tried without signing up.
   const demoEmail = "user@bazari.ge";
   const demoCustomer = await prisma.user.upsert({
@@ -1004,10 +1029,17 @@ async function main() {
     prisma.coupon.count(),
   ]);
 
+  // Addresses, never passwords. This line used to print the admin password in
+  // full on every run, which put it into terminal scrollback, CI job logs and
+  // anywhere else stdout is captured — a secret that is generated carefully
+  // and then echoed is not a secret. The demo customer is the one exception:
+  // its password is a literal in this file and in the README already, because
+  // it exists to be handed out.
   console.log(
     `\n✓ done — ${categories.length} categories, ${products.length} products,\n` +
       `  ${orderCount} orders, ${movementCount} stock movements, ${couponCount} coupons.\n` +
-      `  admin:    ${email} / ${password}\n` +
+      `  admin:    ${email} (password from ADMIN_PASSWORD)\n` +
+      `  viewer:   ${viewerEmail} (password from VIEWER_PASSWORD, read-only)\n` +
       `  customer: ${demoEmail} / user1234\n`,
   );
 }

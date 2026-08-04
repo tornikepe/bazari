@@ -12,7 +12,12 @@ datasource db {
 
 enum Role {
   customer
+  /// Full staff access: sees the dashboard and can change what is on it.
   admin
+  /// Staff, read-only. Sees every dashboard page and no write control on any
+  /// of them. Enforced in the Server Actions, not by hiding buttons — the
+  /// actions are reachable by direct POST.
+  viewer
 }
 
 /// What a one-time code is for. The same table serves both flows, so codes
