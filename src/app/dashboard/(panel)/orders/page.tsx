@@ -54,7 +54,12 @@ export default async function AdminOrdersPage({
   const orders = await prisma.order.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { items: true } } },
+    include: {
+      _count: { select: { items: true } },
+      // Only the newest event per order: the column shows when the status last
+      // moved, and the rest of the history belongs on the detail page.
+      events: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
   });
@@ -196,7 +201,8 @@ export default async function AdminOrdersPage({
                 <tr>
                   <th className="px-4 py-2.5">{t.admin.orderNumber}</th>
                   <th className="px-4 py-2.5">{t.admin.customer}</th>
-                  <th className="px-4 py-2.5">{t.admin.date}</th>
+                  <th className="px-4 py-2.5">{t.admin.placedAt}</th>
+                  <th className="px-4 py-2.5">{t.admin.statusChangedAt}</th>
                   <th className="px-4 py-2.5 text-right">{t.admin.total}</th>
                   <th className="px-4 py-2.5">{t.admin.status}</th>
                   <th className="px-4 py-2.5">{t.admin.updateStatus}</th>
@@ -225,8 +231,16 @@ export default async function AdminOrdersPage({
                       </p>
                     </td>
 
-                    <td className="px-4 py-2.5 text-xs text-ink-500">
+                    <td className="px-4 py-2.5 text-xs text-ink-500 tabular-nums">
                       {formatDateTime(order.createdAt)}
+                    </td>
+
+                    {/* Blank rather than repeating the placed time when the
+                        order has not moved yet — an em dash says "nothing has
+                        happened", a duplicated timestamp says "it was
+                        confirmed the second it arrived", which is not true. */}
+                    <td className="px-4 py-2.5 text-xs text-ink-500 tabular-nums">
+                      {order.events[0] ? formatDateTime(order.events[0].createdAt) : "—"}
                     </td>
 
                     <td className="px-4 py-2.5 text-right text-sm font-bold text-ink-900">

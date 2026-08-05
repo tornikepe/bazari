@@ -36,6 +36,22 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
+  /**
+   * When this order reached the status it is in right now.
+   *
+   * Taken from the last event matching the current status, not from
+   * `order.updatedAt`. `updatedAt` moves whenever *any* column changes, so
+   * correcting a delivery address afterwards would have rewritten the moment
+   * the order was confirmed — the page would have shown a time that was true
+   * of nothing.
+   *
+   * Last rather than first, because a status can be revisited: an order sent
+   * back from `shipped` to `confirmed` and shipped again should show the
+   * second time, which is the one that is still true.
+   */
+  const currentStatusAt =
+    order.events.filter((event) => event.status === order.status).at(-1)?.createdAt ?? null;
+
   const contact = [
     { icon: UserIcon, value: order.customerName },
     { icon: PhoneIcon, value: order.phone },
@@ -63,12 +79,26 @@ export default async function AdminOrderDetailPage({
           <h1 className="font-mono text-xl font-extrabold tracking-tight text-ink-900">
             {order.number}
           </h1>
-          <p className="mt-1 text-xs text-ink-400">{formatDateTime(order.createdAt)}</p>
+          <p className="mt-1 text-xs text-ink-400">
+            {t.admin.placedAt}: {formatDateTime(order.createdAt)}
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <StatusBadge status={order.status} t={t} />
-          <OrderStatusSelect id={order.id} status={order.status} />
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-3">
+            <StatusBadge status={order.status} t={t} />
+            <OrderStatusSelect id={order.id} status={order.status} />
+          </div>
+
+          {/* When the order reached the status it is in now. Read from the
+              event log rather than from `updatedAt`, which moves whenever any
+              column changes — editing an address would have rewritten the
+              moment the order was confirmed. */}
+          {currentStatusAt && (
+            <p className="text-xs text-ink-400">
+              {t.admin.statusChangedAt}: {formatDateTime(currentStatusAt)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -221,9 +251,14 @@ export default async function AdminOrderDetailPage({
 
                   <div className="min-w-0 flex-1 pb-4 last:pb-0">
                     <p className="text-xs font-semibold text-ink-800">{t.status[event.status]}</p>
-                    <p className="mt-0.5 text-xs text-ink-400">
+                    <p className="mt-0.5 text-xs text-ink-400 tabular-nums">
                       {formatDateTime(event.createdAt)}
                     </p>
+                    {/* Empty for the row the system wrote when the order was
+                        placed; an address for every staff change after that. */}
+                    {event.actor && (
+                      <p className="truncate text-xs text-ink-400">{event.actor}</p>
+                    )}
                   </div>
                 </li>
               ))}

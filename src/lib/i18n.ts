@@ -386,8 +386,8 @@ const ka = {
     all: "ყველა",
 
     // dashboard analytics
-    revenue30: "შემოსავალი (30 დღე)",
-    grossProfit: "მოგება (30 დღე)",
+    revenue30: "შემოსავალი ({count} დღე)",
+    grossProfit: "მოგება ({count} დღე)",
     unitsSold: "გაყიდული ერთეული",
     avgOrder: "საშუალო შეკვეთა",
     salesChart: "გაყიდვები ბოლო 30 დღეში",
@@ -407,6 +407,8 @@ const ka = {
     lowStockAtField: "მარაგის ზღვარი",
     skuTaken: "ასეთი SKU უკვე გამოყენებულია",
     orderTimeline: "შეკვეთის ისტორია",
+    placedAt: "შეკვეთის დრო",
+    statusChangedAt: "სტატუსი შეიცვალა",
     payment: "გადახდა",
     markPaid: "გადახდილად მონიშვნა",
     refund: "თანხის დაბრუნება",
@@ -471,6 +473,8 @@ const ka = {
     chartTotal: "ჯამი",
     chartToday: "დღეს",
     chartNoRevenue: "ამ დღეს შემოსავალი არ ყოფილა",
+    chartRange: "პერიოდი",
+    chartDays: "{count} დღე",
 
     // sku
     skuHint: "ცარიელი დატოვე — თავად შეიქმნება",
@@ -940,8 +944,8 @@ const en: Dictionary = {
     all: "All",
 
     // dashboard analytics
-    revenue30: "Revenue (30 days)",
-    grossProfit: "Gross profit (30 days)",
+    revenue30: "Revenue ({count} days)",
+    grossProfit: "Gross profit ({count} days)",
     unitsSold: "Units sold",
     avgOrder: "Average order",
     salesChart: "Sales, last 30 days",
@@ -961,6 +965,8 @@ const en: Dictionary = {
     lowStockAtField: "Low-stock threshold",
     skuTaken: "That SKU is already in use",
     orderTimeline: "Order history",
+    placedAt: "Placed",
+    statusChangedAt: "Status changed",
     payment: "Payment",
     markPaid: "Mark as paid",
     refund: "Refund",
@@ -1025,6 +1031,8 @@ const en: Dictionary = {
     chartTotal: "Total",
     chartToday: "Today",
     chartNoRevenue: "No revenue on this day",
+    chartRange: "Period",
+    chartDays: "{count} days",
 
     // sku
     skuHint: "Leave blank — one is generated for you",
