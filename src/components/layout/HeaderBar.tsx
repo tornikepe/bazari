@@ -141,9 +141,13 @@ export function HeaderBar({
             aria-label={t.nav.search}
             className="field h-11 pl-10 pr-24"
           />
+          {/* `min-h-0` is doing real work: `.btn-sm` sets `min-height: 2.25rem`,
+              which silently beat the `h-8` here — the button rendered 36px tall
+              inside a 44px field, so it sat 4px from the top and bottom but 6px
+              from the right. Symmetric now, 6px on every side. */}
           <button
             type="submit"
-            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 h-8 w-20 -translate-y-1/2 px-0"
+            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 h-8 min-h-0 w-20 -translate-y-1/2 px-0"
           >
             {t.nav.search}
           </button>

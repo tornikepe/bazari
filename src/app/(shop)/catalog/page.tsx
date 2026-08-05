@@ -52,7 +52,13 @@ export default async function CatalogPage({
       <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-8">
         {/* ----------------------------- sidebar ---------------------------- */}
         <aside className="hidden w-64 shrink-0 lg:block">
-          <div className="sticky top-[var(--header-h)] card p-4">
+          {/* Its own scroll container. Sticky alone pins the rail to the top
+              of the viewport and then lets it run off the bottom, so a long
+              filter list could only be reached by scrolling the whole page
+              past it first — and by then the rail had scrolled away too.
+              Capped to the viewport minus the header, with the overflow
+              handled here. */}
+          <div className="sticky top-[var(--header-h)] card max-h-[calc(100dvh-var(--header-h)-1.5rem)] overflow-y-auto overscroll-contain p-4">
             <h2 className="mb-3 text-sm font-extrabold tracking-tight text-ink-900">
               {t.catalog.filters}
             </h2>

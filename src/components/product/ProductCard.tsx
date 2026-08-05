@@ -22,7 +22,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const lowStock = !soldOut && product.stock <= LOW_STOCK_THRESHOLD;
 
   return (
-    <article className="group relative flex flex-col overflow-hidden bg-surface transition-colors hover:bg-ink-50">
+    // The card draws its own edge now that the grid no longer supplies one
+    // through a shared hairline gap. `hover-lift` darkens that edge on hover,
+    // which is what the rest of the site does in place of a shadow.
+    <article className="group hover-lift relative flex flex-col overflow-hidden border border-line bg-surface">
       <Link
         href={`/product/${product.slug}`}
         className="relative block aspect-square overflow-hidden bg-ink-50"

@@ -29,7 +29,7 @@ export function LocaleToggle({
   const { locale, setLocale, t } = useI18n();
 
   const track =
-    tone === "panel" ? "border-panel-fg/20 bg-panel-fg/5" : "border-line bg-canvas";
+    tone === "panel" ? "border-panel-fg/20 bg-panel/40" : "border-line bg-surface";
 
   const segment = (active: boolean) =>
     active
@@ -55,7 +55,11 @@ export function LocaleToggle({
           // `lang` so a screen reader announces each label in its own
           // language rather than reading "ქარ" with an English voice.
           lang={code}
-          className={`h-8 w-11 text-xs font-bold transition-colors duration-200 not-first:border-l not-first:border-line ${segment(
+          // `h-full`, not a fixed height inside a taller track. At h-8 in an
+          // h-10 frame the pressed segment left a strip of the track showing
+          // above and below it, which read as a dark seam around the label
+          // rather than as a selected tab.
+          className={`h-full w-11 text-xs font-bold transition-colors duration-200 not-first:border-l not-first:border-line ${segment(
             locale === code,
           )}`}
         >
