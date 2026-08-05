@@ -1,7 +1,15 @@
 import type { Page } from "@playwright/test";
 
-/** Seeded accounts. The admin password comes from the environment. */
-export const DEMO_CUSTOMER = { email: "user@bazari.ge", password: "user1234" };
+/**
+ * The seeded accounts.
+ *
+ * All three read from the same environment the seed writes from, so the tests
+ * cannot drift from the database the way a hardcoded literal does.
+ */
+export const DEMO_CUSTOMER = {
+  email: process.env.CUSTOMER_EMAIL ?? "user@bazari.ge",
+  password: process.env.CUSTOMER_PASSWORD ?? "",
+};
 export const ADMIN = {
   email: process.env.ADMIN_EMAIL ?? "admin@bazari.ge",
   password: process.env.ADMIN_PASSWORD ?? "",

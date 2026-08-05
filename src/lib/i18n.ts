@@ -243,7 +243,7 @@ const ka = {
     skipForNow: "მოგვიანებით",
     unverified: "ელფოსტა დაუდასტურებელია",
     verifyNow: "დადასტურება",
-    demoNote: "სატესტო მომხმარებელი: user@bazari.ge / user1234",
+    demoNote: "სატესტო ანგარიშები იქმნება seed-ით — იხილე README.",
   },
 
   account: {
@@ -801,7 +801,7 @@ const en: Dictionary = {
     skipForNow: "Later",
     unverified: "Email not verified",
     verifyNow: "Verify",
-    demoNote: "Demo customer: user@bazari.ge / user1234",
+    demoNote: "Demo accounts are created by the seed — see the README.",
   },
 
   account: {

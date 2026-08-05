@@ -784,18 +784,33 @@ async function main() {
     },
   });
 
-  // A ready-made customer, so the account area can be tried without signing up.
-  const demoEmail = "user@bazari.ge";
+  // A ready-made shopper, so the account area and checkout can be tried
+  // without signing up first.
+  //
+  // Configured from the environment like the two staff accounts rather than
+  // hardcoded here. The password used to be the literal "user1234" in this
+  // file: fine for a demo nobody can lose anything in, but it meant three
+  // accounts created three different ways, and the one that is easiest to
+  // forget about is the one still holding a password from the repository.
+  const demoEmail = process.env.CUSTOMER_EMAIL ?? "user@bazari.ge";
+  const demoPassword = process.env.CUSTOMER_PASSWORD;
+  if (!demoPassword || demoPassword.length < 8) {
+    throw new Error(
+      "CUSTOMER_PASSWORD must be set to at least 8 characters before seeding.\n" +
+        "It is the demo shopper account, so a memorable one is fine — but it has\n" +
+        "to be a decision somebody made, not a default that shipped in the repo.",
+    );
+  }
   const demoCustomer = await prisma.user.upsert({
     where: { email: demoEmail },
-    update: { password: hashPassword("user1234"), role: "customer", emailVerified: true },
+    update: { password: hashPassword(demoPassword), role: "customer", emailVerified: true },
     create: {
       email: demoEmail,
       name: "Demo customer",
       phone: "+995 599 00 00 00",
       city: "თბილისი",
       address: "ვაჟა-ფშაველას გამზ. 76",
-      password: hashPassword("user1234"),
+      password: hashPassword(demoPassword),
       role: "customer",
       emailVerified: true,
     },
@@ -1040,7 +1055,7 @@ async function main() {
       `  ${orderCount} orders, ${movementCount} stock movements, ${couponCount} coupons.\n` +
       `  admin:    ${email} (password from ADMIN_PASSWORD)\n` +
       `  viewer:   ${viewerEmail} (password from VIEWER_PASSWORD, read-only)\n` +
-      `  customer: ${demoEmail} / user1234\n`,
+      `  customer: ${demoEmail} (password from CUSTOMER_PASSWORD)\n`,
   );
 }
 
