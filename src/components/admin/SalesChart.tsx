@@ -1,4 +1,4 @@
-import { formatPrice } from "@/lib/format";
+import { formatDate, formatPrice, shopDayKey } from "@/lib/format";
 import type { Dictionary, Locale } from "@/lib/i18n";
 
 /**
@@ -25,6 +25,16 @@ import type { Dictionary, Locale } from "@/lib/i18n";
  */
 
 const GRIDLINES = [1, 0.75, 0.5, 0.25];
+
+/**
+ * `dd.mm` — day first, matching `formatDate` and every other date on the site.
+ * The axis used to print the raw `MM-DD` tail of the ISO key, which is the one
+ * date order this project uses nowhere else.
+ */
+function axisLabel(dayKey: string) {
+  const [, month, day] = dayKey.split("-");
+  return `${day}.${month}`;
+}
 
 /**
  * The top of the scale: the smallest number above the busiest day that also
@@ -74,16 +84,25 @@ export function SalesChart({
   }
 
   const ceiling = niceCeiling(peak);
-  const today = new Date().toISOString().slice(0, 10);
+  // Today in shop time, so the highlighted bar is the one the shop is
+  // actually living in — `toISOString()` would move the highlight to
+  // yesterday's bar for the four hours after midnight in Tbilisi.
+  const today = shopDayKey(new Date());
 
-  // A tick every seventh day plus the last one — but only if the last is far
-  // enough from the one before it. Without that check the final two labels
-  // land on top of each other whenever the window length is not a multiple of
-  // seven, which it usually is not.
+  /**
+   * Roughly six labels, whatever the window.
+   *
+   * A fixed step of seven was right for the thirty-day view it was written
+   * for and wrong for both of the others: at seven days it produced two
+   * labels for seven bars, and at ninety it produced thirteen crammed into
+   * the same width.
+   */
   const lastIndex = data.length - 1;
-  const tickIndexes = data.flatMap((_, index) => (index % 7 === 0 ? [index] : []));
-  if (lastIndex - (tickIndexes.at(-1) ?? 0) >= 3) tickIndexes.push(lastIndex);
-
+  const step = Math.max(1, Math.round(data.length / 6));
+  const tickIndexes = data.flatMap((_, index) => (index % step === 0 ? [index] : []));
+  // The last bar earns a label of its own, but only when it is far enough
+  // from the previous tick to not collide with it.
+  if (lastIndex - (tickIndexes.at(-1) ?? 0) >= Math.max(2, step / 2)) tickIndexes.push(lastIndex);
 
   const summary = [
     { label: t.admin.chartTotal, value: formatPrice(total, locale) },
@@ -133,7 +152,7 @@ export function SalesChart({
                   <span
                     key={day.date}
                     className="group relative flex h-full flex-1 items-end"
-                    title={`${day.date} · ${
+                    title={`${formatDate(day.date)} · ${
                       day.total === 0 ? t.admin.chartNoRevenue : formatPrice(day.total, locale)
                     }`}
                   >
@@ -172,7 +191,7 @@ export function SalesChart({
                   style={{ left: `${centre}%`, transform: anchor }}
                   className="absolute top-0 text-xs whitespace-nowrap text-ink-400 tabular-nums"
                 >
-                  {data[index].date.slice(5)}
+                  {axisLabel(data[index].date)}
                 </span>
               );
             })}

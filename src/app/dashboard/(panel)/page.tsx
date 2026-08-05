@@ -5,7 +5,15 @@ import { getI18n } from "@/lib/locale";
 import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SalesChart } from "@/components/admin/SalesChart";
-import { getDashboardMetrics } from "@/lib/analytics";
+import {
+  DEFAULT_RANGE,
+  getDashboardMetrics,
+  isRangeDays,
+  type RangeDays,
+} from "@/lib/analytics";
+import { ChartRangeTabs } from "@/components/admin/ChartRangeTabs";
+import { fill } from "@/lib/i18n";
+import type { RawSearchParams } from "@/lib/filters";
 import {
   AlertIcon,
   ArrowRightIcon,
@@ -15,8 +23,19 @@ import {
   TruckIcon,
 } from "@/components/ui/icons";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<RawSearchParams>;
+}) {
   const { locale, t } = await getI18n();
+
+  // The window comes from the URL so a particular view can be bookmarked and
+  // shared. Validated rather than trusted — `?range=99999` would otherwise
+  // build ninety-nine thousand buckets.
+  const params = await searchParams;
+  const raw = Number(Array.isArray(params.range) ? params.range[0] : params.range);
+  const range: RangeDays = isRangeDays(raw) ? raw : DEFAULT_RANGE;
 
   const [
     productCount,
@@ -32,7 +51,7 @@ export default async function DashboardPage() {
     prisma.order.count(),
     prisma.order.count({ where: { status: "pending" } }),
 
-    getDashboardMetrics(),
+    getDashboardMetrics(range),
 
     prisma.order.findMany({
       orderBy: { createdAt: "desc" },
@@ -67,14 +86,14 @@ export default async function DashboardPage() {
 
   const stats = [
     {
-      label: t.admin.revenue30,
+      label: fill(t.admin.revenue30, { count: range }),
       value: formatPrice(revenue, locale),
       icon: TagIcon,
       tone: "bg-success-soft text-success",
       href: "/dashboard/orders",
     },
     {
-      label: t.admin.grossProfit,
+      label: fill(t.admin.grossProfit, { count: range }),
       value: formatPrice(profit, locale),
       hint: `${marginPct}% ${t.admin.margin}`,
       icon: BagIcon,
@@ -131,8 +150,15 @@ export default async function DashboardPage() {
 
       {/* ------------------------------- chart ------------------------------ */}
       <section className="card mt-4 p-5">
-        <h2 className="text-sm font-bold text-ink-900">{t.admin.salesChart}</h2>
-        <p className="mt-0.5 text-xs text-ink-500">{t.admin.chartHint}</p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-ink-900">{t.admin.salesChart}</h2>
+            <p className="mt-0.5 text-xs text-ink-500">{t.admin.chartHint}</p>
+          </div>
+
+          <ChartRangeTabs active={range} t={t} />
+        </div>
+
         <SalesChart data={daily} locale={locale} t={t} />
       </section>
 
