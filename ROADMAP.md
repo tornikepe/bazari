@@ -68,13 +68,20 @@ a ₾1,500 fee — it interpolated raw tetri and the money-as-integers migration
 **Not done, deliberately:** the currency symbol. `formatPrice` has 56 call sites and threading
 half of them would put two currencies on one page. The column exists; the pass is its own job.
 
-### 1.2 — Editable information pages 🔵 **next**
+### 1.2 — Editable information pages ✅ **done**
 
-- The seven info pages move from `info-pages.ts` into the database, seeded with the current text
-- Editing in the dashboard, both languages side by side
-- A page left empty is hidden from the footer rather than rendering a blank page
+- ✅ All eight pages moved from `info-pages.ts` into a table, seeded with the text that ships in
+  the repo, which also stays as the fallback for an unseeded database
+- ✅ Edited in the dashboard, both languages side by side — the mistake worth preventing is
+  changing one and forgetting the other
+- ✅ Body format is two rules, not JSON: `## ` starts a section, everything else is a paragraph.
+  A textarea an owner can type into beats a structured editor nobody can use unaided
+- ✅ Figures are placeholders — `{freeShipping}` resolves from settings at render, so a page can
+  never state a delivery rule the checkout no longer applies
+- ✅ Unpublished pages leave the footer instead of rendering an empty shell, and the footer uses
+  each page's own title
 
-### 1.3 — Brand theming without a code change
+### 1.3 — Brand theming without a code change 🔵 **next**
 
 - Brand colour and mark set in Settings, injected as CSS custom properties on `<html>`
 - The design system already makes this possible: every colour is a token in one file and no
