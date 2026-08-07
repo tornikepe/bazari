@@ -49,21 +49,29 @@ without a developer, because these live in source files:
 **There is no settings page in the dashboard at all.** The route list is products, categories,
 orders, customers — nothing else.
 
-### 1.1 — Shop settings (the foundation everything else needs)
+### 1.1 — Shop settings ✅ **done**
 
-- `ShopSettings` table, single row, read through a cached accessor so it costs nothing per request
-- Dashboard → **Settings**, with tabs: Identity · Contact · Shipping · Legal · Email
-- Identity: name, tagline (ka/en), logo upload, favicon generated from it, brand colour
-- Contact: address, phone, email, working hours, map link — all optional, and the contact page
-  renders only what is filled in rather than showing empty rows
-- Shipping: free threshold, flat fee, delivery estimate, and a "cash on delivery" toggle
-- Every one of these is currently a constant; each becomes a field with the constant as its default,
-  so nothing breaks on the day of the migration
+- ✅ `ShopSettings` table, single row, cached per request so it costs one query however many
+  components ask for it
+- ✅ Dashboard → **Settings**: Shop · Contact · Delivery
+- ✅ Name, tab suffix per language, tagline, logo URL — the name reaches the header, footer, tab
+  title, sign-in page and emails
+- ✅ Contact details, each optional, and **an empty field renders nothing at all** rather than a
+  row with a dash in it
+- ✅ Delivery threshold and fee, applied in one place so the cart, the checkout total and the
+  shipping page cannot disagree
+- ✅ Every column defaults to the constant it replaced, so the migration changed nothing on screen
 
-### 1.2 — Editable information pages
+Found and fixed on the way: the shipping page told customers delivery was free over ₾20,000 with
+a ₾1,500 fee — it interpolated raw tetri and the money-as-integers migration had missed it.
+
+**Not done, deliberately:** the currency symbol. `formatPrice` has 56 call sites and threading
+half of them would put two currencies on one page. The column exists; the pass is its own job.
+
+### 1.2 — Editable information pages 🔵 **next**
 
 - The seven info pages move from `info-pages.ts` into the database, seeded with the current text
-- Rich-text editing in the dashboard, both languages side by side
+- Editing in the dashboard, both languages side by side
 - A page left empty is hidden from the footer rather than rendering a blank page
 
 ### 1.3 — Brand theming without a code change
@@ -191,8 +199,9 @@ gaps.
 
 ## 6. ⚙️ Operations
 
-- ✅ Session revocation — done
-- **Admin audit log** — who changed which price, and when. Next up
+- ✅ Session revocation — a password reset now ends every other session
+- ✅ Commit attribution guard — a pre-push hook refuses commits GitHub cannot link
+- **Admin audit log** — who changed which price, and when
 - **Error tracking** (Sentry with source maps) — *needs an account from you*
 - **Uptime alerting** to your phone
 - **Backups**: confirm retention and **restore once**, to prove it works
@@ -243,4 +252,4 @@ languages, checking `documentElement.scrollWidth` against `clientWidth`, every i
 element's bounding box against 24×24, every control for an accessible name, and every image for
 `alt`. §5 turns it into a test that runs in CI rather than a script run by hand.
 
-*Last measured: 7 August 2026.*
+*Last measured: 7 August 2026. Phase 1.1 completed the same day.*

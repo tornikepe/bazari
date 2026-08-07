@@ -2,14 +2,25 @@ import { expect, test } from "@playwright/test";
 
 const PAGES = ["/", "/catalog", "/product/ugreen-usb-c-hub-9in1", "/cart", "/checkout", "/track", "/login", "/register", "/about", "/faq"];
 
-test("nothing spills out of its container", async ({ page }) => {
-  const findings: string[] = [];
+/**
+ * One test per width rather than one test for all of them.
+ *
+ * This was a single test doing 2 locales x 3 widths x 10 pages — sixty
+ * navigations at roughly 0.7s each, which sat just under the 30s budget and
+ * then went over it the first time a page gained a query. A timeout in a
+ * layout test reads as a layout failure and is not one; splitting also names
+ * the width in the failure, which is the first thing you want to know.
+ */
+for (const width of [320, 360, 390]) {
+  test(`nothing spills out of its container at ${width}px`, async ({ page }) => {
+    const findings: string[] = [];
 
-  for (const locale of ["ka", "en"] as const) {
-    await page.context().clearCookies();
-    await page.context().addCookies([{ name: "cm_locale", value: locale, url: "http://127.0.0.1:3100" }]);
+    for (const locale of ["ka", "en"] as const) {
+      await page.context().clearCookies();
+      await page.context().addCookies([
+        { name: "cm_locale", value: locale, url: "http://127.0.0.1:3100" },
+      ]);
 
-    for (const width of [320, 360, 390]) {
       await page.setViewportSize({ width, height: 800 });
 
       for (const path of PAGES) {
@@ -48,10 +59,10 @@ test("nothing spills out of its container", async ({ page }) => {
         for (const b of bad.slice(0, 3)) findings.push(`[${locale} ${width}] ${path}  ${b}`);
       }
     }
-  }
 
-  // `.btn` used to set `white-space: nowrap` with a fixed height, so a long
-  // Georgian label like "კალათაში დამატება" spilled straight out of the
-  // button. This is the regression guard for that whole class of bug.
-  expect(findings, `content spills out of its box:\n${findings.join("\n")}`).toEqual([]);
-});
+    // `.btn` used to set `white-space: nowrap` with a fixed height, so a long
+    // Georgian label like "კალათაში დამატება" spilled straight out of the
+    // button. This is the regression guard for that whole class of bug.
+    expect(findings, `content spills out of its box:\n${findings.join("\n")}`).toEqual([]);
+  });
+}

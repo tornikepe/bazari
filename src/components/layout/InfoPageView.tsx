@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { getI18n } from "@/lib/locale";
 import { getSettings } from "@/lib/settings";
-import { getInfoPage, type InfoSlug } from "@/lib/info-pages";
+import { getPage } from "@/lib/info-store";
+import type { InfoSlug } from "@/lib/info-pages";
 import { MailIcon, MapPinIcon, PhoneIcon } from "@/components/ui/icons";
 
 /** Shared renderer for every footer information page. */
 export async function InfoPageView({ slug }: { slug: InfoSlug }) {
   const [{ locale, t }, settings] = await Promise.all([getI18n(), getSettings()]);
-  const page = getInfoPage(slug, locale, settings);
+  const page = await getPage(slug, locale);
 
   /**
    * The shop's real contact details, on the contact page only.
@@ -102,11 +103,12 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
 /**
  * Metadata for an information route.
  *
- * Deliberately sets only the description: the tab title is a single fixed
- * string for the whole site (see `SITE_TITLE`), so no page overrides it.
+ * Deliberately sets only the description: the tab title is one string for the
+ * whole site, built from the shop's name in the root layout, and no page
+ * overrides it.
  */
 export async function infoMetadata(slug: InfoSlug) {
-  const [{ locale }, settings] = await Promise.all([getI18n(), getSettings()]);
-  const page = getInfoPage(slug, locale, settings);
+  const { locale } = await getI18n();
+  const page = await getPage(slug, locale);
   return { description: page.intro.slice(0, 160) };
 }

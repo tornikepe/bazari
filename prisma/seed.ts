@@ -9,6 +9,8 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import type { OrderStatus } from "../src/generated/prisma/enums";
 import { hashPassword } from "../src/lib/auth-hash";
 import { DEFAULT_SHIPPING } from "../src/lib/cart-rules";
+import { getInfoPage, INFO_SLUGS } from "../src/lib/info-pages";
+import { serialiseSections } from "../src/lib/info-content";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -745,6 +747,32 @@ async function main() {
     update: {},
     create: { id: "shop" },
   });
+
+  /* -------------------------- info pages ---------------------------- */
+  // Written from the prose that ships in `info-pages.ts`, so a fresh database
+  // starts with the same pages the repo has always had. Upserted with an empty
+  // `update`: once a row exists it belongs to the shop owner, and re-running
+  // the seed must never overwrite what they have written.
+  console.log("→ ensuring info pages…");
+  for (const [index, slug] of INFO_SLUGS.entries()) {
+    const ka = getInfoPage(slug, "ka");
+    const en = getInfoPage(slug, "en");
+
+    await prisma.infoPage.upsert({
+      where: { slug },
+      update: {},
+      create: {
+        slug,
+        titleKa: ka.title,
+        titleEn: en.title,
+        introKa: ka.intro,
+        introEn: en.intro,
+        bodyKa: serialiseSections(ka.sections),
+        bodyEn: serialiseSections(en.sections),
+        sortOrder: index,
+      },
+    });
+  }
 
   /* ---------------------------- users ------------------------------ */
   const email = process.env.ADMIN_EMAIL ?? "admin@bazari.ge";

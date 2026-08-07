@@ -12,30 +12,37 @@
  * code really enforces.
  */
 import type { Locale } from "@/lib/i18n";
-import { DEFAULT_SHIPPING, type ShippingRules } from "@/lib/cart-rules";
-import { formatPrice } from "@/lib/format";
 
 type Section = { heading: string; body: string[] };
 type Content = { title: string; intro: string; sections: Section[] };
 
-export type InfoSlug =
-  | "about"
-  | "contact"
-  | "faq"
-  | "shipping"
-  | "returns"
-  | "warranty"
-  | "terms"
-  | "privacy";
+export const INFO_SLUGS = [
+  "about",
+  "contact",
+  "faq",
+  "shipping",
+  "returns",
+  "warranty",
+  "terms",
+  "privacy",
+] as const;
+
+export type InfoSlug = (typeof INFO_SLUGS)[number];
 
 /**
- * Built per call rather than declared once, because two of these paragraphs
- * quote the delivery rules — and those are configuration now, not constants
- * this module can read at import time.
+ * The prose that ships with the repository.
  *
- * Cheap: a handful of small objects, and only one page renders at a time.
+ * Static again. Two paragraphs quote the delivery rules, and they do it with
+ * `{freeShipping}` / `{shippingFee}` placeholders rather than numbers — those
+ * resolve from settings wherever the page is rendered, so a sentence here can
+ * never state a rule the checkout no longer applies. That is not hypothetical:
+ * this page once advertised free delivery over ₾20,000 against a real rule of
+ * ₾200, because the figure had been typed in.
+ *
+ * Once seeded, the database holds the editable copy of all of this and these
+ * values become the fallback for an unseeded install.
  */
-const buildPages = (rules: ShippingRules): Record<InfoSlug, Record<Locale, Content>> => ({
+const pages: Record<InfoSlug, Record<Locale, Content>> = {
   about: {
     ka: {
       title: "ჩვენ შესახებ",
@@ -177,7 +184,7 @@ const buildPages = (rules: ShippingRules): Record<InfoSlug, Record<Locale, Conte
         {
           heading: "ღირებულება",
           body: [
-            `მიწოდება უფასოა ${formatPrice(rules.freeShippingThreshold, "ka")}-ზე მეტ შეკვეთაზე. სხვა შემთხვევაში — ${formatPrice(rules.shippingFee, "ka")}.`,
+            "მიწოდება უფასოა {freeShipping}-ზე მეტ შეკვეთაზე. სხვა შემთხვევაში — {shippingFee}.",
             "ეს თანხა კალათაშივე ჩანს და შეკვეთის ჯამში სერვერზე ითვლება.",
           ],
         },
@@ -196,7 +203,7 @@ const buildPages = (rules: ShippingRules): Record<InfoSlug, Record<Locale, Conte
         {
           heading: "Cost",
           body: [
-            `Delivery is free on orders over ${formatPrice(rules.freeShippingThreshold, "en")}, otherwise ${formatPrice(rules.shippingFee, "en")}.`,
+            "Delivery is free on orders over {freeShipping}, otherwise {shippingFee}.",
             "The amount is shown in the cart and recalculated on the server when the order is placed.",
           ],
         },
@@ -403,12 +410,8 @@ const buildPages = (rules: ShippingRules): Record<InfoSlug, Record<Locale, Conte
       ],
     },
   },
-});
+};
 
-export function getInfoPage(
-  slug: InfoSlug,
-  locale: Locale,
-  rules: ShippingRules = DEFAULT_SHIPPING,
-) {
-  return buildPages(rules)[slug][locale];
+export function getInfoPage(slug: InfoSlug, locale: Locale) {
+  return pages[slug][locale];
 }

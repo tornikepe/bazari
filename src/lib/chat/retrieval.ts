@@ -2,7 +2,8 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
-import { getInfoPage, type InfoSlug } from "@/lib/info-pages";
+import { getPage } from "@/lib/info-store";
+import type { InfoSlug } from "@/lib/info-pages";
 import { getSettings } from "@/lib/settings";
 import type { ShopSettings } from "@/lib/settings-defaults";
 import type { Locale } from "@/lib/i18n";
@@ -105,14 +106,17 @@ async function catalogueSummary(locale: Locale): Promise<string> {
 }
 
 /** The information pages, flattened to plain text the model can quote from. */
-function infoPagesText(locale: Locale, settings: ShopSettings): string {
-  return CONTEXT_PAGES.map((slug) => {
-    const page = getInfoPage(slug, locale, settings);
-    const body = page.sections
-      .map((section) => `### ${section.heading}\n${section.body.join("\n")}`)
-      .join("\n\n");
-    return `## ${page.title}  (/${slug})\n${page.intro}\n\n${body}`;
-  }).join("\n\n");
+async function infoPagesText(locale: Locale): Promise<string> {
+  const pages = await Promise.all(CONTEXT_PAGES.map((slug) => getPage(slug, locale)));
+
+  return pages
+    .map((page) => {
+      const body = page.sections
+        .map((section) => `### ${section.heading}\n${section.body.join("\n")}`)
+        .join("\n\n");
+      return `## ${page.title}  (/${page.slug})\n${page.intro}\n\n${body}`;
+    })
+    .join("\n\n");
 }
 
 /** The rules the code actually enforces, so the assistant can't soften them. */
@@ -147,7 +151,7 @@ export async function shopContext(locale: Locale): Promise<string> {
     shippingRules(locale, settings),
     "",
     "# Information pages, verbatim",
-    infoPagesText(locale, settings),
+    await infoPagesText(locale),
   ].join("\n");
 
   contextCache.set(locale, { text, expiresAt: Date.now() + CONTEXT_TTL_MS });

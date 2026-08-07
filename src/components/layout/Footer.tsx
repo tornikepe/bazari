@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import { getSettings } from "@/lib/settings";
+import { getPublishedPages } from "@/lib/info-store";
 import { getI18n } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 
 export async function Footer() {
   const [{ locale, t }, settings] = await Promise.all([getI18n(), getSettings()]);
+  const published = await getPublishedPages(locale);
 
   const categories = await prisma.category.findMany({
     orderBy: [{ sortOrder: "asc" }],
@@ -13,19 +15,25 @@ export async function Footer() {
     select: { slug: true, nameKa: true, nameEn: true },
   });
 
+  // Built from the pages that actually exist and are published, using each
+  // page's own title. A shop that unpublishes its warranty page should stop
+  // linking to it — a footer link to a blank page is worse than no link, and
+  // the label should be whatever the owner called it rather than a fixed
+  // string in the dictionary.
+  const byGroup = (slugs: readonly string[]) =>
+    slugs.flatMap((slug) => {
+      const page = published.find((candidate) => candidate.slug === slug);
+      return page ? [{ href: `/${slug}`, label: page.title }] : [];
+    });
+
   const companyLinks = [
-    { href: "/about", label: t.nav.about },
-    { href: "/contact", label: t.nav.contact },
-    { href: "/terms", label: t.footer.terms },
-    { href: "/privacy", label: t.footer.privacy },
+    ...byGroup(["about", "contact"]),
+    ...byGroup(["terms", "privacy"]),
   ];
 
   const helpLinks = [
     { href: "/track", label: t.orderDone.trackHint },
-    { href: "/faq", label: t.footer.faq },
-    { href: "/shipping", label: t.footer.shippingInfo },
-    { href: "/returns", label: t.footer.returns },
-    { href: "/warranty", label: t.footer.warranty },
+    ...byGroup(["faq", "shipping", "returns", "warranty"]),
   ];
 
   return (

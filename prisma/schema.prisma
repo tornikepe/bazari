@@ -422,3 +422,27 @@ model ShopSettings {
 
   updatedAt DateTime @updatedAt
 }
+
+/// A footer information page — about, FAQ, shipping, returns, and so on.
+///
+/// Bilingual columns rather than a row per language, matching `Category` and
+/// `Product`: one page is one row, and its two languages are edited together
+/// because they are the same page.
+///
+/// `bodyKa` / `bodyEn` hold the small text format in `info-content.ts`, where
+/// `## ` starts a section. Figures are written as placeholders — `{freeShipping}`
+/// resolves from settings at render, so a page cannot state a delivery rule the
+/// checkout no longer applies.
+model InfoPage {
+  slug        String  @id
+  titleKa     String  @default("")
+  titleEn     String  @default("")
+  introKa     String  @default("")
+  introEn     String  @default("")
+  bodyKa      String  @default("")
+  bodyEn      String  @default("")
+  /// Unpublished pages are hidden from the footer rather than rendered empty.
+  isPublished Boolean @default(true)
+  sortOrder   Int     @default(0)
+  updatedAt   DateTime @updatedAt
+}

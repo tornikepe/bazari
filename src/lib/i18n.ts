@@ -508,6 +508,19 @@ const ka = {
     codEnabled: "კურიერთან გადახდა",
     settingsSaved: "შენახულია",
     settingsInvalid: "შეამოწმე შევსებული ველები",
+
+    // information pages
+    pages: "გვერდები",
+    pagesHint: "ფუტერის საინფორმაციო გვერდები — ორივე ენაზე",
+    pageTitle: "სათაური",
+    pageIntro: "შესავალი",
+    pageBody: "ტექსტი",
+    pagePublished: "გამოქვეყნებული",
+    pageFormatHint:
+      "სტრიქონი «## სათაურით» ახალ სექციას იწყებს. ცარიელი სტრიქონი აბზაცებს ჰყოფს.",
+    pagePlaceholderHint:
+      "{freeShipping} და {shippingFee} ავტომატურად ჩაისმება პარამეტრებიდან — ციფრი ხელით არ ჩაწერო.",
+    pageHiddenNote: "გამოუქვეყნებელი გვერდი ფუტერში არ ჩანს.",
   },
 
   paymentState: {
@@ -1095,6 +1108,19 @@ const en: Dictionary = {
     codEnabled: "Cash on delivery",
     settingsSaved: "Saved",
     settingsInvalid: "Check the fields you filled in",
+
+    // information pages
+    pages: "Pages",
+    pagesHint: "The footer's information pages, in both languages",
+    pageTitle: "Title",
+    pageIntro: "Introduction",
+    pageBody: "Text",
+    pagePublished: "Published",
+    pageFormatHint:
+      "A line starting with “## ” begins a new section. Blank lines separate paragraphs.",
+    pagePlaceholderHint:
+      "{freeShipping} and {shippingFee} are filled in from Settings — don't type the figures.",
+    pageHiddenNote: "An unpublished page is not linked from the footer.",
   },
 
   paymentState: {
