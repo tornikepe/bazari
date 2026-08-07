@@ -83,6 +83,13 @@ half of them would put two currencies on one page. The column exists; the pass i
 
 ### 1.3 — Brand theming without a code change 🔵 **next**
 
+> ⛔ **Blocked right now.** The Prisma Postgres account is returning
+> `planLimitReached`, so the database refuses every connection: the live site
+> is 500ing, and neither the app nor the e2e suite runs locally. CI is
+> unaffected — it spins up its own Postgres container — but nothing that needs
+> the real database can be checked until the plan is raised or the data is
+> moved to another host.
+
 - Brand colour and mark set in Settings, injected as CSS custom properties on `<html>`
 - The design system already makes this possible: every colour is a token in one file and no
   component hardcodes a value. This is the payoff of that decision
