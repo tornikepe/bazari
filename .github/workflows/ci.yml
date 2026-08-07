@@ -51,8 +51,19 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bazari_test
       AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789abcdef
+      # The seed refuses to run without a password for each of the three
+      # accounts, which is the point of it — a default that ships in the repo
+      # is a default on every deployment that forgets. These are literals
+      # rather than secrets because the database they seed is a throwaway
+      # container that is destroyed with the job; they are not credentials to
+      # anything, and pinning them here keeps the workflow readable and the
+      # e2e helpers able to sign in.
       ADMIN_EMAIL: admin@bazari.ge
       ADMIN_PASSWORD: ci-only-admin-password
+      VIEWER_EMAIL: viewer@bazari.ge
+      VIEWER_PASSWORD: ci-only-viewer-password
+      CUSTOMER_EMAIL: user@bazari.ge
+      CUSTOMER_PASSWORD: ci-only-customer
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
       # No RESEND_API_KEY on purpose: mail must degrade, not break the suite.
 

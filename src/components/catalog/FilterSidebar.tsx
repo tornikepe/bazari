@@ -132,7 +132,12 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
       {/* ------------------------------ brands ----------------------------- */}
       {brands.length > 0 && (
         <FilterGroup title={t.catalog.brand}>
-          <ul className="-mr-1 flex max-h-60 flex-col gap-0.5 overflow-y-auto pr-1">
+          {/* No `max-h` and no scroll of its own. The rail around this is
+              already a scroll container, and a scrollbar inside a scrollbar is
+              the worst of both: the wheel goes to whichever one the cursor
+              happens to be over, and neither shows you where you are in the
+              list. One scroller, the outer one. */}
+          <ul className="flex flex-col gap-0.5">
             {brands.map((brand) => (
               <li key={brand}>
                 <CheckboxRow

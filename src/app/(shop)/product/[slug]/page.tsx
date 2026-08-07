@@ -157,7 +157,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
         {/* ------------------------------ gallery ---------------------------- */}
-        <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+        {/* `lg:self-start` is what makes the sticky work at all. A grid item
+            defaults to `align-self: stretch`, so this box was as tall as the
+            whole row — and a sticky element with no room between its own
+            height and its container's has nowhere to travel, so it sat there
+            looking like `position: sticky` had been ignored. */}
+        <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
           <Image
             src={product.image}
             alt={name}
