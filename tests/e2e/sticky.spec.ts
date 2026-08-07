@@ -49,7 +49,10 @@ test("the product photo stays on screen while the details scroll", async ({ page
   const before = (await photo.boundingBox())!;
 
   await page.evaluate(() => window.scrollBy(0, 600));
-  await expect.poll(async () => Math.round(window.scrollY ?? 0)).toBeGreaterThan(0);
+  // Through `page.evaluate`, not directly: `window` in a spec file is Node's
+  // global, where `scrollY` is undefined. Reading it here rather than in the
+  // browser is how this test failed in CI on its first run.
+  await expect.poll(() => page.evaluate(() => Math.round(window.scrollY))).toBeGreaterThan(0);
   await page.waitForTimeout(300);
 
   const after = (await photo.boundingBox())!;
