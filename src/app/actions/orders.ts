@@ -171,16 +171,6 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           },
         });
 
-        // The first entry in the order's history. Without it the timeline on
-        // the dashboard began at whatever the staff member changed the status
-        // *to*, so a real order looked as though it had never been placed —
-        // only confirmed. The seeded demo orders always had this row, which is
-        // exactly why the gap survived: the page looked right on every order
-        // except the ones a customer actually made.
-        await tx.orderEvent.create({
-          data: { orderId: created.id, status: "pending", actor: "" },
-        });
-
         for (const { product, quantity } of lines) {
           // Conditional decrement: the `gte` guard is evaluated by the database
           // as part of the write, so two shoppers racing for the last unit

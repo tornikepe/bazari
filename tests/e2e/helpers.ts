@@ -104,6 +104,34 @@ export async function readProductFlag(id: string, column: "isActive"): Promise<b
 }
 
 /**
+ * How many opening `pending` events an order carries.
+ *
+ * Read from the database rather than from the timeline on the page: the page
+ * faithfully renders duplicates, so counting what it shows would pass on the
+ * exact bug this is here to catch.
+ */
+export async function countPendingEvents(orderNumber: string): Promise<number> {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("[e2e] DATABASE_URL is not set");
+
+  const { Client } = await import("pg");
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const result = await client.query(
+      `SELECT COUNT(*)::int AS n
+         FROM "OrderEvent" e
+         JOIN "Order" o ON o.id = e."orderId"
+        WHERE o.number = $1 AND e.status = 'pending'`,
+      [orderNumber],
+    );
+    return result.rows[0]?.n ?? 0;
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
+/**
  * Clears the rate-limit counters mid-run.
  *
  * `global-setup.ts` clears them once before the suite, which is enough for

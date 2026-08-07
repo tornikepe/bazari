@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { DEMO_CUSTOMER, seedCart, signIn, useEnglish } from "./helpers";
+import { countPendingEvents, DEMO_CUSTOMER, seedCart, signIn, useEnglish } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await useEnglish(page);
@@ -24,6 +24,27 @@ test("a signed-in customer can place an order and reach the confirmation", async
 
   await expect(page).toHaveURL(/\/order\/BZ-/);
   await expect(page.getByRole("heading", { name: /order received/i })).toBeVisible();
+});
+
+test("a placed order opens its history exactly once", async ({ page }) => {
+  await seedCart(page);
+  await page.goto("/checkout");
+  await page.getByLabel(/full name/i).fill("E2E Timeline");
+  await page.getByLabel(/phone/i).fill("555000333");
+  await page.getByLabel(/city/i).fill("Tbilisi");
+  await page.getByLabel(/^address/i).fill("Rustaveli 3");
+  await page.getByRole("button", { name: /place order/i }).click();
+  await expect(page).toHaveURL(/\/order\/BZ-/);
+
+  const number = page.url().split("/").pop()!;
+
+  // The order row already creates its opening event as a nested write. A
+  // second explicit `orderEvent.create` next to it wrote the same row twice,
+  // and the dashboard showed "Pending / Pending" with identical timestamps.
+  // Counted from the database, because the page renders whatever is there.
+  await expect
+    .poll(async () => countPendingEvents(number))
+    .toBe(1);
 });
 
 test("checkout sends a signed-out visitor to sign in first", async ({ page }) => {
