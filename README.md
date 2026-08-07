@@ -173,6 +173,28 @@ variable alone does nothing — it is read only at seed time.
 > replace it.** The seed used to print it on every run for convenience; it now prints only the
 > address and the name of the variable, for exactly this reason.
 
+### Sessions, and what a reset actually ends
+
+The session cookie is stateless — `userId.sessionVersion.expiresAt.hmac`, signed and
+self-verifying, so a request costs no database lookup and there is no session table to keep.
+
+The catch with that design is that a cookie cannot normally be taken back: it stays valid until
+it expires, which was seven days, no matter what happens to the password. That is the wrong
+answer to "I think somebody is in my account" — the exact moment somebody resets a password.
+
+`sessionVersion` fixes it. The number is signed into the cookie and compared against the column
+on every request, so incrementing the column invalidates every cookie that user holds, at once
+and immediately. A password reset does exactly that, then issues the resetting browser a fresh
+session so it is not logged out of its own recovery.
+
+Rotating a *staff* password through the seed also revokes nothing on its own — the seed writes
+a new hash, and old cookies for that account keep working until they expire. If you are
+rotating because a password leaked rather than for hygiene, bump the column too:
+
+```sql
+UPDATE "User" SET "sessionVersion" = "sessionVersion" + 1 WHERE email = 'admin@bazari.ge';
+```
+
 ### How roles are assigned — and why sign-up cannot mint staff
 
 The role is **never** taken from a form. There are exactly two places a `User` row is created:

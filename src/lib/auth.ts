@@ -19,7 +19,18 @@ function secret() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Session cookie: "<userId>.<expiresAt>.<hmac>"                        */
+/* Session cookie: "<userId>.<sessionVersion>.<expiresAt>.<hmac>"       */
+/*                                                                      */
+/* Stateless and self-verifying, so a request costs no session lookup    */
+/* and there is no session table to keep. The price of that is that a    */
+/* cookie cannot be withdrawn once issued — which is the wrong answer    */
+/* to "I think someone is in my account", the exact moment a password    */
+/* reset happens.                                                        */
+/*                                                                       */
+/* `sessionVersion` buys revocation back. It is signed into the cookie    */
+/* and compared against the column on every request, so bumping the       */
+/* column invalidates every cookie for that user at once. The comparison  */
+/* is free: `getCurrentUser` already selects the row.                     */
 /* ------------------------------------------------------------------ */
 
 function sign(payload: string) {
@@ -28,10 +39,10 @@ function sign(payload: string) {
 
 function readToken(token: string) {
   const parts = token.split(".");
-  if (parts.length !== 3) return null;
+  if (parts.length !== 4) return null;
 
-  const [userId, expiresAt, signature] = parts;
-  const payload = `${userId}.${expiresAt}`;
+  const [userId, version, expiresAt, signature] = parts;
+  const payload = `${userId}.${version}.${expiresAt}`;
 
   const expected = Buffer.from(sign(payload), "hex");
   const provided = Buffer.from(signature, "hex");
@@ -40,12 +51,15 @@ function readToken(token: string) {
 
   if (Number(expiresAt) < Date.now()) return null;
 
-  return userId;
+  const sessionVersion = Number(version);
+  if (!Number.isInteger(sessionVersion)) return null;
+
+  return { userId, sessionVersion };
 }
 
-export async function createSession(userId: string) {
+export async function createSession(userId: string, sessionVersion = 0) {
   const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
-  const payload = `${userId}.${expiresAt}`;
+  const payload = `${userId}.${sessionVersion}.${expiresAt}`;
   const store = await cookies();
 
   store.set(SESSION_COOKIE, `${payload}.${sign(payload)}`, {
@@ -87,11 +101,11 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  const userId = readToken(token);
-  if (!userId) return null;
+  const claim = readToken(token);
+  if (!claim) return null;
 
-  return prisma.user.findUnique({
-    where: { id: userId },
+  const user = await prisma.user.findUnique({
+    where: { id: claim.userId },
     select: {
       id: true,
       email: true,
@@ -101,8 +115,41 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       address: true,
       role: true,
       emailVerified: true,
+      sessionVersion: true,
     },
   });
+  if (!user) return null;
+
+  // The signature proves the cookie was minted here; this proves it has not
+  // been revoked since. A password reset bumps the column, and every cookie
+  // carrying the old number stops working on the next request.
+  if (user.sessionVersion !== claim.sessionVersion) return null;
+
+  // `sessionVersion` is a revocation detail and no caller has any business
+  // with it, so it does not travel further than this function.
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    phone: user.phone,
+    city: user.city,
+    address: user.address,
+    role: user.role,
+    emailVerified: user.emailVerified,
+  };
+}
+
+/**
+ * Invalidates every session cookie this user holds, including the one making
+ * the request. Called wherever the account's credentials change.
+ */
+export async function revokeSessions(userId: string) {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { sessionVersion: { increment: 1 } },
+    select: { sessionVersion: true },
+  });
+  return user.sessionVersion;
 }
 
 /**

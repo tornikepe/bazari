@@ -132,6 +132,33 @@ export async function countPendingEvents(orderNumber: string): Promise<number> {
 }
 
 /**
+ * Revokes every session for an address, the way a password reset does.
+ *
+ * Written straight to the column rather than driven through the reset form:
+ * that form needs a code which is emailed and deliberately never returned to
+ * the caller, and a test is not a good reason to open a way to read it back.
+ */
+export async function bumpSessionVersion(email: string): Promise<number> {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("[e2e] DATABASE_URL is not set");
+
+  const { Client } = await import("pg");
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    const result = await client.query(
+      `UPDATE "User" SET "sessionVersion" = "sessionVersion" + 1
+        WHERE email = $1 RETURNING "sessionVersion"`,
+      [email],
+    );
+    if (!result.rowCount) throw new Error(`[e2e] no user with the address ${email}`);
+    return result.rows[0].sessionVersion;
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
+/**
  * Clears the rate-limit counters mid-run.
  *
  * `global-setup.ts` clears them once before the suite, which is enough for

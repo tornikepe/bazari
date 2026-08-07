@@ -1,0 +1,13 @@
+-- A counter that invalidates every session cookie issued before it changed.
+--
+-- The session cookie is stateless: "<userId>.<expiresAt>.<hmac>", signed and
+-- self-verifying, which is why it needs no database lookup and no session
+-- table. The cost of that is that it cannot be withdrawn — a cookie stolen
+-- today stays valid for its full seven days, and resetting the password does
+-- nothing to it. That is the wrong answer to "I think someone got into my
+-- account", which is the exact moment a password reset happens.
+--
+-- Carrying this number inside the signature, and comparing it to the column on
+-- every request, buys revocation back for the cost of a field the app already
+-- reads. Bumping it invalidates every cookie for that user at once.
+ALTER TABLE "User" ADD COLUMN "sessionVersion" INTEGER NOT NULL DEFAULT 0;

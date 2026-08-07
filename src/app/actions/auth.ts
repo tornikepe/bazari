@@ -8,6 +8,7 @@ import { getLocale } from "@/lib/locale";
 import { clientIp, consume, reset } from "@/lib/rate-limit";
 import {
   createSession,
+  revokeSessions,
   destroySession,
   getCurrentUser,
   hashPassword,
@@ -64,7 +65,7 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
   await reset(`login:ip:${ip}`);
   await reset(`login:email:${email}`);
 
-  await createSession(user.id);
+  await createSession(user.id, user.sessionVersion);
   redirect(safeNext(formData.get("next")) ?? homeFor(user.role));
 }
 
@@ -120,7 +121,7 @@ export async function register(_previous: AuthState, formData: FormData): Promis
 
   // Signed in immediately, but flagged unverified until the code is entered —
   // the account works, the badge in the header says it still needs confirming.
-  await createSession(user.id);
+  await createSession(user.id, user.sessionVersion);
 
   const { code } = await issueCode(user.id, "email_verification");
   // Emailed, never placed in the URL — a code in the query string survives in
@@ -243,9 +244,15 @@ export async function resetPassword(
     data: { password: hashPassword(password), emailVerified: true },
   });
 
-  // Every existing session is left as-is by design: this demo has no session
-  // store to revoke. In production this is where they would be invalidated.
-  await createSession(result.userId);
+  // Every session issued before this moment stops working, including any the
+  // attacker is holding. This is the whole point of resetting a password when
+  // you think somebody is in your account, and until now it did not happen:
+  // the old cookie stayed valid for its full seven days.
+  //
+  // It logs out this browser too, which is why a fresh session is minted
+  // immediately afterwards at the new version.
+  const version = await revokeSessions(result.userId);
+  await createSession(result.userId, version);
   redirect("/account");
 }
 

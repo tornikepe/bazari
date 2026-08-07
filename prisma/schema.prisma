@@ -259,6 +259,10 @@ model User {
   role      Role     @default(customer)
   /// Sign-up sends a code; until it's confirmed this stays false.
   emailVerified Boolean @default(false)
+  /// Bumped to invalidate every session cookie issued for this user. The
+  /// cookie carries the value it was signed with, so an old one no longer
+  /// matches and is rejected without needing a session table.
+  sessionVersion Int    @default(0)
   orders    Order[]
   tokens    VerificationToken[]
   createdAt DateTime @default(now())

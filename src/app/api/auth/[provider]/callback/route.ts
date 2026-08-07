@@ -101,7 +101,7 @@ export async function GET(
     });
   }
 
-  await createSession(user.id);
+  await createSession(user.id, user.sessionVersion);
 
   const requested = request.cookies.get("bz_oauth_next")?.value ?? "";
   const next =
