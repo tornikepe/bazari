@@ -39,6 +39,8 @@
 - [Design system](#design-system)
 - [Testing](#testing)
 - [Deploying](#deploying)
+- [Configuring the shop](#configuring-the-shop) — using this for a different business
+- [Commit attribution](#commit-attribution)
 - [Notes and known limits](#notes-and-known-limits)
 
 ---
@@ -79,6 +81,14 @@ npm run db:migrate
 npm run db:seed
 npm run dev
 ```
+
+Finally, arm the repository's git hooks — one command, once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+See [Commit attribution](#commit-attribution) for what it protects against.
 
 | | |
 |---|---|
@@ -470,6 +480,83 @@ Two things worth knowing before pointing this at a real database:
   already.
 - **`remotePatterns` in `next.config.ts` currently allows any HTTPS host**, so that arbitrary
   product image URLs work in the demo. Narrow it to your own CDN before running a real shop.
+
+---
+
+## Configuring the shop
+
+Everything that makes this shop *this* shop lives in the dashboard under
+**Settings**, not in the source. Nothing below needs a code change:
+
+| Group | What |
+|---|---|
+| **Shop** | Name, browser-tab suffix per language, description, logo URL |
+| **Contact** | Email, phone, address, opening hours — each optional |
+| **Delivery** | Free-delivery threshold, delivery fee, cash-on-delivery toggle |
+
+The name appears in the header, the footer, the browser tab, the sign-in page
+and every email the shop sends. Delivery rules are applied in one place and
+reach the cart, the checkout total and the shipping page together, so the
+figure a shopper is shown cannot drift from the one they are charged.
+
+**Empty contact fields are not rendered at all.** A shop without a phone number
+yet shows nothing about phone numbers rather than a row with a dash in it —
+the same rule the rest of the site follows about never displaying a figure it
+cannot stand behind.
+
+Money is typed in lari and stored in tetri; the conversion happens once, in the
+save action.
+
+Still hardcoded, and honestly so: **the currency symbol**. `formatPrice` has 56
+call sites and threading it through half of them would put two currencies on
+one page, so the column exists and the pass is still to come. The **information
+pages** (about, FAQ, shipping, returns, warranty, terms, privacy) are also
+still in `src/lib/info-pages.ts` — moving them into the database is the next
+step.
+
+---
+
+## Commit attribution
+
+This repository once accumulated thirty commits with no author. `user.email`
+was never set, so git fell back to `tornike@Tornikes-MacBook-Pro.local` — not
+an address GitHub knows. Every one of them rendered as an unlinked avatar and
+none reached the contribution graph.
+
+The failure is silent by design: git is happy, the push succeeds, and the only
+symptom is an empty square on a page nobody checks daily. It went unnoticed for
+weeks, and fixing it meant rewriting history and force-pushing.
+
+`.githooks/pre-push` makes it impossible to repeat. It refuses to push when
+`user.email` is unset, and refuses any commit whose author address ends in
+`.local`, `.lan` or `.home` — the shape git invents for a machine with no
+configured identity. Arm it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook reads the ref updates git feeds it on stdin rather than using
+`@{push}`. That matters: `@{push}` does not resolve on a branch's first push
+from a fresh clone, which is precisely the push where an unattributed commit is
+most likely.
+
+If commits are not appearing on your graph, check these in order:
+
+```bash
+git config user.email          # must be your GitHub address or its noreply form
+git log -3 --format='%h %ae'   # what is actually recorded on the commits
+```
+
+Then confirm GitHub agrees — `author` is `null` when it cannot link a commit:
+
+```bash
+curl -s "https://api.github.com/repos/<you>/<repo>/commits?per_page=3" \
+  | grep -E '"login"|"date"'
+```
+
+Note that contributions only count on the **default branch** of a repository
+you own, and never in a fork.
 
 ---
 
