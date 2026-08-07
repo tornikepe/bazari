@@ -387,3 +387,38 @@ model PaymentEvent {
   @@unique([paymentId, externalId])
   @@index([paymentId])
 }
+
+/// Everything about the shop that is not a product.
+///
+/// One row, pinned to `id = "shop"`. Deliberately a table with columns rather
+/// than a key/value store: the types are worth having. `freeShippingThreshold`
+/// is an integer of tetri and the schema says so, instead of it being a string
+/// four different callers have to agree how to parse.
+model ShopSettings {
+  id String @id @default("shop")
+
+  name          String @default("Bazari")
+  /// Appended after the name in the browser tab, per language.
+  titleSuffixKa String @default("ონლაინ მაღაზია")
+  titleSuffixEn String @default("online store")
+  taglineKa     String @default("")
+  taglineEn     String @default("")
+  logoUrl       String @default("")
+
+  /// All optional. The contact page renders what is set and omits what is not,
+  /// rather than showing an empty row — a shop without a phone number yet
+  /// should say nothing, not show a dash.
+  contactEmail   String @default("")
+  contactPhone   String @default("")
+  contactAddress String @default("")
+  contactHoursKa String @default("")
+  contactHoursEn String @default("")
+
+  currencySymbol        String  @default("₾")
+  /// Tetri, like every other amount in this schema.
+  freeShippingThreshold Int     @default(20000)
+  shippingFee           Int     @default(1500)
+  codEnabled            Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+}

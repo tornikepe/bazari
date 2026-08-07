@@ -10,7 +10,8 @@ import { LOCALES, type Locale } from "@/lib/i18n";
 import { isStaff, type Role } from "@/lib/auth-roles";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LocaleToggle } from "@/components/ui/LocaleToggle";
-import { LogoMark } from "@/components/ui/Logo";
+import { LogoMark, Wordmark } from "@/components/ui/Logo";
+import { useSettings } from "@/components/providers/SettingsProvider";
 import { Overlay } from "@/components/ui/Overlay";
 import { useOverlay } from "@/lib/use-overlay";
 import { AccountMenu } from "@/components/layout/AccountMenu";
@@ -42,6 +43,7 @@ export function HeaderBar({
   user: HeaderUser;
 }) {
   const { locale, t, setLocale } = useI18n();
+  const settings = useSettings();
   const { count, hydrated } = useCart();
   const favorites = useFavorites();
   const router = useRouter();
@@ -119,9 +121,7 @@ export function HeaderBar({
 
         <Link href="/" aria-label={t.nav.home} className="flex shrink-0 items-center gap-2.5">
           <LogoMark size={36} />
-          <span className="hidden text-lg leading-none font-extrabold tracking-tight text-ink-900 sm:block">
-            Ba<span className="text-brand-600">zari</span>
-          </span>
+          <Wordmark name={settings.name} className="hidden text-lg sm:block" />
         </Link>
 
         {/* Below `md` the bar is replaced by a single icon that opens a
@@ -269,9 +269,7 @@ export function HeaderBar({
             <div className="flex h-16 items-center justify-between border-b border-line px-4">
               <span className="flex items-center gap-2.5">
                 <LogoMark size={30} />
-                <span className="text-base font-extrabold tracking-tight text-ink-900">
-                  Ba<span className="text-brand-600">zari</span>
-                </span>
+                <Wordmark name={settings.name} className="text-base" />
               </span>
               <button
                 type="button"

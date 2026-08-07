@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { LogoMark } from "@/components/ui/Logo";
+import { LogoMark, Wordmark } from "@/components/ui/Logo";
+import { getSettings } from "@/lib/settings";
 import { getI18n } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 
 export async function Footer() {
-  const { locale, t } = await getI18n();
+  const [{ locale, t }, settings] = await Promise.all([getI18n(), getSettings()]);
 
   const categories = await prisma.category.findMany({
     orderBy: [{ sortOrder: "asc" }],
@@ -38,9 +39,7 @@ export async function Footer() {
         <div className="lg:col-span-2">
           <Link href="/" className="mb-4 inline-flex items-center gap-2.5">
             <LogoMark size={36} />
-            <span className="text-lg font-extrabold tracking-tight text-ink-900">
-              Ba<span className="text-brand-600">zari</span>
-            </span>
+            <Wordmark name={settings.name} className="text-lg" />
           </Link>
 
           <p className="max-w-sm text-sm leading-relaxed text-ink-500">{t.footer.about}</p>
@@ -104,7 +103,7 @@ export async function Footer() {
       <div className="border-t border-line">
         <div className="page-container flex flex-col items-center justify-between gap-2 py-5 text-center sm:flex-row sm:text-left">
           <p className="text-xs text-ink-400">
-            © {new Date().getFullYear()} Bazari. {t.footer.rights}
+            © {new Date().getFullYear()} {settings.name}. {t.footer.rights}
           </p>
 
           <p className="text-xs text-ink-400">{t.footer.demoNote}</p>

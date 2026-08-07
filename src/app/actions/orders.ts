@@ -3,7 +3,8 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
+import { shippingFor } from "@/lib/cart-rules";
+import { getSettings } from "@/lib/settings";
 import { checkCoupon } from "@/lib/coupons";
 import { isPaymentMethod } from "@/lib/payment";
 import { rememberReceipt } from "@/lib/order-access";
@@ -98,7 +99,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // Tetri throughout: price is a whole number and quantity is an integer, so
   // this sum is exact and needs no rounding at all.
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  // Read here rather than trusted from the client, exactly like the prices
+  // above: the cart lives in localStorage and every figure in it is editable.
+  const settings = await getSettings();
+  const shipping = shippingFor(subtotal, lines.length, settings);
 
   // The discount is recomputed here rather than trusted from the client, so a
   // tampered request can't invent one.

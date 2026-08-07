@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cartTotals } from "@/lib/cart-store";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
+import { DEFAULT_SHIPPING } from "@/lib/cart-rules";
 
 type Item = Parameters<typeof cartTotals>[0][number];
 
@@ -36,23 +36,23 @@ describe("cartTotals", () => {
   });
 
   it("charges shipping below the free threshold", () => {
-    const totals = cartTotals([item(FREE_SHIPPING_THRESHOLD - 1)]);
+    const totals = cartTotals([item(DEFAULT_SHIPPING.freeShippingThreshold - 1)]);
 
-    expect(totals.shipping).toBe(SHIPPING_FEE);
-    expect(totals.total).toBe(FREE_SHIPPING_THRESHOLD - 1 + SHIPPING_FEE);
+    expect(totals.shipping).toBe(DEFAULT_SHIPPING.shippingFee);
+    expect(totals.total).toBe(DEFAULT_SHIPPING.freeShippingThreshold - 1 + DEFAULT_SHIPPING.shippingFee);
   });
 
   it("gives free shipping exactly at the threshold", () => {
     // The boundary is the interesting case: "over ₾200" vs "₾200 or more"
     // are different promises, and the UI says orders *over* 200 ship free.
-    const totals = cartTotals([item(FREE_SHIPPING_THRESHOLD)]);
+    const totals = cartTotals([item(DEFAULT_SHIPPING.freeShippingThreshold)]);
 
     expect(totals.shipping).toBe(0);
-    expect(totals.total).toBe(FREE_SHIPPING_THRESHOLD);
+    expect(totals.total).toBe(DEFAULT_SHIPPING.freeShippingThreshold);
   });
 
   it("gives free shipping above the threshold", () => {
-    expect(cartTotals([item(FREE_SHIPPING_THRESHOLD + 1)]).shipping).toBe(0);
+    expect(cartTotals([item(DEFAULT_SHIPPING.freeShippingThreshold + 1)]).shipping).toBe(0);
   });
 
   it("reaches the threshold across several lines", () => {

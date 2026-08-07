@@ -4,10 +4,31 @@ import { useEnglish } from "./helpers";
 test.beforeEach(async ({ page }) => useEnglish(page));
 
 /** `count()` does not auto-wait, and the grid is streamed. */
+/**
+ * How many products are on the page.
+ *
+ * Counts cards, not `/product/` links: each card holds two links to the same
+ * product — the image and the title — so counting links double-counted every
+ * result and made the numbers hard to reason about.
+ *
+ * It also waits for the count to settle rather than reading it the moment the
+ * first card attaches. The page streams, so an immediate read catches a
+ * partial render: this test once reported 4 for one spelling and 2 for the
+ * other with identical pages behind them, and read as a case-sensitivity bug
+ * in Postgres.
+ */
 async function countProducts(page: import("@playwright/test").Page) {
-  const links = page.locator('a[href^="/product/"]');
-  await links.first().waitFor({ state: "attached" });
-  return links.count();
+  const cards = page.locator("article");
+  await cards.first().waitFor({ state: "attached" });
+
+  let previous = -1;
+  for (let i = 0; i < 20; i++) {
+    const current = await cards.count();
+    if (current === previous) return current;
+    previous = current;
+    await page.waitForTimeout(100);
+  }
+  return previous;
 }
 
 test("the catalogue lists products and filters by category", async ({ page }) => {

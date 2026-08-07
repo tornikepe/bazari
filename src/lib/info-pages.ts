@@ -12,7 +12,8 @@
  * code really enforces.
  */
 import type { Locale } from "@/lib/i18n";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
+import { DEFAULT_SHIPPING, type ShippingRules } from "@/lib/cart-rules";
+import { formatPrice } from "@/lib/format";
 
 type Section = { heading: string; body: string[] };
 type Content = { title: string; intro: string; sections: Section[] };
@@ -27,7 +28,14 @@ export type InfoSlug =
   | "terms"
   | "privacy";
 
-const pages: Record<InfoSlug, Record<Locale, Content>> = {
+/**
+ * Built per call rather than declared once, because two of these paragraphs
+ * quote the delivery rules — and those are configuration now, not constants
+ * this module can read at import time.
+ *
+ * Cheap: a handful of small objects, and only one page renders at a time.
+ */
+const buildPages = (rules: ShippingRules): Record<InfoSlug, Record<Locale, Content>> => ({
   about: {
     ka: {
       title: "ჩვენ შესახებ",
@@ -169,7 +177,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
         {
           heading: "ღირებულება",
           body: [
-            `მიწოდება უფასოა ${FREE_SHIPPING_THRESHOLD} ₾-ზე მეტ შეკვეთაზე. სხვა შემთხვევაში — ${SHIPPING_FEE} ₾.`,
+            `მიწოდება უფასოა ${formatPrice(rules.freeShippingThreshold, "ka")}-ზე მეტ შეკვეთაზე. სხვა შემთხვევაში — ${formatPrice(rules.shippingFee, "ka")}.`,
             "ეს თანხა კალათაშივე ჩანს და შეკვეთის ჯამში სერვერზე ითვლება.",
           ],
         },
@@ -188,7 +196,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
         {
           heading: "Cost",
           body: [
-            `Delivery is free on orders over ₾${FREE_SHIPPING_THRESHOLD}, otherwise ₾${SHIPPING_FEE}.`,
+            `Delivery is free on orders over ${formatPrice(rules.freeShippingThreshold, "en")}, otherwise ${formatPrice(rules.shippingFee, "en")}.`,
             "The amount is shown in the cart and recalculated on the server when the order is placed.",
           ],
         },
@@ -395,8 +403,12 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
       ],
     },
   },
-};
+});
 
-export function getInfoPage(slug: InfoSlug, locale: Locale) {
-  return pages[slug][locale];
+export function getInfoPage(
+  slug: InfoSlug,
+  locale: Locale,
+  rules: ShippingRules = DEFAULT_SHIPPING,
+) {
+  return buildPages(rules)[slug][locale];
 }

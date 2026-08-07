@@ -8,7 +8,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import type { OrderStatus } from "../src/generated/prisma/enums";
 import { hashPassword } from "../src/lib/auth-hash";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "../src/lib/cart-rules";
+import { DEFAULT_SHIPPING } from "../src/lib/cart-rules";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -734,6 +734,18 @@ async function main() {
     });
   }
 
+  /* --------------------------- settings ----------------------------- */
+  // Created with its column defaults, which are the values the code used
+  // before any of this was configurable. Upserted with an empty `update`, so
+  // re-running the seed never overwrites what the shop owner has since set —
+  // this row is theirs, not the seed's.
+  console.log("→ ensuring shop settings…");
+  await prisma.shopSettings.upsert({
+    where: { id: "shop" },
+    update: {},
+    create: { id: "shop" },
+  });
+
   /* ---------------------------- users ------------------------------ */
   const email = process.env.ADMIN_EMAIL ?? "admin@bazari.ge";
 
@@ -860,7 +872,7 @@ async function main() {
       });
 
       const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
-      const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+      const shipping = subtotal >= DEFAULT_SHIPPING.freeShippingThreshold ? 0 : DEFAULT_SHIPPING.shippingFee;
 
       // One order in six uses a coupon it actually qualifies for.
       let discount = 0;

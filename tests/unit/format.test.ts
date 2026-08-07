@@ -77,8 +77,15 @@ describe("formatPrice", () => {
   });
 });
 
+/**
+ * These were written when dates were rendered in UTC, and three of the four
+ * assertions encoded that. Dates are now in the shop's own timezone, and the
+ * two that still passed did so by coincidence — both instants happen to fall
+ * on the same calendar day in UTC and in Tbilisi. Rewritten to say what the
+ * function actually promises. See `shop-time.test.ts` for the boundaries.
+ */
 describe("formatDate", () => {
-  it("renders dd.mm.yyyy in UTC", () => {
+  it("renders dd.mm.yyyy", () => {
     expect(formatDate(new Date("2026-03-07T12:00:00Z"))).toBe("07.03.2026");
   });
 
@@ -87,11 +94,16 @@ describe("formatDate", () => {
   });
 
   it("accepts an ISO string", () => {
-    expect(formatDate("2026-12-31T23:59:59Z")).toBe("31.12.2026");
+    // 23:59 UTC on the 31st is 03:59 on the 1st in Tbilisi, and the shop is in
+    // Tbilisi. This asserted "31.12.2026" and was the one that caught the
+    // change — the other three did not move.
+    expect(formatDate("2026-12-31T23:59:59Z")).toBe("01.01.2027");
   });
 
-  it("does not shift the date across a timezone boundary", () => {
-    // Local-time formatting would render this as the 31st in Tbilisi.
+  it("uses shop time, not the machine's", () => {
+    // The instant is 04:30 on the 1st in Tbilisi. A formatter following the
+    // server's own timezone would answer differently depending on where the
+    // server is, which is how the same order came to show two different dates.
     expect(formatDate(new Date("2026-01-01T00:30:00Z"))).toBe("01.01.2026");
   });
 });

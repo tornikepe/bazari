@@ -12,10 +12,9 @@ import {
   subscribe,
   type CartItem,
 } from "@/lib/cart-store";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 export type { CartItem };
-export { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE };
 
 type CartValue = {
   items: CartItem[];
@@ -39,6 +38,9 @@ function subscribeNever() {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  // The shipping rules are configuration now, not constants this module can
+  // import, so they arrive from the provider above.
+  const settings = useSettings();
   const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const hydrated = useSyncExternalStore(
     subscribeNever,
@@ -50,13 +52,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () => ({
       items,
       hydrated,
-      ...cartTotals(items),
+      ...cartTotals(items, settings),
       add: addItem,
       setQuantity: setItemQuantity,
       remove: removeItem,
       clear: clearCart,
     }),
-    [items, hydrated],
+    [items, hydrated, settings],
   );
 
   return <CartContext value={value}>{children}</CartContext>;

@@ -31,12 +31,34 @@ export function LogoMark({ size = 36, className = "" }: { size?: number; classNa
   );
 }
 
+/**
+ * The shop's name, set in one weight and one colour.
+ *
+ * It used to be `Ba` in ink and `zari` in brand red, which looked deliberate
+ * and was: it was designed around a specific six-letter word. The moment the
+ * name became something its owner sets, a two-tone split had nowhere sensible
+ * to fall — "Tornike's Shop" has no natural seam, and picking one by character
+ * count produces a different accident for every name.
+ *
+ * The brand colour still appears, in the mark beside it. That is the part of
+ * the lockup that can carry it without knowing what the word says.
+ */
+export function Wordmark({ name, className = "" }: { name: string; className?: string }) {
+  return (
+    <span className={`leading-none font-extrabold tracking-tight text-ink-900 ${className}`}>
+      {name}
+    </span>
+  );
+}
+
 /** Mark plus wordmark. `compact` drops the word, for narrow bars. */
 export function Logo({
+  name,
   size = 36,
   compact = false,
   className = "",
 }: {
+  name: string;
   size?: number;
   compact?: boolean;
   className?: string;
@@ -44,11 +66,7 @@ export function Logo({
   return (
     <span className={`flex shrink-0 items-center gap-2.5 ${className}`}>
       <LogoMark size={size} />
-      {!compact && (
-        <span className="text-lg leading-none font-extrabold tracking-tight text-ink-900">
-          Ba<span className="text-brand-600">zari</span>
-        </span>
-      )}
+      {!compact && <Wordmark name={name} className="text-lg" />}
     </span>
   );
 }

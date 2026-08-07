@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { FREE_SHIPPING_THRESHOLD } from "@/components/providers/CartProvider";
+import { useSettings } from "@/components/providers/SettingsProvider";
 import { Price } from "@/components/ui/Price";
 import { CartIcon, MinusIcon, PlusIcon, TrashIcon, TruckIcon } from "@/components/ui/icons";
 import { formatPrice } from "@/lib/format";
@@ -12,6 +12,7 @@ import { fill } from "@/lib/i18n";
 
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
+  const settings = useSettings();
   const { items, hydrated, subtotal, shipping, total, setQuantity, remove, clear } = useCart();
 
   // The server can't know the cart, so render a stable skeleton until the
@@ -49,7 +50,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
     );
   }
 
-  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+  const remaining = settings.freeShippingThreshold - subtotal;
 
   return (
     <div className="page-container py-6 lg:py-8">

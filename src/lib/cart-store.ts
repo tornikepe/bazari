@@ -6,7 +6,7 @@
  *
  * It also gets cross-tab sync for free via the `storage` event.
  */
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
+import { shippingFor, type ShippingRules } from "@/lib/cart-rules";
 
 export type CartItem = {
   productId: string;
@@ -140,10 +140,9 @@ export function clearCart() {
 
 /* ------------------------------------------------------------------ */
 
-export function cartTotals(entries: CartItem[]) {
+export function cartTotals(entries: CartItem[], rules?: ShippingRules) {
   const subtotal = entries.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping =
-    entries.length === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const shipping = shippingFor(subtotal, entries.length, rules);
 
   return {
     count: entries.reduce((sum, item) => sum + item.quantity, 0),

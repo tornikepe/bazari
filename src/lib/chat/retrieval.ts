@@ -3,8 +3,8 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { getInfoPage, type InfoSlug } from "@/lib/info-pages";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/cart-rules";
-import { SITE_NAME } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
+import type { ShopSettings } from "@/lib/settings-defaults";
 import type { Locale } from "@/lib/i18n";
 
 /**
@@ -105,9 +105,9 @@ async function catalogueSummary(locale: Locale): Promise<string> {
 }
 
 /** The information pages, flattened to plain text the model can quote from. */
-function infoPagesText(locale: Locale): string {
+function infoPagesText(locale: Locale, settings: ShopSettings): string {
   return CONTEXT_PAGES.map((slug) => {
-    const page = getInfoPage(slug, locale);
+    const page = getInfoPage(slug, locale, settings);
     const body = page.sections
       .map((section) => `### ${section.heading}\n${section.body.join("\n")}`)
       .join("\n\n");
@@ -116,9 +116,9 @@ function infoPagesText(locale: Locale): string {
 }
 
 /** The rules the code actually enforces, so the assistant can't soften them. */
-function shippingRules(locale: Locale): string {
+function shippingRules(locale: Locale, settings: ShopSettings): string {
   return [
-    `Shipping costs ${formatPrice(SHIPPING_FEE, locale)}, and is free once the basket reaches ${formatPrice(FREE_SHIPPING_THRESHOLD, locale)}.`,
+    `Shipping costs ${formatPrice(settings.shippingFee, locale)}, and is free once the basket reaches ${formatPrice(settings.freeShippingThreshold, locale)}.`,
     "Delivery time is set per product and is shown on the product page — there is no single site-wide figure.",
     "Payment is cash on delivery. Card payments are not connected yet, so do not offer them.",
     "An order can be placed without an account; tracking one afterwards needs the order number and the phone number given at checkout (/track).",
@@ -136,16 +136,18 @@ export async function shopContext(locale: Locale): Promise<string> {
   const cached = contextCache.get(locale);
   if (cached && cached.expiresAt > Date.now()) return cached.text;
 
+  const settings = await getSettings();
+
   const text = [
-    `# ${SITE_NAME} — shop facts`,
+    `# ${settings.name} — shop facts`,
     "",
     await catalogueSummary(locale),
     "",
     "## Shipping, payment and orders",
-    shippingRules(locale),
+    shippingRules(locale, settings),
     "",
     "# Information pages, verbatim",
-    infoPagesText(locale),
+    infoPagesText(locale, settings),
   ].join("\n");
 
   contextCache.set(locale, { text, expiresAt: Date.now() + CONTEXT_TTL_MS });

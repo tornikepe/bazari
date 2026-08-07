@@ -8,7 +8,10 @@ import { headers } from "next/headers";
 import { getTheme } from "@/lib/server-theme";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { SITE_TITLE, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
+import { getSettings, siteTitle } from "@/lib/settings";
+import { getI18n } from "@/lib/locale";
+import { SettingsProvider } from "@/components/providers/SettingsProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,29 +31,36 @@ const notoGeorgian = Noto_Sans_Georgian({
   display: "swap",
 });
 
-const DESCRIPTION =
-  "Bazari — ტექნიკა, აქსესუარები და საყოფაცხოვრებო ნივთები. გაფილტრე კატეგორიით, ფასით ან ბრენდით და შეუკვეთე ონლაინ.";
+/**
+ * Read from the database rather than exported as a constant, because the shop's
+ * name is now something its owner sets.
+ *
+ * Still `title` as a single fixed string with no `template`: the tab must read
+ * the same on every route, and no page sets its own. What changed is where the
+ * string comes from, not that there is one.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const [settings, { locale, t }] = await Promise.all([getSettings(), getI18n()]);
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  // Deliberately a single fixed string with no `template`: the tab title
-  // must read the same on every route, so pages never override it.
-  title: SITE_TITLE,
-  description: DESCRIPTION,
-  applicationName: SITE_TITLE,
-  openGraph: {
-    type: "website",
-    siteName: SITE_TITLE,
-    title: SITE_TITLE,
-    description: DESCRIPTION,
-    url: SITE_URL,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: DESCRIPTION,
-  },
-};
+  const title = siteTitle(settings, locale);
+  const tagline = locale === "ka" ? settings.taglineKa : settings.taglineEn;
+  const description = tagline || t.footer.about;
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title,
+    description,
+    applicationName: settings.name,
+    openGraph: {
+      type: "website",
+      siteName: title,
+      title,
+      description,
+      url: SITE_URL,
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 /**
  * Only the shell lives here — the storefront chrome is in `(shop)/layout.tsx`
@@ -64,7 +74,7 @@ export default async function RootLayout({
   // Locale and theme are both read here so the very first server render is
   // already correct — no flash of the wrong language or a white flash before
   // the dark theme applies.
-  const [locale, theme] = await Promise.all([getLocale(), getTheme()]);
+  const [locale, theme, settings] = await Promise.all([getLocale(), getTheme(), getSettings()]);
 
   // Set by `proxy.ts`. The CSP forbids inline script without it, so the
   // pre-paint theme script below would simply not run.
@@ -91,7 +101,12 @@ export default async function RootLayout({
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <I18nProvider locale={locale}>
-            <CartProvider>{children}</CartProvider>
+            {/* Read once here and handed down, because the cart is a client
+                component and the shipping rules it needs are no longer
+                constants it can import. */}
+            <SettingsProvider settings={settings}>
+              <CartProvider>{children}</CartProvider>
+            </SettingsProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>
