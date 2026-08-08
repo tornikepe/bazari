@@ -40,6 +40,7 @@
 - [Testing](#testing)
 - [Deploying](#deploying)
 - [Configuring the shop](#configuring-the-shop) — using this for a different business
+- [Moving to another Postgres](#moving-to-another-postgres)
 - [Commit attribution](#commit-attribution)
 - [Notes and known limits](#notes-and-known-limits)
 
@@ -513,6 +514,70 @@ one page, so the column exists and the pass is still to come. The **information
 pages** (about, FAQ, shipping, returns, warranty, terms, privacy) are also
 still in `src/lib/info-pages.ts` — moving them into the database is the next
 step.
+
+---
+
+## Moving to another Postgres
+
+Nothing in the application is tied to a particular host. `src/lib/prisma.ts`
+takes a plain connection string through the standard `pg` driver, so Neon,
+Supabase, Vercel Postgres, Railway or a server in a cupboard are all the same
+to it.
+
+### The move
+
+```bash
+# 1. Put the new connection string in .env  (and in Vercel, for production)
+DATABASE_URL="postgresql://..."
+
+# 2. Apply every migration, then fill the database
+npm run db:setup
+
+# 3. Confirm it is actually usable
+npm run db:verify
+```
+
+`db:verify` checks the things that make a database *serveable* rather than
+merely *migrated*: the settings row, all eight information pages, an active
+catalogue, an admin to sign in as, and that every price is a whole number of
+tetri. A migration can apply perfectly and still leave a database the site
+half-renders on, and each of those failures otherwise shows up as a broken
+page rather than an error.
+
+**This path is rehearsed on every push.** CI creates an empty `postgres:16`
+container, runs the same `migrate deploy`, `db:seed` and `db:verify`, then the
+whole end-to-end suite against it. A green build is a statement that a brand
+new database works.
+
+### Two things that will bite you
+
+**Use the pooled connection string.** Every serverless instance builds its own
+pool, so a handful of warm instances ask for far more connections than a small
+plan allows. This project has already been taken down once by exactly that —
+`P2037 TooManyConnections`, with correct pages that simply could not get a
+connection. On Neon that means the host containing `-pooler`; on other
+providers, whatever they call the transaction pooler. Keep
+`DATABASE_POOL_MAX` small as well; it defaults to 3 in production.
+
+**Check the SSL mode.** Most hosted providers require `?sslmode=require` on
+the end of the URL. `pg` currently treats `require` as `verify-full` and warns
+about it on start-up; the connection works, and the warning is expected.
+
+### What a move costs you
+
+Migrations hold the entire schema, and the seed rebuilds the catalogue,
+categories, coupons, the three accounts, the settings row, the information
+pages and a history of demo orders. What is *not* recoverable is anything
+typed into the dashboard that differs from the seed — edited product copy,
+changed settings, rewritten information pages, and real orders.
+
+There is no export step here because there is nothing this project stores that
+the repository cannot regenerate. If you have been running a real shop on it,
+take a dump **before** you switch:
+
+```bash
+pg_dump "$OLD_DATABASE_URL" --data-only --column-inserts > backup.sql
+```
 
 ---
 

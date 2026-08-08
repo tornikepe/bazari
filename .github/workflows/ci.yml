@@ -82,6 +82,12 @@ jobs:
       - run: npx prisma migrate deploy
       - run: npm run db:seed
 
+      # The same check used when moving to a new Postgres. Running it here
+      # means the migration rehearsal and the tool that validates it are both
+      # exercised on every push, against a container that was empty a minute
+      # ago — which is exactly the state a new host starts in.
+      - run: npm run db:verify
+
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 
