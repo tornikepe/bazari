@@ -83,12 +83,21 @@ half of them would put two currencies on one page. The column exists; the pass i
 
 ### 1.3 — Brand theming without a code change 🔵 **next**
 
-> ⛔ **Blocked right now.** The Prisma Postgres account is returning
-> `planLimitReached`, so the database refuses every connection: the live site
-> is 500ing, and neither the app nor the e2e suite runs locally. CI is
-> unaffected — it spins up its own Postgres container — but nothing that needs
-> the real database can be checked until the plan is raised or the data is
-> moved to another host.
+> ⛔ **Blocked on a database.** The Prisma Postgres account returns
+> `planLimitReached`, so it refuses every connection — the live site 500s and
+> nothing needing real data runs locally. The old database cannot even be read,
+> so there is nothing to export; the move is a rebuild from migrations, which
+> costs nothing here because the seed regenerates everything except hand-typed
+> dashboard edits.
+>
+> **The code side is ready and rehearsed.** `npm run db:setup` applies every
+> migration and fills the database; `npm run db:verify` then confirms the site
+> can actually serve it. CI runs both against an empty container on every push,
+> so a green build already proves a brand-new database works end to end.
+>
+> **Yours:** create a free Postgres — Neon, Supabase or Vercel Postgres — and
+> put its *pooled* connection string in `.env` and in the Vercel project. Then
+> the two commands above, and the site is back.
 
 - Brand colour and mark set in Settings, injected as CSS custom properties on `<html>`
 - The design system already makes this possible: every colour is a token in one file and no
