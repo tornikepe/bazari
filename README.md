@@ -536,6 +536,9 @@ npm run db:setup
 
 # 3. Confirm it is actually usable
 npm run db:verify
+
+# 4. …and that nothing in it is wrong  (after any bulk import, too)
+npm run db:audit
 ```
 
 `DIRECT_URL` is optional and falls back to `DATABASE_URL`, which is all a local
@@ -547,6 +550,14 @@ catalogue, an admin to sign in as, and that every price is a whole number of
 tetri. A migration can apply perfectly and still leave a database the site
 half-renders on, and each of those failures otherwise shows up as a broken
 page rather than an error.
+
+`db:audit` asks the opposite question — not "is enough here" but "is any of it
+wrong". Orphaned rows, orders whose items no longer sum to their subtotal,
+prices that stopped being whole tetri, blank names, and Georgian mangled by a
+copy that ran under the wrong client encoding. None of these break a page: they
+render perfectly and stay wrong. Worth running after moving hosts and after any
+bulk import of a real catalogue, which is where spreadsheet arithmetic and
+non-Latin text go wrong most often.
 
 **This path is rehearsed on every push.** CI creates an empty `postgres:16`
 container, runs the same `migrate deploy`, `db:seed` and `db:verify`, then the

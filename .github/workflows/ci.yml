@@ -88,6 +88,13 @@ jobs:
       # ago — which is exactly the state a new host starts in.
       - run: npm run db:verify
 
+      # And that what the seed wrote is internally consistent — order totals
+      # that match their items, whole-tetri prices, Georgian that survived the
+      # round trip. The seed is the template a real catalogue replaces, so an
+      # invariant it quietly breaks would be inherited by every shop built on
+      # it.
+      - run: npm run db:audit
+
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 
