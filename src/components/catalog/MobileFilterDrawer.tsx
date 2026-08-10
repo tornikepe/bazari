@@ -46,6 +46,7 @@ export function MobileFilterDrawer({
           onClose={() => setOpen(false)}
           side="bottom"
           closeLabel={t.nav.close}
+          label={t.catalog.filters}
           className="max-h-[85vh] border-t border-line bg-surface"
         >
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">

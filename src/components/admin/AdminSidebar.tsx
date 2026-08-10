@@ -142,6 +142,7 @@ export function AdminSidebar({
           onClose={() => setOpen(false)}
           side="left"
           closeLabel={t.nav.close}
+          label={t.nav.menu}
           className="w-64 max-w-[85vw] bg-panel p-4 shadow-pop"
         >
             <button

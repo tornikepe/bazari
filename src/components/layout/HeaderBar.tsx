@@ -264,6 +264,7 @@ export function HeaderBar({
           onClose={() => setMenuOpen(false)}
           side="left"
           closeLabel={t.nav.close}
+          label={t.nav.menu}
           className="w-[19rem] max-w-[85vw] bg-surface shadow-pop"
         >
             <div className="flex h-16 items-center justify-between border-b border-line px-4">

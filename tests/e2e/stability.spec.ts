@@ -63,6 +63,17 @@ async function clippedText(page: Page) {
         if (style.overflow === "visible" && style.overflowX === "visible") return false;
         if (style.overflowX === "auto" || style.overflowX === "scroll") return false;
         if (node.scrollWidth <= node.clientWidth + 1) return false;
+
+        // Visually hidden text — the `sr-only` pattern — overflows its box on
+        // purpose: a 1x1 clipped element holding a full sentence is exactly how
+        // you give a screen reader something without showing it. That is the
+        // mechanism, not a defect, and the skip link tripped this the moment it
+        // was added. Matched on the whole signature rather than on "small", so
+        // a genuinely broken 1px box still fails.
+        const box = node.getBoundingClientRect();
+        const clipped = style.clipPath === "inset(50%)" || style.clip === "rect(0px, 0px, 0px, 0px)";
+        if (clipped && style.position === "absolute" && box.width <= 1 && box.height <= 1) return false;
+
         // `truncate` is a deliberate choice, not an accident, and an ellipsis
         // is a legitimate design. Only unlabelled clipping counts.
         return style.textOverflow !== "ellipsis";

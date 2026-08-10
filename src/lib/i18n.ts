@@ -31,6 +31,7 @@ const ka = {
     cart: "კალათა",
     menu: "მენიუ",
     close: "დახურვა",
+    skipToContent: "გადადი მთავარ შიგთავსზე",
     language: "ენა",
   },
 
@@ -656,6 +657,7 @@ const en: Dictionary = {
     cart: "Cart",
     menu: "Menu",
     close: "Close",
+    skipToContent: "Skip to content",
     language: "Language",
   },
 
