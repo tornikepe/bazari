@@ -19,12 +19,21 @@ horizontal overflow, tap-target size, accessible names and image alt text.
 |---|---|---|
 | Horizontal overflow | **0** | Solid. This is the thing most sites fail and it is genuinely clean. |
 | Images without `alt` | **0** | Solid. |
-| Controls under 24×24px | **400 distinct** | 🔴 Real. Mostly footer and nav links at 19px tall. |
-| Controls with no accessible name | **3** | 🔴 Real. Product-card image links announce as just "link". |
+| Controls failing WCAG 2.2 target size | **0** | ✅ **Corrected.** The "400 under 24×24" below counted size and never applied SC 2.5.8's spacing exception. |
+| Controls with no accessible name | **0** | ✅ **Corrected.** The "3" came from a check that never looked up `label[for]`. |
+| Controls under 44×44 (comfort, not conformance) | **388 → 141** | ⚪ Improved anyway — see §2.1. |
 
-Plus what the existing suite already guarantees: 298 unit + 103 e2e tests, no layout shift between
+Plus what the existing suite already guarantees: 298 unit + 106 e2e tests, no layout shift between
 Georgian and English, WCAG AA contrast in both themes computed from real token values,
 authorization boundaries proven by replaying captured requests.
+
+> **Two of the numbers above were wrong, and the correction is the point.** The original sweep
+> was a script run by hand. Turning it into a test (`tests/e2e/target-size.spec.ts`) showed it had
+> counted every control under 24px as a failure, when SC 2.5.8 passes an undersized target whose
+> 24px circle touches no other — the footer links it was mostly counting sat 34px apart and
+> cleared it. And its accessible-name check never consulted `label[for]`, so it called ten
+> correctly-labelled form fields unnamed. A finding that is wrong costs more than one that is
+> missing, because somebody acts on it.
 
 **So the responsive *layout* is in good shape. What is not finished is everything a finger and a
 screen reader touch, and — much more importantly — the shop is still Bazari-shaped in code.**
@@ -119,19 +128,31 @@ half of them would put two currencies on one page. The column exists; the pass i
 
 The layout does not break. What is unfinished is touch and assistive technology.
 
-### 2.1 — Tap targets (400 findings)
+### 2.1 — Tap targets ✅ **done**
 
-WCAG 2.2 asks for 24×24 CSS px; Apple and Google both recommend 44px for anything a thumb aims
-at. Footer and nav links currently render 19px tall. The exception in the spec is for links
-inline *in a sentence* — footer links in a list are not that, so they do not qualify.
+WCAG 2.2 asks for 24×24 CSS px *or* enough spacing; Apple and Google both recommend 44px for
+anything a thumb aims at. The site already met the standard. What it did not have was comfort.
 
-- Footer and nav link rows get vertical padding to clear 44px
-- Icon buttons audited for a 44px hit area even where the icon is smaller — the visual size stays,
-  the touchable area grows
-- Checkbox and radio rows in the filter rail made row-height targets, not 16px squares
-- The audit script becomes a test, so this cannot regress
+- ✅ **Footer links fill their rows** — 19px of target in a 34px row meant half of every row was
+  dead space. The list's `gap` became padding on the link, so the target went 19px → 44px with
+  the rows keeping the spacing they had. Extracted to one `FooterLink` rather than three copies
+- ✅ **Breadcrumbs** 18px → 34px, via `-my-2 py-2`: the padding grows the hit area, the negative
+  margin pulls the layout box back so nothing on the page moves. Four hand-rolled copies became
+  one `Breadcrumb` component. Not pushed to 44 — that needs 13px a side, which reaches over the
+  heading below and starts eating clicks meant for it
+- ✅ **Header icon buttons** 40px → 44px. They are ghost buttons with no background at rest, so
+  the change is invisible until hover
+- ✅ **The product card's favourite button** 32px → 40px. The tidier trick — keep the chip small
+  and grow only the touch area with an `::after` ring — was tried, and *does not work here*: the
+  card and its image link both have `overflow: hidden`, so the ring is clipped away. It looked
+  right in the CSS and caught nothing. Growing the chip is uglier and works
+- ✅ **The audit is a test now** (`tests/e2e/target-size.spec.ts`), run in both languages, and
+  verified to fail when the fixes are reverted rather than assumed to work
 
-### 2.2 — Accessible names (3 findings)
+388 controls under 44px, down to 141. What remains is deliberate: full-width buttons that are
+36px tall, 36px logo links, and text links sitting inline in a sentence.
+
+### 2.2 — Accessible names ✅ **done — there were none**
 
 - Product-card image links currently announce as "link" with no text. Either label them or, better,
   remove the duplicate link so the card has exactly one focusable target
