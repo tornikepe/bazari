@@ -22,7 +22,7 @@ horizontal overflow, tap-target size, accessible names and image alt text.
 | Controls under 24×24px | **400 distinct** | 🔴 Real. Mostly footer and nav links at 19px tall. |
 | Controls with no accessible name | **3** | 🔴 Real. Product-card image links announce as just "link". |
 
-Plus what the existing suite already guarantees: 211 unit + 83 e2e tests, no layout shift between
+Plus what the existing suite already guarantees: 298 unit + 103 e2e tests, no layout shift between
 Georgian and English, WCAG AA contrast in both themes computed from real token values,
 authorization boundaries proven by replaying captured requests.
 
@@ -41,6 +41,7 @@ without a developer, because these live in source files:
 | Shop name, tab title | `src/lib/site.ts` — a `const` | Settings row in the database |
 | Logo | `src/components/ui/Logo.tsx` — a React component | Uploaded image, with the mark as fallback |
 | Currency `₾` | `src/lib/format.ts` — a `const` | Settings, with locale-correct placement |
+| ~~Brand colour~~ | ~~`globals.css` — a ten-shade ramp~~ | ✅ One colour in Settings, ramp derived for both themes |
 | Free-shipping threshold, delivery fee | `src/lib/cart-rules.ts` — two `const`s | Settings, editable in the dashboard |
 | About / FAQ / shipping / returns / warranty / terms / privacy | `src/lib/info-pages.ts` — hardcoded prose in both languages | Editable pages in the dashboard |
 | Contact details | Nowhere — deliberately, to avoid inventing them | Settings, and the contact page renders what is set |
@@ -81,31 +82,36 @@ half of them would put two currencies on one page. The column exists; the pass i
 - ✅ Unpublished pages leave the footer instead of rendering an empty shell, and the footer uses
   each page's own title
 
-### 1.3 — Brand theming without a code change 🔵 **next**
+### 1.3 — Brand theming without a code change ✅
 
-> ✅ **Unblocked — the database now runs on Neon** (`us-east-1`, free tier),
-> replacing the Prisma Postgres account that had started refusing every
-> connection with `planLimitReached`. The old database could not be read, so
-> nothing was exported: the move is a rebuild from the 15 migrations plus the
-> seed, which loses only hand-typed dashboard edits.
->
-> Two connection strings, because they are not interchangeable. `DATABASE_URL`
-> is the **pooled** endpoint (`-pooler` in the host) — serverless functions open
-> a connection per invocation and would otherwise exhaust the server's limit.
-> `DIRECT_URL` is the plain endpoint, used only by `prisma migrate`, whose
-> session-level advisory lock does not survive a transaction-mode pooler.
->
-> Verified end to end: all 15 migrations applied, `npm run db:verify` green,
-> `npm run db:audit` finds no damage, 222 unit tests and the full e2e suite pass
-> against it, and production serves from it. Round trips run ~150ms rather than
-> the ~0.2ms of a local database, which is why the e2e assertion budget was
-> resized — see `playwright.config.ts`.
+- ✅ One colour in Settings becomes the whole brand ramp — ten shades plus the button tokens,
+  for both themes — written as custom properties into the document head
+- ✅ The payoff of the token system: every colour was already a token in one file and no
+  component hardcodes a value, so nothing but `globals.css` had to be touched
+- ✅ The ramp is built in OKLCH, which keeps hue steady while lightness moves, then **measured**
+  in WCAG luminance and moved until it passes. The two disagree by design — a yellow and a blue
+  at the same perceptual lightness differ threefold in luminance — so a ramp that looks evenly
+  stepped can still fail AA, and only the measurement is believed
+- ✅ Refused with an explanation rather than accepted quietly: a colour that would have to change
+  beyond recognition to be readable is rejected, and the nearest colour that *does* work comes
+  back with it as a button. Checked in the form and again in the server action, because the
+  action takes a POST from anywhere
+- ✅ Found and fixed two AA failures in the palette that already shipped — the icon chip at
+  4.48:1, and the dashboard's featured badge at 4.05:1 in dark mode, where `brand-700` was
+  darker than `brand-600` and no tint could rescue it. Both pairs are now in the static guard
 
-- Brand colour and mark set in Settings, injected as CSS custom properties on `<html>`
-- The design system already makes this possible: every colour is a token in one file and no
-  component hardcodes a value. This is the payoff of that decision
-- Contrast is re-checked against the chosen colour at save time, and a colour that fails AA is
-  refused with an explanation rather than accepted quietly
+> **The blocker this waited on, for the record.** The Prisma Postgres account
+> started refusing every connection with `planLimitReached`, and the old database
+> could not even be read, so nothing was exported — the move to **Neon**
+> (`us-east-1`, free tier) is a rebuild from the 15 migrations plus the seed, and
+> lost only hand-typed dashboard edits.
+>
+> Two connection strings, because they are not interchangeable. `DATABASE_URL` is
+> the **pooled** endpoint — serverless functions open a connection per invocation
+> and would otherwise exhaust the server's limit. `DIRECT_URL` is the plain one,
+> used only by `prisma migrate`, whose session-level advisory lock does not
+> survive a transaction-mode pooler. Round trips run ~150ms against ~0.2ms for a
+> local database, which is why the e2e assertion budget was resized.
 
 ---
 
@@ -239,9 +245,11 @@ gaps.
 
 ## 7. Order of work
 
-**Phase 1 — make it configurable.** §1.1 settings, §1.2 info pages, §1.3 theming.
-*Nothing else matters as much: until this is done, "use it for my business" means "edit
-TypeScript".*
+**Phase 1 — make it configurable. ✅ Done.** §1.1 settings, §1.2 info pages, §1.3 theming.
+*This was the one that mattered: "use it for my business" no longer means "edit TypeScript".
+A name, a colour, contact details and the eight information pages are now all set from the
+dashboard. What is still hardcoded is listed in the table above — the currency symbol, and the
+logo, which needs somewhere to upload an image to.*
 
 **Phase 2 — finish responsive and accessibility.** §2.1 tap targets, §2.2 names, §2.3 real
 devices, §2.4 keyboard. Then §5's audit-as-test so it stays fixed.
@@ -253,9 +261,42 @@ the moment you supply a token and a provider.
 
 **Phase 5 — testing and operations.** §5 and §6.
 
+**Phase 6 — the documentation pass, last.** §8.
+
 ---
 
-## 8. What only you can do
+## 8. The documentation pass, when everything else is done
+
+Written down as a phase rather than left as good intentions, because it is the part that is
+always meant to happen and never scheduled.
+
+The README is kept current as each piece lands — that is not this. This is the pass at the end
+that reads the whole thing as one document, from the position of someone who has never seen the
+project, and fixes what only becomes visible once everything exists:
+
+- **Every claim re-verified against the code**, not against what the code did when the sentence
+  was written. Every command in the README actually run; every ratio, count and file path
+  checked. A README is trusted more than the code it describes, so a stale line in it does more
+  damage than a stale comment
+- **The three account passwords and `AUTH_SECRET`** — how they are generated, where they are
+  stored, how they reach an account, and how to rotate one. This is the part people get stuck
+  on, and it is the reason `npm run setup:credentials` exists
+- **One route in, one route out.** Someone cloning this should reach a running shop with real
+  data without reading anything twice; someone dropping their own business in should find that
+  path stated in one place rather than assembled from four sections
+- **Screenshots that match what ships**, in both languages and both themes
+- **Every environment variable**: what it is for, what breaks without it, and whether it is
+  required or optional
+- **The honest limits.** What is deliberately not built, what is demo-only, and what would have
+  to change to take real money. A project that overstates itself is worse than one that says
+  plainly where it stops
+
+Nothing here is a rewrite. It is the difference between documentation that exists and
+documentation that is true.
+
+---
+
+## 9. What only you can do
 
 Everything else is mine. These four are not, and three of them block work above.
 

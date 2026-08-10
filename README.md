@@ -64,16 +64,15 @@ Railway, a local server — or spin one up instantly:
 npx create-db@latest
 ```
 
-Now set the passwords for the three seeded accounts. **The seed will not run without them**, on
-purpose — see [Accounts and passwords](#accounts-and-passwords) for why, and for what each
-account is. Generate each one with:
+Now generate the secrets. **The seed will not run without them**, on purpose — see
+[Accounts and passwords](#accounts-and-passwords) for why, and for what each account is:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"
+npm run setup:credentials
 ```
 
-Run it four times and put the results in `.env` as `AUTH_SECRET`, `ADMIN_PASSWORD`,
-`VIEWER_PASSWORD` and `CUSTOMER_PASSWORD`.
+That writes `AUTH_SECRET` and a password for each of the three accounts into `.env`, and prints
+nothing secret. It never overwrites a value you already set, so it is safe to re-run.
 
 Then create the schema and start:
 
@@ -119,9 +118,40 @@ The addresses are defaults; override them with `ADMIN_EMAIL`, `VIEWER_EMAIL` and
 
 ### How the passwords are created
 
-**You choose them. Nothing is generated for you, and nothing has a default.**
+**There is no default and nothing ships with one.** You either generate them or choose them
+yourself; what you cannot do is skip the step.
 
-Each password is one environment variable:
+The short way:
+
+```bash
+npm run setup:credentials
+```
+
+It writes a password for each account into `.env`, plus `AUTH_SECRET`. Each is 24 characters
+drawn from `A-Za-z0-9_-` — about 143 bits, and an alphabet that survives being pasted into a
+shell, a URL or a YAML file without escaping. `AUTH_SECRET` gets 32 bytes rather than 18: a
+password is typed by a person and rate-limited on the way in, while a signing key is attacked
+offline with no such ceiling.
+
+Two things it deliberately does not do:
+
+- **It does not print them.** They are in `.env`, which is the only place anything reads them
+  from. A password echoed into a terminal stays in that scrollback, in the shell history of
+  whoever scrolls up, and in any recording of the session. `npm run setup:credentials -- --show`
+  prints them when you genuinely need to read one out.
+- **It does not overwrite one that is already set.** Rotating `ADMIN_PASSWORD` without
+  re-seeding leaves `.env` and the database disagreeing, and the symptom is being locked out of
+  your own dashboard. `-- --force` does it anyway and tells you to re-seed.
+
+It also replaces known placeholder values rather than trusting them. This repository used to
+ship `AUTH_SECRET="dev-only-change-me-to-a-long-random-string"` in `.env.example`, which meant
+`cp .env.example .env` produced a session signing key that *looked* set, was never questioned,
+and is published here for anyone to read. The template now ships it empty so it fails loudly,
+and the generator treats any leftover copy as unset. **If you deployed before this change, set a
+new `AUTH_SECRET` in your host's environment** — with the old value, session cookies can be
+forged.
+
+Or set them by hand. Each password is one environment variable:
 
 ```bash
 ADMIN_PASSWORD="..."      # minimum 12 characters
@@ -130,7 +160,8 @@ CUSTOMER_PASSWORD="..."   # minimum 8 characters
 ```
 
 If any is missing or too short, `npm run db:seed` stops with an error naming the variable. It
-does not fall back to a default and carry on.
+does not fall back to a default and carry on. `setup:credentials` reports the same thing
+earlier, so a password you typed yourself and made too short is caught before the seed runs.
 
 That refusal is the point. A password that ships inside a repository is a password on every
 deployment that forgot to change it, and the deployment most likely to forget is the one nobody
@@ -143,7 +174,7 @@ owns nothing but its own test orders and is meant to be typed by hand during a d
 
 ### How a password gets attached to an account
 
-1. You write it into `.env`.
+1. It is written into `.env` — by `npm run setup:credentials`, or by you.
 2. `npm run db:seed` reads the variable.
 3. It is hashed — **scrypt**, with a random per-user salt — by `hashPassword` in
    [`src/lib/auth-hash.ts`](src/lib/auth-hash.ts).
@@ -387,8 +418,12 @@ place a division by 100 happens.
 | `npm run lint` | ESLint |
 | `npm test` | Unit tests (Vitest) |
 | `npm run test:e2e` | End-to-end tests (Playwright) |
+| `npm run setup:credentials` | Generate `AUTH_SECRET` and the three account passwords into `.env`. Never overwrites what is set; `-- --show` prints them, `-- --force` replaces them |
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:seed` | Seed catalogue, orders and the three accounts (idempotent) |
+| `npm run db:setup` | `migrate deploy` then `db:seed` — pointing at a new Postgres |
+| `npm run db:verify` | Is there enough here to serve the site: settings row, info pages, catalogue, an admin |
+| `npm run db:audit` | Is any of it wrong: orphans, order arithmetic, whole-tetri prices, Georgian encoding |
 | `npm run db:studio` | Prisma Studio |
 | `npm run db:reset` | Drop, re-migrate and re-seed |
 
@@ -492,6 +527,7 @@ Everything that makes this shop *this* shop lives in the dashboard under
 | Group | What |
 |---|---|
 | **Shop** | Name, browser-tab suffix per language, description, logo URL |
+| **Brand colour** | One colour; the whole palette is derived from it |
 | **Contact** | Email, phone, address, opening hours — each optional |
 | **Delivery** | Free-delivery threshold, delivery fee, cash-on-delivery toggle |
 
@@ -507,6 +543,41 @@ cannot stand behind.
 
 Money is typed in lari and stored in tetri; the conversion happens once, in the
 save action.
+
+### The brand colour
+
+One colour, off a logo. From it the site derives ten brand shades plus the
+button tokens, for the light theme and the dark one — twenty-six values from a
+single field, written into the document head as the same custom properties the
+stylesheet declares.
+
+The ramp is built in **OKLCH**, because hue stays put there while lightness
+moves; interpolating the same ramp in sRGB drags saturated colours through
+grey. It is then judged in **WCAG luminance**, which is a different measure
+entirely — a yellow and a blue at the same perceptual lightness differ
+threefold in luminance. That gap is the reason every shade is measured rather
+than trusted: a ramp can look perfectly evenly stepped and still fail AA.
+
+What is kept from the chosen colour is its hue and its saturation. Its
+*lightness* comes from the default ramp, which was tuned shade by shade against
+every pair the site actually puts on screen. A colour picked for a sign or a
+package was never chosen to carry 13px text on a near-white page, and for light
+colours the honest answer is that it cannot be used unchanged.
+
+So a colour that would have to move too far to be readable is **refused**, and
+the nearest colour that does work comes back with it as a button you can press.
+Bright yellow is the clearest case: as link text it would have to become a dark
+olive, and quietly restyling someone's brand into a different colour is worse
+than telling them. The check runs in the form as you type, and again in the
+server action — the form is a convenience, and the action is the rule.
+
+A shop on the default colour ships no override at all: no extra element, and
+nothing that can go stale against the stylesheet.
+
+Adding these checks found two AA failures in the palette that had already
+shipped — the round icon chip at 4.48:1, and the dashboard's featured badge at
+4.05:1 in dark mode. Both pairs were being rendered and neither was in the
+contrast test's list. They are now.
 
 Still hardcoded, and honestly so: **the currency symbol**. `formatPrice` has 56
 call sites and threading it through half of them would put two currencies on
