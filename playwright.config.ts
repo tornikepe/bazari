@@ -33,6 +33,19 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : [["list"]],
 
+  // Sized to a hosted database rather than a local one. Every round trip to
+  // Neon measures ~150ms from here against ~0.2ms to Postgres on the same
+  // machine, and a checkout is a dozen sequential queries — so a redirect that
+  // used to land in well under a second now takes several. Playwright's 5s
+  // default assertion budget was calibrated to the old latency and started
+  // failing real, working flows: the last full run reported an enumeration
+  // leak that was only a page read before its request had finished.
+  //
+  // These are ceilings for a flake, not target times. Nothing waits longer
+  // than it needs to; a genuinely broken page still fails, just later.
+  expect: { timeout: 15_000 },
+  timeout: 60_000,
+
   use: {
     baseURL,
     trace: "on-first-retry",

@@ -95,7 +95,18 @@ test("a password reset request never says whether the address exists", async ({ 
     await page.goto("/forgot-password");
     await page.getByLabel(/email/i).first().fill(email);
     await page.getByRole("button", { name: /send code|კოდის გაგზავნა/i }).click();
-    await page.waitForTimeout(1200);
+
+    // Wait for the request to finish, not for a fixed number of milliseconds.
+    // The old 1200ms was tuned to a faster database; against a remote one the
+    // second request was still in flight when the page was read, so the
+    // comparison caught a half-submitted form against a completed one and
+    // reported it as an enumeration leak. A security test that fails for a
+    // timing reason is worse than no test — the honest reading of a red one
+    // is to believe it.
+    await expect(page.getByRole("button", { name: /sending|იგზავნება/i })).toHaveCount(0, {
+      timeout: 20_000,
+    });
+
     responses.push(await page.locator("body").innerText());
   }
 
