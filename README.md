@@ -549,6 +549,30 @@ container, runs the same `migrate deploy`, `db:seed` and `db:verify`, then the
 whole end-to-end suite against it. A green build is a statement that a brand
 new database works.
 
+### Which region
+
+Put the database wherever the **functions** run, not wherever you are. Each
+page render issues several queries, so a cross-Atlantic hop is paid three or
+four times per page; your own distance to the site is absorbed by Vercel's edge
+network and costs one round trip.
+
+This deployment's compute region is visible in any response header:
+
+```bash
+curl -sI https://your-site.vercel.app/ | grep x-vercel-id
+# x-vercel-id: fra1::iad1::…
+#              ^edge  ^compute
+```
+
+It currently reads `iad1` — Washington DC — so the database belongs in **AWS
+US East (N. Virginia), `us-east-1`**. Putting it in Frankfurt to be near
+Georgia would add roughly 90ms to every query and make every page slower.
+
+If you would rather serve Georgian visitors from Europe, move *both*: pin the
+functions with a `vercel.json` (`{ "regions": ["fra1"] }`) and create the
+database in Frankfurt. Matching the two is what matters; which pair you pick
+matters much less.
+
 ### Two things that will bite you
 
 **Use the pooled connection string.** Every serverless instance builds its own
