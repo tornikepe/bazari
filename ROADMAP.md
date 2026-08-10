@@ -83,21 +83,23 @@ half of them would put two currencies on one page. The column exists; the pass i
 
 ### 1.3 — Brand theming without a code change 🔵 **next**
 
-> ⛔ **Blocked on a database.** The Prisma Postgres account returns
-> `planLimitReached`, so it refuses every connection — the live site 500s and
-> nothing needing real data runs locally. The old database cannot even be read,
-> so there is nothing to export; the move is a rebuild from migrations, which
-> costs nothing here because the seed regenerates everything except hand-typed
-> dashboard edits.
+> ✅ **Unblocked — the database now runs on Neon** (`us-east-1`, free tier),
+> replacing the Prisma Postgres account that had started refusing every
+> connection with `planLimitReached`. The old database could not be read, so
+> nothing was exported: the move is a rebuild from the 15 migrations plus the
+> seed, which loses only hand-typed dashboard edits.
 >
-> **The code side is ready and rehearsed.** `npm run db:setup` applies every
-> migration and fills the database; `npm run db:verify` then confirms the site
-> can actually serve it. CI runs both against an empty container on every push,
-> so a green build already proves a brand-new database works end to end.
+> Two connection strings, because they are not interchangeable. `DATABASE_URL`
+> is the **pooled** endpoint (`-pooler` in the host) — serverless functions open
+> a connection per invocation and would otherwise exhaust the server's limit.
+> `DIRECT_URL` is the plain endpoint, used only by `prisma migrate`, whose
+> session-level advisory lock does not survive a transaction-mode pooler.
 >
-> **Yours:** create a free Postgres — Neon, Supabase or Vercel Postgres — and
-> put its *pooled* connection string in `.env` and in the Vercel project. Then
-> the two commands above, and the site is back.
+> Verified end to end: all 15 migrations applied, `npm run db:verify` green,
+> `npm run db:audit` finds no damage, 222 unit tests and the full e2e suite pass
+> against it, and production serves from it. Round trips run ~150ms rather than
+> the ~0.2ms of a local database, which is why the e2e assertion budget was
+> resized — see `playwright.config.ts`.
 
 - Brand colour and mark set in Settings, injected as CSS custom properties on `<html>`
 - The design system already makes this possible: every colour is a token in one file and no
