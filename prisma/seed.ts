@@ -12,7 +12,10 @@ import { DEFAULT_SHIPPING } from "../src/lib/cart-rules";
 import { getInfoPage, INFO_SLUGS } from "../src/lib/info-pages";
 import { serialiseSections } from "../src/lib/info-content";
 
-const connectionString = process.env.DATABASE_URL;
+// `DIRECT_URL` when set: seeding is bulk writes run next to migrations, and
+// belongs on the same unpooled endpoint they use. Falls back to DATABASE_URL,
+// which is all a local or CI Postgres needs.
+const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error("DATABASE_URL is not set — copy .env.example to .env");
 }

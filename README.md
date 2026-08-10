@@ -527,8 +527,9 @@ to it.
 ### The move
 
 ```bash
-# 1. Put the new connection string in .env  (and in Vercel, for production)
-DATABASE_URL="postgresql://..."
+# 1. Both connection strings in .env  (and in Vercel, for production)
+DATABASE_URL="postgresql://…-pooler.…"   # pooled — the running app
+DIRECT_URL="postgresql://….…"            # direct — migrations and the seed
 
 # 2. Apply every migration, then fill the database
 npm run db:setup
@@ -536,6 +537,9 @@ npm run db:setup
 # 3. Confirm it is actually usable
 npm run db:verify
 ```
+
+`DIRECT_URL` is optional and falls back to `DATABASE_URL`, which is all a local
+Postgres or the CI container needs — they have no pooler to opt out of.
 
 `db:verify` checks the things that make a database *serveable* rather than
 merely *migrated*: the settings row, all eight information pages, an active
@@ -575,13 +579,20 @@ matters much less.
 
 ### Two things that will bite you
 
-**Use the pooled connection string.** Every serverless instance builds its own
-pool, so a handful of warm instances ask for far more connections than a small
-plan allows. This project has already been taken down once by exactly that —
-`P2037 TooManyConnections`, with correct pages that simply could not get a
-connection. On Neon that means the host containing `-pooler`; on other
-providers, whatever they call the transaction pooler. Keep
-`DATABASE_POOL_MAX` small as well; it defaults to 3 in production.
+**The app needs the pooled string; migrations need the direct one.** Every
+serverless instance builds its own pool, so without pooling a handful of warm
+instances ask for more connections than a small plan allows — this project has
+already been taken down once by exactly that, `P2037 TooManyConnections`, with
+correct pages that simply could not get a connection. But migrations must *not*
+go through it: Prisma Migrate takes a session-level advisory lock so two
+deploys cannot apply the same migration at once, and a transaction-mode pooler
+does not keep a session between statements. The symptom is a migration that
+hangs rather than an error naming the cause.
+
+On Neon the pooled host contains `-pooler`; that single substring is the whole
+difference between the two strings, and it is the reliable way to tell them
+apart whatever the dashboard calls them. Keep `DATABASE_POOL_MAX` small too;
+it defaults to 3 in production.
 
 **Check the SSL mode.** Most hosted providers require `?sslmode=require` on
 the end of the URL. `pg` currently treats `require` as `verify-full` and warns

@@ -18,7 +18,9 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { INFO_SLUGS } from "../src/lib/info-pages";
 
-const connectionString = process.env.DATABASE_URL;
+// Checked over the same endpoint the setup used, so a pooler cannot mask a
+// migration that did not actually land.
+const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!connectionString) {
   console.error("DATABASE_URL is not set — copy .env.example to .env");
   process.exit(1);
