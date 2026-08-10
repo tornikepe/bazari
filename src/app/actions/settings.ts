@@ -4,8 +4,16 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { SETTINGS_ID } from "@/lib/settings";
+import { checkBrandColor } from "@/lib/brand-theme";
 
-export type SettingsResult = { ok: true } | { ok: false; error: "unauthorized" | "invalid" | "failed" };
+export type SettingsResult =
+  | { ok: true }
+  | { ok: false; error: "unauthorized" | "invalid" | "failed" }
+  /**
+   * The brand colour was refused. `suggestion` is the nearest colour that does
+   * work, so the answer is something the owner can act on rather than a wall.
+   */
+  | { ok: false; error: "contrast"; reason: "invalid" | "unusable" | "drift"; suggestion?: string };
 
 function text(form: FormData, key: string, max = 200) {
   return String(form.get(key) ?? "").trim().slice(0, max);
@@ -54,8 +62,23 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     return { ok: false, error: "invalid" };
   }
 
+  // Checked here rather than only in the browser: the colour input is a
+  // convenience, and this action takes a POST from anywhere. A colour that fails
+  // AA must not reach the stylesheet just because it skipped the form.
+  const brandColor = text(formData, "brandColor", 7).toLowerCase();
+  const brand = checkBrandColor(brandColor);
+  if (!brand.ok) {
+    return {
+      ok: false,
+      error: "contrast",
+      reason: brand.reason,
+      ...(brand.reason === "drift" ? { suggestion: brand.suggestion } : {}),
+    };
+  }
+
   const data = {
     name,
+    brandColor,
     titleSuffixKa: text(formData, "titleSuffixKa", 60),
     titleSuffixEn: text(formData, "titleSuffixEn", 60),
     taglineKa: text(formData, "taglineKa", 300),

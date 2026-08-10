@@ -12,6 +12,7 @@ import { SITE_URL } from "@/lib/site";
 import { getSettings, siteTitle } from "@/lib/settings";
 import { getI18n } from "@/lib/locale";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
+import { brandThemeCss } from "@/lib/brand-theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,6 +81,10 @@ export default async function RootLayout({
   // pre-paint theme script below would simply not run.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
+  // Derived per request rather than cached alongside the settings: it is pure
+  // arithmetic on one string, and a stale palette is worse than recomputing it.
+  const brandCss = brandThemeCss(settings.brandColor);
+
   return (
     <html
       lang={locale}
@@ -97,6 +102,29 @@ export default async function RootLayout({
             who has never picked a theme. Once they have, the cookie decides
             and this is a no-op. */}
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+
+        {/* The shop's brand ramp, redefining the same custom properties the
+            stylesheet declares. It goes in `head` and not in a client effect
+            because a brand colour that arrives after hydration is a visible
+            flash of the wrong red on every first paint.
+
+            Empty — and so not rendered at all — while the shop is on the
+            default colour, which is every shop that has not changed it. */}
+        {brandCss ? (
+          <style
+            nonce={nonce}
+            // The browser blanks a `nonce` attribute once it has applied the
+            // CSP, so React reads back "" where the server sent a value and
+            // reports a hydration mismatch. Nothing is actually wrong and
+            // nothing gets patched up — the warning is the whole cost.
+            //
+            // The nonce stays even though `style-src` currently allows
+            // 'unsafe-inline' and does not need one: the day that directive is
+            // tightened, an unnonced palette would silently stop applying.
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: brandCss }}
+          />
+        ) : null}
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeProvider>

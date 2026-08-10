@@ -7,6 +7,7 @@ import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { saveSettings } from "@/app/actions/settings";
 import { AlertIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
 import type { ShopSettings } from "@/lib/settings-defaults";
+import { BrandColorField } from "@/components/admin/BrandColorField";
 
 /**
  * The shop's own settings.
@@ -24,7 +25,7 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
   const router = useRouter();
   const canWrite = useCanWrite();
   const [isPending, startTransition] = useTransition();
-  const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saved" | "error" | "contrast">("idle");
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,7 +33,11 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
 
     startTransition(async () => {
       const result = await saveSettings(formData);
-      setStatus(result.ok ? "saved" : "error");
+      // A refused colour gets its own state: the brand field is already showing
+      // what is wrong and what to use instead, so repeating "check the fields
+      // you filled in" underneath would send the reader looking for a second,
+      // non-existent problem.
+      setStatus(result.ok ? "saved" : result.error === "contrast" ? "contrast" : "error");
       if (result.ok) router.refresh();
     });
   }
@@ -86,6 +91,10 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
           disabled={!canWrite}
           placeholder="https://…"
         />
+      </Section>
+
+      <Section title={t.admin.settingsBrand}>
+        <BrandColorField initial={settings.brandColor} disabled={!canWrite} />
       </Section>
 
       <Section title={t.admin.settingsContact} note={t.admin.contactHint}>
@@ -177,10 +186,10 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
             </p>
           )}
 
-          {status === "error" && !isPending && (
+          {(status === "error" || status === "contrast") && !isPending && (
             <p role="alert" className="flex items-center gap-1.5 text-sm text-danger">
               <AlertIcon size={15} />
-              {t.admin.settingsInvalid}
+              {status === "contrast" ? t.admin.settingsBrand : t.admin.settingsInvalid}
             </p>
           )}
         </div>

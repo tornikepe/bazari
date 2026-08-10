@@ -414,6 +414,12 @@ model ShopSettings {
   contactHoursKa String @default("")
   contactHoursEn String @default("")
 
+  /// One hex colour, lowercase, `#rrggbb`. The ten brand shades and the
+  /// button tokens are derived from it at render time for both themes — see
+  /// `brand-theme.ts`. A database constraint holds the format so nothing can
+  /// reach the stylesheet that is not a colour.
+  brandColor            String  @default("#dc1f24")
+
   currencySymbol        String  @default("₾")
   /// Tetri, like every other amount in this schema.
   freeShippingThreshold Int     @default(20000)

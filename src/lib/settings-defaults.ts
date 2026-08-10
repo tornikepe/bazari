@@ -7,6 +7,8 @@
  * Importing the server module to get them would drag Prisma into the browser
  * bundle, or more likely fail the build.
  */
+import { DEFAULT_BRAND_COLOR } from "./brand-theme";
+
 export type ShopSettings = {
   name: string;
   titleSuffixKa: string;
@@ -19,6 +21,8 @@ export type ShopSettings = {
   contactAddress: string;
   contactHoursKa: string;
   contactHoursEn: string;
+  /** One hex colour; the brand ramp is derived from it. See `brand-theme.ts`. */
+  brandColor: string;
   currencySymbol: string;
   /** Tetri, like every other amount in the app. */
   freeShippingThreshold: number;
@@ -45,6 +49,7 @@ export const DEFAULT_SETTINGS: ShopSettings = {
   contactAddress: "",
   contactHoursKa: "",
   contactHoursEn: "",
+  brandColor: DEFAULT_BRAND_COLOR,
   currencySymbol: "₾",
   freeShippingThreshold: 20_000,
   shippingFee: 1_500,
