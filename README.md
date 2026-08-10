@@ -172,6 +172,27 @@ but it can read every order, every customer's home address and every margin in t
 "it's only read-only" is not a reason to admit a weak password. The customer's floor is 8: it
 owns nothing but its own test orders and is meant to be typed by hand during a demo.
 
+### Which command writes where
+
+Worth stating plainly, because the two commands look similar and only one of them touches
+`.env`:
+
+| Command | Reads | Writes |
+|---|---|---|
+| `npm run setup:credentials` | `.env` (to see what is already set) | **`.env`** — the three passwords and `AUTH_SECRET` |
+| `npm run db:seed` | `.env` | **the database** — the hashed passwords, in the `User` table |
+
+**`db:seed` never writes to `.env`.** If you delete `.env`, seeding does not recreate it — it
+stops with an error naming the variable that is missing. `setup:credentials` is the one that
+creates the file, from `.env.example`, and fills in what is empty.
+
+So from nothing at all:
+
+```bash
+npm run setup:credentials   # creates .env and the secrets in it
+npm run db:seed             # creates the accounts from them
+```
+
 ### How a password gets attached to an account
 
 1. It is written into `.env` — by `npm run setup:credentials`, or by you.

@@ -786,8 +786,8 @@ async function main() {
   if (!password || password.length < 12) {
     throw new Error(
       "ADMIN_PASSWORD must be set to at least 12 characters before seeding.\n" +
-        "Generate one with:\n" +
-        '  node -e "console.log(require(\'crypto\').randomBytes(18).toString(\'base64url\'))"',
+        "Generate all of them, into .env, with:\n" +
+        "  npm run setup:credentials",
     );
   }
   const admin = await prisma.user.upsert({
@@ -811,8 +811,8 @@ async function main() {
   if (!viewerPassword || viewerPassword.length < 12) {
     throw new Error(
       "VIEWER_PASSWORD must be set to at least 12 characters before seeding.\n" +
-        "Generate one with:\n" +
-        '  node -e "console.log(require(\'crypto\').randomBytes(18).toString(\'base64url\'))"',
+        "Generate all of them, into .env, with:\n" +
+        "  npm run setup:credentials",
     );
   }
   await prisma.user.upsert({
@@ -841,7 +841,9 @@ async function main() {
     throw new Error(
       "CUSTOMER_PASSWORD must be set to at least 8 characters before seeding.\n" +
         "It is the demo shopper account, so a memorable one is fine — but it has\n" +
-        "to be a decision somebody made, not a default that shipped in the repo.",
+        "to be a decision somebody made, not a default that shipped in the repo.\n" +
+        "Generate all three, into .env, with:\n" +
+        "  npm run setup:credentials",
     );
   }
   const demoCustomer = await prisma.user.upsert({

@@ -167,11 +167,25 @@ anything a thumb aims at. The site already met the standard. What it did not hav
 - Keyboard-open behaviour on mobile: the checkout form must not hide the field being typed into
 - Reduced motion, forced colours (Windows high contrast), and 200% browser zoom
 
-### 2.4 — Keyboard and screen reader
+### 2.4 — Keyboard and screen reader 🔵 **in progress**
 
-- Full keyboard pass on every flow: catalogue → product → cart → checkout → order
-- Focus trap in the drawers and the chat panel; focus returned to the trigger on close
-- Skip-to-content link
+- ✅ **Skip-to-content link** — the first tab stop, hidden until focused and visible the moment
+  it is. Without it, reaching the page by keyboard meant tabbing the logo, the search field, its
+  button, five icon buttons and the language toggle, on every page. `<main>` gained
+  `tabIndex={-1}`, because an element without it is a scroll target but not a focus target and
+  the next Tab would carry on from the header as though nothing had happened
+- ✅ **The drawers are modal for the keyboard too** — focus moves in on open, is held inside
+  while open, and returns to the control that opened it on close. All three drawers get it at
+  once because it lives in `useOverlay`. They also gained `role="dialog"`, `aria-modal` and a
+  real name: a dialog without one announces as "dialog" and nothing else
+- ✅ Focus lands on the **panel**, not on the first focusable thing in the container — which was
+  the scrim, so the drawer opened with "Close" selected and read as though it were already
+  dismissing itself
+- ✅ **Tested by pressing keys**, not by asserting attributes (`tests/e2e/keyboard.spec.ts`), and
+  verified by disabling each fix and watching three of the four tests go red. `aria-modal="true"`
+  on a drawer that lets Tab wander out behind it is a claim, not a behaviour — and it is exactly
+  what a test that trusted the markup would have passed
+- Full keyboard pass on the remaining flows: catalogue → product → cart → checkout → order
 - Live regions for cart updates and form errors, so a screen reader is told what changed
 - `aria-current`, heading order and landmark audit per page
 
