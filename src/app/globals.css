@@ -10,7 +10,10 @@
 
 @theme {
   /* Brand — warm red, the usual marketplace signal colour */
-  --color-brand-50: #fff1f1;
+  /* Lifted from #fff1f1: `brand-600` on it is the round icon chip on the
+     account and order pages, and that pair measured 4.48:1 — under AA by a
+     margin too small to see and large enough to matter. */
+  --color-brand-50: #fff5f5;
   --color-brand-100: #ffdfdf;
   --color-brand-200: #ffc5c5;
   --color-brand-300: #ff9d9d;
@@ -48,8 +51,8 @@
   --color-ink-200: #dfe3ea;
   --color-ink-300: #c6ccd8;
   --color-ink-400: #6a707d; /* 4.55 on canvas */
-  --color-ink-500: #5f6675; /* 5.38 on canvas */
-  --color-ink-600: #4d5567; /* 6.97 on canvas */
+  --color-ink-500: #5f6675; /* 5.28 on canvas */
+  --color-ink-600: #4d5567; /* 6.85 on canvas */
   --color-ink-700: #3b4252;
   --color-ink-800: #262c39;
   --color-ink-900: #161a23;
@@ -208,7 +211,11 @@
   --color-brand-100: #3d1a1e;
   /* Light enough to read as a link on a dark surface (4.83:1). */
   --color-brand-600: #f04b4f;
-  --color-brand-700: #e5353a;
+  /* Lighter than `brand-600` above, which is the right way round for a dark
+     theme and was not what this was. As the darker shade it measured 4.05:1
+     as the featured badge's text on `brand-50`, and no amount of darkening
+     that tint could reach AA — the shade itself had to move. */
+  --color-brand-700: #ff6060;
 
   /* Dark enough that white text on the button clears AA (4.53:1). The
      bright brand-600 above only manages 3.61:1 under white, which is why

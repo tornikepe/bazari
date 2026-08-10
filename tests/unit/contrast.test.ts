@@ -84,6 +84,12 @@ const PAIRS: [label: string, fg: string, bg: string, min: number][] = [
   ["the visitor's chat bubble", "brand-on-solid", "brand-solid", 4.5],
   ["brand text / links on a card", "brand-600", "surface", 4.5],
   ["brand text / links on the page", "brand-600", "canvas", 4.5],
+  // Both were missing from this list and both were failing when it was
+  // finally checked: the round icon chip on the account and tracking pages at
+  // 4.48, and the dashboard's featured badge at 4.05 in dark mode. A pair that
+  // is rendered and not listed here is a pair nothing is guarding.
+  ["icon chip", "brand-600", "brand-50", 4.5],
+  ["featured badge", "brand-700", "brand-50", 4.5],
   ["text on a dark panel", "panel-fg", "panel", 4.5],
   ["muted text on a dark panel", "panel-muted", "panel", 4.5],
   ["success badge", "success", "success-soft", 4.5],
