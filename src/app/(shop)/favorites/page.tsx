@@ -11,6 +11,7 @@ import { clearFavorites } from "@/lib/favorites-store";
 import { fill } from "@/lib/i18n";
 import { getProductsByIds } from "@/app/actions/products";
 import type { ProductCardData } from "@/lib/catalog";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
 export default function FavoritesPage() {
   const { t } = useI18n();
@@ -39,13 +40,10 @@ export default function FavoritesPage() {
 
   return (
     <div className="page-container py-6 lg:py-8">
-      <nav aria-label="breadcrumb" className="mb-2 flex items-center gap-1.5 text-xs text-ink-400">
-        <Link href="/" className="transition-colors hover:text-brand-600">
-          {t.nav.home}
-        </Link>
-        <span>/</span>
-        <span className="text-ink-600">{t.favorites.title}</span>
-      </nav>
+      <Breadcrumb
+        className="mb-2"
+        items={[{ label: t.nav.home, href: "/" }, { label: t.favorites.title }]}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">

@@ -62,7 +62,7 @@ export function AccountMenu({ user }: { user: MenuUser }) {
         href="/login"
         aria-label={t.auth.signIn}
         title={t.auth.signIn}
-        className="btn btn-ghost h-10 w-10 rounded-control p-0"
+        className="btn btn-ghost h-11 w-11 rounded-control p-0"
       >
         <UserIcon size={19} />
       </Link>
@@ -86,7 +86,7 @@ export function AccountMenu({ user }: { user: MenuUser }) {
         aria-expanded={open}
         aria-label={t.account.title}
         title={t.account.title}
-        className={`btn btn-ghost h-10 w-10 rounded-control p-0 ${open ? "bg-ink-100" : ""}`}
+        className={`btn btn-ghost h-11 w-11 rounded-control p-0 ${open ? "bg-ink-100" : ""}`}
       >
         <UserIcon size={19} />
       </button>

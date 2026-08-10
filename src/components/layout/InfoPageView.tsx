@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/settings";
 import { getPage } from "@/lib/info-store";
 import type { InfoSlug } from "@/lib/info-pages";
 import { MailIcon, MapPinIcon, PhoneIcon } from "@/components/ui/icons";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
 /** Shared renderer for every footer information page. */
 export async function InfoPageView({ slug }: { slug: InfoSlug }) {
@@ -34,13 +35,7 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
 
   return (
     <div className="page-container py-8 lg:py-12">
-      <nav aria-label="breadcrumb" className="mb-3 flex items-center gap-1.5 text-xs text-ink-400">
-        <Link href="/" className="transition-colors hover:text-brand-600">
-          {t.nav.home}
-        </Link>
-        <span>/</span>
-        <span className="text-ink-600">{page.title}</span>
-      </nav>
+      <Breadcrumb items={[{ label: t.nav.home, href: "/" }, { label: page.title }]} />
 
       <article className="mx-auto max-w-3xl">
         <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">

@@ -162,7 +162,7 @@ export function HeaderBar({
             onClick={() => setSearchOpen(true)}
             aria-label={t.nav.search}
             title={t.nav.search}
-            className="btn btn-ghost h-10 w-10 rounded-control p-0 md:hidden"
+            className="btn btn-ghost h-11 w-11 rounded-control p-0 md:hidden"
           >
             <SearchIcon size={19} />
           </button>
@@ -184,7 +184,7 @@ export function HeaderBar({
             aria-label={t.favorites.title}
             // Hidden on the narrowest phones: five icon buttons plus the logo
             // overflow 320px. The drawer still links to it.
-            className="btn btn-ghost relative hidden h-10 w-10 rounded-control p-0 min-[360px]:flex"
+            className="btn btn-ghost relative hidden h-11 w-11 rounded-control p-0 min-[360px]:flex"
           >
             <span className="relative">
               <HeartIcon size={20} />
@@ -201,7 +201,7 @@ export function HeaderBar({
             href="/cart"
             aria-label={t.nav.cart}
             title={t.nav.cart}
-            className="btn btn-ghost relative h-10 w-10 rounded-control p-0"
+            className="btn btn-ghost relative h-11 w-11 rounded-control p-0"
           >
             <span className="relative">
               <CartIcon size={21} />

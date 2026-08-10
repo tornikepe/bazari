@@ -11,6 +11,7 @@ import { ActiveFilterChips } from "@/components/catalog/ActiveFilterChips";
 import { SortSelect } from "@/components/catalog/SortSelect";
 import { Pagination } from "@/components/catalog/Pagination";
 import { PackageIcon } from "@/components/ui/icons";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
 export default async function CatalogPage({
   searchParams,
@@ -32,13 +33,10 @@ export default async function CatalogPage({
   return (
     <div className="page-container py-6 lg:py-8">
       {/* breadcrumb + title */}
-      <nav aria-label="breadcrumb" className="mb-2 flex items-center gap-1.5 text-xs text-ink-400">
-        <Link href="/" className="transition-colors hover:text-brand-600">
-          {t.nav.home}
-        </Link>
-        <span>/</span>
-        <span className="text-ink-600">{t.catalog.title}</span>
-      </nav>
+      <Breadcrumb
+        className="mb-2"
+        items={[{ label: t.nav.home, href: "/" }, { label: t.catalog.title }]}
+      />
 
       {/* A filtered category reads better with the category as the heading. */}
       <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">

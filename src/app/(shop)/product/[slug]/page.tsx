@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
@@ -15,6 +14,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -136,24 +136,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <JsonLd data={productSchema} />
       <JsonLd data={breadcrumbSchema} />
 
-      <nav aria-label="breadcrumb" className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-ink-400">
-        <Link href="/" className="transition-colors hover:text-brand-600">
-          {t.nav.home}
-        </Link>
-        <span>/</span>
-        <Link href="/catalog" className="transition-colors hover:text-brand-600">
-          {t.catalog.title}
-        </Link>
-        <span>/</span>
-        <Link
-          href={`/catalog?category=${product.category.slug}`}
-          className="transition-colors hover:text-brand-600"
-        >
-          {categoryName}
-        </Link>
-        <span>/</span>
-        <span className="truncate text-ink-600">{name}</span>
-      </nav>
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: t.nav.home, href: "/" },
+          { label: t.catalog.title, href: "/catalog" },
+          { label: categoryName, href: `/catalog?category=${product.category.slug}` },
+          { label: name },
+        ]}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
         {/* ------------------------------ gallery ---------------------------- */}

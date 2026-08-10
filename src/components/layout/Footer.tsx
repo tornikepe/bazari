@@ -57,15 +57,12 @@ export async function Footer() {
           <h2 id="footer-shop" className="mb-3.5 text-sm font-bold text-ink-900">
             {t.footer.shop}
           </h2>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col">
             {categories.map((category) => (
               <li key={category.slug}>
-                <Link
-                  href={`/catalog?category=${category.slug}`}
-                  className="text-sm text-ink-500 transition-colors hover:text-brand-600"
-                >
+                <FooterLink href={`/catalog?category=${category.slug}`}>
                   {locale === "ka" ? category.nameKa : category.nameEn}
-                </Link>
+                </FooterLink>
               </li>
             ))}
           </ul>
@@ -75,15 +72,10 @@ export async function Footer() {
           <h2 id="footer-company" className="mb-3.5 text-sm font-bold text-ink-900">
             {t.footer.company}
           </h2>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col">
             {companyLinks.map((link) => (
               <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-sm text-ink-500 transition-colors hover:text-brand-600"
-                >
-                  {link.label}
-                </Link>
+                <FooterLink href={link.href}>{link.label}</FooterLink>
               </li>
             ))}
           </ul>
@@ -93,15 +85,10 @@ export async function Footer() {
           <h2 id="footer-help" className="mb-3.5 text-sm font-bold text-ink-900">
             {t.footer.help}
           </h2>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col">
             {helpLinks.map((link) => (
               <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-sm text-ink-500 transition-colors hover:text-brand-600"
-                >
-                  {link.label}
-                </Link>
+                <FooterLink href={link.href}>{link.label}</FooterLink>
               </li>
             ))}
           </ul>
@@ -118,5 +105,31 @@ export async function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+/**
+ * A footer link that fills its row.
+ *
+ * The text is 19px tall and the rows were 34px apart, so half of every row was
+ * dead space a thumb could land in and nothing would happen. `min-h-11` is 44px
+ * — what Apple and Google both ask for — and the list's `gap` is removed to pay
+ * for it, so the rows keep roughly the spacing they had while the target more
+ * than doubles.
+ *
+ * Worth being precise about what this does and does not fix: these links were
+ * never a WCAG failure. SC 2.5.8 lets an undersized target pass when a 24px
+ * circle on its centre touches no other target's, and at 34px apart these
+ * cleared that comfortably. This is an ergonomic improvement, not a conformance
+ * one, and the roadmap said otherwise until it was measured properly.
+ */
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="flex min-h-11 items-center text-sm text-ink-500 transition-colors hover:text-brand-600"
+    >
+      {children}
+    </Link>
   );
 }
