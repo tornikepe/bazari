@@ -158,12 +158,39 @@ anything a thumb aims at. The site already met the standard. What it did not hav
   remove the duplicate link so the card has exactly one focusable target
 - The `sr-only` input on `/catalog` checked and labelled
 
-### 2.3 — Real-device behaviour the desktop sweep cannot see
+### 2.3 — Real-device behaviour the desktop sweep cannot see 🔵 **in progress**
 
+- ✅ **WebKit runs in CI**, on the specs where engines actually differ — layout, sticky,
+  overflow, focus, motion. The first run failed 24 of 34, and one cause explained almost all of
+  them: the CSP sent `upgrade-insecure-requests` unconditionally. Chromium exempts localhost;
+  **WebKit does not**, so every stylesheet, script and server action on `http://127.0.0.1:3100`
+  was upgraded to a port with no TLS listener and failed. The page rendered unstyled, never
+  hydrated, and every form silently did nothing — which read as two dozen unrelated layout and
+  focus bugs. Sending it without TLS was never right; it is now conditional on the request
+  actually being HTTPS. **24 failures → 4**
+- ✅ **A real WebKit layout bug, invisible in Chromium**: WebKit sizes a `<select>`'s min-content
+  from its longest option and keeps that as its scroll width whatever it is laid out at. On a
+  320px screen — an iPhone SE — the Georgian sort label `ფასი: დაბლიდან მაღლა` let the catalogue
+  toolbar be dragged 15px sideways. `min-w-0` had been added for exactly this and works only in
+  Chromium. The control now takes its own row below `sm`
+- ✅ **Landscape, which nothing had ever been checked at** — 667×375 and 844×390, both languages:
+  no sideways scroll, the header never takes more than a third of a short viewport, and an open
+  drawer keeps its actions on screen with the rest reachable by scrolling inside it
+- ✅ The three tests that press Tab are excluded from WebKit, and that is a fact rather than a
+  workaround: **Safari does not put links or buttons in the tab order** unless the reader turns
+  on "Use keyboard navigation to move focus between controls". Measured — in WebKit, Tab on the
+  home page cycles between the body and one text input. A focus trap keyed on Tab has nothing to
+  trap there
+- ⛔ **`env(safe-area-inset-*)` — needs a real device, and is currently inert.** `.buy-bar`
+  already pads for the home indicator, but that padding resolves to `0` on iOS because the
+  viewport never opts in with `viewport-fit=cover`. Turning it on extends the page under the
+  notch, so it has to land together with insets on every edge — and **none of that can be
+  verified here**: Playwright cannot emulate safe areas, and the iOS Simulator needs a full Xcode
+  install this machine does not have. Shipping it blind could put content under the notch that
+  is merely letterboxed today, which is worse. Left as a device-gated item on purpose
 - iOS Safari 100vh and the dynamic address bar, on the chat panel and the mobile filter sheet
-- `env(safe-area-inset-*)` on the notch and home indicator for the sticky buy bar and drawers
+  (`min-h-screen` in three places wants `dvh`)
 - Touch scrolling inside the filter rail and the chat transcript with momentum
-- Landscape phone, which nothing has ever been checked at
 - Keyboard-open behaviour on mobile: the checkout form must not hide the field being typed into
 - Reduced motion, forced colours (Windows high contrast), and 200% browser zoom
 

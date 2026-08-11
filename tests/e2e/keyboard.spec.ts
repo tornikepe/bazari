@@ -3,6 +3,14 @@ import { expect, test } from "@playwright/test";
 /**
  * The site driven by keyboard alone.
  *
+ * The tests that press Tab carry `@tab-order` and do not run on WebKit. That is
+ * not a gap being papered over: Safari does not put links or buttons in the tab
+ * order at all unless the reader turns on "Use keyboard navigation to move
+ * focus between controls", which is off by default. Measured rather than
+ * assumed — in WebKit, Tab on the home page cycles between the body and the one
+ * text input and reaches nothing else. A focus trap keyed on Tab has nothing to
+ * trap there, so asserting it would be asserting a fiction.
+ *
  * Everything here is checked by pressing keys and reading where focus went,
  * not by asserting that an attribute is present. `aria-modal="true"` on a
  * drawer that lets Tab wander out into the page behind it is a claim, not a
@@ -21,7 +29,7 @@ const active = (page: import("@playwright/test").Page) =>
     return `${el.tagName.toLowerCase()}#${el.id || "-"}[${label}]`;
   });
 
-test("the first Tab offers a way past the header", async ({ page }) => {
+test("the first Tab offers a way past the header @engine @tab-order", async ({ page }) => {
   await page.goto("/");
 
   // Tab until focus is on *something*, capped low. A freshly loaded page has
@@ -47,7 +55,7 @@ test("the first Tab offers a way past the header", async ({ page }) => {
   expect(await active(page), "activating the skip link did not move focus to main").toContain("main");
 });
 
-test("focus moves into the menu, is held there, and comes back", async ({ page }) => {
+test("focus moves into the menu, is held there, and comes back @engine @tab-order", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
 
@@ -85,7 +93,7 @@ test("focus moves into the menu, is held there, and comes back", async ({ page }
   await expect(trigger, "focus did not return to the button that opened the drawer").toBeFocused();
 });
 
-test("the drawer says what it is", async ({ page }) => {
+test("the drawer says what it is @engine", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
   await page.getByRole("button", { name: /menu|მენიუ/i }).first().click();
@@ -96,7 +104,7 @@ test("the drawer says what it is", async ({ page }) => {
   expect(name?.trim(), "the drawer has no accessible name").toBeTruthy();
 });
 
-test("the catalogue filter drawer holds focus too", async ({ page }) => {
+test("the catalogue filter drawer holds focus too @engine @tab-order", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/catalog");
 

@@ -21,7 +21,7 @@ test.beforeEach(async ({ page }) => {
 const rail = (page: import("@playwright/test").Page) =>
   page.locator("aside .card").first();
 
-test("the rail scrolls inside itself", async ({ page }) => {
+test("the rail scrolls inside itself @engine", async ({ page }) => {
   const box = await rail(page).evaluate((node) => ({
     scrollHeight: node.scrollHeight,
     clientHeight: node.clientHeight,
@@ -38,7 +38,7 @@ test("the rail scrolls inside itself", async ({ page }) => {
     .toBeGreaterThan(0);
 });
 
-test("scrolling the rail does not move the page", async ({ page }) => {
+test("scrolling the rail does not move the page @engine", async ({ page }) => {
   const before = await page.evaluate(() => window.scrollY);
 
   // Deliberately less than the rail's own remaining scroll. Past its end the
@@ -68,7 +68,7 @@ test("scrolling the rail does not move the page", async ({ page }) => {
   expect(await page.evaluate(() => window.scrollY)).toBe(before);
 });
 
-test("the rail never runs off the bottom of the screen", async ({ page }) => {
+test("the rail never runs off the bottom of the screen @engine", async ({ page }) => {
   await page.evaluate(() => window.scrollBy(0, 800));
 
   const { bottom, viewport } = await rail(page).evaluate((node) => ({
@@ -79,7 +79,7 @@ test("the rail never runs off the bottom of the screen", async ({ page }) => {
   expect(bottom).toBeLessThanOrEqual(viewport + 1);
 });
 
-test("the bottom of the filter list is reachable", async ({ page }) => {
+test("the bottom of the filter list is reachable @engine", async ({ page }) => {
   // The reset button is the last thing in the rail. If it cannot be reached
   // without scrolling the page away, the rail is not doing its job.
   const reset = page.getByRole("button", { name: /clear|გასუფთავება/i }).last();

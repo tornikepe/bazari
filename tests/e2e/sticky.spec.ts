@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
 });
 
-test("the filter rail is the only scroller in the sidebar", async ({ page }) => {
+test("the filter rail is the only scroller in the sidebar @engine", async ({ page }) => {
   await page.goto("/catalog");
 
   const scrollers = await page.evaluate(() => {
@@ -38,7 +38,7 @@ test("the filter rail is the only scroller in the sidebar", async ({ page }) => 
   expect(scrollers, `nested scroll containers:\n${scrollers?.join("\n")}`).toHaveLength(1);
 });
 
-test("the product photo stays on screen while the details scroll", async ({ page }) => {
+test("the product photo stays on screen while the details scroll @engine", async ({ page }) => {
   await page.goto("/catalog");
   const href = await page.locator('a[href^="/product/"]').first().getAttribute("href");
   await page.goto(href!);
@@ -63,7 +63,7 @@ test("the product photo stays on screen while the details scroll", async ({ page
   expect(after.y + after.height, "the photo left the viewport").toBeGreaterThan(0);
 });
 
-test("the photo is not stretched to the height of the details column", async ({ page }) => {
+test("the photo is not stretched to the height of the details column @engine", async ({ page }) => {
   // The root cause, asserted directly: a grid item defaults to
   // `align-self: stretch`, which leaves a sticky element no room to move. It
   // is a square by design, so its height should match its width.

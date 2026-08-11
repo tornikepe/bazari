@@ -14,6 +14,20 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
 
+  /**
+   * Whether this response is actually travelling over TLS.
+   *
+   * Not `!isDev`: the end-to-end suite runs a *production* build over plain
+   * http, so anything keyed on the build mode is wrong there — and one header
+   * below is only safe to send when there is really a TLS endpoint to upgrade
+   * to. Vercel terminates TLS and forwards the original scheme in
+   * `x-forwarded-proto`; a direct request carries its own.
+   */
+  const forwarded = request.headers.get("x-forwarded-proto");
+  const isHttps = forwarded
+    ? forwarded.split(",")[0]!.trim() === "https"
+    : request.nextUrl.protocol === "https:";
+
   const csp = [
     `default-src 'self'`,
     // 'strict-dynamic' lets the nonced bootstrap load the rest of the chunks.
@@ -31,7 +45,21 @@ export function proxy(request: NextRequest) {
     `base-uri 'self'`,
     `form-action 'self'`,
     `frame-ancestors 'none'`,
-    `upgrade-insecure-requests`,
+    /**
+     * Only over TLS, and this one is not cosmetic.
+     *
+     * `upgrade-insecure-requests` rewrites every http subresource to https.
+     * Chromium exempts localhost, so on plain http it appears to do nothing.
+     * WebKit does not exempt it — it dutifully upgrades every stylesheet,
+     * script and server action on `http://127.0.0.1:3100` to a port with no
+     * TLS listener, and each one fails with a TLS error. The page renders
+     * unstyled, never hydrates, and every form silently does nothing.
+     *
+     * That is exactly what the WebKit project found the first time it ran, and
+     * it read as two dozen unrelated layout and focus bugs. There is nothing to
+     * upgrade *to* without TLS, so sending it there was never right.
+     */
+    ...(isHttps ? [`upgrade-insecure-requests`] : []),
   ].join("; ");
 
   const requestHeaders = new Headers(request.headers);

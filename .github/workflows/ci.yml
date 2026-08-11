@@ -95,7 +95,12 @@ jobs:
       # it.
       - run: npm run db:audit
 
-      - run: npx playwright install --with-deps chromium
+      # WebKit as well as Chromium. It is the only engine iOS renders with, and
+      # the first run of it found a CSP directive that broke every subresource
+      # on the site — invisible in Chromium, which exempts localhost from it.
+      # It runs a subset (the specs tagged `@engine`), so the extra minutes are
+      # spent only on what differs between engines.
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
 
       - uses: actions/upload-artifact@v4

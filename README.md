@@ -520,8 +520,34 @@ npm run test:e2e    # end-to-end — the flows, and the security properties
 ```
 
 The end-to-end suite covers what is easiest to break invisibly: authorization boundaries, the
-read-only role, OAuth failure paths, layout stability across both languages, and that overlays
-animate in both directions.
+read-only role, OAuth failure paths, layout stability across both languages, that overlays
+animate in both directions, that every control has an accessible name and a reachable target,
+and that the drawers hold the keyboard as well as the pointer.
+
+### Two engines
+
+It runs in **Chromium** and **WebKit**. WebKit is not thoroughness for its own sake — it is the
+only engine iOS is allowed to render with, so it is the only way to see an iPhone problem without
+an iPhone. Running everything twice would double an eleven-minute run for no gain, so WebKit runs
+the specs tagged `@engine`: layout, sticky, overflow, focus and motion. A server action behaves
+the same in both.
+
+```bash
+npx playwright test --project=webkit
+```
+
+Its first run failed 24 of 34, and one cause explained nearly all of them. The CSP sent
+`upgrade-insecure-requests` on every response. Chromium exempts localhost from that directive;
+WebKit does not, so every stylesheet, script and server action on `http://127.0.0.1:3100` was
+upgraded to a port with no TLS listener and failed. The page rendered unstyled, never hydrated,
+and every form silently did nothing — which looked like two dozen unrelated layout and focus
+bugs. The directive is now sent only when the request is really over HTTPS, which is the only
+situation it means anything in.
+
+The three tests that press Tab are excluded from WebKit, and that is a fact rather than a
+workaround: **Safari does not put links or buttons in the tab order** unless the reader turns on
+"Use keyboard navigation to move focus between controls". Measured rather than assumed — in
+WebKit, Tab on the home page cycles between the body and one text input.
 
 ---
 

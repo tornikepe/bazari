@@ -144,7 +144,7 @@ async function sweep(page: import("@playwright/test").Page, path: string) {
 }
 
 for (const locale of ["ka", "en"] as const) {
-  test(`every control is reachable and named — ${locale}`, async ({ page }) => {
+  test(`every control is reachable and named — ${locale} @engine`, async ({ page }) => {
     // A thumb, not a mouse: the width where target size is decided.
     await page.setViewportSize({ width: 375, height: 812 });
     await page.context().addCookies([
@@ -183,7 +183,7 @@ for (const locale of ["ka", "en"] as const) {
   });
 }
 
-test("footer links stay thumb-sized", async ({ page }) => {
+test("footer links stay thumb-sized @engine", async ({ page }) => {
   // Specific, because it is the thing that was just fixed and the thing most
   // likely to be undone by someone tidying the footer's spacing. The links were
   // 19px of target in a 34px row; the gap became padding instead.

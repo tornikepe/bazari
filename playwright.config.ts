@@ -52,7 +52,31 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+
+    /**
+     * WebKit, which is the only engine iOS is allowed to render with.
+     *
+     * Running the whole suite twice would double a run that already takes
+     * eleven minutes, and most of it is not engine-sensitive — a server action
+     * behaves the same in both. What differs between engines is layout, sticky
+     * and overflow behaviour, focus handling and transitions, so this project
+     * runs exactly those specs.
+     *
+     * `grep` rather than a separate directory: the specs are the same tests,
+     * and a copy kept for WebKit would be a copy that drifts.
+     */
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      grep: /@engine/,
+      // Safari keeps links and buttons out of the tab order by default, so the
+      // tests that press Tab have nothing to walk through. See the header of
+      // `keyboard.spec.ts`.
+      grepInvert: /@tab-order/,
+    },
+  ],
 
   webServer: {
     command: `npx next build && npx next start --port ${PORT}`,

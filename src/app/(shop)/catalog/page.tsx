@@ -76,7 +76,14 @@ export default async function CatalogPage({
               {fill(t.catalog.resultsCount, { count: total })}
             </p>
 
-            <div className="flex items-center gap-2">
+            {/* Wraps, because at 320px in Georgian it cannot not.
+                WebKit sizes a `<select>`'s min-content from its longest option
+                — here "ფასი: დაბლიდან მაღლა" — so the sort control refuses to
+                shrink below that however much `min-w-0` it is given, and the
+                row overflowed by 15px on an iPhone SE. Chromium measures it
+                differently and showed nothing wrong. Letting the two controls
+                take a line each is what a 320px screen wanted anyway. */}
+            <div className="flex flex-wrap items-center gap-2">
               <MobileFilterDrawer
                 filters={filters}
                 categories={categories}

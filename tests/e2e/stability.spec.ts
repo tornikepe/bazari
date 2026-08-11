@@ -83,9 +83,9 @@ async function clippedText(page: Page) {
   );
 }
 
-test.describe("the storefront", () => {
+test.describe("the storefront @engine", () => {
   for (const width of WIDTHS) {
-    test(`does not scroll sideways at ${width}px, in either language`, async ({ page }) => {
+    test(`does not scroll sideways at ${width}px, in either language @engine`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
 
       for (const locale of ["ka", "en"] as const) {
@@ -102,7 +102,7 @@ test.describe("the storefront", () => {
     });
   }
 
-  test("no control changes size when the language changes", async ({ page }) => {
+  test("no control changes size when the language changes @engine", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
 
     for (const path of PUBLIC_PAGES) {
@@ -126,7 +126,7 @@ test.describe("the storefront", () => {
     }
   });
 
-  test("no text is clipped without an ellipsis", async ({ page }) => {
+  test("no text is clipped without an ellipsis @engine", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 900 });
 
     for (const locale of ["ka", "en"] as const) {
@@ -140,11 +140,11 @@ test.describe("the storefront", () => {
   });
 });
 
-test.describe("the dashboard", () => {
+test.describe("the dashboard @engine", () => {
   test.skip(!ADMIN.password, "ADMIN_PASSWORD is not set");
 
   for (const width of [390, 1280]) {
-    test(`does not scroll sideways at ${width}px, in either language`, async ({ page }) => {
+    test(`does not scroll sideways at ${width}px, in either language @engine`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await signIn(page, ADMIN.email, ADMIN.password);
 
@@ -162,7 +162,7 @@ test.describe("the dashboard", () => {
     });
   }
 
-  test("no control changes size when the language changes", async ({ page }) => {
+  test("no control changes size when the language changes @engine", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await signIn(page, ADMIN.email, ADMIN.password);
 
@@ -183,7 +183,7 @@ test.describe("the dashboard", () => {
   });
 });
 
-test("the language switch itself does not resize when pressed", async ({ page }) => {
+test("the language switch itself does not resize when pressed @engine", async ({ page }) => {
   // The one control guaranteed to be on screen in both languages at once, and
   // the one most likely to move: it is *made of* the two language names.
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -202,7 +202,7 @@ test("the language switch itself does not resize when pressed", async ({ page })
   expect(Math.round(after.x)).toBe(Math.round(before.x));
 });
 
-test("a viewer's dashboard is as stable as an admin's", async ({ page }) => {
+test("a viewer's dashboard is as stable as an admin's @engine", async ({ page }) => {
   test.skip(!VIEWER.password, "VIEWER_PASSWORD is not set");
 
   await page.setViewportSize({ width: 390, height: 900 });
@@ -220,7 +220,7 @@ test("a viewer's dashboard is as stable as an admin's", async ({ page }) => {
   }
 });
 
-test("the customer account area fits a phone in both languages", async ({ page }) => {
+test("the customer account area fits a phone in both languages @engine", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
 

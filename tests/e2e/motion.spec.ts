@@ -47,7 +47,7 @@ test.beforeEach(async ({ page }) => {
   await watchTransitions(page);
 });
 
-test("the drawer slides in and the scrim fades with it", async ({ page }) => {
+test("the drawer slides in and the scrim fades with it @engine", async ({ page }) => {
   await openMenu(page);
   await expect(panel(page)).toHaveAttribute("data-state", "open");
   await expect.poll(async () => Math.round((await panel(page).boundingBox())!.x)).toBe(0);
@@ -57,7 +57,7 @@ test("the drawer slides in and the scrim fades with it", async ({ page }) => {
   expect(log.filter((e) => e.part === "overlay-scrim" && e.property === "opacity")).not.toEqual([]);
 });
 
-test("the drawer slides out instead of vanishing", async ({ page }) => {
+test("the drawer slides out instead of vanishing @engine", async ({ page }) => {
   await openMenu(page);
   await expect.poll(async () => Math.round((await panel(page).boundingBox())!.x)).toBe(0);
 
@@ -82,7 +82,7 @@ test("the drawer slides out instead of vanishing", async ({ page }) => {
   await expect(panel(page)).toHaveCount(0);
 });
 
-test("the account menu grows from its button", async ({ page }) => {
+test("the account menu grows from its button @engine", async ({ page }) => {
   // The menu only exists for a signed-in shopper; signed out the control is a
   // plain link to sign-in and there is nothing to open.
   await page.goto("/login");
@@ -92,7 +92,7 @@ test("the account menu grows from its button", async ({ page }) => {
   await expect(popover).toHaveCount(0);
 });
 
-test("the page cannot scroll behind an open drawer", async ({ page }) => {
+test("the page cannot scroll behind an open drawer @engine", async ({ page }) => {
   await openMenu(page);
   await expect.poll(async () => Math.round((await panel(page).boundingBox())!.x)).toBe(0);
   expect(await page.evaluate(() => document.body.style.overflow)).toBe("hidden");
@@ -108,7 +108,7 @@ test("the page cannot scroll behind an open drawer", async ({ page }) => {
   expect(await page.evaluate(() => document.body.style.overflow)).toBe("");
 });
 
-test("reduced motion still opens and closes the drawer", async ({ page }) => {
+test("reduced motion still opens and closes the drawer @engine", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
