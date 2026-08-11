@@ -13,6 +13,7 @@ import { LocaleToggle } from "@/components/ui/LocaleToggle";
 import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { Overlay } from "@/components/ui/Overlay";
+import { SearchSuggestions } from "@/components/layout/SearchSuggestions";
 import { useOverlay } from "@/lib/use-overlay";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { logout } from "@/app/actions/auth";
@@ -53,6 +54,9 @@ export function HeaderBar({
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  // The phone sheet is a second input, so it needs its own handle — one ref
+  // across both would point at whichever mounted last.
+  const mobileSearchRef = useRef<HTMLInputElement>(null);
   const { mounted: searchMounted, state: searchState } = useOverlay(searchOpen, {
     duration: 220,
   });
@@ -151,6 +155,8 @@ export function HeaderBar({
           >
             {t.nav.search}
           </button>
+
+          <SearchSuggestions query={query} inputRef={searchRef} onNavigate={() => setSearchOpen(false)} />
         </form>
 
         {/* Pushes the actions to the right where the bar is hidden. */}
@@ -231,6 +237,7 @@ export function HeaderBar({
                 className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-400"
               />
               <input
+                ref={mobileSearchRef}
                 autoFocus
                 type="search"
                 value={query}
@@ -238,6 +245,12 @@ export function HeaderBar({
                 placeholder={t.nav.searchPlaceholder}
                 aria-label={t.nav.search}
                 className="field h-11 pl-10"
+              />
+
+              <SearchSuggestions
+                query={query}
+                inputRef={mobileSearchRef}
+                onNavigate={() => setSearchOpen(false)}
               />
             </div>
 

@@ -39,6 +39,7 @@
 - [Design system](#design-system)
 - [Testing](#testing)
 - [Deploying](#deploying)
+- [The storefront](#the-storefront) — the 3D hero, search suggestions, the theme fade
 - [Configuring the shop](#configuring-the-shop) — using this for a different business
 - [Moving to another Postgres](#moving-to-another-postgres)
 - [Commit attribution](#commit-attribution)
@@ -563,6 +564,49 @@ Two things worth knowing before pointing this at a real database:
   already.
 - **`remotePatterns` in `next.config.ts` currently allows any HTTPS host**, so that arbitrary
   product image URLs work in the demo. Narrow it to your own CDN before running a real shop.
+
+---
+
+## The storefront
+
+Three things worth describing, because each hides a decision.
+
+### A hero in three dimensions
+
+The object beside the headline is the shop's own mark given depth — a cube whose every face is
+the 2×2 module grid with one cell in brand red, turning once every 28 seconds. It is CSS, not a
+canvas: `transform-style: preserve-3d` is a real perspective projection with six faces composited
+on the GPU, and it needs no library, no shader and **no JavaScript at all**, so it renders on the
+server and is correct before hydration rather than after it. It stops for `prefers-reduced-motion`
+and it is `aria-hidden` — it says nothing the heading does not.
+
+### Suggestions in the search field
+
+Typing two characters into the header search shows matching products under it, with the
+thumbnail, brand and price. `/api/search` shares its matching predicate with the catalogue by
+importing it, rather than restating it — two definitions of what "matches" means fail silently
+and in the most annoying way available: a product offered in the dropdown that is missing from
+the page you land on after pressing enter. A test asserts the suggested product really is among
+the catalogue's results for the same word.
+
+It is a real combobox. Arrow keys move the highlight, Enter opens the highlighted product, Enter
+with nothing highlighted submits the search as before, and Escape closes the list while **keeping
+what was typed** — `<input type="search">` clears itself on Escape in Chrome, so the default is
+taken over while the list is open and only then, leaving a second Escape to clear the field.
+
+### The theme fades
+
+Switching between light and dark cross-fades over 700ms in both directions.
+
+It is a **view transition**, not a CSS transition, and that is not a matter of taste. Every colour
+here is `var(--color-…)`, and an unregistered custom property is not animatable: flipping
+`data-theme` recomputes the dependent colours without starting a transition at all. The first
+attempt did exactly that — `transition-duration` reported a correct `0.7s` on every element on the
+page and not one transition ever ran. Listening for `transitionrun` is what caught it; watching it
+and deciding it looked smooth would not have.
+
+Reduced motion skips it, and so does any engine without the API — a missing fade is a missing
+nicety, a theme that will not change is a broken control.
 
 ---
 

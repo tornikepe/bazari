@@ -4,24 +4,35 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import { PAGE_SIZE, type CatalogFilters, type Sort } from "@/lib/filters";
 
+/**
+ * What "matches this text" means, in one place.
+ *
+ * Exported because the header's suggestion endpoint needs the same answer. Two
+ * copies would be two definitions, and the failure would be quiet and
+ * infuriating: a product offered in the dropdown and missing from the results
+ * page you land on after pressing enter.
+ */
+export function searchPredicate(query: string): Prisma.ProductWhereInput {
+  // Postgres `LIKE` is case-sensitive, so `mode: "insensitive"` is required
+  // for "anker" to match "Anker". (Georgian is caseless and unaffected.)
+  const contains = { contains: query, mode: "insensitive" } as const;
+
+  return {
+    isActive: true,
+    OR: [
+      { nameKa: contains },
+      { nameEn: contains },
+      { brand: contains },
+      { descriptionKa: contains },
+      { descriptionEn: contains },
+    ],
+  };
+}
+
 function buildWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
   const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
 
-  if (filters.q) {
-    // Postgres `LIKE` is case-sensitive, so `mode: "insensitive"` is required
-    // for "anker" to match "Anker". (Georgian is caseless and unaffected.)
-    const contains = { contains: filters.q, mode: "insensitive" } as const;
-
-    and.push({
-      OR: [
-        { nameKa: contains },
-        { nameEn: contains },
-        { brand: contains },
-        { descriptionKa: contains },
-        { descriptionEn: contains },
-      ],
-    });
-  }
+  if (filters.q) and.push(searchPredicate(filters.q));
 
   if (filters.category) and.push({ category: { slug: filters.category } });
   if (filters.brands.length) and.push({ brand: { in: filters.brands } });
