@@ -5,6 +5,7 @@ import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { BrandCube } from "@/components/home/BrandCube";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import {
   ArrowRightIcon,
@@ -129,6 +130,14 @@ export default async function HomePage() {
               products, categories and brands, and nothing here is rounded up
               to look better.
             */}
+            {/* The object sits in the column the grid already left empty,
+                above the figures rather than beside the headline — the words
+                keep the reading position and this keeps the space that was
+                doing nothing. */}
+            <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-start">
+              <BrandCube />
+            </div>
+
             <dl className="lg:col-span-4 lg:col-start-9 lg:self-end">
               {[
                 { value: String(productCount), label: t.home.statProducts },

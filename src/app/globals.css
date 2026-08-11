@@ -1531,3 +1531,141 @@
     margin: 1.5cm;
   }
 }
+
+/* ==========================================================================
+   The hero object — the mark, in three dimensions
+   --------------------------------------------------------------------------
+   Real 3D: a perspective projection with six faces placed in space, composited
+   on the GPU. No canvas, no library, and no JavaScript, which is why it is
+   correct on the server's first paint rather than after hydration.
+   ========================================================================== */
+
+.cube-stage {
+  /* The edge length. Everything below is derived from it, so the object scales
+     by changing one number. */
+  --cube: clamp(7rem, 26vw, 12rem);
+  --cube-half: calc(var(--cube) / 2);
+
+  display: grid;
+  place-items: center;
+  /* Shorter than the cube's diagonal would need, on purpose: the corners pass
+     outside the box as it turns, and the box is what reserves layout space. A
+     square would leave a visible column of nothing beside the headline. */
+  min-height: calc(var(--cube) * 1.6);
+  perspective: 900px;
+}
+
+.cube {
+  position: relative;
+  width: var(--cube);
+  height: var(--cube);
+  transform-style: preserve-3d;
+  /* One full turn every 28 seconds. Slow enough to read as alive rather than
+     as movement, which is the difference between depth and distraction. */
+  animation: cube-turn 28s linear infinite;
+}
+
+.cube-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(var(--cube) * 0.055);
+  padding: calc(var(--cube) * 0.16);
+  /* The field stays dark in both themes, exactly as the flat mark does — a
+     mark that inverts with the theme is two marks rather than one brand. */
+  background: var(--color-panel);
+  border: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.cube-module {
+  background: var(--color-panel-fg);
+}
+
+.cube-module--brand {
+  background: var(--color-brand-solid);
+}
+
+.cube-face[data-face="front"] {
+  transform: translateZ(var(--cube-half));
+}
+.cube-face[data-face="back"] {
+  transform: rotateY(180deg) translateZ(var(--cube-half));
+}
+.cube-face[data-face="right"] {
+  transform: rotateY(90deg) translateZ(var(--cube-half));
+}
+.cube-face[data-face="left"] {
+  transform: rotateY(-90deg) translateZ(var(--cube-half));
+}
+.cube-face[data-face="top"] {
+  transform: rotateX(90deg) translateZ(var(--cube-half));
+}
+.cube-face[data-face="bottom"] {
+  transform: rotateX(-90deg) translateZ(var(--cube-half));
+}
+
+@keyframes cube-turn {
+  from {
+    transform: rotateX(-24deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(-24deg) rotateY(360deg);
+  }
+}
+
+/* Stopped, not hidden. Someone who has asked for less motion still gets the
+   object — held at the angle that shows three faces, which is the one that
+   reads as a cube standing still. */
+@media (prefers-reduced-motion: reduce) {
+  .cube {
+    animation: none;
+    transform: rotateX(-24deg) rotateY(-32deg);
+  }
+}
+
+/* ==========================================================================
+   Turning the lights on and off
+   --------------------------------------------------------------------------
+   Switching themes reassigns several dozen custom properties at once, and the
+   whole page changes in a single frame. That is abrupt in a way that reads as a
+   glitch rather than as a setting.
+
+   It is a *view transition* and not a CSS transition, and the difference is not
+   a matter of taste. Every colour here is `var(--color-…)`, and an unregistered
+   custom property is not animatable: flipping `data-theme` recomputes the
+   dependent `background-color` without starting a transition at all. A first
+   attempt did exactly that — `transition-duration` reported a correct `0.7s` on
+   every element on the page, and listening for `transitionrun` caught that not
+   one of them ever ran.
+
+   A view transition blends a snapshot of the old page into the new one, so it
+   does not care how many variables moved. `ThemeProvider` skips it entirely for
+   reduced motion and where the API is missing.
+   ========================================================================== */
+
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  /* The default cross-fade is 250ms, which is a blink. This is the "slow" the
+     fade was asked for — long enough to read as the lights coming up.
+
+     The `group` is included as well as `old` and `new`. It carries no visible
+     change for a theme switch — nothing moves or resizes — but leaving it at
+     the 250ms default while the two snapshots run for 700ms is one transition
+     described two ways, and the next person to add a transition that *does*
+     move something would inherit the inconsistency. */
+  animation-duration: 700ms;
+  animation-timing-function: ease;
+}
+
+/* Belt and braces: `ThemeProvider` does not start a transition at all under
+   reduced motion, but a stylesheet that disagrees with a component is a bug
+   waiting for one of them to change. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
