@@ -429,6 +429,28 @@ model ShopSettings {
   updatedAt DateTime @updatedAt
 }
 
+/// An uploaded product photo, kept in the database.
+///
+/// Postgres rather than object storage because object storage needs an account
+/// and a token, and this has to work the moment somebody clones the project.
+/// `Product.image` holds a short `/api/images/<id>` URL rather than the bytes,
+/// so the catalogue's list queries — which select `image` for every card — stay
+/// as cheap as they were when it held a path.
+///
+/// Swapping in Vercel Blob later changes only where the upload route writes to;
+/// nothing that reads a product needs to know the difference.
+model ProductImage {
+  id          String   @id @default(cuid())
+  data        Bytes
+  contentType String
+  /// What the file was called when it was chosen, for the dashboard to show.
+  filename    String   @default("")
+  bytes       Int
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 /// A footer information page — about, FAQ, shipping, returns, and so on.
 ///
 /// Bilingual columns rather than a row per language, matching `Category` and

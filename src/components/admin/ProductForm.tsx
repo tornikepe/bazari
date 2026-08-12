@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { saveProduct } from "@/app/actions/admin";
-import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { AlertIcon, SpinnerIcon, UploadIcon } from "@/components/ui/icons";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
 
@@ -45,6 +45,52 @@ export function ProductForm({
 
   // Only for the live preview — the value submitted is the input's own.
   const [image, setImage] = useState(product?.image ?? DEFAULT_IMAGE);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  /**
+   * Sends the chosen file and puts the URL it comes back with into the field.
+   *
+   * The server decides what the file is by reading its bytes, so the messages
+   * below are translations of its refusal rather than a second opinion formed
+   * here — a client-side check would only be a courtesy, and one that disagreed
+   * with the server would be worse than none.
+   */
+  async function upload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    // Cleared straight away so choosing the same file twice fires `change`
+    // again — otherwise a retry after a failure does nothing at all.
+    event.target.value = "";
+    if (!file) return;
+
+    setUploadError(null);
+    setUploading(true);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/images", { method: "POST", body });
+      const data = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
+
+      if (!response.ok || !data.url) {
+        setUploadError(
+          data.error === "too-large"
+            ? t.admin.imageTooLarge
+            : data.error === "not-an-image"
+              ? t.admin.imageNotAnImage
+              : t.admin.imageFailed,
+        );
+        return;
+      }
+
+      setImage(data.url);
+    } catch {
+      setUploadError(t.admin.imageFailed);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -238,16 +284,43 @@ export function ProductForm({
               />
             </div>
 
-            <div className="mt-3">
+            <div className="mt-3 flex flex-col gap-2">
+              {/* Pick a file. The upload happens on choosing it rather than on
+                  saving the product, so the preview above is the real stored
+                  photo and not a local object URL that disappears on reload —
+                  and so a failed upload is reported while the reader is still
+                  looking at the field, not after they press save. */}
+              <label className="btn btn-outline btn-sm w-full cursor-pointer">
+                {uploading ? <SpinnerIcon size={15} /> : <UploadIcon size={15} />}
+                {uploading ? t.admin.imageUploading : t.admin.imageChoose}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  disabled={uploading}
+                  onChange={upload}
+                  className="sr-only"
+                />
+              </label>
+
+              {uploadError && (
+                <p role="alert" className="flex items-center gap-1.5 text-xs text-danger">
+                  <AlertIcon size={13} className="shrink-0" />
+                  {uploadError}
+                </p>
+              )}
+
+              {/* The URL is still here and still the field that is saved. An
+                  upload writes into it; a link pasted by hand works exactly as
+                  it did before. */}
               <input
                 name="image"
-                defaultValue={product?.image ?? DEFAULT_IMAGE}
+                value={image}
                 onChange={(event) => setImage(event.target.value.trim() || DEFAULT_IMAGE)}
                 placeholder={DEFAULT_IMAGE}
-                aria-label={t.admin.image}
+                aria-label={t.admin.imageOrUrl}
                 className="field text-xs"
               />
-              <p className="mt-1 text-xs text-ink-400">{t.admin.imageHint}</p>
+              <p className="text-xs text-ink-400">{t.admin.imageHint}</p>
             </div>
           </section>
 
