@@ -122,6 +122,10 @@ const ka = {
   },
 
   cart: {
+    cartAdded: "{name} დაემატა კალათაში. სულ {count}.",
+    cartRemoved: "{name} ამოღებულია კალათიდან. სულ {count}.",
+    cartQuantity: "{name} — {quantity} ცალი. სულ {count}.",
+    cartCleared: "კალათა დაცარიელდა.",
     title: "შენი კალათა",
     empty: "კალათა ცარიელია",
     emptyHint: "დაამატე პროდუქტები კატალოგიდან და დაბრუნდი აქ.",
@@ -755,6 +759,10 @@ const en: Dictionary = {
   },
 
   cart: {
+    cartAdded: "{name} added to the cart. {count} in total.",
+    cartRemoved: "{name} removed from the cart. {count} in total.",
+    cartQuantity: "{name}, quantity {quantity}. {count} in total.",
+    cartCleared: "The cart is empty.",
     title: "Your cart",
     empty: "Your cart is empty",
     emptyHint: "Add products from the catalog and come back here.",

@@ -57,7 +57,10 @@ export function AddToCartButton({
       type="button"
       onClick={handleClick}
       disabled={soldOut || disabled}
-      aria-live="polite"
+      // No `aria-live` here on purpose. It used to be, and a live region on the
+      // control whose own label is changing announces the label rather than the
+      // event — and only while that button is on screen, so removing an item
+      // from the cart page said nothing. `CartAnnouncer` owns this now.
       className={[
         "btn",
         `btn-${size}`,

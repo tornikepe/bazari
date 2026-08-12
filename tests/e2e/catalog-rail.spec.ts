@@ -69,7 +69,14 @@ test("scrolling the rail does not move the page @engine", async ({ page }) => {
 });
 
 test("the rail never runs off the bottom of the screen @engine", async ({ page }) => {
-  await page.evaluate(() => window.scrollBy(0, 800));
+  // `behavior: "instant"` on purpose, for the reason the test above documents:
+  // `html { scroll-behavior: smooth }` is global, so a plain `scrollBy` starts
+  // an animation and the rail — which is sticky — is still settling for several
+  // frames afterwards. Reading the rectangle immediately catches it mid-flight
+  // and reports a rail hanging past the fold on working code. Chromium happened
+  // to settle inside the gap and WebKit did not, which is how this arrived as a
+  // one-engine flake rather than as the timing bug it is.
+  await page.evaluate(() => window.scrollBy({ top: 800, behavior: "instant" }));
 
   const { bottom, viewport } = await rail(page).evaluate((node) => ({
     bottom: node.getBoundingClientRect().bottom,

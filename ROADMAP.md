@@ -212,8 +212,22 @@ anything a thumb aims at. The site already met the standard. What it did not hav
   verified by disabling each fix and watching three of the four tests go red. `aria-modal="true"`
   on a drawer that lets Tab wander out behind it is a claim, not a behaviour — and it is exactly
   what a test that trusted the markup would have passed
+- ✅ **Live region for the cart.** Adding to a basket is the one action on a shop that changes
+  state without changing the page — the button says what it said and the feedback lives in a
+  header count nowhere near the focus, so a screen reader was told nothing. One region owned by
+  the storefront now says what was added or removed and the running total, by product name
+- ✅ It **derives** what changed by comparing lists rather than being told, because the cart is an
+  external store whose mutations are plain functions. That also catches the changes nobody would
+  have remembered to report — a quantity edited on the cart page, an item removed from the
+  drawer, a cart emptied after checkout
+- ✅ A cart restored from a previous visit is **not** announced. Otherwise every page load greets
+  the reader with a summary of a basket filled yesterday
+- ✅ The `aria-live` on the add-to-cart button is gone. A live region on the control whose own
+  label is changing announces the label rather than the event, and only while that control is on
+  screen — which is why removing an item from the cart page used to be silent
+- ✅ Form errors already announce: the sign-in summary is `role="alert"`, and the field messages
+  are reached through `aria-describedby` with focus moved to the field at fault (§2.4 above)
 - Full keyboard pass on the remaining flows: catalogue → product → cart → checkout → order
-- Live regions for cart updates and form errors, so a screen reader is told what changed
 - `aria-current`, heading order and landmark audit per page
 
 ---
@@ -360,16 +374,41 @@ documentation that is true.
 
 ## 9. What only you can do
 
-Everything else is mine. These four are not, and three of them block work above.
+Everything else is mine. These seven are not — each needs an account, a payment relationship, a
+password, or something from the real world. None of them can be guessed at, and none of them
+should be approximated with invented stand-ins.
 
-| | What | Blocks |
-|---|---|---|
-| **A1** | A sending domain verified in Resend | Every customer email |
-| **A2** | A payment provider application | §4 payment |
-| **A3** | Real product photos | §4 images. The *upload* no longer waits on anything — a Blob token would only move the bytes out of Postgres, which is a scaling question rather than a blocker. What is still missing is photographs of real products. |
-| **A4** | Real business details, when you have a business | §1.1 contact settings |
+Ordered by how much each unblocks.
 
-None of Phase 1, 2, 3 or 5 waits on any of them.
+| | What | Why it is yours | Blocks |
+|---|---|---|---|
+| **A1** | **`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`** | Creating an OAuth client means signing in to Google's own console as you, and the secret is a secret | Google sign-in. The flow is **written and tested**; the button is deliberately not rendered while the variables are empty, because a button that fails after a round trip to Google is worse than no button |
+| **A2** | **Check `AUTH_SECRET` on Vercel** | Only you can read your project's environment | Nothing — but with the old placeholder value, session cookies can be **forged**. Local is fine; production was never checked |
+| **A3** | A sending domain verified in **Resend** | Domain ownership | Every customer email — verification codes, password resets, order confirmations |
+| **A4** | A **payment provider** application | A business relationship, and it takes weeks | §4 payment. Worth starting long before it is needed |
+| **A5** | **Real product photographs** | Nobody can invent a photo of a product that exists | §4 images. Uploading now works with nothing configured — a Blob token would only move the bytes out of Postgres, which is a scaling question, not a blocker |
+| **A6** | **Real business details** — address, phone, hours, tax ID | They are facts about a business | §1.1 contact settings, which stay empty on purpose rather than showing something invented |
+| **A7** | A full **Xcode** install, then `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` | It needs your password | §2.3's notch work. `env(safe-area-inset-*)` cannot be emulated in Playwright, so it stays device-gated rather than shipped blind |
+
+### The two that cost nothing and unblock the most
+
+```bash
+# A1 — after registering the client at console.cloud.google.com/apis/credentials
+#      with these redirect URIs, character for character:
+#        http://localhost:3000/api/auth/google/callback
+#        https://bazari-git-main-tornikepes-projects.vercel.app/api/auth/google/callback
+GOOGLE_CLIENT_ID="…"
+GOOGLE_CLIENT_SECRET="…"
+```
+
+```bash
+# A2 — if Vercel's AUTH_SECRET is "dev-only-change-me-to-a-long-random-string",
+#      replace it. Everyone gets signed out, which is the correct outcome.
+npm run setup:credentials -- --force   # locally; set the Vercel one by hand
+```
+
+**Nothing in Phase 2, 3 or 5 waits on any of these.** A1 and A2 are the only ones that unblock
+something today.
 
 ---
 

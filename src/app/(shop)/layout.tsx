@@ -1,5 +1,6 @@
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { CartAnnouncer } from "@/components/cart/CartAnnouncer";
 import { Header } from "@/components/layout/Header";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { isChatConfigured } from "@/lib/chat/providers";
@@ -9,6 +10,10 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <SkipLink />
+      {/* One live region for the whole storefront. It has to outlive any single
+          page, because a cart change on the product page and a removal on the
+          cart page are the same event to somebody listening. */}
+      <CartAnnouncer />
       <Header />
       {/* `tabIndex={-1}` so the skip link can actually move focus here: an
           element without it is a scroll target but not a focus target, and the

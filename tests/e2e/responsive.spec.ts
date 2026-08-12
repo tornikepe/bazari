@@ -13,6 +13,14 @@ const PAGES = ["/", "/catalog", "/product/ugreen-usb-c-hub-9in1", "/cart", "/che
  */
 for (const width of [320, 360, 390]) {
   test(`nothing spills out of its container at ${width}px @engine`, async ({ page }) => {
+    // Twenty navigations — ten pages in two languages — and every one of them
+    // queries a database ~150ms away. That fits the default budget on a good
+    // run and sits close enough to it that a slow minute anywhere tips one of
+    // these over, which is how this arrived as a failure that moved to a
+    // different width each time. `slow` triples the allowance rather than
+    // pretending the work is quicker than it is.
+    test.slow();
+
     const findings: string[] = [];
 
     for (const locale of ["ka", "en"] as const) {
@@ -84,6 +92,10 @@ for (const [width, height, name] of [
   [844, 390, "a current phone"],
 ] as const) {
   test(`the storefront works on ${name} in landscape @engine`, async ({ page }) => {
+    // Thirty-two navigations: the same ten pages, two languages, and both
+    // orientations of the check. Same reasoning as the width sweep above.
+    test.slow();
+
     await page.setViewportSize({ width, height });
 
     for (const locale of ["ka", "en"] as const) {
