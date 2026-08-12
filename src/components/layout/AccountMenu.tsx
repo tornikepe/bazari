@@ -8,10 +8,8 @@ import { logout } from "@/app/actions/auth";
 import { Popover } from "@/components/ui/Overlay";
 import { isStaff, type Role } from "@/lib/auth-roles";
 import {
-  BagIcon,
   DashboardIcon,
   LogoutIcon,
-  PackageIcon,
   UserIcon,
 } from "@/components/ui/icons";
 
@@ -69,13 +67,17 @@ export function AccountMenu({ user }: { user: MenuUser }) {
     );
   }
 
+  /**
+   * One destination for a customer, not three.
+   *
+   * "My orders" and "Settings" were both anchors into `/account` — the same
+   * page the first entry already opens. A menu whose three items lead to one
+   * place asks the reader to choose between things that are not choices, and
+   * the page's own headings do that job better once they are on it.
+   */
   const links = isStaff(user.role)
     ? [{ href: "/dashboard", label: t.admin.dashboard, icon: DashboardIcon }]
-    : [
-        { href: "/account", label: t.account.title, icon: UserIcon },
-        { href: "/account#orders", label: t.account.myOrders, icon: PackageIcon },
-        { href: "/account#profile", label: t.account.settings, icon: BagIcon },
-      ];
+    : [{ href: "/account", label: t.account.title, icon: UserIcon }];
 
   return (
     <div ref={containerRef} className="relative">

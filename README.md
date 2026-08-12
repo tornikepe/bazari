@@ -39,7 +39,7 @@
 - [Design system](#design-system)
 - [Testing](#testing)
 - [Deploying](#deploying)
-- [The storefront](#the-storefront) — the 3D hero, search suggestions, the theme fade
+- [The storefront](#the-storefront) — the 3D hero, search suggestions, photo uploads, the theme fade
 - [Configuring the shop](#configuring-the-shop) — using this for a different business
 - [Moving to another Postgres](#moving-to-another-postgres)
 - [Commit attribution](#commit-attribution)
@@ -312,11 +312,16 @@ than no button, so the app checks before drawing one.
 1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials).
 2. Create a project if you have none.
 3. **Create Credentials → OAuth client ID**, application type **Web application**.
-4. Under *Authorised redirect URIs* add these exactly, including the scheme:
+4. Under *Authorised redirect URIs* add these exactly, including the scheme. Google matches them
+   character for character — a missing `http://`, a trailing slash or the wrong port is the usual
+   cause of `redirect_uri_mismatch`:
    ```
    http://localhost:3000/api/auth/google/callback
-   https://your-domain.com/api/auth/google/callback
+   https://bazari-git-main-tornikepes-projects.vercel.app/api/auth/google/callback
    ```
+   The second is this deployment's own URL. If you later put a domain in front of it, add that
+   one too — and set `NEXT_PUBLIC_SITE_URL` to it, because the callback URL the app sends is
+   built from that variable.
 5. Copy the client ID and secret into `.env`:
    ```bash
    GOOGLE_CLIENT_ID="..."
@@ -593,6 +598,29 @@ It is a real combobox. Arrow keys move the highlight, Enter opens the highlighte
 with nothing highlighted submits the search as before, and Escape closes the list while **keeping
 what was typed** — `<input type="search">` clears itself on Escape in Chrome, so the default is
 taken over while the list is open and only then, leaving a second Escape to clear the field.
+
+### Uploading a product photo
+
+**Dashboard → Products → New** takes a file. The upload happens when the file is chosen rather
+than when the product is saved, so the preview is the photo that is actually stored and a refusal
+arrives while you are still looking at the field.
+
+The bytes go into Postgres, not into object storage. Object storage is the usual answer and it
+needs an account and a token before a single photo can be uploaded; this works on a fresh clone
+with nothing configured. `Product.image` holds a short `/api/images/<id>` URL rather than the
+bytes, so the catalogue's list queries — which select `image` for every card — carry a path and
+not a megabyte. Moving to Vercel Blob later changes only where the upload route writes; nothing
+that reads a product would know the difference.
+
+**What a file is, is decided by reading it.** The `type` a browser sends with an upload is a
+claim from the client, and a route that stores whatever was declared and serves it back with that
+`Content-Type` is how a stored cross-site scripting bug gets built. So the format is sniffed from
+the leading bytes and the declaration is discarded — JPEG, PNG, WebP or AVIF, up to 2 MB, and
+anything else is refused. A WAV is not mistaken for a WebP and an MP4 is not mistaken for an AVIF,
+because both share their first four bytes with the format they are not. There are tests for each.
+
+The URL field is still there and still what gets saved, so pasting a link works exactly as it
+did.
 
 ### The theme fades
 
