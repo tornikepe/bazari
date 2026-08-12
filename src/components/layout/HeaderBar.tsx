@@ -14,6 +14,7 @@ import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { Overlay } from "@/components/ui/Overlay";
 import { SearchSuggestions } from "@/components/layout/SearchSuggestions";
+import { isCurrentPage } from "@/lib/current-page";
 import { useOverlay } from "@/lib/use-overlay";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { logout } from "@/app/actions/auth";
@@ -300,11 +301,17 @@ export function HeaderBar({
                 {t.nav.categories}
               </p>
               <ul className="mb-5 flex flex-col gap-0.5">
-                {categories.map((category) => (
+                {categories.map((category) => {
+                  const href = `/catalog?category=${category.slug}`;
+                  const current = isCurrentPage(href, pathname, searchParams.toString());
+                  return (
                   <li key={category.slug}>
                     <Link
-                      href={`/catalog?category=${category.slug}`}
-                      className="flex items-center gap-2.5 rounded-control px-2.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100"
+                      href={href}
+                      aria-current={current ? "page" : undefined}
+                      className={`flex items-center gap-2.5 rounded-control px-2.5 py-2.5 text-sm font-medium transition-colors hover:bg-ink-100 ${
+                        current ? "bg-ink-100 text-ink-900" : "text-ink-700"
+                      }`}
                     >
                       <span className="text-base" aria-hidden="true">
                         {category.icon}
@@ -312,22 +319,29 @@ export function HeaderBar({
                       {categoryName(category)}
                     </Link>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
 
               <div className="h-px bg-line" />
 
               <ul className="mt-4 flex flex-col gap-0.5">
-                {navLinks.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="block rounded-control px-2.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                {navLinks.map((link) => {
+                  const current = isCurrentPage(link.href, pathname, searchParams.toString());
+                  return (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        aria-current={current ? "page" : undefined}
+                        className={`block rounded-control px-2.5 py-2.5 text-sm font-medium transition-colors hover:bg-ink-100 ${
+                          current ? "bg-ink-100 text-ink-900" : "text-ink-700"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  );
+                })}
                 <li>
                   <Link
                     href={accountHref}

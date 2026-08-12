@@ -19,7 +19,12 @@ export function AuthCard({
   const settings = useSettings();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
+    // `<main>`, not a `<div>`. The auth pages sit outside the storefront layout
+    // and so had no landmarks at all — a screen reader arriving at the sign-in
+    // page found one anonymous blob with nothing to jump between. They keep no
+    // header or footer on purpose, because the point of the page is one card
+    // and nothing else, but every page needs somewhere to land.
+    <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
       <div className="w-full max-w-sm animate-rise">
         <Link href="/" className="mb-6 flex items-center justify-center gap-2.5">
           <LogoMark size={40} />
@@ -40,6 +45,6 @@ export function AuthCard({
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

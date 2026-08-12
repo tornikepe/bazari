@@ -227,8 +227,20 @@ anything a thumb aims at. The site already met the standard. What it did not hav
   screen — which is why removing an item from the cart page used to be silent
 - ✅ Form errors already announce: the sign-in summary is `role="alert"`, and the field messages
   are reached through `aria-describedby` with focus moved to the field at fault (§2.4 above)
+- ✅ **`aria-current`, heading order and landmarks are a test** (`tests/e2e/document-structure.spec.ts`)
+  rather than an intention. It checks one `h1` per page, no skipped heading levels, the three
+  landmarks, that a second `<nav>` on a page has a name, and that the link to the page you are
+  already on says so. Headings and nav naming were already clean; two things were not
+- ✅ **The sign-in and sign-up pages had no landmarks at all.** They sit outside the storefront
+  layout, so a screen reader arriving there found one anonymous blob with nothing to jump between.
+  They now have a `<main>` — and deliberately still no header or footer, which the test encodes
+  as a rule rather than leaving as an accident
+- ✅ **Nothing marked the current page.** The footer is the storefront's only navigation on a wide
+  screen, so that is where "you are here" had to be said; the menu drawer says it too. The rule
+  lives in one function with eleven unit tests, because it is less obvious than it looks:
+  `/catalog` and `/catalog?sale=1` share a path, and marking both — or marking plain "Catalogue"
+  while a filter is applied — is worse than marking neither
 - Full keyboard pass on the remaining flows: catalogue → product → cart → checkout → order
-- `aria-current`, heading order and landmark audit per page
 
 ---
 
