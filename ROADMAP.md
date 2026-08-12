@@ -23,7 +23,7 @@ horizontal overflow, tap-target size, accessible names and image alt text.
 | Controls with no accessible name | **0** | ✅ **Corrected.** The "3" came from a check that never looked up `label[for]`. |
 | Controls under 44×44 (comfort, not conformance) | **388 → 141** | ⚪ Improved anyway — see §2.1. |
 
-Plus what the existing suite already guarantees: 298 unit + 106 e2e tests, no layout shift between
+Plus what the existing suite already guarantees: 308 unit + 187 e2e tests across two engines, no layout shift between
 Georgian and English, WCAG AA contrast in both themes computed from real token values,
 authorization boundaries proven by replaying captured requests.
 
@@ -253,7 +253,7 @@ Ordered by how badly a business would miss it.
 
 | Priority | Item | Why |
 |---|---|---|
-| 🔴 | **Product images** | Every product shares one placeholder. Upload, gallery, ordering, alt text per language, AVIF/WebP. *Needs a Blob token from you.* |
+| 🟡 | **Product images** | ✅ **Upload works, and needs nothing from you.** A file picker in the product form, stored in Postgres behind `/api/images/<id>`, with the format decided by sniffing the bytes rather than trusting the browser's declared type — JPEG, PNG, WebP or AVIF, 2 MB. Still to do: a gallery rather than one photo, ordering, alt text per language, and generated sizes. A Blob token would move the bytes out of the database; it is no longer what unblocks uploading. |
 | 🔴 | **Payment** | The adapter interface is written and tested; nothing implements it. *Needs a provider from you.* |
 | 🔴 | **Settings** | Section 1 |
 | 🟠 | **Coupon management** | The `Coupon` table and validation exist and work — there is no dashboard page to create one |
@@ -366,7 +366,7 @@ Everything else is mine. These four are not, and three of them block work above.
 |---|---|---|
 | **A1** | A sending domain verified in Resend | Every customer email |
 | **A2** | A payment provider application | §4 payment |
-| **A3** | Product photos + a Vercel Blob token | §4 images — the largest visible improvement available |
+| **A3** | Real product photos | §4 images. The *upload* no longer waits on anything — a Blob token would only move the bytes out of Postgres, which is a scaling question rather than a blocker. What is still missing is photographs of real products. |
 | **A4** | Real business details, when you have a business | §1.1 contact settings |
 
 None of Phase 1, 2, 3 or 5 waits on any of them.
