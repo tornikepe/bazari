@@ -64,6 +64,14 @@ async function sweep(page: import("@playwright/test").Page, path: string) {
       for (const el of document.querySelectorAll(SELECTOR)) {
         const style = getComputedStyle(el);
         if (style.display === "none" || style.visibility === "hidden") continue;
+
+        // Visually hidden until focused — the skip links. They measure 1x1
+        // while clipped, which is not a target anyone can point at; the size
+        // that matters is the one they take when focused, and that is 44px.
+        // Measuring the hidden state instead reports a fault that cannot be
+        // fixed without making the link permanently visible.
+        if (style.clipPath === "inset(50%)" || style.clip === "rect(0px, 0px, 0px, 0px)") continue;
+
         const r = el.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) continue;
         visible.push({ el, r });

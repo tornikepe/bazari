@@ -19,10 +19,17 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
 
   // The server can't know the cart, so render a stable skeleton until the
   // client has read localStorage.
+  //
+  // The title is real rather than a grey bar: it is a fixed string the server
+  // knows perfectly well, and without it this page had *no* `h1` at all before
+  // hydration — no title for a screen reader, and none ever for a reader
+  // without JavaScript. `document-structure.spec.ts` found it on a machine
+  // slow enough to look before React ran.
   if (!hydrated) {
     return (
       <div className="page-container py-10">
-        <div className="h-8 w-48 animate-pulse rounded-control bg-ink-100" />
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">{t.cart.title}</h1>
+        <div className="mt-6" />
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
           <div className="flex flex-col gap-3">
             {[0, 1, 2].map((index) => (
@@ -37,13 +44,14 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
 
   if (items.length === 0) {
     return (
-      <div className="page-container py-16">
+      <div className="page-container py-10">
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">{t.cart.title}</h1>
+
         <EmptyState
-          className="card mx-auto max-w-md"
+          className="card mx-auto mt-6 max-w-md"
           art={<EmptyCartArt size={96} />}
           title={t.cart.empty}
           text={t.cart.emptyHint}
-          titleAs="h1"
           action={
             <Link href="/catalog" className="btn btn-primary btn-md">
               {t.cart.continueShopping}

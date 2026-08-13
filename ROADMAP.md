@@ -235,6 +235,16 @@ anything a thumb aims at. The site already met the standard. What it did not hav
   layout, so a screen reader arriving there found one anonymous blob with nothing to jump between.
   They now have a `<main>` — and deliberately still no header or footer, which the test encodes
   as a rule rather than leaving as an accident
+- ✅ **The cart page had no `h1` until JavaScript ran** — none at all for a screen reader
+  arriving early, and none ever without JavaScript, because the stand-in shown while the cart is
+  read out of `localStorage` was a grey bar where the title should be. The title is a fixed
+  string the server knows; it is now printed. Found by `document-structure.spec.ts` on a CI
+  machine slow enough to look before React did, which is the entire argument for running the
+  suite somewhere other than the machine that wrote it
+- ✅ **A clipped skip link is not a pointing target.** The target-size audit measured both skip
+  links at 1×1 — the size they are while hidden — and reported a fault that could only be
+  "fixed" by making them permanently visible. It now skips the visually-hidden-until-focused
+  pattern, where the size that matters is the 44px they take when focused
 - ✅ **Nothing marked the current page.** The footer is the storefront's only navigation on a wide
   screen, so that is where "you are here" had to be said; the menu drawer says it too. The rule
   lives in one function with eleven unit tests, because it is less obvious than it looks:
