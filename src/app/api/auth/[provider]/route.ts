@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authorizeUrl, getProvider, isProviderId, randomToken } from "@/lib/oauth";
 import { consume, clientIp } from "@/lib/rate-limit";
+import { secureCookiesFor } from "@/lib/cookie-security";
 
 /**
  * Starts a social sign-in: mints the CSRF state and the PKCE verifier, parks
@@ -48,7 +49,7 @@ export async function GET(
   const options = {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookiesFor(request),
     path: "/",
     maxAge: FLOW_MAX_AGE,
   };

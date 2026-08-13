@@ -14,6 +14,7 @@ import { parseMessages, type ClientMessage } from "@/lib/chat/messages";
 import { clientIp, consume } from "@/lib/rate-limit";
 import { getLocale } from "@/lib/locale";
 import type { Locale } from "@/lib/i18n";
+import { secureCookiesFor } from "@/lib/cookie-security";
 
 /**
  * The contact assistant.
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
     headers.append(
       "Set-Cookie",
       `${SESSION_COOKIE}=${sessionId}; Path=/; Max-Age=${SESSION_MAX_AGE}; HttpOnly; SameSite=Lax${
-        process.env.NODE_ENV === "production" ? "; Secure" : ""
+        secureCookiesFor(request) ? "; Secure" : ""
       }`,
     );
   }

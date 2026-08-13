@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { secureCookies } from "@/lib/cookie-security";
 
 /**
  * Who is allowed to see a guest order's full details.
@@ -62,7 +63,7 @@ export async function rememberReceipt(orderNumber: string) {
   (await cookies()).set(RECEIPT_COOKIE, `${payload}.${sign(payload)}`, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await secureCookies(),
     path: "/",
     maxAge: RECEIPT_MAX_AGE,
   });

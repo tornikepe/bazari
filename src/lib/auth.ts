@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { secureCookies } from "@/lib/cookie-security";
 import { prisma } from "@/lib/prisma";
 import { isStaff, type Role } from "@/lib/auth-roles";
 
@@ -65,7 +66,7 @@ export async function createSession(userId: string, sessionVersion = 0) {
   store.set(SESSION_COOKIE, `${payload}.${sign(payload)}`, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await secureCookies(),
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });

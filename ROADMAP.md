@@ -181,6 +181,16 @@ anything a thumb aims at. The site already met the standard. What it did not hav
   on "Use keyboard navigation to move focus between controls". Measured — in WebKit, Tab on the
   home page cycles between the body and one text input. A focus trap keyed on Tab has nothing to
   trap there
+- ✅ **The session cookie was `Secure` on a plain-http response**, and so was thrown away by the
+  browser the moment it was set. `NODE_ENV === "production"` was the rule, which is true of a
+  production *build* served over http — `next start`, and the whole end-to-end suite. Chromium
+  hides it by treating loopback as a trustworthy origin; **WebKit does not**, so signing in
+  worked and the very next request arrived back at the sign-in page. The same shape as the
+  `upgrade-insecure-requests` fault above: the lenient engine is the one most people develop in
+- ✅ The replacement can only ever **remove** `Secure` from a request that is demonstrably plain
+  http — a proxy that says so, or no proxy and a loopback host. A deployment whose proxy sets no
+  headers keeps it. Eight unit tests, most of them about that direction, because losing the flag
+  on a real deployment is the expensive mistake and passing a test is not worth it
 - ⛔ **`env(safe-area-inset-*)` — needs a real device, and is currently inert.** `.buy-bar`
   already pads for the home indicator, but that padding resolves to `0` on iOS because the
   viewport never opts in with `viewport-fit=cover`. Turning it on extends the page under the
