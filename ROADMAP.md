@@ -194,7 +194,7 @@ anything a thumb aims at. The site already met the standard. What it did not hav
 - Keyboard-open behaviour on mobile: the checkout form must not hide the field being typed into
 - Reduced motion, forced colours (Windows high contrast), and 200% browser zoom
 
-### 2.4 — Keyboard and screen reader 🔵 **in progress**
+### 2.4 — Keyboard and screen reader ✅ **done**
 
 - ✅ **Skip-to-content link** — the first tab stop, hidden until focused and visible the moment
   it is. Without it, reaching the page by keyboard meant tabbing the logo, the search field, its
@@ -240,7 +240,24 @@ anything a thumb aims at. The site already met the standard. What it did not hav
   lives in one function with eleven unit tests, because it is less obvious than it looks:
   `/catalog` and `/catalog?sale=1` share a path, and marking both — or marking plain "Catalogue"
   while a filter is applied — is worse than marking neither
-- Full keyboard pass on the remaining flows: catalogue → product → cart → checkout → order
+- ✅ **The whole purchase was made without a mouse** (`tests/e2e/keyboard-purchase.spec.ts`),
+  Tab and Enter only, never `click()`: catalogue → product → cart → checkout → order placed. Every
+  step already had a test, and all of them clicked — clicking proves the handler works and proves
+  nothing about whether the control can be *reached*. The quantity controls, and the way back out
+  of each page with Shift+Tab, are checked the same way
+- ✅ **A way past the filters.** The walk found the one real fault: the first product on `/catalog`
+  stood **64 tab presses** away, because the filter rail — a checkbox per category, a checkbox per
+  brand, the price range — sits between the top of the page and the results, on every catalogue
+  page and every page of results. That is the repeated block WCAG 2.4.1 exists for. A second
+  hidden-until-focused link, first inside `<main>`, brings it to **four keys**: skip to content,
+  Enter, skip the filters, Enter
+- ✅ The link **moves focus**, not just the scroll position — `id` and `tabIndex={-1}` on the
+  results, the same lesson as `<main>`. The test asserts where focus landed rather than what
+  scrolled, and asserts the *counts*: reachable in sixty presses is not reachable in any sense a
+  person would recognise
+- ✅ It sits **in the flow** rather than pinned to a corner like the header's. Pinned was written
+  first, and screenshotting it showed nothing: `<main>` carries a filling animation, so it has a
+  stacking context, and inside one a `z-index` of 100 still paints under the sticky header
 
 ---
 

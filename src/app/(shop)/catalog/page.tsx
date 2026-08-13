@@ -32,6 +32,29 @@ export default async function CatalogPage({
 
   return (
     <div className="page-container py-6 lg:py-8">
+      {/* A way past the filters.
+          The rail is 63 tab stops deep — a checkbox per category, per brand,
+          plus the price range — and all of it sits between the top of the page
+          and the first product. Reaching the thing you came for took 64 tab
+          presses, on every catalogue page. That is the repeated block WCAG
+          2.4.1 is about, and this is the mechanism it asks for.
+
+          First inside <main>, ahead of the breadcrumb, so that the reader who
+          takes "skip to content" from the header lands one Tab away from it.
+          Hidden until focused, like that one, and for the same reason: a
+          control nobody can see is not a control.
+
+          In the flow rather than pinned to a corner like the header's. Pinned
+          was tried first and is invisible here: `main` carries a filling
+          animation, which gives it a stacking context, and inside one a
+          `z-index` of 100 still paints under the sticky header. */}
+      <a
+        href="#results"
+        className="sr-only focus:not-sr-only focus:mb-3 focus:inline-flex focus:min-h-11 focus:items-center focus:border focus:border-line focus:bg-surface focus:px-4 focus:text-sm focus:font-semibold focus:text-ink-900"
+      >
+        {t.catalog.skipFilters}
+      </a>
+
       {/* breadcrumb + title */}
       <Breadcrumb
         className="mb-2"
@@ -70,7 +93,10 @@ export default async function CatalogPage({
         </aside>
 
         {/* ------------------------------ results --------------------------- */}
-        <section className="min-w-0 flex-1">
+        {/* `tabIndex={-1}`, or the skip link scrolls here and leaves focus
+            behind in the rail — and the next Tab carries on through the
+            filters as though nothing had happened. */}
+        <section id="results" tabIndex={-1} className="min-w-0 flex-1">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-ink-500">
               {fill(t.catalog.resultsCount, { count: total })}

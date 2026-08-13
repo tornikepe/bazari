@@ -75,6 +75,7 @@ const ka = {
   catalog: {
     title: "კატალოგი",
     filters: "ფილტრები",
+    skipFilters: "ფილტრების გამოტოვება",
     category: "კატეგორია",
     allCategories: "ყველა კატეგორია",
     price: "ფასი",
@@ -712,6 +713,7 @@ const en: Dictionary = {
   catalog: {
     title: "Catalog",
     filters: "Filters",
+    skipFilters: "Skip the filters",
     category: "Category",
     allCategories: "All categories",
     price: "Price",
