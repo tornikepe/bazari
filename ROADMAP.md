@@ -281,11 +281,17 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
 - ✅ The action now **matches what is actually wrong**. Offering "new product" to an admin whose
   search found nothing answers a question they did not ask; a filtered empty state offers to
   reset the filters, and only a genuinely empty table offers to add the first row
-- ✅ **Loading states.** Skeletons existed for the product grid and nowhere else, so the product
-  page, the order page, the account page and every dashboard table went from blank to full in one
-  step. Four `loading.tsx` files now stand in, built from three primitives — a block, a run of
-  lines, a table — assembled *next to the page they stand in for*, because a skeleton whose boxes
-  do not match the real ones causes the jump it exists to prevent
+- ✅ **Loading states.** Skeletons existed for the product grid and nowhere else, so the account
+  page and every dashboard table went from blank to full in one step. `loading.tsx` files now
+  stand in, built from three primitives — a block, a run of lines, a table — assembled *next to
+  the page they stand in for*, because a skeleton whose boxes do not match the real ones causes
+  the jump it exists to prevent
+- ⛔ **Not on the product or order pages, and that is deliberate.** A loading boundary starts the
+  response streaming, and once the headers are sent the status can no longer change — so
+  `notFound()` renders the 404 page under a **200**. Both were written, both were caught by
+  `storefront.spec.ts`, and both were removed: a soft 404 on the most-linked page on the site is
+  a worse fault than a moment of blank. The dashboard keeps its skeleton over the same hazard on
+  purpose — it is behind a sign-in and `noindex`, so nothing reads that status code
 - ✅ One `loading.tsx` for the **whole dashboard panel** rather than four: products, orders,
   customers and categories are the same page with different columns, and four near-identical
   files would have drifted the way the seven empty states did
@@ -295,15 +301,33 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
   wishlist deliberately have none: both live in `localStorage`, so there is no server wait to
   cover, and the wishlist already shows the product-grid skeleton while it reads storage
 - **Error states.** A failed action mostly produces a red sentence; it should say what to do next
-- **Product page.** The weakest page on the site — no gallery, no specification table worth the
-  name, no cross-sell beyond "related"
+- ✅ **Product page: a real gallery.** `Product.images` holds the extra photos, the admin form
+  uploads and removes them, and the page shows a thumbnail strip — but only when there is more
+  than one, because a strip under a single photo is a control for a gallery that does not exist.
+  Most of the seeded catalogue is in exactly that state
+- ✅ Built as **tabs, not a row of buttons**, for the tab order: seven photos as seven buttons is
+  seven stops between the price and the buy button. The strip is one stop, with arrow keys inside
+  it, Home/End, and wrapping at both ends
+- ✅ **Tested with photos it uploads itself.** Nothing in the seed has a second photo, so a test
+  that merely looked at a product page would pass against a gallery that never renders. It posts
+  two pictures through the admin form, checks the storefront, and takes them away again — which
+  also proves the two halves agree: the form writes a list, the page reads one
+- ✅ The structured data now lists **every** photo, and the list is deduplicated: the same photo
+  twice is never what anyone meant
+- **Specification table.** The `Details` box is brand, category, SKU and shipping — four facts the
+  page already shows elsewhere. Real specifications need a place to put them
+- **Cross-sell** is still "related" and nothing else
+- **Removing a photo leaves its bytes behind.** Taking a picture off a product removes the URL
+  from the list; the row in `ProductImage` stays. Nothing reads it and nothing deletes it, so
+  uploads accumulate. Found by running the gallery test fifteen times and counting the rows
 - **Density on the dashboard.** Tables are readable but plain; column sorting, saved views, bulk
   actions and inline editing are all missing
 - **The 404 and error pages** are functional and unloved
 
 ### 3.2 — Craft
 
-- A proper icon for empty states and errors rather than a grey circle
+- ✅ A proper icon for empty states and errors rather than a grey circle — seven of them,
+  one family, in `illustrations.tsx` (§3.1)
 - Micro-interactions on add-to-cart, quantity change and status change — the site animates panels
   well and value changes not at all
 - Print stylesheet for the order/invoice page, which a shop actually uses

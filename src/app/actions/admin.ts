@@ -8,6 +8,7 @@ import { getLocale } from "@/lib/locale";
 import { slugify } from "@/lib/format";
 import { generateSku } from "@/lib/sku";
 import { isOrderStatus } from "@/lib/order-status";
+import { MAX_GALLERY } from "@/lib/image-upload";
 import type { Prisma } from "@/generated/prisma/client";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
@@ -131,6 +132,13 @@ async function readProductForm(
       costPrice: Math.max(0, tetri(formData, "costPrice")),
       lowStockAt: Math.max(0, Math.floor(number(formData, "lowStockAt", 10))),
       image: text(formData, "image") || DEFAULT_IMAGE,
+      /* The extra photos, cleaned here rather than trusted from the form: a
+         blank field posts an empty string, and a photo repeated in the list
+         would give the gallery two identical thumbnails. Capped so a broken
+         client cannot write an unbounded array. */
+      images: [...new Set(formData.getAll("images").map((value) => String(value).trim()))]
+        .filter((url) => url.length > 0 && url !== text(formData, "image"))
+        .slice(0, MAX_GALLERY),
       brand: text(formData, "brand"),
       shippingDays: Math.max(1, Math.floor(number(formData, "shippingDays", 14))),
       isFeatured: checkbox(formData, "isFeatured"),

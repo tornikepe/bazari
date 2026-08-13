@@ -111,6 +111,10 @@ model Product {
   /// Alert threshold — below this the dashboard flags the product.
   lowStockAt    Int         @default(10)
   image         String      @default("/products/placeholder.svg")
+  /// Extra photos, in the order they are shown. `image` stays the first one —
+  /// the card, the search result, the order line and the Open Graph tag all
+  /// want exactly one photo, and only the product page wants the rest.
+  images        String[]    @default([])
   brand         String      @default("")
   shippingDays  Int         @default(14)
   isFeatured    Boolean     @default(false)

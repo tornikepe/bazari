@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { fill } from "@/lib/i18n";
 import { saveProduct } from "@/app/actions/admin";
-import { AlertIcon, SpinnerIcon, UploadIcon } from "@/components/ui/icons";
+import { MAX_GALLERY } from "@/lib/image-upload";
+import { AlertIcon, CloseIcon, PlusIcon, SpinnerIcon, UploadIcon } from "@/components/ui/icons";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
 
@@ -24,6 +26,7 @@ export type ProductFormValues = {
   oldPrice: number | null;
   stock: number;
   image: string;
+  images: string[];
   brand: string;
   shippingDays: number;
   isFeatured: boolean;
@@ -45,6 +48,7 @@ export function ProductForm({
 
   // Only for the live preview — the value submitted is the input's own.
   const [image, setImage] = useState(product?.image ?? DEFAULT_IMAGE);
+  const [gallery, setGallery] = useState<string[]>(product?.images ?? []);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -56,7 +60,7 @@ export function ProductForm({
    * here — a client-side check would only be a courtesy, and one that disagreed
    * with the server would be worse than none.
    */
-  async function upload(event: React.ChangeEvent<HTMLInputElement>) {
+  async function upload(event: React.ChangeEvent<HTMLInputElement>, into: "main" | "gallery") {
     const file = event.target.files?.[0];
     // Cleared straight away so choosing the same file twice fires `change`
     // again — otherwise a retry after a failure does nothing at all.
@@ -84,7 +88,8 @@ export function ProductForm({
         return;
       }
 
-      setImage(data.url);
+      if (into === "main") setImage(data.url);
+      else setGallery((current) => (current.includes(data.url!) ? current : [...current, data.url!]));
     } catch {
       setUploadError(t.admin.imageFailed);
     } finally {
@@ -297,7 +302,7 @@ export function ProductForm({
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/avif"
                   disabled={uploading}
-                  onChange={upload}
+                  onChange={(event) => upload(event, "main")}
                   className="sr-only"
                 />
               </label>
@@ -322,6 +327,52 @@ export function ProductForm({
               />
               <p className="text-xs text-ink-400">{t.admin.imageHint}</p>
             </div>
+
+            {/* ------------------------- more photos ------------------------ */}
+            <h3 className="mt-5 border-t border-line pt-4 text-sm font-bold text-ink-900">
+              {t.admin.gallery}
+            </h3>
+            <p className="mt-1 text-xs text-ink-400">{t.admin.galleryHint}</p>
+
+            {gallery.length > 0 && (
+              <ul className="mt-3 grid grid-cols-4 gap-2">
+                {gallery.map((url, index) => (
+                  <li key={url} className="relative">
+                    <div className="relative aspect-square overflow-hidden border border-line bg-ink-50">
+                      <Image src={url} alt="" fill sizes="64px" className="object-cover" />
+                    </div>
+
+                    {/* Named by position, because "remove" seven times over is
+                        the same button seven times to a screen reader. */}
+                    <button
+                      type="button"
+                      onClick={() => setGallery((current) => current.filter((item) => item !== url))}
+                      aria-label={fill(t.admin.galleryRemove, { index: index + 1 })}
+                      className="absolute -top-2 -right-2 grid h-7 w-7 place-items-center border border-line bg-surface text-ink-500 hover:text-danger"
+                    >
+                      <CloseIcon size={14} />
+                    </button>
+
+                    {/* The value that is actually posted. */}
+                    <input type="hidden" name="images" value={url} />
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {gallery.length < MAX_GALLERY && (
+              <label className="btn btn-outline btn-sm mt-3 w-full cursor-pointer">
+                {uploading ? <SpinnerIcon size={15} /> : <PlusIcon size={15} />}
+                {t.admin.galleryAdd}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  disabled={uploading}
+                  onChange={(event) => upload(event, "gallery")}
+                  className="sr-only"
+                />
+              </label>
+            )}
           </section>
 
           <section className="card p-5">

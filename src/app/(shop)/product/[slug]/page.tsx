@@ -15,6 +15,7 @@ import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, TruckIcon } from "@/comp
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { ProductGallery } from "@/components/product/ProductGallery";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -98,7 +99,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     name,
     description: locale === "ka" ? product.descriptionKa : product.descriptionEn,
     sku: product.sku,
-    image: `${SITE_URL}${product.image}`,
+    /* schema.org takes a list, and Google shows more of a product that offers
+       more than one photo. Absolute, because a structured-data consumer is not
+       reading this from the page it was served on. */
+    image: [product.image, ...product.images].map((photo) => `${SITE_URL}${photo}`),
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
     category: categoryName,
     offers: {
@@ -131,6 +135,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ],
   };
 
+  /* One photo means one photo: a strip of thumbnails under a single image is
+     a gallery control for a gallery that does not exist. Most of the seeded
+     catalogue is in exactly that state, which is why the plain version below
+     is not dead code waiting for a redesign.
+
+     Deduplicated, because the same photo listed twice is never what anyone
+     meant — the form already prevents it, and data can arrive from elsewhere. */
+  const photos = [...new Set([product.image, ...product.images])];
+
+  const saleBadge =
+    discount > 0 ? (
+      <span className="badge absolute top-4 left-4 bg-brand-solid text-sm text-brand-on-solid">
+        {fill(t.product.sale, { percent: discount })}
+      </span>
+    ) : null;
+
   return (
     <div className="page-container py-6 lg:py-8">
       <JsonLd data={productSchema} />
@@ -153,22 +173,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             whole row — and a sticky element with no room between its own
             height and its container's has nowhere to travel, so it sat there
             looking like `position: sticky` had been ignored. */}
-        <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
-          <Image
-            src={product.image}
-            alt={name}
-            fill
-            sizes="(max-width: 1024px) 100vw, 560px"
-            className="object-cover"
-            priority
-          />
-
-          {discount > 0 && (
-            <span className="badge absolute top-4 left-4 bg-brand-solid text-sm text-brand-on-solid">
-              {fill(t.product.sale, { percent: discount })}
-            </span>
-          )}
-        </div>
+        {photos.length > 1 ? (
+          <ProductGallery photos={photos} name={name} badge={saleBadge} />
+        ) : (
+          <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
+            <Image
+              src={product.image}
+              alt={name}
+              fill
+              sizes="(max-width: 1024px) 100vw, 560px"
+              className="object-cover"
+              priority
+            />
+            {saleBadge}
+          </div>
+        )}
 
         {/* ------------------------------- info ------------------------------ */}
         <div>

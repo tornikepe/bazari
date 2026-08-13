@@ -28,7 +28,9 @@ test("an admin picks a file and it becomes the product's photo", async ({ page }
   const url = page.locator('input[name="image"]');
   const before = await url.inputValue();
 
-  await page.locator('input[type="file"]').setInputFiles({
+  // `.first()` is the main photo — the form has a second picker for the
+  // gallery, and the two are the same element type.
+  await page.locator('input[type="file"]').first().setInputFiles({
     name: "photo.png",
     mimeType: "image/png",
     buffer: PNG,
@@ -52,7 +54,7 @@ test("a script named like an image is refused", async ({ page }) => {
   await signIn(page, ADMIN.email, ADMIN.password);
   await page.goto("/dashboard/products/new");
 
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('input[type="file"]').first().setInputFiles({
     name: "innocent.png",
     // The declared type is a lie, which is the point: it is not consulted.
     mimeType: "image/png",

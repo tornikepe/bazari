@@ -9,6 +9,13 @@ import { Block, LoadingShell, TableSkeleton } from "@/components/ui/Skeleton";
  * shape rather than four near-identical files that would drift apart. The
  * dashboard's own charts are the exception and are worth their own later; a
  * table is closer to them than a blank screen is.
+ *
+ * It also covers `products/[id]`, which can call `notFound()` — and a loading
+ * boundary above a `notFound()` streams the response, so the 404 page arrives
+ * under a 200. That is why the storefront's product and order pages
+ * deliberately have no skeleton (see `storefront.spec.ts`). Here it is a fair
+ * trade: the panel is behind a sign-in and marked `noindex`, so the status
+ * code is read by nobody, while the tables are the slowest pages in the site.
  */
 export default async function DashboardLoading() {
   const { t } = await getI18n();
