@@ -6,9 +6,11 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { Price } from "@/components/ui/Price";
-import { CartIcon, MinusIcon, PlusIcon, TrashIcon, TruckIcon } from "@/components/ui/icons";
+import { MinusIcon, PlusIcon, TrashIcon, TruckIcon } from "@/components/ui/icons";
 import { formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyCartArt } from "@/components/ui/illustrations";
 
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
@@ -36,16 +38,18 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   if (items.length === 0) {
     return (
       <div className="page-container py-16">
-        <div className="card mx-auto flex max-w-md flex-col items-center gap-3 px-6 py-14 text-center">
-          <span className="grid h-16 w-16 place-items-center rounded-pill bg-ink-100 text-ink-400">
-            <CartIcon size={30} />
-          </span>
-          <h1 className="text-lg font-bold text-ink-900">{t.cart.empty}</h1>
-          <p className="text-sm text-ink-500">{t.cart.emptyHint}</p>
-          <Link href="/catalog" className="btn btn-primary btn-md mt-2">
-            {t.cart.continueShopping}
-          </Link>
-        </div>
+        <EmptyState
+          className="card mx-auto max-w-md"
+          art={<EmptyCartArt size={96} />}
+          title={t.cart.empty}
+          text={t.cart.emptyHint}
+          titleAs="h1"
+          action={
+            <Link href="/catalog" className="btn btn-primary btn-md">
+              {t.cart.continueShopping}
+            </Link>
+          }
+        />
       </div>
     );
   }

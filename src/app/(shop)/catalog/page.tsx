@@ -10,7 +10,8 @@ import { MobileFilterDrawer } from "@/components/catalog/MobileFilterDrawer";
 import { ActiveFilterChips } from "@/components/catalog/ActiveFilterChips";
 import { SortSelect } from "@/components/catalog/SortSelect";
 import { Pagination } from "@/components/catalog/Pagination";
-import { PackageIcon } from "@/components/ui/icons";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { NoResultsArt } from "@/components/ui/illustrations";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
 export default async function CatalogPage({
@@ -123,16 +124,17 @@ export default async function CatalogPage({
           <ActiveFilterChips filters={filters} categories={categories} />
 
           {items.length === 0 ? (
-            <div className="card flex flex-col items-center gap-3 px-6 py-16 text-center">
-              <span className="grid h-14 w-14 place-items-center rounded-pill bg-ink-100 text-ink-400">
-                <PackageIcon size={26} />
-              </span>
-              <h2 className="text-base font-bold text-ink-900">{t.catalog.noResults}</h2>
-              <p className="max-w-sm text-sm text-ink-500">{t.catalog.noResultsHint}</p>
-              <Link href="/catalog" className="btn btn-primary btn-sm mt-1">
-                {t.catalog.clear}
-              </Link>
-            </div>
+            <EmptyState
+              className="card"
+              art={<NoResultsArt size={88} />}
+              title={t.catalog.noResults}
+              text={t.catalog.noResultsHint}
+              action={
+                <Link href="/catalog" className="btn btn-primary btn-md">
+                  {t.catalog.clear}
+                </Link>
+              }
+            />
           ) : (
             <>
               <div className={`stagger ${PRODUCT_GRID}`}>

@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { AlertIcon, RefreshIcon } from "@/components/ui/icons";
+import { RefreshIcon } from "@/components/ui/icons";
+import { ErrorArt } from "@/components/ui/illustrations";
 
 /**
  * Route-level error boundary.
@@ -29,11 +30,9 @@ export default function Error({
   return (
     <div className="page-container py-20">
       <div className="mx-auto flex max-w-md flex-col items-center text-center">
-        <span className="grid h-14 w-14 place-items-center rounded-pill bg-danger-soft text-danger">
-          <AlertIcon size={26} />
-        </span>
+        <ErrorArt size={96} />
 
-        <h1 className="mt-4 text-xl font-bold text-ink-900">{t.common.errorTitle}</h1>
+        <h1 className="mt-5 text-xl font-bold tracking-tight text-ink-900">{t.common.errorTitle}</h1>
         <p className="mt-2 text-sm text-ink-500">{t.common.errorText}</p>
 
         {/* Lets support match a report to a log line without exposing a stack. */}

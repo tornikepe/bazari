@@ -9,9 +9,10 @@ import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
 import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { isOrderStatus, ORDER_STATUSES } from "@/lib/order-status";
-import { BagIcon } from "@/components/ui/icons";
 import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyOrdersArt, NoResultsArt } from "@/components/ui/illustrations";
 
 const PAGE_SIZE = 20;
 
@@ -140,14 +141,20 @@ export default async function AdminOrdersPage({
       </div>
 
       {orders.length === 0 ? (
-        <div className="card mt-4 flex flex-col items-center gap-3 px-6 py-16 text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-pill bg-ink-100 text-ink-400">
-            <BagIcon size={26} />
-          </span>
-          <p className="text-sm text-ink-500">
-            {query || status ? t.admin.noMatches : t.admin.noOrders}
-          </p>
-        </div>
+        <EmptyState
+          className="card mt-4"
+          art={query || status ? <NoResultsArt size={88} /> : <EmptyOrdersArt size={88} />}
+          title={query || status ? t.admin.noMatches : t.admin.noOrders}
+          text={query || status ? t.admin.noMatchesHint : t.admin.noOrdersHint}
+          titleAs="p"
+          action={
+            (query || status) && (
+              <Link href="/dashboard/orders" className="btn btn-outline btn-md">
+                {t.admin.resetFilters}
+              </Link>
+            )
+          }
+        />
       ) : (
         <>
           <p className="mt-3 text-xs text-ink-400">

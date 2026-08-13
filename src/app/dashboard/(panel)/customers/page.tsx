@@ -7,9 +7,10 @@ import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { RoleBadge } from "@/components/admin/RoleBadge";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
-import { UsersIcon } from "@/components/ui/icons";
 import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyPeopleArt, NoResultsArt } from "@/components/ui/illustrations";
 
 const PAGE_SIZE = 20;
 const ROLES = ["customer", "admin", "viewer"] as const;
@@ -146,14 +147,20 @@ export default async function AdminCustomersPage({
       </div>
 
       {users.length === 0 ? (
-        <div className="card mt-4 flex flex-col items-center gap-3 px-6 py-16 text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-pill bg-ink-100 text-ink-400">
-            <UsersIcon size={26} />
-          </span>
-          <p className="text-sm text-ink-500">
-            {query || role ? t.admin.noMatches : t.admin.noCustomers}
-          </p>
-        </div>
+        <EmptyState
+          className="card mt-4"
+          art={query || role ? <NoResultsArt size={88} /> : <EmptyPeopleArt size={88} />}
+          title={query || role ? t.admin.noMatches : t.admin.noCustomers}
+          text={query || role ? t.admin.noMatchesHint : t.admin.noCustomersHint}
+          titleAs="p"
+          action={
+            (query || role) && (
+              <Link href="/dashboard/customers" className="btn btn-outline btn-md">
+                {t.admin.resetFilters}
+              </Link>
+            )
+          }
+        />
       ) : (
         <>
           <p className="mt-3 text-xs text-ink-400">

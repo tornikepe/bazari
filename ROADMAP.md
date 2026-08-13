@@ -268,8 +268,19 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
 
 ### 3.1 — What is missing rather than wrong
 
-- **Empty states.** Several pages show a line of grey text where they should show a drawing, an
-  explanation and the one action that fixes it
+- ✅ **Empty states.** There were seven, hand-written, and they had drifted apart: two icon sizes,
+  two paddings, three heading levels, and two that were a bare line of grey text with no way out.
+  One `EmptyState` now fixes the shape — a drawing, what is missing, why, and **exactly one**
+  action, because two equal actions are none. The heading level stays the caller's decision: the
+  cart's empty state *is* that page's `h1`, the account one sits under a heading, and the
+  dashboard's is not a heading at all — guessing is how a page grows a second `h1`
+- ✅ **A drawing rather than a grey circle** (`illustrations.tsx`). Seven of them, one family: the
+  same 96×96 plate, hairline weight, square ends, and exactly one element in the brand colour —
+  always the thing that is *absent*, drawn dashed. An empty shelf, an unfilled cart, a receipt
+  with no line on it. They are `aria-hidden`, because the heading beside them already says it
+- ✅ The action now **matches what is actually wrong**. Offering "new product" to an admin whose
+  search found nothing answers a question they did not ask; a filtered empty state offers to
+  reset the filters, and only a genuinely empty table offers to add the first row
 - **Loading states.** Skeletons exist for the product grid; the dashboard, cart and order pages
   still jump
 - **Error states.** A failed action mostly produces a red sentence; it should say what to do next

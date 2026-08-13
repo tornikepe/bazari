@@ -346,6 +346,7 @@ const ka = {
     lowStockEmpty: "ყველა პროდუქტს საკმარისი მარაგი აქვს.",
     recentOrders: "ბოლო შეკვეთები",
     noOrders: "შეკვეთები ჯერ არ არის",
+    noOrdersHint: "როგორც კი პირველი შეკვეთა შემოვა, აქ გამოჩნდება.",
     newProduct: "ახალი პროდუქტი",
     editProduct: "პროდუქტის რედაქტირება",
     newCategory: "ახალი კატეგორია",
@@ -392,6 +393,7 @@ const ka = {
     orderNumber: "ნომერი",
     updateStatus: "სტატუსის განახლება",
     noProducts: "პროდუქტი ვერ მოიძებნა",
+    noProductsHint: "დაამატე პირველი პროდუქტი — სახელი, ფასი და ფოტო საკმარისია.",
     noCategories: "კატეგორია ჯერ არ არის",
     required: "შეავსე ყველა სავალდებულო ველი",
     slugTaken: "ასეთი slug უკვე გამოყენებულია",
@@ -451,6 +453,7 @@ const ka = {
     resetFilters: "ფილტრების მოხსნა",
     searchOrders: "ნომერი, სახელი ან ტელეფონი…",
     noMatches: "შედეგი ვერ მოიძებნა",
+    noMatchesHint: "სცადე სხვა საძიებო სიტყვა, ან მოხსენი ფილტრები.",
 
     // roles and permissions
     roleAdmin: "ადმინისტრატორი",
@@ -467,6 +470,7 @@ const ka = {
     customersHint: "რეგისტრირებული ანგარიშები და მათი შეკვეთები",
     searchCustomers: "სახელი, ელფოსტა ან ტელეფონი…",
     noCustomers: "მომხმარებელი ვერ მოიძებნა",
+    noCustomersHint: "მომხმარებელი აქ რეგისტრაციისთანავე ჩნდება.",
     customerSince: "რეგისტრაცია",
     customerOrders: "შეკვეთა",
     customerSpend: "დახარჯული",
@@ -984,6 +988,7 @@ const en: Dictionary = {
     lowStockEmpty: "Every product has enough stock.",
     recentOrders: "Recent orders",
     noOrders: "No orders yet",
+    noOrdersHint: "The first order placed in the shop will show up here.",
     newProduct: "New product",
     editProduct: "Edit product",
     newCategory: "New category",
@@ -1030,6 +1035,7 @@ const en: Dictionary = {
     orderNumber: "Number",
     updateStatus: "Update status",
     noProducts: "No products found",
+    noProductsHint: "Add the first one — a name, a price and a photo is enough.",
     noCategories: "No categories yet",
     required: "Fill in every required field",
     slugTaken: "That slug is already taken",
@@ -1089,6 +1095,7 @@ const en: Dictionary = {
     resetFilters: "Reset filters",
     searchOrders: "Number, name or phone…",
     noMatches: "No matches found",
+    noMatchesHint: "Try a different search term, or reset the filters.",
 
     // roles and permissions
     roleAdmin: "Administrator",
@@ -1105,6 +1112,7 @@ const en: Dictionary = {
     customersHint: "Registered accounts and the orders they have placed",
     searchCustomers: "Name, email or phone…",
     noCustomers: "No customers found",
+    noCustomersHint: "Customers appear here as soon as they register.",
     customerSince: "Joined",
     customerOrders: "Orders",
     customerSpend: "Spent",

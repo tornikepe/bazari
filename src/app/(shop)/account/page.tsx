@@ -8,8 +8,10 @@ import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { VerifyBanner } from "@/components/account/VerifyBanner";
-import { BagIcon, HeartIcon, PackageIcon, TagIcon } from "@/components/ui/icons";
+import { BagIcon, HeartIcon, TagIcon } from "@/components/ui/icons";
 import type { RawSearchParams } from "@/lib/filters";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyOrdersArt } from "@/components/ui/illustrations";
 
 export default async function AccountPage({
   searchParams,
@@ -92,16 +94,17 @@ export default async function AccountPage({
           </h2>
 
           {orders.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-              <span className="grid h-14 w-14 place-items-center rounded-pill bg-ink-100 text-ink-400">
-                <PackageIcon size={26} />
-              </span>
-              <p className="text-sm font-semibold text-ink-900">{t.account.noOrders}</p>
-              <p className="max-w-xs text-sm text-ink-500">{t.account.noOrdersHint}</p>
-              <Link href="/catalog" className="btn btn-primary btn-sm mt-1">
-                {t.catalog.title}
-              </Link>
-            </div>
+            <EmptyState
+              art={<EmptyOrdersArt size={88} />}
+              title={t.account.noOrders}
+              text={t.account.noOrdersHint}
+              titleAs="h3"
+              action={
+                <Link href="/catalog" className="btn btn-primary btn-md">
+                  {t.catalog.title}
+                </Link>
+              }
+            />
           ) : (
             <ul className="divide-y divide-line">
               {orders.map((order) => (

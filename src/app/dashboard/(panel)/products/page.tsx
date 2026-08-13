@@ -9,9 +9,11 @@ import { WriteOnly } from "@/components/admin/StaffRoleProvider";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { ProductRowActions } from "@/components/admin/ProductRowActions";
 import { AdminPagination } from "@/components/admin/AdminPagination";
-import { PackageIcon, PlusIcon } from "@/components/ui/icons";
+import { PlusIcon } from "@/components/ui/icons";
 import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EmptyShelfArt, NoResultsArt } from "@/components/ui/illustrations";
 
 const PAGE_SIZE = 20;
 const LOW_STOCK_THRESHOLD = 10;
@@ -74,6 +76,10 @@ export default async function AdminProductsPage({
   const statusRaw = one(params.status);
   const status = (STATUSES as readonly string[]).includes(statusRaw) ? statusRaw : "";
   const category = one(params.category);
+
+  /* One name for "the reader is looking at a subset", because the empty
+     state has to say something different in each case. */
+  const filtered = Boolean(query || status || category);
   const sortRaw = one(params.sort);
   const sort = (SORTS as readonly string[]).includes(sortRaw) ? sortRaw : "newest";
   const pageRaw = Number(one(params.page));
@@ -173,20 +179,30 @@ export default async function AdminProductsPage({
       </div>
 
       {products.length === 0 ? (
-        <div className="card mt-4 flex flex-col items-center gap-3 px-6 py-16 text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-pill bg-ink-100 text-ink-400">
-            <PackageIcon size={26} />
-          </span>
-          <p className="text-sm text-ink-500">
-            {query || status || category ? t.admin.noMatches : t.admin.noProducts}
-          </p>
-          <WriteOnly>
-          <Link href="/dashboard/products/new" className="btn btn-primary btn-sm mt-1">
-            <PlusIcon size={15} />
-            {t.admin.newProduct}
-          </Link>
-          </WriteOnly>
-        </div>
+        <EmptyState
+          className="card mt-4"
+          art={filtered ? <NoResultsArt size={88} /> : <EmptyShelfArt size={88} />}
+          title={filtered ? t.admin.noMatches : t.admin.noProducts}
+          text={filtered ? t.admin.noMatchesHint : t.admin.noProductsHint}
+          titleAs="p"
+          action={
+            /* The action has to match what is actually wrong. Offering "new
+               product" to someone whose search found nothing is an answer to
+               a question they did not ask. */
+            filtered ? (
+              <Link href="/dashboard/products" className="btn btn-outline btn-md">
+                {t.admin.resetFilters}
+              </Link>
+            ) : (
+              <WriteOnly>
+                <Link href="/dashboard/products/new" className="btn btn-primary btn-md">
+                  <PlusIcon size={15} />
+                  {t.admin.newProduct}
+                </Link>
+              </WriteOnly>
+            )
+          }
+        />
       ) : (
         <>
           <p className="mt-3 text-xs text-ink-400">
