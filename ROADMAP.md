@@ -346,9 +346,18 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
 - **Specification table.** The `Details` box is brand, category, SKU and shipping — four facts the
   page already shows elsewhere. Real specifications need a place to put them
 - **Cross-sell** is still "related" and nothing else
-- **Removing a photo leaves its bytes behind.** Taking a picture off a product removes the URL
-  from the list; the row in `ProductImage` stays. Nothing reads it and nothing deletes it, so
-  uploads accumulate. Found by running the gallery test fifteen times and counting the rows
+- ✅ **Removing a photo now removes its bytes.** Taking a picture off a product removed the URL
+  and left the row: unreferenced, unreachable and permanent. Found by running the gallery test
+  fifteen times and counting the rows — a shop owner re-photographing a product every season
+  would collect them the same way, only slower. Deleting a product clears its photos too
+- ✅ The comparison is made **after** the save, against what the database now holds, so a photo
+  merely being reordered is not deleted and one still used by another product is left alone.
+  Only images this application stores are considered: a pasted link to another site is not ours
+  to delete, and the placeholder belongs to every product without a photo
+- ✅ Tidying up cannot fail a save. The row is already written; the worst case of a failure here
+  is a row nobody points at, which is what the situation was before
+- ✅ The test asks the server: after the photos are removed, their URLs must **404**. Disabling
+  the cleanup turns it red with `is still served after being removed`
 - **Density on the dashboard.** Tables are readable but plain; column sorting, saved views, bulk
   actions and inline editing are all missing
 - **The 404 and error pages** are functional and unloved

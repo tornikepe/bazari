@@ -9,6 +9,7 @@ import { slugify } from "@/lib/format";
 import { generateSku } from "@/lib/sku";
 import { isOrderStatus } from "@/lib/order-status";
 import { MAX_GALLERY } from "@/lib/image-upload";
+import { forgetUnusedImages, photosOf } from "@/lib/product-images";
 import type { Prisma } from "@/generated/prisma/client";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
@@ -154,6 +155,13 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
   const parsed = await readProductForm(formData, id ?? undefined);
   if (!parsed.ok) return { ok: false, error: parsed.error };
 
+  /* What it points at now, so the photos it stops pointing at can have their
+     bytes cleaned up after the save. Read before, compared after: an upload
+     that is merely being reordered must not be deleted. */
+  const before = id
+    ? await prisma.product.findUnique({ where: { id }, select: { image: true, images: true } })
+    : null;
+
   try {
     if (id) {
       await prisma.product.update({ where: { id }, data: parsed.data });
@@ -165,6 +173,15 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
     return { ok: false, error: "failed" };
   }
 
+  if (before) {
+    const kept = new Set(photosOf(parsed.data as { image: string; images: string[] }));
+    /* Failing to tidy up is not a reason to tell the admin their save failed —
+       the save happened. The worst case is a row nobody points at. */
+    await forgetUnusedImages(photosOf(before).filter((url) => !kept.has(url))).catch((error) =>
+      console.error("forgetUnusedImages failed", error),
+    );
+  }
+
   revalidateStorefront();
   return { ok: true };
 }
@@ -172,11 +189,22 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
 export async function deleteProduct(id: string): Promise<ActionResult> {
   if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
 
+  const doomed = await prisma.product.findUnique({
+    where: { id },
+    select: { image: true, images: true },
+  });
+
   try {
     await prisma.product.delete({ where: { id } });
   } catch (error) {
     console.error("deleteProduct failed", error);
     return { ok: false, error: "failed" };
+  }
+
+  if (doomed) {
+    await forgetUnusedImages(photosOf(doomed)).catch((error) =>
+      console.error("forgetUnusedImages failed", error),
+    );
   }
 
   revalidateStorefront();

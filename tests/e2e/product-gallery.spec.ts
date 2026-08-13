@@ -80,6 +80,13 @@ test("a product with more than one photo gets a gallery @engine", async ({ page 
     await expect(page.getByRole("button", { name: new RegExp(`Remove photo ${index + 1}`) })).toBeVisible();
   }
 
+  // The URLs the uploads were given, so what happens to the bytes can be
+  // checked once the photos are taken away again.
+  const uploaded = await page.locator('input[name="images"]').evaluateAll((inputs) =>
+    inputs.map((input) => (input as HTMLInputElement).value),
+  );
+  expect(uploaded, "the form did not post the uploaded photos").toHaveLength(2);
+
   await save(page);
 
   try {
@@ -119,5 +126,14 @@ test("a product with more than one photo gets a gallery @engine", async ({ page 
 
     await page.goto(`/product/${slug}`);
     await expect(page.getByRole("tab"), "the test left photos behind").toHaveCount(0);
+
+    // And the bytes go with them. Taking a picture off a product used to
+    // remove the URL and leave the row: unreferenced, unreachable and
+    // permanent. Fifteen runs of this test left fifteen of them, which is how
+    // it was noticed.
+    for (const url of uploaded) {
+      const response = await page.request.get(url);
+      expect(response.status(), `${url} is still served after being removed`).toBe(404);
+    }
   }
 });
