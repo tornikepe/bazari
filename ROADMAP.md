@@ -292,14 +292,23 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
   `storefront.spec.ts`, and both were removed: a soft 404 on the most-linked page on the site is
   a worse fault than a moment of blank. The dashboard keeps its skeleton over the same hazard on
   purpose — it is behind a sign-in and `noindex`, so nothing reads that status code
-- ✅ One `loading.tsx` for the **whole dashboard panel** rather than four: products, orders,
-  customers and categories are the same page with different columns, and four near-identical
-  files would have drifted the way the seven empty states did
+- ✅ The dashboard's skeleton is scoped to **the dashboard's own page** by a `(home)` route
+  group, and the group exists because of two faults the wider version caused. A `loading.tsx`
+  covers its folder *and everything under it*, so one placed beside the panel layout also stood
+  in for the tables, the settings form and `products/[id]`: **saving anything in the panel lost
+  its "Saved" confirmation**, and `notFound()` under a streamed response returned the 404 page
+  with a 200. Both were caught by tests that had nothing to do with loading states —
+  `info-pages.spec.ts` and `authorization.spec.ts` — which is the argument for having them
+- ✅ What is left is where a skeleton actually pays: the account page, and the dashboard home,
+  which reads six aggregates and a chart and has neither a form nor a way to 404
 - ✅ Each is **one live region** saying "loading", not forty grey rectangles announced one by one —
   and previously, nothing at all
 - ✅ Verified by **delaying the real pages** and photographing what stands in. The cart and the
   wishlist deliberately have none: both live in `localStorage`, so there is no server wait to
   cover, and the wishlist already shows the product-grid skeleton while it reads storage
+- The lesson, written down because it cost two rounds: **a loading boundary is not free.** It
+  changes the status code a route can return and when the page becomes interactive, and it
+  applies to every route beneath it. It belongs on slow pages that cannot 404 and hold no form
 - **Error states.** A failed action mostly produces a red sentence; it should say what to do next
 - ✅ **Product page: a real gallery.** `Product.images` holds the extra photos, the admin form
   uploads and removes them, and the page shows a thumbnail strip — but only when there is more
