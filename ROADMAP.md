@@ -281,8 +281,19 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
 - ✅ The action now **matches what is actually wrong**. Offering "new product" to an admin whose
   search found nothing answers a question they did not ask; a filtered empty state offers to
   reset the filters, and only a genuinely empty table offers to add the first row
-- **Loading states.** Skeletons exist for the product grid; the dashboard, cart and order pages
-  still jump
+- ✅ **Loading states.** Skeletons existed for the product grid and nowhere else, so the product
+  page, the order page, the account page and every dashboard table went from blank to full in one
+  step. Four `loading.tsx` files now stand in, built from three primitives — a block, a run of
+  lines, a table — assembled *next to the page they stand in for*, because a skeleton whose boxes
+  do not match the real ones causes the jump it exists to prevent
+- ✅ One `loading.tsx` for the **whole dashboard panel** rather than four: products, orders,
+  customers and categories are the same page with different columns, and four near-identical
+  files would have drifted the way the seven empty states did
+- ✅ Each is **one live region** saying "loading", not forty grey rectangles announced one by one —
+  and previously, nothing at all
+- ✅ Verified by **delaying the real pages** and photographing what stands in. The cart and the
+  wishlist deliberately have none: both live in `localStorage`, so there is no server wait to
+  cover, and the wishlist already shows the product-grid skeleton while it reads storage
 - **Error states.** A failed action mostly produces a red sentence; it should say what to do next
 - **Product page.** The weakest page on the site — no gallery, no specification table worth the
   name, no cross-sell beyond "related"
