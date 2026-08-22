@@ -115,6 +115,10 @@ model Product {
   /// the card, the search result, the order line and the Open Graph tag all
   /// want exactly one photo, and only the product page wants the rest.
   images        String[]    @default([])
+  /// Specifications, as an ordered list of `{labelKa,labelEn,valueKa,valueEn}`.
+  /// A column rather than a table: they belong to exactly one product, are
+  /// never queried on their own and never joined to. The order is the array's.
+  specs         Json        @default("[]")
   brand         String      @default("")
   shippingDays  Int         @default(14)
   isFeatured    Boolean     @default(false)

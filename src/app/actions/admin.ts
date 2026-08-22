@@ -9,6 +9,7 @@ import { slugify } from "@/lib/format";
 import { generateSku } from "@/lib/sku";
 import { isOrderStatus } from "@/lib/order-status";
 import { MAX_GALLERY } from "@/lib/image-upload";
+import { specsFromForm } from "@/lib/product-specs";
 import { forgetUnusedImages, photosOf } from "@/lib/product-images";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -140,6 +141,9 @@ async function readProductForm(
       images: [...new Set(formData.getAll("images").map((value) => String(value).trim()))]
         .filter((url) => url.length > 0 && url !== text(formData, "image"))
         .slice(0, MAX_GALLERY),
+      /* Put through the same parser the product page reads with, so the form
+         cannot store a shape the page would then have to reject. */
+      specs: specsFromForm(formData),
       brand: text(formData, "brand"),
       shippingDays: Math.max(1, Math.floor(number(formData, "shippingDays", 14))),
       isFeatured: checkbox(formData, "isFeatured"),

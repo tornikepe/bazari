@@ -16,6 +16,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import { parseSpecs, readSpec } from "@/lib/product-specs";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -73,6 +74,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const categoryName = locale === "ka" ? product.category.nameKa : product.category.nameEn;
   const discount = discountPercent(product.price, product.oldPrice);
   const soldOut = product.stock <= 0;
+
+  /* What the shop typed, ahead of what the application knows.
+     The four rows below — brand, category, SKU, shipping — are derived facts
+     the page already shows elsewhere; a specification is the thing somebody
+     actually wants before buying, so it goes first and the derived rows read
+     as the footnote they are. */
+  const specs = parseSpecs(product.specs).map((spec) => readSpec(spec, locale));
 
   const details = [
     { label: t.product.brand, value: product.brand || "—" },
@@ -252,6 +260,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </li>
             ))}
           </ul>
+
+          {/* specifications, when the shop has written any */}
+          {specs.length > 0 && (
+            <div className="mt-6">
+              <h2 className="mb-3 text-sm font-bold text-ink-900">{t.product.specs}</h2>
+              <dl className="overflow-hidden rounded-card border border-line">
+                {specs.map((spec, index) => (
+                  <div
+                    key={`${spec.label}-${index}`}
+                    /* Zebra striping by row, which is what makes a long table
+                       scannable across — the same rule the derived rows below
+                       already used, applied to the table that matters more. */
+                    className={`flex items-start justify-between gap-4 px-4 py-2.5 text-xs ${
+                      index % 2 === 0 ? "bg-surface" : "bg-ink-50"
+                    }`}
+                  >
+                    <dt className="shrink-0 text-ink-500">{spec.label}</dt>
+                    <dd className="text-right font-semibold text-ink-800">{spec.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
 
           {/* details */}
           <div className="mt-6">

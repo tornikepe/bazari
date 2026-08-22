@@ -35,9 +35,6 @@ rather than a claim. What is left needs a real phone.
 - **Error states, the rest.** The checkout and the two dashboard forms now say what happened,
   what to do about it, and offer the way — the chat panel, the payment panel and the page editor
   still print a bare red sentence
-- **A specification table on the product page.** The `Details` box is brand, category, SKU and
-  shipping — four facts the page already shows elsewhere. Real specifications need somewhere to
-  live: a per-product list of name/value pairs in both languages, editable in the dashboard
 - **Cross-sell** is still "related products" and nothing else. Bought-together, recently viewed,
   and something on the empty cart
 - **Density on the dashboard.** The tables are readable and plain: no column sorting, no saved

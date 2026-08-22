@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,8 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { saveProduct } from "@/app/actions/admin";
 import { MAX_GALLERY } from "@/lib/image-upload";
-import { AlertIcon, CloseIcon, PlusIcon, SpinnerIcon, UploadIcon } from "@/components/ui/icons";
+import { MAX_SPECS, parseSpecs, type Spec } from "@/lib/product-specs";
+import { AlertIcon, CloseIcon, PlusIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
@@ -28,6 +29,7 @@ export type ProductFormValues = {
   stock: number;
   image: string;
   images: string[];
+  specs: unknown;
   brand: string;
   shippingDays: number;
   isFeatured: boolean;
@@ -52,6 +54,14 @@ export function ProductForm({
   // Only for the live preview — the value submitted is the input's own.
   const [image, setImage] = useState(product?.image ?? DEFAULT_IMAGE);
   const [gallery, setGallery] = useState<string[]>(product?.images ?? []);
+
+  /* Rows are keyed by a number that never changes, not by their index:
+     removing the second of four re-indexes the rest, and React would then
+     reuse the wrong inputs and move the text the reader typed. */
+  const [specs, setSpecs] = useState<{ key: number; spec: Spec }[]>(() =>
+    parseSpecs(product?.specs).map((spec, index) => ({ key: index, spec })),
+  );
+  const nextKey = useRef(specs.length);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -200,6 +210,78 @@ export function ProductForm({
                 />
               </div>
             </div>
+          </section>
+
+          {/* ------------------------- specifications ------------------------ */}
+          <section className="card p-5">
+            <h2 className="text-sm font-bold text-ink-900">{t.admin.specs}</h2>
+            <p className="mt-1 text-xs text-ink-400">{t.admin.specsHint}</p>
+
+            {specs.length > 0 && (
+              <ul className="mt-4 flex flex-col gap-3">
+                {specs.map(({ key, spec }, index) => (
+                  <li key={key} className="border border-line p-3">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {(
+                        [
+                          ["labelKa", `${t.admin.specLabel} (ka)`],
+                          ["labelEn", `${t.admin.specLabel} (en)`],
+                          ["valueKa", `${t.admin.specValue} (ka)`],
+                          ["valueEn", `${t.admin.specValue} (en)`],
+                        ] as const
+                      ).map(([field, label]) => (
+                        <label key={field} className="block">
+                          <span className="sr-only">{`${label} — ${index + 1}`}</span>
+                          <input
+                            name={`spec_${field}`}
+                            value={spec[field]}
+                            onChange={(event) =>
+                              setSpecs((rows) =>
+                                rows.map((row) =>
+                                  row.key === key
+                                    ? { ...row, spec: { ...row.spec, [field]: event.target.value } }
+                                    : row,
+                                ),
+                              )
+                            }
+                            placeholder={label}
+                            className="field h-10 text-sm"
+                          />
+                        </label>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSpecs((rows) => rows.filter((row) => row.key !== key))}
+                      className="btn btn-ghost btn-sm mt-2 text-ink-500 hover:text-danger"
+                    >
+                      <TrashIcon size={14} />
+                      {fill(t.admin.specRemove, { index: index + 1 })}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {specs.length < MAX_SPECS && (
+              <button
+                type="button"
+                onClick={() =>
+                  setSpecs((rows) => [
+                    ...rows,
+                    {
+                      key: nextKey.current++,
+                      spec: { labelKa: "", labelEn: "", valueKa: "", valueEn: "" },
+                    },
+                  ])
+                }
+                className="btn btn-outline btn-sm mt-3"
+              >
+                <PlusIcon size={15} />
+                {t.admin.specAdd}
+              </button>
+            )}
           </section>
 
           {/* ------------------------- price and stock ----------------------- */}
