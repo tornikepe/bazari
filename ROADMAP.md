@@ -32,8 +32,9 @@ rather than a claim. What is left needs a real phone.
 
 ### 2.1 — Missing rather than wrong
 
-- **Error states.** A failed action mostly produces a red sentence. It should say what to do
-  next, and offer it
+- **Error states, the rest.** The checkout and the two dashboard forms now say what happened,
+  what to do about it, and offer the way — the chat panel, the payment panel and the page editor
+  still print a bare red sentence
 - **A specification table on the product page.** The `Details` box is brand, category, SKU and
   shipping — four facts the page already shows elsewhere. Real specifications need somewhere to
   live: a per-product list of name/value pairs in both languages, editable in the dashboard

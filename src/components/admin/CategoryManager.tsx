@@ -7,7 +7,8 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { deleteCategory, saveCategory } from "@/app/actions/admin";
 import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
-import { AlertIcon, CloseIcon, PencilIcon, PlusIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
+import { CloseIcon, PencilIcon, PlusIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 
 export type AdminCategory = {
   id: string;
@@ -27,7 +28,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
 
   // `null` = closed, `"new"` = create, otherwise the category being edited.
   const [editing, setEditing] = useState<AdminCategory | "new" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ title: string; hint?: string } | null>(null);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,7 +41,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
       const result = await saveCategory(id, formData);
 
       if (!result.ok) {
-        setError(result.error === "slug-taken" ? t.admin.slugTaken : t.admin.required);
+        setError({ title: result.error === "slug-taken" ? t.admin.slugTaken : t.admin.required });
         return;
       }
 
@@ -57,7 +58,11 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
       const result = await deleteCategory(category.id);
 
       if (!result.ok) {
-        setError(result.error === "has-products" ? t.admin.categoryHasProducts : t.common.error);
+        setError(
+          result.error === "has-products"
+            ? { title: t.admin.categoryHasProducts }
+            : { title: t.common.error, hint: t.common.errorHint },
+        );
         return;
       }
 
@@ -91,13 +96,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
       </div>
 
       {error && (
-        <p
-          role="alert"
-          className="mt-4 flex items-center gap-2 rounded-control bg-danger-soft p-3 text-sm text-danger"
-        >
-          <AlertIcon size={16} className="shrink-0" />
-          {error}
-        </p>
+        <ErrorNote className="mt-4" title={error.title} hint={error.hint} />
       )}
 
       {/* ------------------------------- form ------------------------------- */}

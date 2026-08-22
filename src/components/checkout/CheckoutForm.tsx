@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Price } from "@/components/ui/Price";
-import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { SpinnerIcon } from "@/components/ui/icons";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { formatPrice } from "@/lib/format";
 import type { Dictionary } from "@/lib/i18n";
 import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/orders";
@@ -48,7 +49,18 @@ export function CheckoutForm({ defaults }: { defaults: CheckoutDefaults }) {
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [formError, setFormError] = useState("");
+  /**
+   * The failure, kept as a shape rather than a sentence.
+   *
+   * It used to be one string, which is why every cause ended up wearing the
+   * same words: a cart holding a withdrawn product was told "please try
+   * again", and trying again failed in exactly the same way, for ever.
+   */
+  const [failure, setFailure] = useState<null | {
+    title: string;
+    hint?: string;
+    action?: { href: string; label: string };
+  }>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const discount = coupon?.ok ? coupon.discount : 0;
@@ -91,10 +103,14 @@ export function CheckoutForm({ defaults }: { defaults: CheckoutDefaults }) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setFormError("");
+    setFailure(null);
 
     if (items.length === 0) {
-      setFormError(t.checkout.emptyCart);
+      setFailure({
+        title: t.checkout.emptyCart,
+        hint: t.checkout.emptyCartHint,
+        action: { href: "/catalog", label: t.catalog.title },
+      });
       return;
     }
     if (!validate()) return;
@@ -109,14 +125,31 @@ export function CheckoutForm({ defaults }: { defaults: CheckoutDefaults }) {
       });
 
       if (!result.ok) {
-        setFormError(
+        /* Each cause gets its own way out. "Unavailable" is the one that
+           mattered: it used to fall through to "please try again", which was
+           advice that could not work — the cart has to change first. */
+        setFailure(
           result.error === "empty"
-            ? t.checkout.emptyCart
-            : result.error === "rate-limited"
-              ? t.checkout.rateLimited
-              : result.error === "sign-in-required"
-                ? t.auth.signInToOrder
-                : t.checkout.failed,
+            ? {
+                title: t.checkout.emptyCart,
+                hint: t.checkout.emptyCartHint,
+                action: { href: "/catalog", label: t.catalog.title },
+              }
+            : result.error === "unavailable"
+              ? {
+                  title: t.checkout.unavailable,
+                  hint: t.checkout.unavailableHint,
+                  action: { href: "/cart", label: t.checkout.openCart },
+                }
+              : result.error === "rate-limited"
+                ? { title: t.checkout.rateLimited, hint: t.checkout.rateLimitedHint }
+                : result.error === "sign-in-required"
+                  ? {
+                      title: t.auth.signInToOrder,
+                      hint: t.checkout.signInHint,
+                      action: { href: "/login?next=/checkout", label: t.auth.signIn },
+                    }
+                  : { title: t.checkout.failed, hint: t.checkout.failedHint },
         );
         return;
       }
@@ -125,7 +158,7 @@ export function CheckoutForm({ defaults }: { defaults: CheckoutDefaults }) {
       clear();
       router.push(`/order/${result.number}`);
     } catch {
-      setFormError(t.checkout.failed);
+      setFailure({ title: t.checkout.failed, hint: t.checkout.failedHint });
     } finally {
       setSubmitting(false);
     }
@@ -381,14 +414,19 @@ export function CheckoutForm({ defaults }: { defaults: CheckoutDefaults }) {
             </div>
           </dl>
 
-          {formError && (
-            <p
-              role="alert"
-              className="mt-4 flex items-start gap-2 rounded-control bg-danger-soft p-3 text-xs leading-snug text-danger"
-            >
-              <AlertIcon size={15} className="mt-px shrink-0" />
-              {formError}
-            </p>
+          {failure && (
+            <ErrorNote
+              className="mt-4"
+              title={failure.title}
+              hint={failure.hint}
+              action={
+                failure.action && (
+                  <Link href={failure.action.href} className="btn btn-outline btn-sm">
+                    {failure.action.label}
+                  </Link>
+                )
+              }
+            />
           )}
 
           <button type="submit" disabled={submitting} className="btn btn-primary btn-lg mt-5 w-full">

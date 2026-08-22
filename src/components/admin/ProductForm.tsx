@@ -9,6 +9,7 @@ import { fill } from "@/lib/i18n";
 import { saveProduct } from "@/app/actions/admin";
 import { MAX_GALLERY } from "@/lib/image-upload";
 import { AlertIcon, CloseIcon, PlusIcon, SpinnerIcon, UploadIcon } from "@/components/ui/icons";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
 
@@ -44,7 +45,9 @@ export function ProductForm({
   const { locale, t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  /* A title and, when the failure is one the reader can do nothing specific
+     about, the one thing they were never told: whether anything was saved. */
+  const [error, setError] = useState<{ title: string; hint?: string } | null>(null);
 
   // Only for the live preview — the value submitted is the input's own.
   const [image, setImage] = useState(product?.image ?? DEFAULT_IMAGE);
@@ -109,12 +112,12 @@ export function ProductForm({
       if (!result.ok) {
         setError(
           result.error === "slug-taken"
-            ? t.admin.slugTaken
+            ? { title: t.admin.slugTaken }
             : result.error === "sku-taken"
-              ? t.admin.skuTaken
+              ? { title: t.admin.skuTaken }
               : result.error === "invalid"
-                ? t.admin.required
-                : t.common.error,
+                ? { title: t.admin.required }
+                : { title: t.common.error, hint: t.common.errorHint },
         );
         return;
       }
@@ -142,15 +145,7 @@ export function ProductForm({
         </div>
       </div>
 
-      {error && (
-        <p
-          role="alert"
-          className="mt-4 flex items-center gap-2 rounded-control bg-danger-soft p-3 text-sm text-danger"
-        >
-          <AlertIcon size={16} className="shrink-0" />
-          {error}
-        </p>
-      )}
+      {error && <ErrorNote className="mt-4" title={error.title} hint={error.hint} />}
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_18rem] lg:items-start">
         <div className="flex flex-col gap-4">
