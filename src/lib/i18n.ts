@@ -199,6 +199,9 @@ const ka = {
   auth: {
     continueWith: "გაგრძელება {provider}-ით",
     or: "ან",
+    mailUnavailable: "ამ დემოზე წერილის გაგზავნა ჯერ ჩართული არ არის — კოდი ვერ მოვა.",
+    mailUnavailableHint: "ანგარიში მაინც მუშაობს: შეგიძლია გააგრძელო და ელფოსტა მოგვიანებით დაადასტურო.",
+    socialUnavailable: "სოციალური ავტორიზაცია ამ დემოზე ჯერ ჩართული არ არის — გამოიყენე ელფოსტა.",
     oauthFailed: "სოციალური ქსელით შესვლა ვერ მოხერხდა. სცადე ხელახლა.",
     oauthUnverified:
       "ამ ანგარიშის ელფოსტა დადასტურებული არ არის. შედი ელფოსტითა და პაროლით.",
@@ -848,6 +851,9 @@ const en: Dictionary = {
   auth: {
     continueWith: "Continue with {provider}",
     or: "or",
+    mailUnavailable: "Sending email is not enabled on this demo, so the code cannot arrive.",
+    mailUnavailableHint: "The account works anyway: carry on and confirm the address later.",
+    socialUnavailable: "Social sign-in is not enabled on this demo yet — use your email.",
     oauthFailed: "That sign-in did not complete. Please try again.",
     oauthUnverified:
       "That account's email address is not confirmed. Sign in with your email and password instead.",

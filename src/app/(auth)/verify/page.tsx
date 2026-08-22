@@ -14,6 +14,10 @@ function VerifyForm() {
   const params = useSearchParams();
 
   const email = params.get("email") ?? "";
+  /* Set by `register` when the provider would not take the message. Only ever
+     "0" — its absence claims nothing, so a link typed by hand cannot make the
+     page announce a failure that did not happen. */
+  const undelivered = params.get("sent") === "0";
 
   const [state, formAction, pending] = useActionState<AuthState, FormData>(verifyEmail, {});
   const [resendState, resendAction, resending] = useActionState<AuthState, FormData>(
@@ -40,6 +44,22 @@ function VerifyForm() {
         </Link>
       }
     >
+      {/* Before the field, not after it: someone who will never receive a code
+          should be told so before they sit staring at an empty box. `alert`
+          rather than `status` — this changes what they have to do next. */}
+      {undelivered && (
+        <div
+          role="alert"
+          className="mt-4 border border-warning/40 bg-warning-soft p-3 text-xs text-warning"
+        >
+          <p className="flex items-start gap-2 font-semibold">
+            <AlertIcon size={15} className="mt-px shrink-0" />
+            {t.auth.mailUnavailable}
+          </p>
+          <p className="mt-1.5 pl-[23px] text-ink-600">{t.auth.mailUnavailableHint}</p>
+        </div>
+      )}
+
       <form action={formAction} className="mt-4 flex flex-col gap-4">
         <input type="hidden" name="email" value={email} />
 
@@ -87,7 +107,11 @@ function VerifyForm() {
           </p>
         )}
 
-        <button type="submit" disabled={resending} className="btn btn-ghost btn-sm w-full">
+        <button
+          type="submit"
+          disabled={resending || undelivered}
+          className="btn btn-ghost btn-sm w-full"
+        >
           {resending && <SpinnerIcon size={15} />}
           {t.auth.resend}
         </button>

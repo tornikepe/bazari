@@ -26,7 +26,9 @@ export default function ForgotPasswordPage() {
   const codeSent = Boolean(requestState.sent);
 
   const message = (state: AuthState) =>
-    state.error === "weak"
+    state.error === "mail-unavailable"
+      ? t.auth.mailUnavailable
+      : state.error === "weak"
       ? t.auth.weak
       : state.error === "mismatch"
         ? t.auth.mismatch

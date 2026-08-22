@@ -24,6 +24,19 @@ export type MailInput = {
 const API_URL = "https://api.resend.com/emails";
 
 /**
+ * Whether this deployment can send mail at all.
+ *
+ * Asked by the pages that would otherwise tell a visitor to check an inbox
+ * nothing was sent to. It is deliberately about *configuration* and never
+ * about a particular address: "we cannot send email" is safe to say to
+ * anybody, where "we did not send to you" would answer a question about who
+ * has an account here.
+ */
+export function mailConfigured(): boolean {
+  return readApiKey() !== undefined;
+}
+
+/**
  * The API key, tolerant of a fumbled copy-paste.
  *
  * Pasting into `vercel env add` easily picks up a trailing newline, or the

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { consumeCode, issueCode } from "@/lib/verification";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/auth-emails";
+import { mailConfigured } from "@/lib/mail";
 import { getLocale } from "@/lib/locale";
 import { clientIp, consume, reset } from "@/lib/rate-limit";
 import {
@@ -25,7 +26,10 @@ export type AuthState = {
     | "mismatch"
     | "expired"
     | "too-many-attempts"
-    | "rate-limited";
+    | "rate-limited"
+    /* The shop has no mail provider configured, so no code can be sent to
+       anybody. Never says anything about a particular address. */
+    | "mail-unavailable";
   sent?: boolean;
   /** Minutes until a rate-limited caller may retry. */
   retryMinutes?: number;
@@ -126,9 +130,13 @@ export async function register(_previous: AuthState, formData: FormData): Promis
   const { code } = await issueCode(user.id, "email_verification");
   // Emailed, never placed in the URL — a code in the query string survives in
   // browser history, server logs and the Referer header.
-  await sendVerificationEmail(email, code, await getLocale());
+  const sent = await sendVerificationEmail(email, code, await getLocale());
 
-  redirect(`/verify?email=${encodeURIComponent(email)}`);
+  /* Whether it actually went out, so the next page can stop telling people to
+     check an inbox nothing was sent to. Only ever "0": the flag says the send
+     failed, and its absence claims nothing. */
+  const failed = sent ? "" : "&sent=0";
+  redirect(`/verify?email=${encodeURIComponent(email)}${failed}`);
 }
 
 /* ------------------------------------------------------------------ */
@@ -170,6 +178,11 @@ export async function resendVerification(
     }
   }
 
+  /* Answered before the lookup and without reference to the address: "this
+     shop cannot send email" is safe to tell anybody, where "nothing was sent
+     to you" would answer a question about who has an account here. */
+  if (!mailConfigured()) return { error: "mail-unavailable" };
+
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
 
   // Always reports success: telling an anonymous caller whether an address is
@@ -205,6 +218,11 @@ export async function requestPasswordReset(
       return { error: "rate-limited", retryMinutes: Math.ceil(result.retryAfter / 60) };
     }
   }
+
+  // Same reasoning as the resend above: a deployment with no mail provider
+  // cannot send this code to anyone, and saying so reveals nothing about who
+  // has an account. Without it the page promises a letter that never comes.
+  if (!mailConfigured()) return { error: "mail-unavailable" };
 
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
 

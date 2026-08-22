@@ -99,10 +99,25 @@ export function getProvider(id: ProviderId) {
   return provider.clientId && provider.clientSecret ? provider : null;
 }
 
-/** Which buttons to draw. Empty when nothing is configured. */
+/**
+ * The order the buttons are drawn in, which is deliberate rather than whatever
+ * `Object.keys` returns: Google first because it is the one nearly everyone
+ * has, and a list whose order moved with the environment would be worse.
+ */
+export const PROVIDER_ORDER: readonly ProviderId[] = ["google", "facebook"];
+
+/** Whether this deployment can actually complete a round trip to the provider. */
+export function isProviderConfigured(id: ProviderId): boolean {
+  return getProvider(id) !== null;
+}
+
+export function providerLabel(id: ProviderId): string {
+  return PROVIDERS[id].label;
+}
+
+/** Which buttons can be *used*. Empty when nothing is configured. */
 export function configuredProviders() {
-  return (Object.keys(PROVIDERS) as ProviderId[])
-    .map((id) => getProvider(id))
+  return PROVIDER_ORDER.map((id) => getProvider(id))
     .filter((provider): provider is ProviderConfig => provider !== null)
     .map((provider) => ({ id: provider.id, label: provider.label }));
 }
