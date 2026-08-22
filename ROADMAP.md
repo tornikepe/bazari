@@ -198,6 +198,22 @@ anything a thumb aims at. The site already met the standard. What it did not hav
   verified here**: Playwright cannot emulate safe areas, and the iOS Simulator needs a full Xcode
   install this machine does not have. Shipping it blind could put content under the notch that
   is merely letterboxed today, which is worse. Left as a device-gated item on purpose
+- ✅ **The catalogue's two controls share one row on a phone.** Sorting was a `<select>`, and a
+  `<select>` cannot be laid out narrower than its longest option — in Georgian, "ფასი: დაბლიდან
+  მაღლა" is wider than the space beside the filter button on every phone made. It was given a
+  whole row to itself and *still* overflowed an iPhone SE by 15px in WebKit. On phones it is now
+  a button and a bottom sheet: half the row each, 44px tall instead of 36, and the sheet is a
+  `radiogroup` so the option in force says which it is. From `sm` up the native control is
+  unchanged — it was never wrong there
+- ✅ **Two products per row from 340px** rather than 380px. One column on a 375px phone, the most
+  common size there is, turned six products into a very long scroll. 320px keeps one column,
+  which is where the original measurement was right
+- ✅ **The dashboard chart's date axis** printed six labels whatever the width; on a 390px screen
+  the last two landed on top of each other as "18.0822.08". It renders on the server and cannot
+  measure itself, so it draws a three-label axis and a six-label axis and lets CSS pick
+- ✅ **A width sweep for the pages behind a sign-in** (`responsive-dashboard.spec.ts`). The
+  storefront sweep cannot reach them, and the dashboard is the part of this project most likely
+  to be opened on a phone by the person running the shop
 - iOS Safari 100vh and the dynamic address bar, on the chat panel and the mobile filter sheet
   (`min-h-screen` in three places wants `dvh`)
 - Touch scrolling inside the filter rail and the chat transcript with momentum
@@ -343,6 +359,17 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
   also proves the two halves agree: the form writes a list, the page reads one
 - ✅ The structured data now lists **every** photo, and the list is deduplicated: the same photo
   twice is never what anyone meant
+- ✅ **The tracking page tells people where their order is.** It showed a status word, a date, an
+  item count and a total — and "pending" is a label, not an answer. It now shows the journey:
+  four steps, the ones behind you dated from the order's own history, the one you are standing on
+  explained, the ones ahead named but not pretended to be scheduled. No estimated delivery date
+  anywhere, because nothing in this shop knows one
+- ✅ The history is **reconstructed from two witnesses**: `OrderEvent` is the record, but an order
+  older than that table would show an empty timeline while plainly being delivered, so the
+  columns on the order itself are merged in and the earliest time for each status wins
+- ✅ It also returns **what they bought and what they agreed to pay** — both already known to the
+  person who placed the order. Still withheld: the address, the name, the email, and the notes
+  staff write on an order
 - **Specification table.** The `Details` box is brand, category, SKU and shipping — four facts the
   page already shows elsewhere. Real specifications need a place to put them
 - **Cross-sell** is still "related" and nothing else
@@ -363,6 +390,12 @@ The Swiss direction is right and consistent. What it lacks is the last 10% that 
 - **The 404 and error pages** are functional and unloved
 
 ### 3.2 — Craft
+
+- ✅ **The shop counts properly in English.** "1 products found" on the catalogue, "1 products" on
+  the wishlist and four order lists, "1 business days" on same-day products. The singular and the
+  plural both live in the dictionary — Georgian does not inflect after a numeral, so its pair is
+  identical on purpose — rather than in a rule that would have to know which languages have a
+  plural
 
 - ✅ A proper icon for empty states and errors rather than a grey circle — seven of them,
   one family, in `illustrations.tsx` (§3.1)
@@ -495,13 +528,22 @@ Ordered by how much each unblocks.
 
 | | What | Why it is yours | Blocks |
 |---|---|---|---|
-| **A1** | **`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`** | Creating an OAuth client means signing in to Google's own console as you, and the secret is a secret | Google sign-in. The flow is **written and tested**; the button is deliberately not rendered while the variables are empty, because a button that fails after a round trip to Google is worse than no button |
+| **A1** | **`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`** | Creating an OAuth client means signing in to Google's own console as you, and the secret is a secret | Google sign-in. The flow is **written and tested**; the button is drawn but **disabled** while the variables are empty, with a line saying why — a live button that fails after a round trip to Google would be worse, and rendering nothing at all told the reader nothing |
 | **A2** | **Check `AUTH_SECRET` on Vercel** | Only you can read your project's environment | Nothing — but with the old placeholder value, session cookies can be **forged**. Local is fine; production was never checked |
 | **A3** | A sending domain verified in **Resend** | Domain ownership | Every customer email — verification codes, password resets, order confirmations |
 | **A4** | A **payment provider** application | A business relationship, and it takes weeks | §4 payment. Worth starting long before it is needed |
 | **A5** | **Real product photographs** | Nobody can invent a photo of a product that exists | §4 images. Uploading now works with nothing configured — a Blob token would only move the bytes out of Postgres, which is a scaling question, not a blocker |
 | **A6** | **Real business details** — address, phone, hours, tax ID | They are facts about a business | §1.1 contact settings, which stay empty on purpose rather than showing something invented |
 | **A7** | A full **Xcode** install, then `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` | It needs your password | §2.3's notch work. `env(safe-area-inset-*)` cannot be emulated in Playwright, so it stays device-gated rather than shipped blind |
+
+- ✅ **The shop now says when it cannot send email.** Registration carries whether the message was
+  actually accepted, and the resend and password-reset actions refuse up front when no provider
+  is configured — worded so it never says anything about a particular address: "this shop cannot
+  send email" is safe to tell anybody, "nothing was sent to *you*" would answer a question about
+  who has an account here. Until **A3** is done, that is what a new customer will see
+- ✅ **Both sign-in marks are drawn**, in their own colours, and the one without credentials is a
+  disabled control with a line saying why. A shop that plainly has no Google button looked the
+  same as one whose button was broken. Until **A1**, that is what visitors see
 
 ### The two that cost nothing and unblock the most
 
