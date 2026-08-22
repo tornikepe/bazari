@@ -17,6 +17,26 @@ import { DEMO_CUSTOMER, seedCart, signIn, useEnglish } from "./helpers";
 
 const PHONE = "555000777";
 
+/**
+ * One order for the whole file, placed once.
+ *
+ * Not thrift for its own sake: `placeOrder` allows ten orders an hour from one
+ * address, and the suite shares one. Three tests each placing their own — over
+ * two engines — spent six of that budget on three questions about *reading* a
+ * tracking page, and the run failed at the far end with a rate limit that was
+ * working exactly as intended.
+ */
+let placed = "";
+
+test.beforeAll(async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await useEnglish(page);
+  await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
+  placed = await placeAnOrder(page);
+  await context.close();
+});
+
 async function placeAnOrder(page: import("@playwright/test").Page) {
   await seedCart(page);
   await page.goto("/checkout");
@@ -44,11 +64,7 @@ async function look(page: import("@playwright/test").Page, number: string, phone
 test("a new order shows where it is, not just what it is called @engine", async ({ page }) => {
   test.slow();
   await useEnglish(page);
-  await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
-
-  const number = await placeAnOrder(page);
-
-  await look(page, number, PHONE);
+  await look(page, placed, PHONE);
 
   const progress = page.getByRole("region", { name: /where your order is/i });
   await expect(progress, "the result showed no timeline at all").toBeVisible();
@@ -75,12 +91,8 @@ test("a new order shows where it is, not just what it is called @engine", async 
 });
 
 test("the order's own contents come back with it @engine", async ({ page }) => {
-  test.slow();
   await useEnglish(page);
-  await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
-
-  const number = await placeAnOrder(page);
-  await look(page, number, PHONE);
+  await look(page, placed, PHONE);
 
   // What they bought and what they agreed to pay — both already known to the
   // person who placed it, and both missing from the old page.
@@ -90,15 +102,11 @@ test("the order's own contents come back with it @engine", async ({ page }) => {
 });
 
 test("the phone number is what protects it @engine", async ({ page }) => {
-  test.slow();
   await useEnglish(page);
-  await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
-
-  const number = await placeAnOrder(page);
 
   // The order number alone is guessable — it is the pair that authorises the
   // lookup, and the refusal must not hint that the number itself was right.
-  await look(page, number, "555999999");
+  await look(page, placed, "555999999");
 
   await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)').first()).toContainText(
     /not found|check the number/i,
