@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
-import { fill } from "@/lib/i18n";
+import { countText, fill } from "@/lib/i18n";
 import { discountPercent } from "@/lib/format";
 import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -80,7 +80,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     { label: t.product.sku, value: product.slug },
     {
       label: t.product.shipping,
-      value: fill(t.product.shippingDays, { count: product.shippingDays }),
+      value: countText(t.product.shippingDaysOne, t.product.shippingDays, product.shippingDays),
     },
   ];
 

@@ -98,11 +98,30 @@ export function SalesChart({
    * the same width.
    */
   const lastIndex = data.length - 1;
-  const step = Math.max(1, Math.round(data.length / 6));
-  const tickIndexes = data.flatMap((_, index) => (index % step === 0 ? [index] : []));
-  // The last bar earns a label of its own, but only when it is far enough
-  // from the previous tick to not collide with it.
-  if (lastIndex - (tickIndexes.at(-1) ?? 0) >= Math.max(2, step / 2)) tickIndexes.push(lastIndex);
+
+  /**
+   * Two sets of ticks: one for a phone, one for everything wider.
+   *
+   * Six labels fit a desktop plot and collide on a 390px one, where the plot
+   * is about 250px after the money gutter — "18.0822.08", printed on top of
+   * each other, is what that looked like. The count cannot be measured here
+   * because this chart renders on the server and has nothing to hydrate, so
+   * both sets are drawn and CSS picks one. Three labels and thirty bars is
+   * not less information: the bars are the information.
+   */
+  const ticksFor = (target: number) => {
+    const step = Math.max(1, Math.round(data.length / target));
+    const indexes = data.flatMap((_, index) => (index % step === 0 ? [index] : []));
+    // The last bar earns a label of its own, but only when it is far enough
+    // from the previous tick to not collide with it.
+    if (lastIndex - (indexes.at(-1) ?? 0) >= Math.max(2, step / 2)) indexes.push(lastIndex);
+    return indexes;
+  };
+
+  const tickSets = [
+    { indexes: ticksFor(3), className: "sm:hidden" },
+    { indexes: ticksFor(6), className: "hidden sm:block" },
+  ];
 
   const summary = [
     { label: t.admin.chartTotal, value: formatPrice(total, locale) },
@@ -173,8 +192,9 @@ export function SalesChart({
           {/* Date axis. Positioned against the plot rather than given one cell
               per bar: a 30-column flex row is ~20px wide per cell, and "07-05"
               wrapped onto two lines in every one of them. */}
-          <div className="relative mt-2 h-4">
-            {tickIndexes.map((index) => {
+          {tickSets.map((set) => (
+          <div key={set.className} className={`relative mt-2 h-4 ${set.className}`}>
+            {set.indexes.map((index) => {
               const centre = ((index + 0.5) / data.length) * 100;
 
               // Clamped by position, not by index. The final tick is often not
@@ -196,6 +216,7 @@ export function SalesChart({
               );
             })}
           </div>
+          ))}
         </div>
       </div>
 

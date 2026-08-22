@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { RoleBadge } from "@/components/admin/RoleBadge";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { ChevronLeftIcon } from "@/components/ui/icons";
+import { countText } from "@/lib/i18n";
 
 /**
  * One customer, and everything the shop actually knows about them.
@@ -142,8 +143,7 @@ export default async function AdminCustomerPage({
                     <div className="min-w-0 flex-1">
                       <p className="font-mono text-xs font-bold text-ink-900">{order.number}</p>
                       <p className="mt-0.5 text-xs text-ink-400">
-                        {formatDateTime(order.createdAt)} · {order._count.items}{" "}
-                        {t.admin.productCount}
+                        {formatDateTime(order.createdAt)} · {countText(t.admin.productCountOne, t.admin.productCount, order._count.items)}
                       </p>
                     </div>
 

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { getI18n } from "@/lib/locale";
 import { formatDateTime, formatPrice } from "@/lib/format";
-import { fill } from "@/lib/i18n";
+import { countText, fill } from "@/lib/i18n";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
 import { AdminToolbar } from "@/components/admin/AdminToolbar";
@@ -102,7 +102,10 @@ export default async function AdminOrdersPage({
             key={tab.value || "all"}
             href={tabHref(tab.value)}
             aria-current={(status ?? "") === tab.value ? "page" : undefined}
-            className={`flex shrink-0 items-center gap-1.5 rounded-control px-3 py-1.5 text-sm font-medium transition-colors ${
+            /* 44px on a phone. These were 30px tall, which is a comfortable
+               size for a mouse and a poor one for a thumb — and this row is
+               the primary way an order list is narrowed on a small screen. */
+            className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-control px-3 py-1.5 text-sm font-medium transition-colors sm:min-h-9 ${
               (status ?? "") === tab.value
                 ? "bg-panel text-panel-fg"
                 : "border border-line bg-surface text-ink-600 hover:bg-ink-50"
@@ -188,7 +191,7 @@ export default async function AdminOrdersPage({
                       {formatPrice(order.total, locale)}
                     </p>
                     <p className="text-xs text-ink-400">
-                      {order._count.items} {t.admin.productCount}
+                      {countText(t.admin.productCountOne, t.admin.productCount, order._count.items)}
                     </p>
                   </div>
                 </div>
@@ -227,7 +230,7 @@ export default async function AdminOrdersPage({
                         {order.number}
                       </Link>
                       <p className="text-xs text-ink-400">
-                        {order._count.items} {t.admin.productCount}
+                        {countText(t.admin.productCountOne, t.admin.productCount, order._count.items)}
                       </p>
                     </td>
 

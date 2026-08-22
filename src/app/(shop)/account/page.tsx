@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getI18n } from "@/lib/locale";
-import { fill } from "@/lib/i18n";
+import { countText, fill } from "@/lib/i18n";
 import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ProfileForm } from "@/components/account/ProfileForm";
@@ -116,8 +116,7 @@ export default async function AccountPage({
                     <div className="min-w-0 flex-1">
                       <p className="font-mono text-sm font-bold text-ink-900">{order.number}</p>
                       <p className="text-xs text-ink-400">
-                        {formatDate(order.createdAt)} · {order._count.items}{" "}
-                        {t.admin.productCount}
+                        {formatDate(order.createdAt)} · {countText(t.admin.productCountOne, t.admin.productCount, order._count.items)}
                       </p>
                     </div>
 

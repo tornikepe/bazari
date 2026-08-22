@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getI18n } from "@/lib/locale";
-import { fill } from "@/lib/i18n";
+import { countText } from "@/lib/i18n";
 import { parseFilters, type RawSearchParams } from "@/lib/filters";
 import { getBrands, getCategoriesWithCounts, getFilteredProducts, getPriceBounds } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -100,7 +100,7 @@ export default async function CatalogPage({
         <section id="results" tabIndex={-1} className="min-w-0 flex-1">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-ink-500">
-              {fill(t.catalog.resultsCount, { count: total })}
+              {countText(t.catalog.resultsCountOne, t.catalog.resultsCount, total)}
             </p>
 
             {/* Half the row each on a phone, their natural width from `sm` up.

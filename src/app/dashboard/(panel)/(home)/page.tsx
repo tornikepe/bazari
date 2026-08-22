@@ -12,7 +12,7 @@ import {
   type RangeDays,
 } from "@/lib/analytics";
 import { ChartRangeTabs } from "@/components/admin/ChartRangeTabs";
-import { fill } from "@/lib/i18n";
+import { countText, fill } from "@/lib/i18n";
 import type { RawSearchParams } from "@/lib/filters";
 import {
   AlertIcon,
@@ -196,7 +196,7 @@ export default async function DashboardPage({
                     <div className="hidden text-right sm:block">
                       <p className="text-xs text-ink-400">{formatDate(order.createdAt)}</p>
                       <p className="text-xs text-ink-400">
-                        {order._count.items} {t.admin.productCount}
+                        {countText(t.admin.productCountOne, t.admin.productCount, order._count.items)}
                       </p>
                     </div>
 

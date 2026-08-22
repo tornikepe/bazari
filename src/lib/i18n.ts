@@ -95,6 +95,7 @@ const ka = {
     sortPriceDesc: "ფასი: მაღლიდან დაბლა",
     sortName: "დასახელებით (ა-ჰ)",
     resultsCount: "ნაპოვნია {count} პროდუქტი",
+    resultsCountOne: "ნაპოვნია {count} პროდუქტი",
     noResults: "ამ ფილტრებით პროდუქტი ვერ მოიძებნა",
     noResultsHint: "სცადე ფილტრების გასუფთავება ან სხვა საძიებო სიტყვა.",
     searchResultsFor: "ძებნის შედეგი:",
@@ -121,6 +122,7 @@ const ka = {
     sku: "კოდი",
     shipping: "მიწოდება",
     shippingDays: "{count} სამუშაო დღე",
+    shippingDaysOne: "{count} სამუშაო დღე",
     related: "მსგავსი პროდუქტები",
     notFound: "პროდუქტი ვერ მოიძებნა",
     backToCatalog: "კატალოგში დაბრუნება",
@@ -294,6 +296,7 @@ const ka = {
     empty: "რჩეულების სია ცარიელია",
     emptyHint: "დააჭირე გულის იკონას პროდუქტზე, რომ აქ შეინახო.",
     count: "{count} პროდუქტი",
+    countOne: "{count} პროდუქტი",
     clear: "სიის გასუფთავება",
   },
 
@@ -421,7 +424,8 @@ const ka = {
     active: "აქტიური",
     icon: "იკონა (emoji)",
     sortOrder: "რიგითობა",
-    productCount: "პროდუქტი",
+    productCount: "{count} პროდუქტი",
+    productCountOne: "{count} პროდუქტი",
     status: "სტატუსი",
     customer: "მომხმარებელი",
     date: "თარიღი",
@@ -774,6 +778,7 @@ const en: Dictionary = {
     sortPriceDesc: "Price: high to low",
     sortName: "Name (A-Z)",
     resultsCount: "{count} products found",
+    resultsCountOne: "{count} product found",
     noResults: "No products match these filters",
     noResultsHint: "Try clearing the filters or using a different search term.",
     searchResultsFor: "Results for:",
@@ -800,6 +805,7 @@ const en: Dictionary = {
     sku: "SKU",
     shipping: "Shipping",
     shippingDays: "{count} business days",
+    shippingDaysOne: "{count} business day",
     related: "Related products",
     notFound: "Product not found",
     backToCatalog: "Back to catalog",
@@ -973,6 +979,7 @@ const en: Dictionary = {
     empty: "Your wishlist is empty",
     emptyHint: "Tap the heart on any product to save it here.",
     count: "{count} products",
+    countOne: "{count} product",
     clear: "Clear wishlist",
   },
 
@@ -1100,7 +1107,8 @@ const en: Dictionary = {
     active: "Active",
     icon: "Icon (emoji)",
     sortOrder: "Sort order",
-    productCount: "products",
+    productCount: "{count} products",
+    productCountOne: "{count} product",
     status: "Status",
     customer: "Customer",
     date: "Date",
@@ -1368,6 +1376,23 @@ export function getDictionary(locale: Locale): Dictionary {
 }
 
 /** Replaces `{name}` placeholders: `fill(t.cart.freeShippingHint, { amount: "20 ₾" })` */
+/**
+ * Picks the singular or the plural, then fills it.
+ *
+ * English says "1 product found" and "6 products found"; Georgian says
+ * "ნაპოვნია 1 პროდუქტი" for both, because it does not inflect a noun after a
+ * numeral. So the *dictionary* decides — both forms exist in both languages
+ * and the Georgian pair is simply identical — rather than a rule here trying
+ * to know which languages have a plural.
+ *
+ * Not a general plural library: no language in this shop needs a "few" or a
+ * "many" form, and inventing categories nobody uses is how a translation file
+ * becomes unreadable.
+ */
+export function countText(one: string, many: string, count: number) {
+  return fill(count === 1 ? one : many, { count });
+}
+
 export function fill(template: string, values: Record<string, string | number>) {
   return template.replace(/\{(\w+)\}/g, (match, key: string) =>
     key in values ? String(values[key]) : match,

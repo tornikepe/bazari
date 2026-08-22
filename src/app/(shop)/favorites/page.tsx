@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { ProductGridSkeleton, PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { TrashIcon } from "@/components/ui/icons";
 import { clearFavorites } from "@/lib/favorites-store";
-import { fill } from "@/lib/i18n";
+import { countText } from "@/lib/i18n";
 import { getProductsByIds } from "@/app/actions/products";
 import type { ProductCardData } from "@/lib/catalog";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -52,7 +52,7 @@ export default function FavoritesPage() {
           {t.favorites.title}
           {!isLoading && products.length > 0 && (
             <span className="ml-2 text-sm font-medium text-ink-400">
-              {fill(t.favorites.count, { count: products.length })}
+              {countText(t.favorites.countOne, t.favorites.count, products.length)}
             </span>
           )}
         </h1>
