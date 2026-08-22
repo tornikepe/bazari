@@ -14,6 +14,28 @@ import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyOrdersArt, NoResultsArt } from "@/components/ui/illustrations";
 
+const SORTS = ["newest", "oldest", "total-desc", "total-asc"] as const;
+
+/**
+ * `id` as the last key, always.
+ *
+ * Two orders placed in the same second — which the seed produces by the dozen
+ * — otherwise come back in whatever order the planner felt like, and one row
+ * can appear on page one and again on page two of the same listing.
+ */
+function buildOrderBy(sort: string): Prisma.OrderOrderByWithRelationInput[] {
+  switch (sort) {
+    case "oldest":
+      return [{ createdAt: "asc" }, { id: "asc" }];
+    case "total-desc":
+      return [{ total: "desc" }, { id: "asc" }];
+    case "total-asc":
+      return [{ total: "asc" }, { id: "asc" }];
+    default:
+      return [{ createdAt: "desc" }, { id: "asc" }];
+  }
+}
+
 const PAGE_SIZE = 20;
 
 function one(value: string | string[] | undefined) {
@@ -31,6 +53,8 @@ export default async function AdminOrdersPage({
   const statusRaw = one(params.status);
   const status = isOrderStatus(statusRaw) ? statusRaw : null;
   const query = one(params.q);
+  const sortRaw = one(params.sort);
+  const sort = (SORTS as readonly string[]).includes(sortRaw) ? sortRaw : "newest";
   const pageRaw = Number(one(params.page));
   const requestedPage = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
 
@@ -54,7 +78,7 @@ export default async function AdminOrdersPage({
 
   const orders = await prisma.order.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: buildOrderBy(sort),
     include: {
       _count: { select: { items: true } },
       // Only the newest event per order: the column shows when the status last
@@ -138,8 +162,21 @@ export default async function AdminOrdersPage({
                 ...ORDER_STATUSES.map((value) => ({ value, label: t.status[value] })),
               ],
             },
+            {
+              name: "sort",
+              label: t.admin.sortBy,
+              /* Empty means the default, so "newest" is not repeated in the
+                 URL of every listing that never changed it. */
+              value: sort === "newest" ? "" : sort,
+              options: [
+                { value: "", label: t.admin.sortNewest },
+                { value: "oldest", label: t.admin.sortOldest },
+                { value: "total-desc", label: t.admin.sortTotalDesc },
+                { value: "total-asc", label: t.admin.sortTotalAsc },
+              ],
+            },
           ]}
-          hasActive={Boolean(query || status)}
+          hasActive={Boolean(query || status || sort !== "newest")}
         />
       </div>
 

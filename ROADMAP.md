@@ -37,8 +37,8 @@ rather than a claim. What is left needs a real phone.
   still print a bare red sentence
 - **Cross-sell** is still "related products" and nothing else. Bought-together, recently viewed,
   and something on the empty cart
-- **Density on the dashboard.** The tables are readable and plain: no column sorting, no saved
-  views, no bulk actions, no inline editing
+- **Density on the dashboard, the rest.** Orders and customers can now be sorted, as products
+  already could. Still missing: saved views, bulk actions, and inline editing
 - **The 404 and error pages** work and are unloved
 - **The account page, the last 10%.** The identity block, the figures and the order list are
   done; still open are a saved-address book rather than one address, filtering the order list by

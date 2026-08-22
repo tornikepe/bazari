@@ -30,6 +30,28 @@ function one(value: string | string[] | undefined) {
  * money that never arrived, and counting it would flatter every customer who
  * ever changed their mind.
  */
+const SORTS = ["newest", "name", "orders-desc"] as const;
+
+/**
+ * Sorting by *lifetime spend* is deliberately not offered.
+ *
+ * Spend is aggregated per page with one grouped query, not stored on the user
+ * row, so the database cannot order by it without summing every order for
+ * every customer first. Offering the control and then sorting only the twenty
+ * rows already fetched would look like it worked and be wrong on page two —
+ * the worst of the three options.
+ */
+function buildOrderBy(sort: string): Prisma.UserOrderByWithRelationInput[] {
+  switch (sort) {
+    case "name":
+      return [{ name: "asc" }, { id: "asc" }];
+    case "orders-desc":
+      return [{ orders: { _count: "desc" } }, { id: "asc" }];
+    default:
+      return [{ createdAt: "desc" }, { id: "asc" }];
+  }
+}
+
 export default async function AdminCustomersPage({
   searchParams,
 }: {
@@ -39,6 +61,8 @@ export default async function AdminCustomersPage({
   const params = await searchParams;
 
   const query = one(params.q);
+  const sortRaw = one(params.sort);
+  const sort = (SORTS as readonly string[]).includes(sortRaw) ? sortRaw : "newest";
   const roleRaw = one(params.role);
   const role = (ROLES as readonly string[]).includes(roleRaw)
     ? (roleRaw as (typeof ROLES)[number])
@@ -70,7 +94,7 @@ export default async function AdminCustomersPage({
 
   const users = await prisma.user.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: buildOrderBy(sort),
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
     select: {
@@ -141,8 +165,18 @@ export default async function AdminCustomersPage({
                 { value: "viewer", label: t.admin.roleViewer },
               ],
             },
+            {
+              name: "sort",
+              label: t.admin.sortBy,
+              value: sort === "newest" ? "" : sort,
+              options: [
+                { value: "", label: t.admin.sortNewest },
+                { value: "name", label: t.admin.sortName },
+                { value: "orders-desc", label: t.admin.sortOrdersDesc },
+              ],
+            },
           ]}
-          hasActive={Boolean(query || role)}
+          hasActive={Boolean(query || role || sort !== "newest")}
         />
       </div>
 
