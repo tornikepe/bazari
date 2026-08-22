@@ -6,7 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AlertIcon, PackageIcon, SearchIcon, SpinnerIcon } from "@/components/ui/icons";
+import Image from "next/image";
 import { formatDate, formatPrice } from "@/lib/format";
+import { fill } from "@/lib/i18n";
+import { OrderProgress } from "@/components/order/OrderProgress";
 import { trackOrder, type TrackResult } from "@/app/actions/track";
 
 function TrackOrderForm() {
@@ -42,30 +45,107 @@ function TrackOrderForm() {
         </div>
 
         {found ? (
-          <div className="card p-6">
-            <h2 className="text-sm font-bold text-ink-900">{t.track.resultTitle}</h2>
+          <div className="flex flex-col gap-4">
+            {/* ------------------------------ header ------------------------ */}
+            <div className="card p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <div className="min-w-0">
+                  <h2 className="text-xs font-bold tracking-wider text-ink-400 uppercase">
+                    {t.track.resultTitle}
+                  </h2>
+                  <p className="mt-0.5 font-mono text-lg font-bold break-all text-ink-900">
+                    {found.number}
+                  </p>
+                </div>
+                <StatusBadge status={found.status} t={t} />
+              </div>
 
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <span className="font-mono text-lg font-bold text-ink-900">{found.number}</span>
-              <StatusBadge status={found.status} t={t} />
+              <p className="mt-3 text-xs text-ink-400">
+                {t.track.placed}: {formatDate(found.createdAt)}
+              </p>
+
+              <div className="mt-5 border-t border-line pt-5">
+                <OrderProgress status={found.status} history={found.history} />
+              </div>
             </div>
 
-            <dl className="mt-4 flex flex-col gap-2.5 text-sm">
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-500">{t.track.placed}</dt>
-                <dd className="font-semibold text-ink-800">{formatDate(found.createdAt)}</dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-500">{t.track.items}</dt>
-                <dd className="font-semibold text-ink-800">{found.itemCount}</dd>
-              </div>
-              <div className="flex items-center justify-between border-t border-line pt-2.5">
-                <dt className="font-bold text-ink-900">{t.cart.total}</dt>
-                <dd className="text-base font-extrabold text-ink-900">
-                  {formatPrice(found.total, locale)}
-                </dd>
-              </div>
-            </dl>
+            {/* ------------------------------- items ------------------------ */}
+            <div className="card p-5 sm:p-6">
+              <h3 className="text-sm font-bold text-ink-900">{t.track.itemsTitle}</h3>
+
+              <ul className="mt-3 divide-y divide-line">
+                {found.items.map((item, index) => (
+                  <li key={index} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <span className="relative h-11 w-11 shrink-0 overflow-hidden border border-line bg-ink-50">
+                      <Image src={item.image} alt="" fill sizes="44px" className="object-cover" />
+                    </span>
+                    <span className="min-w-0 flex-1 text-sm text-ink-800">{item.name}</span>
+                    <span className="shrink-0 text-xs text-ink-400">
+                      {fill(t.track.quantity, { count: item.quantity })}
+                    </span>
+                    <span className="w-20 shrink-0 text-right text-sm font-semibold text-ink-900">
+                      {formatPrice(item.price * item.quantity, locale)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ------------------------------ payment ----------------------- */}
+            <div className="card p-5 sm:p-6">
+              <h3 className="text-sm font-bold text-ink-900">{t.track.paymentTitle}</h3>
+
+              <dl className="mt-3 flex flex-col gap-2 text-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-ink-500">{t.track.subtotal}</dt>
+                  <dd className="font-semibold text-ink-800">
+                    {formatPrice(found.subtotal, locale)}
+                  </dd>
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-ink-500">{t.track.shipping}</dt>
+                  <dd className="font-semibold text-ink-800">
+                    {found.shipping === 0 ? t.track.free : formatPrice(found.shipping, locale)}
+                  </dd>
+                </div>
+
+                {/* Only when there was one — a row of zero is noise. */}
+                {found.discount > 0 && (
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-ink-500">{t.track.discount}</dt>
+                    <dd className="font-semibold text-success">
+                      −{formatPrice(found.discount, locale)}
+                    </dd>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-4 border-t border-line pt-2">
+                  <dt className="font-bold text-ink-900">{t.cart.total}</dt>
+                  <dd className="text-base font-extrabold text-ink-900">
+                    {formatPrice(found.total, locale)}
+                  </dd>
+                </div>
+
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2.5">
+                  <dt className="text-ink-500">{t.admin.paymentMethod}</dt>
+                  <dd className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-ink-800">
+                      {t.payment[found.paymentMethod as keyof typeof t.payment]}
+                    </span>
+                    <span
+                      className={`badge ${
+                        found.paymentStatus === "paid"
+                          ? "bg-success-soft text-success"
+                          : "bg-ink-100 text-ink-600"
+                      }`}
+                    >
+                      {t.payment[found.paymentStatus as keyof typeof t.payment]}
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
 
             <button
               type="button"
@@ -74,7 +154,7 @@ function TrackOrderForm() {
                 setOrderNumber("");
                 setPhone("");
               }}
-              className="btn btn-outline btn-md mt-5 w-full"
+              className="btn btn-outline btn-md w-full"
             >
               {t.track.searchAgain}
             </button>
@@ -129,7 +209,8 @@ function TrackOrderForm() {
           </form>
         )}
 
-        <p className="mt-5 text-center text-sm text-ink-500">
+        <p className="mt-6 text-center text-sm text-ink-500">
+          {t.track.help}{" "}
           <Link href="/contact" className="font-semibold text-brand-600 hover:underline">
             {t.footer.contactUs}
           </Link>
