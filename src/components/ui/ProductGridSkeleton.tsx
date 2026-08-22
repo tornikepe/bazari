@@ -37,7 +37,7 @@
  * to stop between one product and the next.
  */
 export const PRODUCT_GRID =
-  "grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 xl:grid-cols-3";
+  "grid grid-cols-1 gap-3 min-[340px]:grid-cols-2 sm:gap-4 xl:grid-cols-3";
 
 /** The wishlist's grid, which goes one wider because it has no sidebar. */
 export const PRODUCT_GRID_WIDE =

@@ -171,6 +171,15 @@ export const CheckIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** Two lines with handles — "sort", as distinct from the funnel that filters. */
+export const SortIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 7h11M4 12h7M4 17h4" />
+    <path d="m17 11 3 3 3-3" />
+    <path d="M20 14V4" />
+  </Icon>
+);
+
 export const FilterIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M3 5h18M6 12h12M10 19h4" />

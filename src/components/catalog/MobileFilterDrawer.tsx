@@ -28,7 +28,10 @@ export function MobileFilterDrawer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="btn btn-outline btn-sm lg:hidden"
+        /* Same height as the sort control beside it, and 44px on a phone:
+           two controls of different heights in one row read as a mistake, and
+           36px is under the comfortable touch size. */
+        className="btn btn-outline btn-sm h-11 flex-1 sm:h-9 sm:flex-none lg:hidden"
         aria-expanded={open}
       >
         <FilterIcon size={15} />
