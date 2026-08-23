@@ -25,6 +25,8 @@ enum Role {
 enum TokenPurpose {
   email_verification
   password_reset
+  /// A staff member setting their password for the first time.
+  staff_invite
 }
 
 enum PaymentMethod {
@@ -271,6 +273,10 @@ model User {
   /// cookie carries the value it was signed with, so an old one no longer
   /// matches and is rejected without needing a session table.
   sessionVersion Int    @default(0)
+  /// Set when an account is switched off. Sign-in is refused while it is set,
+  /// and the row stays: an order points at the customer who placed it, and a
+  /// deleted staff account takes its own audit trail with it.
+  disabledAt DateTime?
   orders    Order[]
   tokens    VerificationToken[]
   addresses Address[]

@@ -117,9 +117,16 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       role: true,
       emailVerified: true,
       sessionVersion: true,
+      disabledAt: true,
     },
   });
   if (!user) return null;
+
+  /* Checked on every request, not only at sign-in. Disabling bumps
+     `sessionVersion` too, which is what actually ends a live session — this is
+     the belt to that pair of braces, and it is what makes the account stay
+     shut if the bump is ever missed. */
+  if (user.disabledAt) return null;
 
   // The signature proves the cookie was minted here; this proves it has not
   // been revoked since. A password reset bumps the column, and every cookie

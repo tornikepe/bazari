@@ -21,6 +21,7 @@ import {
   PackageIcon,
   FileIcon,
   SettingsIcon,
+  ShieldIcon,
   UsersIcon,
 } from "@/components/ui/icons";
 
@@ -40,6 +41,7 @@ export function AdminSidebar({
     { href: "/dashboard/orders", label: t.admin.orders, icon: BagIcon },
     { href: "/dashboard/coupons", label: t.admin.coupons, icon: TagIcon },
     { href: "/dashboard/customers", label: t.admin.customers, icon: UsersIcon },
+    { href: "/dashboard/staff", label: t.admin.staff, icon: ShieldIcon },
     { href: "/dashboard/pages", label: t.admin.pages, icon: FileIcon },
     { href: "/dashboard/settings", label: t.admin.settings, icon: SettingsIcon },
   ];

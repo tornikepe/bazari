@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import type { TokenPurpose } from "@/generated/prisma/enums";
 
@@ -100,4 +100,58 @@ export async function consumeCode(
   });
 
   return { ok: true, userId: user.id };
+}
+
+/**
+ * A one-time link token for a staff invitation.
+ *
+ * Not a six-digit code: this one travels in a URL rather than being typed, so
+ * it can afford to be long — and it has to be, because a code short enough to
+ * read out is short enough to guess when it is good for two days rather than
+ * fifteen minutes.
+ *
+ * Stored hashed like every other token here, and any earlier unused invite for
+ * the same person is spent first so only the newest link works.
+ */
+export async function issueInvite(userId: string, hours = 48) {
+  await prisma.verificationToken.updateMany({
+    where: { userId, purpose: "staff_invite", usedAt: null },
+    data: { usedAt: new Date() },
+  });
+
+  const token = randomBytes(32).toString("base64url");
+
+  await prisma.verificationToken.create({
+    data: {
+      userId,
+      purpose: "staff_invite",
+      codeHash: hashCode(token),
+      expiresAt: new Date(Date.now() + hours * 60 * 60 * 1000),
+    },
+  });
+
+  return token;
+}
+
+/**
+ * Spends an invitation and reports whose it was.
+ *
+ * Deliberately not `consumeCode`: that one counts attempts and locks after
+ * five, which is right for a code somebody types and wrong for a link they
+ * click — a mistyped URL would lock the invitation for the person it was sent
+ * to. A 256-bit token needs no attempt limit.
+ */
+export async function consumeInvite(token: string): Promise<string | null> {
+  if (!token) return null;
+
+  const row = await prisma.verificationToken.findFirst({
+    where: { purpose: "staff_invite", usedAt: null, codeHash: hashCode(token) },
+    select: { id: true, userId: true, expiresAt: true },
+  });
+
+  if (!row) return null;
+  if (row.expiresAt.getTime() < Date.now()) return null;
+
+  await prisma.verificationToken.update({ where: { id: row.id }, data: { usedAt: new Date() } });
+  return row.userId;
 }

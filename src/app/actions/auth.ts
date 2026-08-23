@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { consumeCode, issueCode } from "@/lib/verification";
+import { consumeCode, consumeInvite, issueCode } from "@/lib/verification";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/auth-emails";
 import { mailConfigured } from "@/lib/mail";
 import { getLocale } from "@/lib/locale";
@@ -64,6 +64,13 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
   if (!user || !verifyPassword(password, user.password)) {
     return { error: "invalid" };
   }
+
+  /* A switched-off account is refused *after* the password is checked and
+     with the same message a wrong password gets. Answering "this account is
+     disabled" to anyone who types an address would turn the form into a way
+     to find out who works here — and answering it before the password check
+     would do so without even needing to guess one. */
+  if (user.disabledAt) return { error: "invalid" };
 
   // A correct password clears the counters, so yesterday's typos don't count.
   await reset(`login:ip:${ip}`);
@@ -306,4 +313,53 @@ export async function updateProfile(
   }
 
   redirect("/account?saved=1");
+}
+
+/**
+ * Accepts a staff invitation: the invitee chooses their own password.
+ *
+ * The account already exists with a password nobody knows, so this is not a
+ * reset — there is nothing to reset from. The token is the whole
+ * authorisation, which is why it is 256 bits, single-use and short-lived, and
+ * why it is spent before the password is written rather than after: a request
+ * that fails halfway must not leave a link that still works.
+ */
+export async function acceptInvite(
+  _previous: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const token = String(formData.get("token") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+
+  if (password.length < MIN_PASSWORD_LENGTH) return { error: "weak" };
+  if (password !== confirm) return { error: "mismatch" };
+
+  const userId = await consumeInvite(token);
+  if (!userId) return { error: "expired" };
+
+  let user;
+  try {
+    user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashPassword(password),
+        /* Following the link proves the address receives mail, which is the
+           same thing the six-digit code proves. Asking them to confirm it
+           again afterwards would be asking twice. */
+        emailVerified: true,
+        disabledAt: null,
+        // Nothing was signed in before this; the bump is for the case where
+        // an existing account was promoted into a role.
+        sessionVersion: { increment: 1 },
+      },
+      select: { id: true, role: true, sessionVersion: true },
+    });
+  } catch (error) {
+    console.error("acceptInvite failed", error);
+    return { error: "failed" };
+  }
+
+  await createSession(user.id, user.sessionVersion);
+  redirect(homeFor(user.role));
 }

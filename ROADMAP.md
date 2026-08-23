@@ -30,7 +30,6 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 | | Item | What it needs |
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
-| 🟠 | Staff management | Invite, change role, deactivate |
 | 🟠 | Order invoice | Printable, and attached to the confirmation email |
 | 🟠 | Stock control | Restock from the dashboard, low-stock email, "tell me when it is back" |
 | 🟡 | Product variants | Size and colour. A schema change, and the largest item here |
@@ -129,9 +128,8 @@ Visual regression (§4) lands first, so the pass is measured rather than admired
 
 ## 9. Order of work
 
-1. **§3** — staff management
-2. **§4** — visual regression
-3. **§8** — the design pass
-4. **§2** — craft, after the design pass: polishing pages that are about to be restyled is work
+1. **§4** — visual regression
+2. **§8** — the design pass
+3. **§2** — craft, after the design pass: polishing pages that are about to be restyled is work
    done twice
-5. **§5** and **§6**, last
+4. **§5** and **§6**, last
