@@ -27,6 +27,7 @@ import {
   SearchIcon,
   UserIcon,
 } from "@/components/ui/icons";
+import { useChangeKey } from "@/components/ui/useChangeKey";
 
 export type HeaderCategory = {
   slug: string;
@@ -47,7 +48,11 @@ export function HeaderBar({
   const { locale, t, setLocale } = useI18n();
   const settings = useSettings();
   const { count, hydrated } = useCart();
+
+  /* Both badges bounce when their number changes and stay still on load. */
+  const cartBump = useChangeKey(count, hydrated);
   const favorites = useFavorites();
+  const savedBump = useChangeKey(favorites.length, hydrated);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -197,7 +202,12 @@ export function HeaderBar({
               <HeartIcon size={20} />
               {/* Only after hydration — the server can't know the wishlist. */}
               {hydrated && favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid">
+                <span
+                  key={savedBump}
+                  className={`absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid ${
+                    savedBump > 0 ? "animate-bump" : ""
+                  }`}
+                >
                   {favorites.length > 99 ? "99+" : favorites.length}
                 </span>
               )}
@@ -214,7 +224,16 @@ export function HeaderBar({
               <CartIcon size={21} />
               {/* Rendered only after hydration — the server has no cart. */}
               {hydrated && count > 0 && (
-                <span className="absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid">
+                /* Keyed on the change, so the badge remounts and replays the
+                   bump. Adding something from a product page changes a number
+                   in the corner of the screen and nothing else; without this
+                   the only feedback is a digit quietly becoming another digit. */
+                <span
+                  key={cartBump}
+                  className={`absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid ${
+                    cartBump > 0 ? "animate-bump" : ""
+                  }`}
+                >
                   {count > 99 ? "99+" : count}
                 </span>
               )}

@@ -717,6 +717,49 @@
   mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
 }
 
+/*
+ * A count that just changed.
+ *
+ * Scale only — nothing here moves anything else on the page, which is what
+ * makes it safe on a badge sitting inside a header that must not reflow. The
+ * reduced-motion block below flattens it to nothing, and it can: the number
+ * itself is the information, and the bump only draws the eye to it.
+ */
+@keyframes bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-bump {
+  animation: bump 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * A figure that has been recalculated.
+ *
+ * A background tint rather than a movement: this runs on prices inside a
+ * table, and anything that changes a box's size would jog every row below it.
+ */
+@keyframes flash {
+  0% {
+    background-color: var(--color-brand-50);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-flash {
+  animation: flash 0.7s ease-out;
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

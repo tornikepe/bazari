@@ -11,5 +11,17 @@ const STYLES: Record<string, string> = {
 export function StatusBadge({ status, t }: { status: string; t: Dictionary }) {
   const label = t.status[status as keyof Dictionary["status"]] ?? status;
 
-  return <span className={`badge ${STYLES[status] ?? "bg-ink-100 text-ink-500"}`}>{label}</span>;
+  /* `transition-colors`, so a status changed from the dashboard moves between
+     two colours rather than cutting between them. It costs nothing on a page
+     that only ever renders one status, and the reduced-motion block flattens
+     it for anyone who has asked for that. */
+  return (
+    <span
+      className={`badge transition-colors duration-200 ${
+        STYLES[status] ?? "bg-ink-100 text-ink-500"
+      }`}
+    >
+      {label}
+    </span>
+  );
 }

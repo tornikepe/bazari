@@ -37,8 +37,6 @@ rather than a claim. What is left needs a real phone.
 
 ### 2.2 — Craft
 
-- **Micro-interactions** on add-to-cart, quantity change and status change. The site animates
-  panels and drawers and nothing else
 - **A print stylesheet** for the order page, which a shop actually uses
 - **Dark mode reviewed page by page** rather than trusted to the token swap
 - **A real favicon set**, web manifest and install prompt

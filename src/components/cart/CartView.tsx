@@ -12,6 +12,7 @@ import { fill } from "@/lib/i18n";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyCartArt } from "@/components/ui/illustrations";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
+import { useChangeKey } from "@/components/ui/useChangeKey";
 
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
@@ -145,7 +146,11 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <Price value={item.price * item.quantity} size="md" />
+                      {/* Keyed on the figure, so changing a quantity tints the
+                          line total for a moment. Pressing "+" otherwise
+                          changes two numbers on opposite sides of the row and
+                          neither of them says it changed. */}
+                      <LineTotal value={item.price * item.quantity} />
                       <button
                         type="button"
                         onClick={() => remove(item.productId)}
@@ -199,7 +204,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
             <div className="flex items-center justify-between">
               <dt className="text-base font-bold text-ink-900">{t.cart.total}</dt>
               <dd>
-                <Price value={total} size="lg" />
+                <TotalPrice value={total} />
               </dd>
             </div>
           </dl>
@@ -228,5 +233,34 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
         </aside>
       </div>
     </div>
+  );
+}
+
+/**
+ * A line total that tints when it changes.
+ *
+ * Its own component because the flash is replayed by remounting, and a `key`
+ * has to sit on something React owns — putting one on `Price` inside the map
+ * would make the row's identity the price rather than the product, and every
+ * price change would then remount the whole row.
+ */
+function LineTotal({ value }: { value: number }) {
+  const changed = useChangeKey(value);
+
+  return (
+    <span key={changed} className={changed > 0 ? "animate-flash" : undefined}>
+      <Price value={value} size="md" />
+    </span>
+  );
+}
+
+/** The same, for the figure the shopper is actually deciding on. */
+function TotalPrice({ value }: { value: number }) {
+  const changed = useChangeKey(value);
+
+  return (
+    <span key={changed} className={changed > 0 ? "animate-flash" : undefined}>
+      <Price value={value} size="lg" />
+    </span>
   );
 }
