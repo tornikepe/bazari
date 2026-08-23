@@ -69,3 +69,38 @@ test("an order row opens that order @engine", async ({ page }) => {
   await first.click();
   await expect(page).toHaveURL(new RegExp(`/order/${number}`));
 });
+
+test("the order list can be filtered by status @engine", async ({ page }) => {
+  const tabs = page.getByRole("navigation", { name: /status/i }).getByRole("link");
+  const count = await tabs.count();
+  test.skip(count < 2, "this account has orders in only one state");
+
+  // The filter is in the address, so it can be linked to and the back button
+  // behaves — that is the reason it is links rather than a `<select>`.
+  const second = tabs.nth(1);
+  const label = (await second.innerText()).trim().split(/\s+/)[0]!;
+  await second.click();
+
+  await expect(page).toHaveURL(/status=/);
+  await expect(second).toHaveAttribute("aria-current", "page");
+
+  // Every row shown is in the state that was asked for.
+  const badges = await page.locator("#orders li .badge").allInnerTexts();
+  expect(badges.length).toBeGreaterThan(0);
+  for (const badge of badges) {
+    expect(badge.trim().toLowerCase()).toBe(label.toLowerCase());
+  }
+});
+
+test("a status nobody has is not offered @engine", async ({ page }) => {
+  // A tab reading "cancelled 0" invites a click that leads to an empty page.
+  const labels = await page
+    .getByRole("navigation", { name: /status/i })
+    .getByRole("link")
+    .allInnerTexts();
+
+  for (const label of labels) {
+    const shown = Number(label.trim().split(/\s+/).pop());
+    expect(shown, `${label} is offered with nothing behind it`).toBeGreaterThan(0);
+  }
+});

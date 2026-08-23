@@ -34,16 +34,35 @@ export type CheckoutDefaults = {
   email: string;
   city: string;
   address: string;
+  note: string;
 };
 
-export function CheckoutForm({ defaults }: { defaults: CheckoutDefaults }) {
+/** One saved address, as the picker needs it. */
+export type CheckoutAddress = {
+  id: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  city: string;
+  street: string;
+  note: string;
+  isDefault: boolean;
+};
+
+export function CheckoutForm({
+  defaults,
+  saved = [],
+}: {
+  defaults: CheckoutDefaults;
+  saved?: CheckoutAddress[];
+}) {
   const { locale, t } = useI18n();
   const { items, hydrated, subtotal, shipping, total, clear } = useCart();
   const router = useRouter();
 
   // Prefilled from the account. Requiring people to sign in and then making
   // them retype the address they already gave us would be the worst of both.
-  const [form, setForm] = useState({ ...defaults, note: "" });
+  const [form, setForm] = useState({ ...defaults });
   const [payment, setPayment] = useState<PaymentMethod>("cash_on_delivery");
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
@@ -190,6 +209,75 @@ export function CheckoutForm({ defaults }: { defaults: CheckoutDefaults }) {
         className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-start"
       >
         <div className="flex flex-col gap-4">
+          {/* -------------------------- saved addresses ---------------------- */}
+          {/* Only when there is a choice to make. One saved address has already
+              been used to fill the fields below, and a picker offering the
+              thing that is already selected is a control with no purpose. */}
+          {saved.length > 1 && (
+            <fieldset className="card p-5">
+              <legend className="px-1 text-sm font-bold text-ink-900">
+                {t.account.addressPick}
+              </legend>
+
+              <div className="mt-3 flex flex-col gap-2">
+                {saved.map((address) => {
+                  /* Chosen by what is in the fields, not by a separate
+                     "selected" state: a customer who picks an address and then
+                     edits the street is no longer using that address, and a
+                     radio still lit against it would be lying. */
+                  const inUse =
+                    form.customerName === address.fullName &&
+                    form.phone === address.phone &&
+                    form.city === address.city &&
+                    form.address === address.street;
+
+                  return (
+                    <label
+                      key={address.id}
+                      className={`flex cursor-pointer items-start gap-3 border p-3 text-sm transition-colors ${
+                        inUse ? "border-brand-600 bg-brand-50" : "border-line hover:bg-ink-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="savedAddress"
+                        checked={inUse}
+                        onChange={() =>
+                          setForm((current) => ({
+                            ...current,
+                            customerName: address.fullName,
+                            phone: address.phone,
+                            city: address.city,
+                            address: address.street,
+                            note: address.note || current.note,
+                          }))
+                        }
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
+                      />
+
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-ink-900">
+                          {address.label || address.city}
+                          {address.isDefault && (
+                            <span className="badge ml-2 bg-brand-50 text-brand-700">
+                              {t.account.addressDefault}
+                            </span>
+                          )}
+                        </span>
+                        <span className="block text-ink-600">
+                          {address.fullName} · {address.phone}
+                        </span>
+                        <span className="block text-ink-500">
+                          {address.city}, {address.street}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
+
           {/* ---------------------------- contact --------------------------- */}
           <fieldset className="card p-5">
             <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.contact}</legend>

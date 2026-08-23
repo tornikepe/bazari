@@ -32,10 +32,8 @@ rather than a claim. What is left needs a real phone.
 
 ### 2.1 — Missing rather than wrong
 
-- **Saved views and inline editing** on the dashboard tables — products can be selected and
-  published, hidden or deleted in one go; orders and customers cannot be acted on in bulk at all
-- **The account page:** a saved-address book rather than one address, filtering the order list by
-  status, and something better than empty space beside the profile form on a wide screen
+- **Saved views and inline editing** on the dashboard tables, and bulk actions for orders and
+  customers
 
 ### 2.2 — Craft
 
@@ -198,7 +196,8 @@ It is last on purpose. Doing it before the pages stop changing means doing it tw
 
 ## 9. Order of work
 
-1. **§2.1 design** — the account page's remaining items, then §2.2 craft. Neither is blocked
+1. **§2.2 craft** — micro-interactions, the print stylesheet, dark mode page by page, the favicon
+   set. §2.1 is finished apart from the dashboard's saved views and inline editing
 2. **§3 shop features** — coupons and staff management first: both are a page away from data
    that already exists and already works
 3. **§4 testing** — visual regression, which §8 depends on

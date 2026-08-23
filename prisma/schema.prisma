@@ -273,10 +273,38 @@ model User {
   sessionVersion Int    @default(0)
   orders    Order[]
   tokens    VerificationToken[]
+  addresses Address[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([role])
+}
+
+/// A delivery address a customer has saved.
+///
+/// The three fields on `User` stay where they are: they are what checkout
+/// prefills for someone who has never saved anything, and moving them would
+/// mean a migration of every account for no gain. This table is the *book* —
+/// the second address, the office, the parents' house.
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// What the customer calls it — "home", "work". Never shown to a courier.
+  label     String   @default("")
+  fullName  String
+  phone     String
+  city      String
+  street    String
+  note      String   @default("")
+  /// The one checkout offers first. At most one per user, enforced in the
+  /// action that sets it rather than by a constraint, because "exactly one"
+  /// is false the moment a customer has none.
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 /// Short-lived one-time codes for email verification and password resets.

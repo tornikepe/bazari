@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 
 /**
@@ -22,15 +23,38 @@ export default async function CheckoutPage() {
   if (!user) redirect("/login?next=%2Fcheckout");
   if (user.role !== "customer") redirect("/cart");
 
+  const saved = await prisma.address.findMany({
+    where: { userId: user.id },
+    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+    select: {
+      id: true,
+      label: true,
+      fullName: true,
+      phone: true,
+      city: true,
+      street: true,
+      note: true,
+      isDefault: true,
+    },
+  });
+
+  /* The default address wins over the profile fields when there is one: a
+     customer who has taken the trouble to save "work, and send it to the
+     back door" meant it, and the three columns on `User` are the fallback
+     for an account that never saved anything. */
+  const preferred = saved.find((address) => address.isDefault);
+
   return (
     <CheckoutForm
       defaults={{
-        customerName: user.name,
-        phone: user.phone,
+        customerName: preferred?.fullName || user.name,
+        phone: preferred?.phone || user.phone,
         email: user.email,
-        city: user.city,
-        address: user.address,
+        city: preferred?.city || user.city,
+        address: preferred?.street || user.address,
+        note: preferred?.note ?? "",
       }}
+      saved={saved}
     />
   );
 }
