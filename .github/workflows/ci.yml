@@ -108,17 +108,23 @@ jobs:
       # operating system, so the Linux images live beside the macOS ones and
       # neither is compared against the other.
       #
-      # SEEDING RUN: writes the Linux baselines and uploads them so they can be
-      # committed. Switched to `npm run test:visual` — a comparison — as soon as
-      # they are in the repository.
-      - run: npm run test:visual:update
+      # A comparison. The Linux baselines are committed beside the macOS ones —
+      # a screenshot is a picture of one browser on one operating system, and
+      # neither set is ever compared against the other.
+      #
+      # To refresh them after a deliberate design change: run
+      # `npm run test:visual:update` locally for the macOS pair, and take the
+      # Linux pair from the artifact this step uploads when it fails.
+      - run: npm run test:visual
         id: visual
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: failure() && steps.visual.conclusion == 'failure'
         with:
-          name: visual-baselines
-          path: tests/e2e/visual.spec.ts-snapshots/
+          name: visual-diff
+          path: |
+            test-results/
+            tests/e2e/visual.spec.ts-snapshots/
           retention-days: 7
 
       - uses: actions/upload-artifact@v4
