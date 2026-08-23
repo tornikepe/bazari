@@ -24,7 +24,10 @@ test.beforeEach(async ({ page }) => {
 test("the page says who is signed in @engine", async ({ page }) => {
   // Name, address and the state of the account — none of which it showed.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/\S/);
-  await expect(page.getByText(DEMO_CUSTOMER.email)).toBeVisible();
+  /* Scoped to `main`: the account menu in the header shows the same address,
+     so an unscoped match finds two and fails on strictness rather than on
+     anything being wrong. */
+  await expect(page.locator("main").getByText(DEMO_CUSTOMER.email)).toBeVisible();
   await expect(page.getByText(/email (confirmed|not confirmed)/i)).toBeVisible();
 });
 

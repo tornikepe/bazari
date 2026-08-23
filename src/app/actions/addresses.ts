@@ -30,16 +30,28 @@ function read(formData: FormData) {
   };
 }
 
+/**
+ * Says why, in the server log, whenever this refuses.
+ *
+ * An action that answers "no" and writes nothing is impossible to support:
+ * the browser shows one generic note and the reason never leaves the process.
+ * The reason only — never the address, which is somebody's home.
+ */
+function refuse(where: string, error: "invalid" | "failed" | "signed-out"): AddressResult {
+  console.error(`[addresses] ${where} refused: ${error}`);
+  return { ok: false, error };
+}
+
 export async function saveAddress(formData: FormData): Promise<AddressResult> {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "signed-out" };
+  if (!user) return refuse("saveAddress", "signed-out");
 
   const id = String(formData.get("id") ?? "").trim();
   const data = read(formData);
 
   // A courier needs all four. A label is the customer's own note to self.
   if (!data.fullName || !data.phone || !data.city || !data.street) {
-    return { ok: false, error: "invalid" };
+    return refuse("saveAddress", "invalid");
   }
 
   const makeDefault = formData.get("isDefault") === "on";
