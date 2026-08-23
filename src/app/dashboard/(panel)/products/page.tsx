@@ -9,6 +9,7 @@ import { WriteOnly } from "@/components/admin/StaffRoleProvider";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { ProductRowActions } from "@/components/admin/ProductRowActions";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { BulkProducts } from "@/components/admin/BulkProducts";
 import { PlusIcon } from "@/components/ui/icons";
 import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
@@ -213,11 +214,28 @@ export default async function AdminProductsPage({
             })}
           </p>
 
+          <BulkProducts ids={products.map((product) => product.id)}>
           {/* Cards on small screens — a six-column table can't shrink far
               enough to stay readable on a phone. */}
           <ul className="mt-3 flex flex-col gap-2 lg:hidden">
             {products.map((product) => (
               <li key={product.id} className="card flex gap-3 p-3">
+                <WriteOnly>
+                  <label className="flex shrink-0 items-start pt-1">
+                    <span className="sr-only">
+                      {fill(t.admin.bulkSelectRow, {
+                        name: locale === "ka" ? product.nameKa : product.nameEn,
+                      })}
+                    </span>
+                    <input
+                      type="checkbox"
+                      name="product-id"
+                      value={product.id}
+                      className="h-4 w-4 accent-brand-600"
+                    />
+                  </label>
+                </WriteOnly>
+
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-control bg-ink-50">
                   <Image src={product.image} alt="" fill sizes="64px" className="object-cover" />
                 </div>
@@ -259,6 +277,14 @@ export default async function AdminProductsPage({
             <table className="w-full text-left">
               <thead className="border-b border-line bg-ink-50 text-xs font-bold tracking-wide text-ink-500 uppercase">
                 <tr>
+                  {/* No header checkbox: select-all lives above the table so
+                      that it exists at every width, and a column heading of
+                      one control reads as a column of data. */}
+                  <WriteOnly>
+                    <th className="w-10 px-4 py-2.5">
+                      <span className="sr-only">{t.admin.bulkSelectAll}</span>
+                    </th>
+                  </WriteOnly>
                   <th className="px-4 py-2.5">{t.cart.item}</th>
                   <th className="px-4 py-2.5">{t.admin.categoryField}</th>
                   <th className="px-4 py-2.5 text-right">{t.admin.price}</th>
@@ -270,6 +296,24 @@ export default async function AdminProductsPage({
               <tbody className="divide-y divide-line">
                 {products.map((product) => (
                   <tr key={product.id} className="transition-colors hover:bg-ink-50">
+                    <WriteOnly>
+                      <td className="px-4 py-2.5">
+                        <label className="flex items-center">
+                          <span className="sr-only">
+                            {fill(t.admin.bulkSelectRow, {
+                              name: locale === "ka" ? product.nameKa : product.nameEn,
+                            })}
+                          </span>
+                          <input
+                            type="checkbox"
+                            name="product-id"
+                            value={product.id}
+                            className="h-4 w-4 accent-brand-600"
+                          />
+                        </label>
+                      </td>
+                    </WriteOnly>
+
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-3">
                         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-control bg-ink-50">
@@ -327,6 +371,7 @@ export default async function AdminProductsPage({
               </tbody>
             </table>
           </div>
+          </BulkProducts>
 
           <AdminPagination
             basePath="/dashboard/products"

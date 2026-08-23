@@ -216,6 +216,68 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
 }
 
 /** Inline toggle from the product table. */
+/**
+ * Publishes, unpublishes or deletes several products at once.
+ *
+ * One action rather than a loop of `toggleProductActive` on the client: twenty
+ * separate round trips can half-succeed, and a table that ends up in a state
+ * nobody asked for is worse than one that refuses. This either applies to all
+ * the ids it was given or fails, and it reports how many rows it touched so
+ * the page can say so rather than implying it.
+ *
+ * `publish` and `unpublish` are named, not toggled. "Toggle these twelve" on a
+ * mixed selection means twelve different outcomes, and the reader has to work
+ * out which — the one thing a bulk action exists to avoid.
+ */
+export type BulkAction = "publish" | "unpublish" | "delete";
+
+export async function bulkProducts(
+  action: BulkAction,
+  ids: string[],
+): Promise<ActionResult & { count?: number }> {
+  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+
+  /* Deduplicated and capped. The ids arrive from a form, so a crafted post can
+     carry any number of them; the cap is the page size, which is the most a
+     reader can have selected from what they were shown. */
+  const unique = [...new Set(ids.filter((id) => typeof id === "string" && id.length > 0))].slice(
+    0,
+    100,
+  );
+  if (unique.length === 0) return { ok: false, error: "invalid" };
+
+  try {
+    if (action === "delete") {
+      /* Read first: once the rows are gone their photo lists are gone with
+         them, and the bytes behind those photos would be unreachable. */
+      const doomed = await prisma.product.findMany({
+        where: { id: { in: unique } },
+        select: { image: true, images: true },
+      });
+
+      const { count } = await prisma.product.deleteMany({ where: { id: { in: unique } } });
+
+      await forgetUnusedImages(doomed.flatMap(photosOf)).catch((error) =>
+        console.error("forgetUnusedImages failed", error),
+      );
+
+      revalidateStorefront();
+      return { ok: true, count };
+    }
+
+    const { count } = await prisma.product.updateMany({
+      where: { id: { in: unique } },
+      data: { isActive: action === "publish" },
+    });
+
+    revalidateStorefront();
+    return { ok: true, count };
+  } catch (error) {
+    console.error("bulkProducts failed", error);
+    return { ok: false, error: "failed" };
+  }
+}
+
 export async function toggleProductActive(id: string): Promise<ActionResult> {
   if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
 
