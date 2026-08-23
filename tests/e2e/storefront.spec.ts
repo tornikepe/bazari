@@ -169,3 +169,32 @@ test("the product page carries valid structured data", async ({ page }) => {
 
   expect(crumbs.itemListElement).toHaveLength(4);
 });
+
+/**
+ * The 404 page, which most people reach from a link that used to work.
+ *
+ * It was a large red "404", a sentence and two buttons. The number is a status
+ * code — it means something to whoever wrote the link and nothing to the
+ * person who followed it — so it is the small print now, and the page leads
+ * somewhere instead of stopping.
+ */
+test("the 404 page offers a way on, not just a way out @engine", async ({ page }) => {
+  const response = await page.goto("/no-such-page");
+  expect(response?.status(), "the page must still be a 404 to a machine").toBe(404);
+
+  // Search first: most people arriving here were looking for a product.
+  await expect(page.getByRole("searchbox").last()).toBeVisible();
+
+  // And the shelves themselves, counted from the database rather than listed
+  // by hand — a hardcoded menu here would rot the first time one is renamed.
+  const shelves = page.getByRole("navigation", { name: /categor/i }).getByRole("link");
+  expect(await shelves.count(), "no categories were offered").toBeGreaterThan(2);
+
+  const first = shelves.first();
+  const href = await first.getAttribute("href");
+  expect(href).toMatch(/\/catalog\?category=/);
+
+  await first.click();
+  await expect(page).toHaveURL(/\/catalog\?category=/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});

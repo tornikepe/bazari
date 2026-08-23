@@ -88,6 +88,13 @@ test("hiding two products actually hides them, and publishing brings them back @
   await page.getByRole("button", { name: /^hide$/i }).click();
   await expect(page.getByText(/done — 2 products/i)).toBeVisible();
 
+  /* Wait for the refresh the action starts, rather than navigating on top of
+     it: WebKit rejects a `goto` that interrupts a navigation already in
+     flight, and the rows leaving this listing is the refresh finishing. */
+  for (const name of chosen) {
+    await expect(rows(page).filter({ hasText: name })).toHaveCount(0);
+  }
+
   try {
     // Gone from the published listing, which is the thing that was asked for.
     await page.goto("/dashboard/products?status=active");
@@ -111,6 +118,11 @@ test("hiding two products actually hides them, and publishing brings them back @
     }
     await page.getByRole("button", { name: /^publish$/i }).click();
     await expect(page.getByText(/done — \d+ products/i)).toBeVisible();
+
+    // Same wait, same reason: the rows leave the unpublished listing.
+    for (const name of chosen) {
+      await expect(rows(page).filter({ hasText: name })).toHaveCount(0);
+    }
   }
 
   await page.goto("/dashboard/products?status=active");

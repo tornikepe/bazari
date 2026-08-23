@@ -108,7 +108,18 @@ export function useChatStream() {
       if (!response.ok || !response.body) {
         const payload = await response.json().catch(() => null);
         const code = (payload as { error?: ChatErrorCode } | null)?.error;
-        failWith(code ?? "failed");
+
+        /* The body is where the reason lives, and this route always sends one
+           — but the response can also come from something in front of it. A
+           proxy shedding load answers 429 with its own page, and reading that
+           as a generic failure would offer "ask again" against a limit that is
+           certain to refuse again. The status is the fallback, not the source. */
+        const byStatus: Partial<Record<number, ChatErrorCode>> = {
+          429: "rate_limited",
+          503: "unavailable",
+        };
+
+        failWith(code ?? byStatus[response.status] ?? "failed");
         return;
       }
 
@@ -172,5 +183,32 @@ export function useChatStream() {
     }
   }, []);
 
-  return { messages, status, activity, error, send, stop, reset };
+  /**
+   * Sends the last question again.
+   *
+   * "Please try again" was the whole of the failure message, and trying again
+   * meant typing the question out a second time — the assistant keeps the
+   * transcript, so it already knows what was asked. The failed turn is dropped
+   * first so the history sent is the one that was sent before, not one with an
+   * empty answer in the middle of it.
+   */
+  const retry = useCallback(() => {
+    const lastQuestion = [...messagesRef.current].reverse().find((m) => m.role === "user");
+    if (!lastQuestion) return;
+
+    const index = messagesRef.current.findIndex((message) => message.id === lastQuestion.id);
+    if (index < 0) return;
+
+    /* The ref is written as well as the state, and that is not belt and
+       braces: `send` reads `messagesRef.current` to build the history it
+       posts, and a `setMessages` queued a moment earlier has not reached it
+       yet — the request would carry the failed turn it is meant to replace. */
+    const before = messagesRef.current.slice(0, index);
+    messagesRef.current = before;
+    setMessages(before);
+
+    void send(lastQuestion.content);
+  }, [send]);
+
+  return { messages, status, activity, error, send, stop, reset, retry };
 }

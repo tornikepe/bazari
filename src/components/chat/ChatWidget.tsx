@@ -5,7 +5,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { ChatMessageText } from "@/components/chat/ChatMessageText";
 import { useChatStream } from "@/components/chat/useChatStream";
 import { MAX_MESSAGE_LENGTH, type ChatToolName } from "@/lib/chat/config";
-import { ChatIcon, CloseIcon, SendIcon, TrashIcon } from "@/components/ui/icons";
+import { ChatIcon, CloseIcon, RefreshIcon, SendIcon, TrashIcon } from "@/components/ui/icons";
 import { useOverlay } from "@/lib/use-overlay";
 
 /**
@@ -23,7 +23,7 @@ import { useOverlay } from "@/lib/use-overlay";
  */
 export function ChatWidget({ available }: { available: boolean }) {
   const { t } = useI18n();
-  const { messages, status, activity, error, send, stop, reset } = useChatStream();
+  const { messages, status, activity, error, send, stop, reset, retry } = useChatStream();
 
   const [open, setOpen] = useState(false);
   // Long enough to cover the exit transition on `.chat-panel`, so the panel
@@ -107,6 +107,11 @@ export function ChatWidget({ available }: { available: boolean }) {
         failed: t.chat.errorFailed,
       }[error]
     : null;
+
+  /* Asking the same question again can only help when the failure was
+     transient. `bad_request` would be rejected identically, and the other two
+     are the shop's own limits rather than a hiccup. */
+  const retryable = error === "failed" || error === "unavailable";
 
   const activityText: Record<ChatToolName, string> = {
     search_products: t.chat.toolSearchProducts,
@@ -202,9 +207,24 @@ export function ChatWidget({ available }: { available: boolean }) {
             )}
 
             {errorText && (
-              <p role="alert" className="chat-bubble bg-danger-soft text-danger">
+              <div role="alert" className="chat-bubble bg-danger-soft text-danger">
                 {errorText}
-              </p>
+
+                {/* Only where pressing it could work. A rate limit and an
+                    exhausted budget are answers, not accidents, and offering
+                    "ask again" against either is offering a button that is
+                    certain to fail. */}
+                {retryable && (
+                  <button
+                    type="button"
+                    onClick={retry}
+                    className="mt-2 flex min-h-9 items-center gap-1.5 font-bold underline underline-offset-2"
+                  >
+                    <RefreshIcon size={14} />
+                    {t.chat.errorRetry}
+                  </button>
+                )}
+              </div>
             )}
 
             {messages.length === 0 && !busy && (

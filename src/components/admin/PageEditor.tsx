@@ -95,9 +95,14 @@ export function PageEditor({ page }: { page: EditablePage }) {
           )}
 
           {status === "error" && !isPending && (
-            <p role="alert" className="flex items-center gap-1.5 text-xs text-danger">
-              <AlertIcon size={14} />
-              {t.admin.settingsInvalid}
+            /* Two sentences rather than one: the second is the one nobody was
+               told — that the page they are looking at still holds everything
+               they typed, so pressing save again is all this needs. */
+            <p role="alert" className="flex items-start gap-1.5 text-xs text-danger">
+              <AlertIcon size={14} className="mt-px shrink-0" />
+              <span>
+                {t.admin.settingsInvalid} <span className="text-ink-600">{t.common.errorHint}</span>
+              </span>
             </p>
           )}
         </div>

@@ -7,6 +7,7 @@ import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { SpinnerIcon } from "@/components/ui/icons";
 import type { PaymentState } from "@/lib/payments/types";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 
 export type PaymentRow = {
   id: string;
@@ -107,11 +108,7 @@ export function PaymentPanel({ payments }: { payments: PaymentRow[] }) {
         </ul>
       )}
 
-      {error && (
-        <p role="alert" className="mt-3 text-xs text-danger">
-          {error}
-        </p>
-      )}
+      {error && <ErrorNote className="mt-3" title={error} hint={t.common.errorHint} />}
     </section>
   );
 }
