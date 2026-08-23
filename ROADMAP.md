@@ -32,16 +32,13 @@ rather than a claim. What is left needs a real phone.
 
 ### 2.1 — Missing rather than wrong
 
-- **Error states, the rest.** The checkout and the two dashboard forms now say what happened,
-  what to do about it, and offer the way — the chat panel, the payment panel and the page editor
-  still print a bare red sentence
+- **Error states in the chat panel, the payment panel and the page editor** — three places that
+  still print a bare red sentence with no way out of it
 - **Cross-sell** is still "related products" and nothing else. Bought-together, recently viewed,
   and something on the empty cart
-- **Density on the dashboard, the rest.** Orders and customers can now be sorted, as products
-  already could. Still missing: saved views, bulk actions, and inline editing
+- **Bulk actions, saved views and inline editing** on the dashboard tables
 - **The 404 and error pages** work and are unloved
-- **The account page, the last 10%.** The identity block, the figures and the order list are
-  done; still open are a saved-address book rather than one address, filtering the order list by
+- **The account page:** a saved-address book rather than one address, filtering the order list by
   status, and something better than empty space beside the profile form on a wide screen
 
 ### 2.2 — Craft
@@ -166,12 +163,49 @@ npm run setup:credentials -- --force   # locally; set the Vercel one by hand
 
 ---
 
-## 8. Order of work
+## 8. One design across the whole site
 
-1. **§2.1 design** — error states, the specification table, the dashboard's density. The most
-   visible work left, and none of it is blocked
+The direction is settled — Swiss, a grid, hairline rules, square corners, no shadows, one red —
+and the tokens exist. What does not exist is a *system*: pages were built one at a time and each
+solved the same problems slightly differently, so the site reads as a good design applied nine
+times rather than one design. This is the pass that makes every page look like the same hand
+drew it.
+
+It is last on purpose. Doing it before the pages stop changing means doing it twice.
+
+**The rules to write down, then apply everywhere**
+
+- **One page header.** Today: some pages open with a breadcrumb and an `h1`, some with an `h1`
+  alone, the account page with an identity card, the track page with a centred icon. Decide the
+  shape — eyebrow, title, one line of purpose, optional action on the right — and give every page
+  the same one
+- **One card.** The orders card has a bordered header bar; the profile card has a padded heading;
+  the dashboard's have neither. One card component with an optional header and one padding scale
+- **One vertical rhythm.** `py-6 lg:py-8` on the catalogue, `py-10 lg:py-14` on the track page,
+  `py-6 lg:py-10` on the account page. Three values doing one job
+- **One way to show a set of figures.** The account page uses a hairline strip; the dashboard
+  uses separate cards; the track page uses a definition list. Pick one and use it three times
+- **One table.** Column alignment, zebra rules, the money column, the row-action column, and what
+  a row looks like when it collapses to a card on a phone
+- **One empty, one loading, one error** — these three already exist as components and are the
+  proof the rest is worth doing
+- **A page-template inventory** in the README: which of the four templates each route uses, so
+  the next page starts from a decision instead of a copy-paste
+
+**How it gets checked**
+
+- Visual regression (§4) lands *first*, so the pass is measured rather than admired
+- A short document — not a style guide nobody reads, a one-page list of the seven rules above —
+  and a test that fails when a page invents an eighth
+
+---
+
+## 9. Order of work
+
+1. **§2.1 design** — the remaining error states, cross-sell, the dashboard's bulk actions. None
+   of it is blocked
 2. **§3 shop features** — coupons and staff management first: both are a page away from data
    that already exists and already works
-3. **§4 testing** — visual regression before the design work grows any further, so that what is
-   built next cannot quietly undo what is there
-4. **§5 operations** and **§6 documentation**, last, when there is something stable to describe
+3. **§4 testing** — visual regression, which §8 depends on
+4. **§8 the design pass**, once the pages have stopped moving
+5. **§5 operations** and **§6 documentation**, last, when there is something stable to describe
