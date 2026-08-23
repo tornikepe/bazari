@@ -103,6 +103,24 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
 
+      # The look of the place, compared against baselines committed for this
+      # runner's platform. A screenshot is a picture of one browser on one
+      # operating system, so the Linux images live beside the macOS ones and
+      # neither is compared against the other.
+      #
+      # SEEDING RUN: writes the Linux baselines and uploads them so they can be
+      # committed. Switched to `npm run test:visual` — a comparison — as soon as
+      # they are in the repository.
+      - run: npm run test:visual:update
+        id: visual
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-baselines
+          path: tests/e2e/visual.spec.ts-snapshots/
+          retention-days: 7
+
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

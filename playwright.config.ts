@@ -53,7 +53,13 @@ export default defineConfig({
   },
 
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      // The visual project owns these; running them here too would compare the
+      // same images twice.
+      grepInvert: /@visual/,
+    },
 
     /**
      * WebKit, which is the only engine iOS is allowed to render with.
@@ -67,6 +73,23 @@ export default defineConfig({
      * `grep` rather than a separate directory: the specs are the same tests,
      * and a copy kept for WebKit would be a copy that drifts.
      */
+    /**
+     * The look of the place.
+     *
+     * Its own project so the ordinary suite is not slowed by image
+     * comparison, and so `--project=visual` can be run on its own after a
+     * deliberate design change to refresh the baselines.
+     *
+     * Chromium only: a baseline is a picture of one browser on one operating
+     * system, and a second engine would double the images in the repository
+     * to catch font rendering differences that are not faults.
+     */
+    {
+      name: "visual",
+      use: { ...devices["Desktop Chrome"] },
+      grep: /@visual/,
+    },
+
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
