@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyCartArt } from "@/components/ui/illustrations";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
@@ -58,6 +59,12 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
             </Link>
           }
         />
+
+        {/* What they were just looking at, under the empty state rather than
+            inside it: the card is the answer to "there is nothing here", and
+            this is the answer to "so what now". Draws nothing at all for a
+            first-time visitor, who has no history to offer. */}
+        <RecentlyViewed take={4} />
       </div>
     );
   }

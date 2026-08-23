@@ -81,7 +81,17 @@ export default defineConfig({
   webServer: {
     command: `npx next build && npx next start --port ${PORT}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    /*
+     * Never reused, and that is worth the twenty seconds.
+     *
+     * `!process.env.CI` reuses a server left running by an earlier local run —
+     * built from *older source*. It has produced a false failure and a false
+     * pass in this project several times over: a test asserting new copy
+     * against a stale build, and a feature that "did not render" because the
+     * route it needed was not in the bundle being served. Neither is worth the
+     * rebuild it saves.
+     */
+    reuseExistingServer: false,
     timeout: 180_000,
     stdout: "pipe",
     stderr: "pipe",

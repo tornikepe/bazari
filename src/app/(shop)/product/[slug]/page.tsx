@@ -17,6 +17,9 @@ import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { parseSpecs, readSpec } from "@/lib/product-specs";
+import { getBoughtTogether } from "@/lib/cross-sell";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
+import { RecordView } from "@/components/product/RecordView";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -61,6 +64,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const product = await getProduct(slug);
   if (!product) notFound();
+
+  /* What people actually bought alongside this, counted from real orders.
+     Fetched with the related row rather than after it: they are drawn one
+     above the other, and two round trips in sequence would delay the page by
+     the slower of them twice. */
+  const boughtTogether = await getBoughtTogether(product.id);
 
   const related = await prisma.product.findMany({
     where: { isActive: true, categoryId: product.categoryId, NOT: { id: product.id } },
@@ -304,6 +313,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
 
+      {/* -------------------------- bought together -------------------------- */}
+      {/* Above "related", because it is the stronger claim: this row is
+          counted from orders the shop has taken, and the one below it is a
+          guess by category. Absent entirely when nothing has been bought
+          alongside this product — a "customers also bought" row filled with
+          whatever shares a shelf is a recommendation nobody made. */}
+      {boughtTogether.length > 0 && (
+        <section className="mt-12">
+          <SectionHeading title={t.product.boughtTogether} />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {boughtTogether.map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ------------------------------ related ------------------------------ */}
       {related.length > 0 && (
         <section className="mt-12">
@@ -315,6 +341,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </section>
       )}
+
+      <RecentlyViewed exclude={product.id} />
+
+      {/* Notes the visit. Renders nothing; the list is this browser's own and
+          never reaches the server. */}
+      <RecordView productId={product.id} />
 
       {/* Follows the visitor down the page once the panel above is gone. */}
       <StickyBuyBar

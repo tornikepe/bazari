@@ -32,8 +32,6 @@ rather than a claim. What is left needs a real phone.
 
 ### 2.1 — Missing rather than wrong
 
-- **Cross-sell** is still "related products" and nothing else. Bought-together, recently viewed,
-  and something on the empty cart
 - **Saved views and inline editing** on the dashboard tables — products can be selected and
   published, hidden or deleted in one go; orders and customers cannot be acted on in bulk at all
 - **The account page:** a saved-address book rather than one address, filtering the order list by
@@ -200,7 +198,7 @@ It is last on purpose. Doing it before the pages stop changing means doing it tw
 
 ## 9. Order of work
 
-1. **§2.1 design** — cross-sell, then the account page's remaining items. Neither is blocked
+1. **§2.1 design** — the account page's remaining items, then §2.2 craft. Neither is blocked
 2. **§3 shop features** — coupons and staff management first: both are a page away from data
    that already exists and already works
 3. **§4 testing** — visual regression, which §8 depends on
