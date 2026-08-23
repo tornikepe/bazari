@@ -50,7 +50,6 @@ Ordered by how badly a business would miss it.
 | Priority | Item | Where it stands |
 |---|---|---|
 | 🔴 | **Payment** | The adapter interface is written and tested; nothing implements it. Needs a provider — **A4** |
-| 🟠 | **Coupon management** | The `Coupon` table and the validation work. There is no page to create one |
 | 🟠 | **Staff management** | Roles change only through Prisma Studio. Needs invite, role change, deactivate |
 | 🟠 | **Order invoice** | Printable, and attached to the confirmation email |
 | 🟠 | **Stock control** | Restock from the dashboard, a low-stock email, "tell me when it is back" for shoppers |
@@ -194,10 +193,11 @@ It is last on purpose. Doing it before the pages stop changing means doing it tw
 
 ## 9. Order of work
 
-1. **§2.2 craft** — micro-interactions, the print stylesheet, dark mode page by page, the favicon
-   set. §2.1 is finished apart from the dashboard's saved views and inline editing
-2. **§3 shop features** — coupons and staff management first: both are a page away from data
+1. **§3 shop features** — coupons and staff management first: both are a page away from data
    that already exists and already works
-3. **§4 testing** — visual regression, which §8 depends on
-4. **§8 the design pass**, once the pages have stopped moving
+2. **§4 testing** — visual regression, which §8 depends on
+3. **§8 the design pass**, once the pages have stopped moving
+4. **§2.2 craft** — the print stylesheet, dark mode page by page, the favicon set. It belongs
+   after the design pass, not before it: polishing pages that are about to be restyled is work
+   done twice
 5. **§5 operations** and **§6 documentation**, last, when there is something stable to describe
