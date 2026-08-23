@@ -153,7 +153,11 @@ export default async function AccountPage({
           {orderCount > 0 && (
             <nav
               aria-label={t.account.orderFilter}
-              className="-mx-4 flex gap-1.5 overflow-x-auto border-b border-line px-4 py-2.5 no-scrollbar sm:mx-0 sm:px-5"
+              /* No negative margin. The card hides its own overflow, so a
+                 strip pulled wider than its padding makes the *card* scroll —
+                 which it cannot, so the tabs were clipped at 320px instead.
+                 The strip scrolls inside its own box, where it can. */
+              className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5 no-scrollbar"
             >
               {[null, ...ORDER_STATUSES.filter((value) => countFor(value) > 0)].map((value) => {
                 const active = status === value;

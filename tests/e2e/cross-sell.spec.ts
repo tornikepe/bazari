@@ -18,6 +18,21 @@ async function aSoldProduct(page: Page): Promise<string> {
   return href!.replace("/product/", "");
 }
 
+/**
+ * Opens a product and waits for the visit to be *recorded*.
+ *
+ * `goto` resolves on load, and the visit is written by an effect that runs
+ * after hydration. Navigating away in between records nothing — which is
+ * exactly what happened on CI, where the machine is slower than this one and
+ * the next `goto` won the race.
+ */
+async function view(page: Page, slug: string) {
+  await page.goto(`/product/${slug}`);
+  // The store keeps ids, not slugs, so the check is that *something* was
+  // written — which is the only part that races.
+  await page.waitForFunction(() => (localStorage.getItem("bazari.viewed.v1") ?? "").length > 4);
+}
+
 const section = (page: Page, name: RegExp) =>
   page.locator("section").filter({ has: page.getByRole("heading", { name }) });
 
@@ -30,7 +45,7 @@ test("recently viewed shows what this browser looked at, and nothing before that
   // A browser with no history is shown no row at all — not a heading over an
   // empty grid, and not a skeleton for something that will never arrive.
   const first = await aSoldProduct(page);
-  await page.goto(`/product/${first}`);
+  await view(page, first);
   await expect(section(page, /recently viewed/i)).toHaveCount(0);
 
   // Look at a second product: the first one is now history.
@@ -39,7 +54,7 @@ test("recently viewed shows what this browser looked at, and nothing before that
     .locator('a[href^="/product/"]')
     .nth(4)
     .getAttribute("href");
-  await page.goto(second!);
+  await view(page, second!.replace("/product/", ""));
 
   const row = section(page, /recently viewed/i);
   await expect(row).toBeVisible();
@@ -57,7 +72,7 @@ test("the row survives a reload, because it is not in the page @engine", async (
   await useEnglish(page);
 
   const slug = await aSoldProduct(page);
-  await page.goto(`/product/${slug}`);
+  await view(page, slug);
 
   await page.goto("/cart");
   // The empty cart is the one place a suggestion is worth most, and it offers

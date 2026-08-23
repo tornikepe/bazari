@@ -36,6 +36,12 @@ async function selectRows(page: Page, count: number): Promise<string[]> {
     await row.locator('input[name="product-id"]').check();
   }
 
+  /* The bar counting them is the proof React saw the ticks. Without this the
+     test can tick boxes before hydration, act on an empty selection, and fail
+     several steps later on a missing confirmation — which is how it read on
+     CI, where hydration lands later than it does here. */
+  await expect(bar(page)).toHaveText(new RegExp(`${count} selected`));
+
   return names;
 }
 

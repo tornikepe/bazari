@@ -38,11 +38,18 @@ async function addAddress(page: Page, address: typeof HOME) {
 
 async function removeAll(page: Page) {
   await page.goto("/account");
-  page.on("dialog", (dialog) => void dialog.accept());
 
   for (const label of [HOME.label, WORK.label]) {
     const row = book(page).locator("li").filter({ hasText: label });
     if ((await row.count()) === 0) continue;
+
+    /* `once`, immediately before the click that raises it. A handler added
+       with `on` survives the call, so the second time this helper ran there
+       were two of them: the first accepted the dialog and the second threw
+       against a dialog already handled, which failed the run in CI and never
+       here — locally the first call had nothing to delete and no dialog ever
+       appeared. */
+    page.once("dialog", (dialog) => void dialog.accept());
     await row.getByRole("button", { name: /delete/i }).click();
     await expect(row).toHaveCount(0);
   }
