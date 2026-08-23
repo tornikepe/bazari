@@ -33,6 +33,12 @@ async function addAddress(page: Page, address: typeof HOME) {
   await form.getByLabel(/^address$/i).fill(address.street);
   await form.getByRole("button", { name: /^save$/i }).click();
 
+  /* The panel closes only after the action returns ok, so this separates the
+     two ways saving can fail: a form still open means the submit never
+     reached the server, and a form closed with no row means it did and the
+     list did not catch up. Without the distinction a failure here is a
+     fifteen-second timeout that says neither. */
+  await expect(form, "the form stayed open — the submit never reached the action").toHaveCount(0);
   await expect(book(page).getByText(address.street)).toBeVisible();
 }
 
