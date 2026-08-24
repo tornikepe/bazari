@@ -13,6 +13,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyPeopleArt, NoResultsArt } from "@/components/ui/illustrations";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Figures } from "@/components/ui/Figures";
+import { BulkCustomers } from "@/components/admin/BulkCustomers";
+import { WriteOnly } from "@/components/admin/StaffRoleProvider";
 
 const PAGE_SIZE = 20;
 const ROLES = ["customer", "admin", "viewer"] as const;
@@ -107,6 +109,7 @@ export default async function AdminCustomersPage({
       city: true,
       role: true,
       emailVerified: true,
+      disabledAt: true,
       createdAt: true,
       _count: { select: { orders: true } },
     },
@@ -199,13 +202,36 @@ export default async function AdminCustomersPage({
             })}
           </p>
 
+          <BulkCustomers
+            ids={users.filter((user) => user.role === "customer").map((user) => user.id)}
+          >
           {/* Cards below lg — six columns do not fit a phone. */}
           <ul className="mt-3 flex flex-col gap-2 lg:hidden">
             {users.map((user) => {
               const money = spendByUser.get(user.id);
               return (
                 <li key={user.id} className="card card-pad-tight">
-                  <Link href={`/dashboard/customers/${user.id}`} className="block">
+                  <div className="flex items-start justify-between gap-3">
+                    {user.role === "customer" && (
+                      <WriteOnly>
+                        <label className="flex shrink-0 items-start pt-0.5">
+                          <span className="sr-only">
+                            {fill(t.admin.bulkSelectRow, { name: user.name || user.email })}
+                          </span>
+                          <input
+                            type="checkbox"
+                            name="customer-id"
+                            value={user.id}
+                            className="h-4 w-4 accent-brand-600"
+                          />
+                        </label>
+                      </WriteOnly>
+                    )}
+
+                  {/* `min-w-0`: a flex child defaults to `min-width: auto`, so without
+                        it the two truncating lines below refuse to shrink and the
+                        card runs 162px off a 320px screen. */}
+                  <Link href={`/dashboard/customers/${user.id}`} className="block min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-ink-900">
@@ -219,12 +245,14 @@ export default async function AdminCustomersPage({
                     <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 text-xs">
                       <span className="text-ink-500">
                         {user._count.orders} {t.admin.customerOrders}
+                        {user.disabledAt && ` · ${t.admin.customerDisabled}`}
                       </span>
                       <span className="font-bold text-ink-900">
                         {formatPrice(money?.total ?? 0, locale)}
                       </span>
                     </div>
                   </Link>
+                  </div>
                 </li>
               );
             })}
@@ -234,6 +262,13 @@ export default async function AdminCustomersPage({
             <table className="table">
               <thead>
                 <tr>
+                  {/* No header checkbox: select-all lives above the table so it
+                      exists at every width. */}
+                  <WriteOnly>
+                    <th className="w-10">
+                      <span className="sr-only">{t.admin.bulkSelectAll}</span>
+                    </th>
+                  </WriteOnly>
                   <th>{t.admin.customer}</th>
                   <th>{t.admin.contactDetails}</th>
                   <th>{t.admin.role}</th>
@@ -248,6 +283,27 @@ export default async function AdminCustomersPage({
                   const money = spendByUser.get(user.id);
                   return (
                     <tr key={user.id}>
+                      {/* Staff have no box: their account is managed on the
+                          staff page, which knows about the last-admin rule.
+                          The cell stays so the columns still line up. */}
+                      <WriteOnly>
+                        <td>
+                          {user.role === "customer" && (
+                            <label className="flex items-center">
+                              <span className="sr-only">
+                                {fill(t.admin.bulkSelectRow, { name: user.name || user.email })}
+                              </span>
+                              <input
+                                type="checkbox"
+                                name="customer-id"
+                                value={user.id}
+                                className="h-4 w-4 accent-brand-600"
+                              />
+                            </label>
+                          )}
+                        </td>
+                      </WriteOnly>
+
                       <td>
                         <Link
                           href={`/dashboard/customers/${user.id}`}
@@ -256,7 +312,11 @@ export default async function AdminCustomersPage({
                           {user.name || "—"}
                         </Link>
                         <p className="text-xs text-ink-400">
-                          {user.emailVerified ? t.admin.verified : t.admin.unverified}
+                          {user.disabledAt
+                            ? t.admin.customerDisabled
+                            : user.emailVerified
+                              ? t.admin.verified
+                              : t.admin.unverified}
                         </p>
                       </td>
 
@@ -288,6 +348,7 @@ export default async function AdminCustomersPage({
               </tbody>
             </table>
           </div>
+          </BulkCustomers>
 
           <AdminPagination
             basePath="/dashboard/customers"

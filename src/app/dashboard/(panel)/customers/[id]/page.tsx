@@ -10,6 +10,7 @@ import { ChevronLeftIcon } from "@/components/ui/icons";
 import { countText } from "@/lib/i18n";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Figures } from "@/components/ui/Figures";
+import { CustomerSwitch } from "@/components/admin/CustomerSwitch";
 
 /**
  * One customer, and everything the shop actually knows about them.
@@ -37,6 +38,7 @@ export default async function AdminCustomerPage({
       address: true,
       role: true,
       emailVerified: true,
+      disabledAt: true,
       createdAt: true,
       orders: {
         orderBy: { createdAt: "desc" },
@@ -98,7 +100,16 @@ export default async function AdminCustomerPage({
         className="mt-3"
         scale="panel"
         title={user.name || user.email}
-        action={<RoleBadge role={user.role} t={t} />}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <RoleBadge role={user.role} t={t} />
+            {/* Only customers. A staff account is switched on and off on the
+                staff page, which knows about the last admin. */}
+            {user.role === "customer" && (
+              <CustomerSwitch id={user.id} disabled={user.disabledAt !== null} />
+            )}
+          </div>
+        }
       />
 
       <Figures className="mt-5" items={figures} columns={4} />
