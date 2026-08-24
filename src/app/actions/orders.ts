@@ -11,6 +11,8 @@ import { rememberReceipt } from "@/lib/order-access";
 import { clientIp, consume } from "@/lib/rate-limit";
 import { toMinor, PAYMENT_WINDOW_MINUTES } from "@/lib/payments";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
+import { sendLowStockEmail, type LowStockItem } from "@/lib/stock-emails";
+import { crossedLowStock } from "@/lib/stock";
 import { getLocale } from "@/lib/locale";
 
 export type PlaceOrderInput = {
@@ -121,6 +123,11 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // A few attempts in case two orders draw the same random number.
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
+      /* Declared per attempt rather than once: the transaction below can roll
+         back and be retried, and an alert about stock that was never taken
+         would be a message about nothing. */
+      const crossed: LowStockItem[] = [];
+
       const order = await prisma.$transaction(async (tx) => {
         const created = await tx.order.create({
           data: {
@@ -196,6 +203,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             select: { stock: true },
           });
 
+          /* The crossing, and only the crossing: the sale that takes a product
+             from above its threshold to at or below it. Collected here because
+             this is the one place that knows both figures, and sent after the
+             transaction commits — a mail outage must not roll back a sale. */
+          if (crossedLowStock(updated.stock + quantity, updated.stock, product.lowStockAt)) {
+            crossed.push({
+              id: product.id,
+              name: product.nameEn || product.nameKa,
+              sku: product.sku,
+              stock: updated.stock,
+              threshold: product.lowStockAt,
+            });
+          }
+
           // Every stock change is written to the ledger, so the dashboard can
           // always explain how a product reached its current level.
           await tx.stockMovement.create({
@@ -239,6 +260,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         })),
         locale: await getLocale(),
       });
+
+      // Same reasoning, and the same not-awaited-into-the-failure-path: the
+      // order is committed either way, and nobody's basket should fail because
+      // the shop could not be told to reorder.
+      await sendLowStockEmail(crossed).catch((error) =>
+        console.error("sendLowStockEmail failed", error),
+      );
 
       return { ok: true, number: order.number };
     } catch (error) {

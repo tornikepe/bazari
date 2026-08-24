@@ -22,7 +22,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
 | 🟠 | Order invoice | A PDF on the confirmation email. Printing works; the attachment needs a renderer, and a sending domain — blocked on **A3** |
-| 🟠 | Stock control | Restock from the dashboard, low-stock email, "tell me when it is back" |
+| 🟠 | Stock control | "Tell me when it is back" for shoppers. Restocking and the low-stock alert are done |
 | 🟡 | Product variants | Size and colour. A schema change, and the largest item here |
 | 🟡 | Search | Postgres full-text with Georgian stemming, in place of `contains` |
 | 🟡 | Product images | Ordering, alt text per language, generated sizes |

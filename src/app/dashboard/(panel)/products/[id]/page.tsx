@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { StockLedger } from "@/components/admin/StockLedger";
+import { RestockPanel } from "@/components/admin/RestockPanel";
 
 export default async function EditProductPage({
   params,
@@ -23,7 +24,15 @@ export default async function EditProductPage({
   return (
     <>
       <ProductForm product={product} categories={categories} />
-      <StockLedger productId={product.id} />
+
+      {/* One column for the whole page: the form is `max-w-4xl` and the ledger
+          below it was full width, so the two disagreed about where the page
+          ends. Restocking sits above the ledger because it is the thing that
+          writes to it. */}
+      <div className="mx-auto max-w-4xl">
+        <RestockPanel productId={product.id} />
+        <StockLedger productId={product.id} />
+      </div>
     </>
   );
 }

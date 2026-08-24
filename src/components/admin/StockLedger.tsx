@@ -48,6 +48,13 @@ export async function StockLedger({ productId }: { productId: string }) {
                     <p className="font-semibold text-ink-800">
                       {t.stockReason[movement.reason]}
                     </p>
+                    {/* What somebody typed when they recorded it — an invoice
+                        number, a supplier. The column stored it from the start
+                        and nothing showed it, which made the field a place to
+                        write things nobody would ever read. */}
+                    {movement.note && (
+                      <p className="mt-0.5 text-ink-600">{movement.note}</p>
+                    )}
                     <p className="mt-0.5 text-ink-400">{formatDateTime(movement.createdAt)}</p>
                   </td>
 

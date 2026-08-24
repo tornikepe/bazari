@@ -285,6 +285,58 @@ export async function setProductNumber(
   return { ok: true, value: stored };
 }
 
+/**
+ * A delivery arriving, as opposed to a miscount being fixed.
+ *
+ * Separate from typing a new figure over the old one, and the difference is
+ * the ledger rather than the arithmetic. "Stock is now 40" and "twelve more
+ * arrived" are different sentences, and only the second one answers "where did
+ * these come from?" six months later — which is the question the ledger exists
+ * for. So this adds rather than sets, and writes `restock` rather than
+ * `correction`.
+ *
+ * The increment is done by the database, not read-then-written here: a sale
+ * landing between a read and a write would be undone by it.
+ */
+export async function restockProduct(
+  id: string,
+  quantity: number,
+  note: string,
+): Promise<ActionResult & { balance?: number }> {
+  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+
+  const amount = Math.floor(Number(quantity));
+  if (!Number.isFinite(amount) || amount < 1) return { ok: false, error: "invalid" };
+
+  try {
+    const balance = await prisma.$transaction(async (tx) => {
+      const after = await tx.product.update({
+        where: { id },
+        data: { stock: { increment: amount } },
+        select: { stock: true },
+      });
+
+      await tx.stockMovement.create({
+        data: {
+          productId: id,
+          delta: amount,
+          reason: "restock",
+          balance: after.stock,
+          note: note.trim().slice(0, 200),
+        },
+      });
+
+      return after.stock;
+    });
+
+    revalidateStorefront();
+    return { ok: true, balance };
+  } catch (error) {
+    console.error("restockProduct failed", error);
+    return { ok: false, error: "failed" };
+  }
+}
+
 export async function deleteProduct(id: string): Promise<ActionResult> {
   if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
 
