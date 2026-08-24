@@ -21,7 +21,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 | | Item | What it needs |
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
-| 🟠 | Order invoice | A PDF on the confirmation email. Printing works; the attachment needs a renderer, and a sending domain — blocked on **A3** |
+| 🟠 | Order invoice | A PDF attached to the confirmation email. Needs a renderer, and **A3** |
 | 🟡 | Product images | Ordering, alt text per language, generated sizes |
 | 🟡 | Delivery options | Courier against pickup, zones, per-zone pricing |
 | 🟡 | Tax | Shown and recorded per order. Georgia is 18% |
@@ -37,11 +37,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 - `axe-core` on every page, in both languages
 - Firefox
 - A load test on the catalogue and checkout
-- A disposable test database, so the suite stops mutating the data it reads. It has cost real
-  time three times now: a brand-colour test left the shop blue and every screenshot failed
-  about nothing; a sold-out product made a settings test wait a minute for a button that was
-  never going to be clickable; and a stock figure moving changed a card's height, so ten
-  screenshots differed for a reason that had nothing to do with the design
+- A disposable test database, so the suite stops mutating the data it reads
 
 ---
 
