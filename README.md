@@ -919,7 +919,9 @@ you own, and never in a fork.
 ## Notes and known limits
 
 - **Product images.** All seeded products share `public/products/placeholder.svg`. Set a real
-  image URL per product in the dashboard.
+  image URL per product in the dashboard. The placeholder is deliberately transparent so it takes
+  the card's own background and works in both themes; a real photograph on a white studio ground
+  will look like a white square in dark mode, which is a fact about photographs rather than a bug.
 - **Payments are not real.** Orders are recorded as cash-on-delivery. `PaymentProvider` is an
   enum with a single `manual` member, ready for a real adapter.
 - **Order tracking requires the phone number**, not just the order number, so order numbers

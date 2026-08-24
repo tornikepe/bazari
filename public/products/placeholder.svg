@@ -1,9 +1,15 @@
+<!--
+  The stand-in every product ships with, until it has a photograph of its own.
+
+  Deliberately transparent. It used to carry its own near-white ground, which
+  was right until the site grew a dark theme — and then every product card,
+  and the top-left quarter of every product page, was a white block on a black
+  page. The card behind this is `bg-ink-50`, and that is a token, so it already
+  knows which theme it is in. The greys below are picked to read on either one;
+  the carton is orange and never needed to care.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="640" height="640" role="img" aria-label="Sample product photo">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#f5f7fa"/>
-      <stop offset="100%" stop-color="#e4e9f2"/>
-    </linearGradient>
     <linearGradient id="boxTop" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f3b45f"/>
       <stop offset="100%" stop-color="#e09a3e"/>
@@ -16,14 +22,8 @@
       <stop offset="0%" stop-color="#c9832f"/>
       <stop offset="100%" stop-color="#a96a20"/>
     </linearGradient>
-    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0%" stop-color="#1f2937" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#1f2937" stop-opacity="0"/>
-    </radialGradient>
   </defs>
 
-  <rect width="640" height="640" fill="url(#bg)"/>
-  <ellipse cx="320" cy="497" rx="176" ry="34" fill="url(#shadow)"/>
 
   <!-- carton: isometric box -->
   <g>
@@ -38,10 +38,10 @@
   </g>
 
   <!-- air-freight mark -->
-  <g fill="#5b6478" fill-opacity="0.55" transform="translate(430 120) scale(1.05)">
+  <g fill="#7d8698" fill-opacity="0.6" transform="translate(430 120) scale(1.05)">
     <path d="M4 34 L54 12 L58 16 L34 44 L46 52 L44 58 L28 52 L18 62 L14 60 L16 46 L2 40 Z"/>
   </g>
 
-  <text x="320" y="556" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#5b6478" letter-spacing="4">BAZARI</text>
-  <text x="320" y="586" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="17" fill="#94a0b4" letter-spacing="1">sample product photo</text>
+  <text x="320" y="556" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="26" font-weight="600" fill="#7d8698" letter-spacing="4">BAZARI</text>
+  <text x="320" y="586" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="17" fill="#7d8698" fill-opacity="0.75" letter-spacing="1">sample product photo</text>
 </svg>
