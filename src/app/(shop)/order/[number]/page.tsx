@@ -35,7 +35,7 @@ export default async function OrderConfirmationPage({
   if (!mayView) redirect(`/track?number=${encodeURIComponent(order.number)}`);
 
   return (
-    <div className="page-container py-10 lg:py-14">
+    <div className="page">
       <div className="mx-auto max-w-2xl">
         <div className="card flex flex-col items-center px-6 py-10 text-center">
           <span className="grid h-16 w-16 place-items-center rounded-pill bg-success-soft text-success">

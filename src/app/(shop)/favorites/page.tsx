@@ -8,10 +8,9 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { ProductGridSkeleton, PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { TrashIcon } from "@/components/ui/icons";
 import { clearFavorites } from "@/lib/favorites-store";
-import { countText } from "@/lib/i18n";
 import { getProductsByIds } from "@/app/actions/products";
 import type { ProductCardData } from "@/lib/catalog";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyHeartArt } from "@/components/ui/illustrations";
 
@@ -41,33 +40,24 @@ export default function FavoritesPage() {
   const isLoading = products === null;
 
   return (
-    <div className="page-container py-6 lg:py-8">
-      <Breadcrumb
-        className="mb-2"
-        items={[{ label: t.nav.home, href: "/" }, { label: t.favorites.title }]}
+    <div className="page">
+      <PageHeader
+        crumbs={[{ label: t.nav.home, href: "/" }, { label: t.favorites.title }]}
+        title={t.favorites.title}
+        count={!isLoading && products.length > 0 ? products.length : undefined}
+        action={
+          !isLoading && products.length > 0 ? (
+            <button
+              type="button"
+              onClick={clearFavorites}
+              className="btn btn-ghost btn-sm hover:text-danger"
+            >
+              <TrashIcon size={15} />
+              {t.favorites.clear}
+            </button>
+          ) : undefined
+        }
       />
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
-          {t.favorites.title}
-          {!isLoading && products.length > 0 && (
-            <span className="ml-2 text-sm font-medium text-ink-400">
-              {countText(t.favorites.countOne, t.favorites.count, products.length)}
-            </span>
-          )}
-        </h1>
-
-        {!isLoading && products.length > 0 && (
-          <button
-            type="button"
-            onClick={clearFavorites}
-            className="btn btn-ghost btn-sm hover:text-danger"
-          >
-            <TrashIcon size={15} />
-            {t.favorites.clear}
-          </button>
-        )}
-      </div>
 
       <div className="mt-6">
         {isLoading ? (

@@ -90,7 +90,7 @@ export default async function AccountPage({
   ];
 
   return (
-    <div className="page-container py-6 lg:py-10">
+    <div className="page">
       <AccountIdentity
         name={user.name}
         email={user.email}

@@ -34,7 +34,7 @@ function TrackOrderForm() {
   const errorKey = result && !result.ok ? result.error : null;
 
   return (
-    <div className="page-container py-10 lg:py-14">
+    <div className="page">
       <div className="mx-auto max-w-lg">
         <div className="mb-6 text-center">
           <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-pill bg-brand-50 text-brand-600">
@@ -224,7 +224,7 @@ export default function TrackOrderPage() {
   // `useSearchParams` needs a Suspense boundary so it can't block the static
   // shell from rendering.
   return (
-    <Suspense fallback={<div className="page-container py-10 lg:py-14" />}>
+    <Suspense fallback={<div className="page" />}>
       <TrackOrderForm />
     </Suspense>
   );

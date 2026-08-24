@@ -34,7 +34,7 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
       : [];
 
   return (
-    <div className="page-container py-8 lg:py-12">
+    <div className="page">
       <Breadcrumb items={[{ label: t.nav.home, href: "/" }, { label: page.title }]} />
 
       <article className="mx-auto max-w-3xl">

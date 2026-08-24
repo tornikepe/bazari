@@ -46,7 +46,6 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 
 ## 4. Testing
 
-- Visual regression: every page × two themes × two languages × three widths, diffed on every PR
 - `axe-core` on every page, in both languages
 - Firefox
 - A load test on the catalogue and checkout
@@ -114,7 +113,6 @@ Decide each rule once, then apply it everywhere.
 
 - **One page header** — eyebrow, title, one line of purpose, optional action on the right
 - **One card** — an optional header bar, one padding scale
-- **One vertical rhythm** — one page-padding value, not three
 - **One way to show a row of figures**
 - **One table** — column alignment, zebra rules, the money column, the row-action column, and
   what a row becomes on a phone
@@ -122,14 +120,12 @@ Decide each rule once, then apply it everywhere.
   starts from a decision rather than a copy-paste
 - A one-page list of those rules, and a test that fails when a page invents another
 
-Visual regression (§4) lands first, so the pass is measured rather than admired.
 
 ---
 
 ## 9. Order of work
 
-1. **§4** — visual regression
-2. **§8** — the design pass
-3. **§2** — craft, after the design pass: polishing pages that are about to be restyled is work
+1. **§8** — the design pass
+2. **§2** — craft, after the design pass: polishing pages that are about to be restyled is work
    done twice
-4. **§5** and **§6**, last
+3. **§5** and **§6**, last

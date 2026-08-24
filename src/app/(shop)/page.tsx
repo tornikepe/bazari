@@ -242,7 +242,9 @@ export default async function HomePage() {
 
       {/* ---------------------------- new arrivals ------------------------- */}
       {newArrivals.length > 0 && (
-        <section className="page-container rule py-12 lg:py-16">
+        // Named so the screenshot suite can paint over it: these four cards
+        // are whatever was added last, and the suite adds products.
+        <section id="new-arrivals" className="page-container rule py-12 lg:py-16">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="label">{t.home.newArrivals}</h2>
             <Link

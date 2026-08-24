@@ -29,7 +29,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   // slow enough to look before React ran.
   if (!hydrated) {
     return (
-      <div className="page-container py-10">
+      <div className="page">
         <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">{t.cart.title}</h1>
         <div className="mt-6" />
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
@@ -46,7 +46,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
 
   if (items.length === 0) {
     return (
-      <div className="page-container py-10">
+      <div className="page">
         <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">{t.cart.title}</h1>
 
         <EmptyState
@@ -73,7 +73,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   const remaining = settings.freeShippingThreshold - subtotal;
 
   return (
-    <div className="page-container py-6 lg:py-8">
+    <div className="page">
       <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
         {t.cart.title}
       </h1>

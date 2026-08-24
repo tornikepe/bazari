@@ -77,6 +77,23 @@ async function expectSaved(page: Page) {
   await expect(page.getByRole("status").filter({ hasText: /saved/i })).toBeVisible();
 }
 
+/**
+ * Puts the shop's colour back, and waits until it really is back.
+ *
+ * The wait is the point. An earlier version clicked Save and returned, and
+ * Playwright tore the page down while the Server Action was still in flight —
+ * so the restore never landed and the shop stayed whatever colour the test had
+ * set. Nothing failed: this spec passes either way. What it broke was the
+ * *visual* suite, which rendered thirty screenshots of a blue shop and reported
+ * thirty diffs about a page-spacing change that had nothing to do with it.
+ */
+async function restore(page: Page, colour: string) {
+  await page.goto("/dashboard/settings");
+  await setColour(page, colour);
+  await save(page);
+  await expectSaved(page);
+}
+
 test("an admin sets a brand colour and the storefront changes", async ({ page }) => {
   await useEnglish(page);
   await signIn(page, ADMIN.email, ADMIN.password);
@@ -103,9 +120,7 @@ test("an admin sets a brand colour and the storefront changes", async ({ page })
     const [r, , b] = [1, 3, 5].map((i) => parseInt(link.slice(i, i + 2), 16));
     expect(b!).toBeGreaterThan(r!);
   } finally {
-    await page.goto("/dashboard/settings");
-    await setColour(page, original);
-    await save(page);
+    await restore(page, original);
   }
 });
 
@@ -129,9 +144,7 @@ test("the derived palette still meets AA where it lands on the page", async ({ p
     expect(ratio, "the primary button's own text on its own background").not.toBeNull();
     expect(ratio!).toBeGreaterThanOrEqual(4.5);
   } finally {
-    await page.goto("/dashboard/settings");
-    await setColour(page, original);
-    await save(page);
+    await restore(page, original);
   }
 });
 
@@ -187,9 +200,7 @@ test("the refusal offers a colour that is accepted", async ({ page }) => {
     await save(page);
     await expectSaved(page);
   } finally {
-    await page.goto("/dashboard/settings");
-    await setColour(page, original);
-    await save(page);
+    await restore(page, original);
   }
 });
 

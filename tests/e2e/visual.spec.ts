@@ -41,9 +41,43 @@ function volatileParts(page: Page): Locator[] {
     // Prices, stock counts and delivery estimates all move with the data.
     page.locator(".tabular-nums"),
     page.locator(".badge"),
+    // The same thing set larger: the home page's hero counts and the number
+    // beside each category in the index. Both are counted from the database,
+    // so both move when another test adds a product or takes one away.
+    page.locator(".figure"),
+    page.locator(".index-count"),
     // The assistant floats over everything and animates on a timer of its own.
     page.locator(".chat-launcher"),
   ];
+}
+
+/**
+ * Refuses to compare a shop that is not wearing its own colours.
+ *
+ * The brand colour lives in the settings row, and the row is shared by the
+ * whole suite: `brand-color.spec.ts` sets a blue, checks the palette, and puts
+ * the red back. When that restore does not land — the run was interrupted, or,
+ * as happened, the save was never waited for — every page on the site is a
+ * different colour, and every screenshot here fails. Thirty diffs, none of them
+ * about anything this suite is watching.
+ *
+ * A shop on the default colour renders from the stylesheet alone and injects
+ * nothing; anything else ships a `<style>` with the derived tokens in it. So
+ * the check is for that element, not for a particular hex — it holds in both
+ * themes without knowing either one's shades.
+ */
+async function expectDefaultBrand(page: Page) {
+  const overrides = await page.evaluate(() =>
+    [...document.querySelectorAll("head style")].filter((element) =>
+      (element.textContent ?? "").includes("--color-brand"),
+    ).length,
+  );
+
+  expect(
+    overrides,
+    "the shop is not on its default brand colour — a brand-colour test left one behind; " +
+      "put it back before reading anything into these diffs",
+  ).toBe(0);
 }
 
 async function shoot(page: Page, name: string, extra: Locator[] = []) {
@@ -51,6 +85,8 @@ async function shoot(page: Page, name: string, extra: Locator[] = []) {
   // layout, and a screenshot taken before they land is a picture of a page
   // that never existed.
   await page.waitForLoadState("networkidle");
+
+  await expectDefaultBrand(page);
 
   await expect(page).toHaveScreenshot(name, {
     fullPage: true,
@@ -73,7 +109,19 @@ async function shoot(page: Page, name: string, extra: Locator[] = []) {
 
 /** The pages worth watching, and anything on them that moves by itself. */
 const PAGES: { name: string; path: string; masks?: (page: Page) => Locator[] }[] = [
-  { name: "home", path: "/" },
+  {
+    name: "home",
+    path: "/",
+    /* The four newest products, whichever they happen to be.
+     *
+     * Every other section of the home page is fixed: the categories are
+     * seeded, the featured row is chosen by a flag nobody sets in passing.
+     * This one is `order by createdAt desc limit 4`, so a single product
+     * created anywhere in the suite replaces all four cards and this page
+     * reports four diffs that are really one insert. The cards are painted
+     * over and their boxes are not, so the grid still has to hold its shape. */
+    masks: (page) => [page.locator("#new-arrivals article")],
+  },
   { name: "catalog", path: "/catalog" },
   { name: "cart-empty", path: "/cart" },
   { name: "track", path: "/track" },

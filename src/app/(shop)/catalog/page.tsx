@@ -12,7 +12,7 @@ import { SortSelect } from "@/components/catalog/SortSelect";
 import { Pagination } from "@/components/catalog/Pagination";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NoResultsArt } from "@/components/ui/illustrations";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default async function CatalogPage({
   searchParams,
@@ -32,7 +32,7 @@ export default async function CatalogPage({
   const activeCategory = categories.find((category) => category.slug === filters.category);
 
   return (
-    <div className="page-container py-6 lg:py-8">
+    <div className="page">
       {/* A way past the filters.
           The rail is 63 tab stops deep — a checkbox per category, per brand,
           plus the price range — and all of it sits between the top of the page
@@ -56,20 +56,17 @@ export default async function CatalogPage({
         {t.catalog.skipFilters}
       </a>
 
-      {/* breadcrumb + title */}
-      <Breadcrumb
-        className="mb-2"
-        items={[{ label: t.nav.home, href: "/" }, { label: t.catalog.title }]}
-      />
-
       {/* A filtered category reads better with the category as the heading. */}
-      <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
-        {activeCategory
-          ? locale === "ka"
-            ? activeCategory.nameKa
-            : activeCategory.nameEn
-          : t.catalog.title}
-      </h1>
+      <PageHeader
+        crumbs={[{ label: t.nav.home, href: "/" }, { label: t.catalog.title }]}
+        title={
+          activeCategory
+            ? locale === "ka"
+              ? activeCategory.nameKa
+              : activeCategory.nameEn
+            : t.catalog.title
+        }
+      />
 
       <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-8">
         {/* ----------------------------- sidebar ---------------------------- */}

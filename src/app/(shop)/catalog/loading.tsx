@@ -2,7 +2,7 @@ import { ProductGridSkeleton } from "@/components/ui/ProductGridSkeleton";
 
 export default function CatalogLoading() {
   return (
-    <div className="page-container py-6 lg:py-8">
+    <div className="page">
       <div className="h-4 w-40 animate-pulse bg-ink-100" />
       <div className="mt-3 h-8 w-56 animate-pulse bg-ink-100" />
 

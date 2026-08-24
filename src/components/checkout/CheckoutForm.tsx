@@ -198,7 +198,7 @@ export function CheckoutForm({
   }
 
   return (
-    <div className="page-container py-6 lg:py-8">
+    <div className="page">
       <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
         {t.checkout.title}
       </h1>

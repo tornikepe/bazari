@@ -169,7 +169,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ) : null;
 
   return (
-    <div className="page-container py-6 lg:py-8">
+    <div className="page">
       <JsonLd data={productSchema} />
       <JsonLd data={breadcrumbSchema} />
 
