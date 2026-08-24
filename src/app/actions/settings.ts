@@ -108,5 +108,10 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
   // Every page reads some of this — the header the name, the cart the shipping
   // rules, the footer the contact details — so the whole tree is stale.
   revalidatePath("/", "layout");
+  /* And the manifest, which is not in that tree. It is a static route built
+     from the same row, so without this an installed shop would keep the name
+     and the colour it had at deploy time — the one place a stale value is not
+     merely stale but sitting on somebody's home screen. */
+  revalidatePath("/manifest.webmanifest");
   return { ok: true };
 }

@@ -98,39 +98,39 @@ model Category {
 /// Neither is acceptable for deciding what a card is charged, so every amount
 /// in this schema is an integer and only the display layer divides by 100.
 model Product {
-  id            String      @id @default(cuid())
-  slug          String      @unique
+  id            String          @id @default(cuid())
+  slug          String          @unique
   nameKa        String
   nameEn        String
-  descriptionKa String      @default("")
-  descriptionEn String      @default("")
-  sku           String      @unique
+  descriptionKa String          @default("")
+  descriptionEn String          @default("")
+  sku           String          @unique
   price         Int
   oldPrice      Int?
   /// What the shop paid. Drives the margin figures in the dashboard.
-  costPrice     Int       @default(0)
-  stock         Int         @default(0)
+  costPrice     Int             @default(0)
+  stock         Int             @default(0)
   /// Alert threshold — below this the dashboard flags the product.
-  lowStockAt    Int         @default(10)
-  image         String      @default("/products/placeholder.svg")
+  lowStockAt    Int             @default(10)
+  image         String          @default("/products/placeholder.svg")
   /// Extra photos, in the order they are shown. `image` stays the first one —
   /// the card, the search result, the order line and the Open Graph tag all
   /// want exactly one photo, and only the product page wants the rest.
-  images        String[]    @default([])
+  images        String[]        @default([])
   /// Specifications, as an ordered list of `{labelKa,labelEn,valueKa,valueEn}`.
   /// A column rather than a table: they belong to exactly one product, are
   /// never queried on their own and never joined to. The order is the array's.
-  specs         Json        @default("[]")
-  brand         String      @default("")
-  shippingDays  Int         @default(14)
-  isFeatured    Boolean     @default(false)
-  isActive      Boolean     @default(true)
+  specs         Json            @default("[]")
+  brand         String          @default("")
+  shippingDays  Int             @default(14)
+  isFeatured    Boolean         @default(false)
+  isActive      Boolean         @default(true)
   categoryId    String
-  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category      Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
   stockMoves    StockMovement[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([categoryId])
   @@index([isActive])
@@ -167,7 +167,7 @@ model Coupon {
   /// Percent off when `percentOff` is set, otherwise a flat `amountOff`.
   percentOff    Int?
   amountOff     Int?
-  minOrderTotal Int     @default(0)
+  minOrderTotal Int       @default(0)
   maxUses       Int?
   usedCount     Int       @default(0)
   expiresAt     DateTime?
@@ -179,42 +179,42 @@ model Coupon {
 }
 
 model Order {
-  id           String      @id @default(cuid())
-  number       String      @unique
+  id           String  @id @default(cuid())
+  number       String  @unique
   /// Null for guest checkout — an account isn't required to order.
   userId       String?
-  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user         User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   customerName String
   phone        String
-  email        String      @default("")
+  email        String  @default("")
   city         String
   address      String
-  note         String      @default("")
+  note         String  @default("")
 
   /// Money is stored broken down, not just as a total, so an invoice can be
   /// reproduced exactly even after prices or shipping rules change.
-  subtotal     Int       @default(0)
-  shipping     Int       @default(0)
-  discount     Int       @default(0)
-  total        Int
+  subtotal Int @default(0)
+  shipping Int @default(0)
+  discount Int @default(0)
+  total    Int
 
-  couponId     String?
-  coupon       Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  couponId String?
+  coupon   Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
 
   paymentMethod PaymentMethod @default(cash_on_delivery)
   paymentStatus PaymentStatus @default(unpaid)
 
-  status       OrderStatus @default(pending)
+  status      OrderStatus @default(pending)
   /// Set when the order reaches `shipped` / `delivered`.
-  shippedAt    DateTime?
-  deliveredAt  DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
 
-  items        OrderItem[]
-  events       OrderEvent[]
-  movements    StockMovement[]
-  payments     Payment[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  items     OrderItem[]
+  events    OrderEvent[]
+  movements StockMovement[]
+  payments  Payment[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   @@index([status])
   @@index([createdAt])
@@ -250,7 +250,7 @@ model OrderItem {
   price     Int
   /// Snapshotted alongside the price so past margins don't move when the
   /// product's cost is later updated.
-  costPrice Int    @default(0)
+  costPrice Int      @default(0)
   quantity  Int
 
   @@index([orderId])
@@ -259,31 +259,59 @@ model OrderItem {
 /// Both customers and staff live here — `role` is what separates the customer
 /// account area from the admin dashboard.
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String   @default("")
-  phone     String   @default("")
-  city      String   @default("")
-  address   String   @default("")
-  password  String
-  role      Role     @default(customer)
+  id             String              @id @default(cuid())
+  email          String              @unique
+  name           String              @default("")
+  phone          String              @default("")
+  city           String              @default("")
+  address        String              @default("")
+  password       String
+  role           Role                @default(customer)
   /// Sign-up sends a code; until it's confirmed this stays false.
-  emailVerified Boolean @default(false)
+  emailVerified  Boolean             @default(false)
   /// Bumped to invalidate every session cookie issued for this user. The
   /// cookie carries the value it was signed with, so an old one no longer
   /// matches and is rejected without needing a session table.
-  sessionVersion Int    @default(0)
+  sessionVersion Int                 @default(0)
   /// Set when an account is switched off. Sign-in is refused while it is set,
   /// and the row stays: an order points at the customer who placed it, and a
   /// deleted staff account takes its own audit trail with it.
-  disabledAt DateTime?
-  orders    Order[]
-  tokens    VerificationToken[]
-  addresses Address[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  disabledAt     DateTime?
+  orders         Order[]
+  tokens         VerificationToken[]
+  addresses      Address[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  savedViews     SavedView[]
 
   @@index([role])
+}
+
+/// A dashboard listing somebody wants to come back to.
+///
+/// The orders page already answers "unpaid, this month, biggest first" — it is
+/// four controls and a URL. What it could not do is remember the answer, so the
+/// same four controls were set again every morning. A saved view is that URL's
+/// query string with a name on it.
+///
+/// Per user rather than per shop: two people running the same dashboard watch
+/// different things, and a shared list grows until nobody can find their own.
+model SavedView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Which listing it belongs to: "orders", "products", "customers".
+  page      String
+  name      String
+  /// The query string without its leading `?`, e.g. `status=pending&sort=total`.
+  query     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  /// One name per listing per person: saving over a name replaces what it
+  /// points at, which is what "save" means when the name is already on screen.
+  @@unique([userId, page, name])
+  @@index([userId, page])
 }
 
 /// A delivery address a customer has saved.
@@ -356,9 +384,9 @@ model RateLimit {
 /// point, and a payment that disagrees with the gateway by a tetri is a
 /// reconciliation problem.
 model Payment {
-  id          String          @id @default(cuid())
-  orderId     String
-  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   provider    PaymentProvider
   /// The gateway's own identifier for this attempt, once it has issued one.
@@ -366,24 +394,24 @@ model Payment {
   state       PaymentState    @default(pending)
 
   /// Charged amount in tetri, copied from the order when the attempt starts.
-  amount      Int
-  currency    String          @default("GEL")
+  amount   Int
+  currency String @default("GEL")
   /// Set once money has actually moved back out again.
-  refunded    Int             @default(0)
+  refunded Int    @default(0)
 
   /// Attempts that are never completed are swept to `expired` after this.
-  expiresAt   DateTime
-  capturedAt  DateTime?
-  failReason  String          @default("")
+  expiresAt  DateTime
+  capturedAt DateTime?
+  failReason String    @default("")
 
-  events      PaymentEvent[]
+  events PaymentEvent[]
 
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@unique([provider, providerRef])
   @@index([orderId])
   @@index([state])
-  @@unique([provider, providerRef])
 }
 
 /// Token spend for the contact assistant, one row per calendar month.
@@ -415,16 +443,16 @@ model ChatUsage {
 /// `externalId` is unique: gateways retry webhooks, and replaying one must not
 /// capture an order twice.
 model PaymentEvent {
-  id         String   @id @default(cuid())
-  paymentId  String
-  payment    Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
   /// The gateway's event id, or a hash of the body when it doesn't send one.
   externalId String
   state      PaymentState
   /// Verbatim payload, for disputes and debugging.
-  payload    String   @default("")
-  createdAt  DateTime @default(now())
+  payload    String       @default("")
+  createdAt  DateTime     @default(now())
 
   @@unique([paymentId, externalId])
   @@index([paymentId])
@@ -460,7 +488,7 @@ model ShopSettings {
   /// button tokens are derived from it at render time for both themes — see
   /// `brand-theme.ts`. A database constraint holds the format so nothing can
   /// reach the stylesheet that is not a colour.
-  brandColor            String  @default("#dc1f24")
+  brandColor String @default("#dc1f24")
 
   currencySymbol        String  @default("₾")
   /// Tetri, like every other amount in this schema.
@@ -504,15 +532,15 @@ model ProductImage {
 /// resolves from settings at render, so a page cannot state a delivery rule the
 /// checkout no longer applies.
 model InfoPage {
-  slug        String  @id
-  titleKa     String  @default("")
-  titleEn     String  @default("")
-  introKa     String  @default("")
-  introEn     String  @default("")
-  bodyKa      String  @default("")
-  bodyEn      String  @default("")
+  slug        String   @id
+  titleKa     String   @default("")
+  titleEn     String   @default("")
+  introKa     String   @default("")
+  introEn     String   @default("")
+  bodyKa      String   @default("")
+  bodyEn      String   @default("")
   /// Unpublished pages are hidden from the footer rather than rendered empty.
-  isPublished Boolean @default(true)
-  sortOrder   Int     @default(0)
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
   updatedAt   DateTime @updatedAt
 }

@@ -15,6 +15,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Figures } from "@/components/ui/Figures";
 import { BulkCustomers } from "@/components/admin/BulkCustomers";
 import { WriteOnly } from "@/components/admin/StaffRoleProvider";
+import { SavedViews } from "@/components/admin/SavedViews";
+import { getSavedViews } from "@/lib/saved-views-store";
 
 const PAGE_SIZE = 20;
 const ROLES = ["customer", "admin", "viewer"] as const;
@@ -132,6 +134,8 @@ export default async function AdminCustomersPage({
     { label: t.admin.withOrders, value: withOrders },
   ];
 
+  const views = await getSavedViews("customers");
+
   return (
     <div className="mx-auto max-w-6xl">
       <ReadOnlyNotice />
@@ -146,6 +150,8 @@ export default async function AdminCustomersPage({
       <Figures className="mt-5" items={stats} columns={3} />
 
       <div className="mt-4">
+        <SavedViews className="mb-3" page="customers" views={views} />
+
         <AdminToolbar
           basePath="/dashboard/customers"
           search={query}

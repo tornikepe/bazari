@@ -16,6 +16,8 @@ import { EmptyOrdersArt, NoResultsArt } from "@/components/ui/illustrations";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { BulkOrders } from "@/components/admin/BulkOrders";
 import { WriteOnly } from "@/components/admin/StaffRoleProvider";
+import { SavedViews } from "@/components/admin/SavedViews";
+import { getSavedViews } from "@/lib/saved-views-store";
 
 const SORTS = ["newest", "oldest", "total-desc", "total-asc"] as const;
 
@@ -113,6 +115,8 @@ export default async function AdminOrdersPage({
     return qs ? `/dashboard/orders?${qs}` : "/dashboard/orders";
   };
 
+  const views = await getSavedViews("orders");
+
   return (
     <div className="mx-auto max-w-6xl">
       <ReadOnlyNotice />
@@ -148,6 +152,8 @@ export default async function AdminOrdersPage({
       </div>
 
       <div className="mt-3">
+        <SavedViews className="mb-3" page="orders" views={views} />
+
         <AdminToolbar
           basePath="/dashboard/orders"
           search={query}

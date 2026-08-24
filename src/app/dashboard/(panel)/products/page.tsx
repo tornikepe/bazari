@@ -17,6 +17,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyShelfArt, NoResultsArt } from "@/components/ui/illustrations";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EditableNumber } from "@/components/admin/EditableNumber";
+import { SavedViews } from "@/components/admin/SavedViews";
+import { getSavedViews } from "@/lib/saved-views-store";
 
 const PAGE_SIZE = 20;
 const LOW_STOCK_THRESHOLD = 10;
@@ -154,6 +156,8 @@ export default async function AdminProductsPage({
         ? "bg-warning-soft text-warning"
         : "bg-ink-100 text-ink-600";
 
+  const views = await getSavedViews("products");
+
   return (
     <div className="mx-auto max-w-6xl">
       <ReadOnlyNotice />
@@ -173,6 +177,8 @@ export default async function AdminProductsPage({
       />
 
       <div className="mt-4">
+        <SavedViews className="mb-3" page="products" views={views} />
+
         <AdminToolbar
           basePath="/dashboard/products"
           search={query}

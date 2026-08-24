@@ -16,13 +16,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 
 ---
 
-## 2. Design
-
-- Saved views, inline editing, and bulk actions for orders and customers
-
----
-
-## 3. Shop features
+## 2. Shop features
 
 | | Item | What it needs |
 |---|---|---|
@@ -41,7 +35,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 
 ---
 
-## 4. Testing
+## 3. Testing
 
 - `axe-core` on every page, in both languages
 - Firefox
@@ -50,7 +44,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 
 ---
 
-## 5. Operations
+## 4. Operations
 
 - An admin audit log: who changed which price, and when
 - Error tracking — Sentry with source maps. Blocked on **A8**
@@ -63,7 +57,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 
 ---
 
-## 6. Documentation, at the end
+## 5. Documentation, at the end
 
 - Re-verify every claim against the code, and run every command in the README
 - The three passwords and `AUTH_SECRET`: how they are made, where they live, how to rotate one
@@ -74,7 +68,7 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 
 ---
 
-## 7. What only you can do
+## 6. What only you can do
 
 | | What | Why it is yours |
 |---|---|---|
@@ -103,7 +97,9 @@ npm run setup:credentials -- --force   # locally; set the Vercel one by hand
 
 ---
 
-## 8. Order of work
+## 7. Order of work
 
-1. **§2** — craft
-2. **§5** and **§6**, last
+1. **§2** — the shop features, in the order they are weighted
+2. **§3** — testing, alongside rather than after
+3. **§4** and **§5**, last
+4. **§1** whenever a real phone is to hand — most of it cannot be verified without one
