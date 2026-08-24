@@ -933,6 +933,11 @@ you own, and never in a fork.
   runtime-derived zone answers differently on the server and in the browser, which is a hydration
   mismatch; UTC is deterministic but four hours wrong, which filed every order placed after
   midnight under the previous day.
+- **Nothing is emailed at all without a sending domain.** Order confirmations, shipping notices,
+  the low-stock alert to the shop and the back-in-stock message to a shopper are all written and
+  all degrade the same way: without `RESEND_API_KEY` the message is written to the *server* log and
+  never to the browser. That is deliberate — it keeps local development workable without ever
+  handing a one-time code to the caller.
 - **An order prints, but no invoice is emailed.** Both order pages — the shop's and the
   shopper's — print as a document: the shop's name and contact details, the number, the date, who
   it is for, the lines, the totals. It is deliberately not a fiscal document and says so on its

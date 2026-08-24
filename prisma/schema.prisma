@@ -129,12 +129,37 @@ model Product {
   category      Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
   stockMoves    StockMovement[]
+  stockAlerts   StockAlert[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
   @@index([categoryId])
   @@index([isActive])
   @@index([createdAt])
+}
+
+/// Somebody waiting for a product to come back.
+///
+/// A shop that is out of something loses the sale twice: once now, and again
+/// when the box arrives and nobody knows. This is the shopper leaving an
+/// address instead of being asked to come back and check.
+///
+/// The row is deleted the moment the message is sent. It is an email address
+/// attached to a thing somebody wants, held only for as long as it takes to
+/// tell them — keeping it afterwards would be keeping a list nobody asked to
+/// be on.
+model StockAlert {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  email     String
+  /// The language they asked in, so the message arrives in it.
+  locale    String   @default("ka")
+  createdAt DateTime @default(now())
+
+  /// Asking twice is the same as asking once.
+  @@unique([productId, email])
+  @@index([productId])
 }
 
 /// Append-only stock ledger. Every change to `Product.stock` writes a row, so

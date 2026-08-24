@@ -20,6 +20,7 @@ import { parseSpecs, readSpec } from "@/lib/product-specs";
 import { getBoughtTogether } from "@/lib/cross-sell";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { RecordView } from "@/components/product/RecordView";
+import { WatchStock } from "@/components/product/WatchStock";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -245,6 +246,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {description && (
             <p className="mt-5 text-base leading-relaxed text-ink-600">{description}</p>
           )}
+
+          {/* Offered where the disappointment happens, above the buy panel
+              that has nothing to offer. */}
+          {soldOut && <WatchStock productId={product.id} />}
 
           <div className="mt-6" id="buy-panel">
             <ProductPurchasePanel

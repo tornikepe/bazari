@@ -11,6 +11,7 @@ import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { MAX_GALLERY } from "@/lib/image-upload";
 import { specsFromForm } from "@/lib/product-specs";
 import { forgetUnusedImages, photosOf } from "@/lib/product-images";
+import { releaseStockAlerts } from "@/lib/stock-emails";
 import type { Prisma } from "@/generated/prisma/client";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
@@ -187,6 +188,26 @@ async function recordStockChange(
   });
 }
 
+/**
+ * Tells anybody waiting, when a product comes back from nothing.
+ *
+ * Four things raise a stock figure — a delivery, a correction, an edit in the
+ * form, and an order being cancelled — and all four go through here rather
+ * than each deciding for itself whether a message is due. The rule is the same
+ * one the low-stock alert uses from the other side: the crossing, not the
+ * state.
+ *
+ * Never allowed to fail the write it follows. The stock rose either way, and
+ * a mail outage must not turn a delivery into an error.
+ */
+async function announceIfBack(productId: string, before: number, after: number) {
+  if (!(before <= 0 && after > 0)) return;
+
+  await releaseStockAlerts(productId).catch((error) =>
+    console.error("releaseStockAlerts failed", error),
+  );
+}
+
 export async function saveProduct(id: string | null, formData: FormData): Promise<ActionResult> {
   if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
 
@@ -206,18 +227,21 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
 
   try {
     if (id) {
-      await prisma.$transaction(async (tx) => {
+      const after = await prisma.$transaction(async (tx) => {
         // The figure comes back from the row rather than from the form, so the
         // ledger records what the product actually holds.
-        const after = await tx.product.update({
+        const saved = await tx.product.update({
           where: { id },
           data: parsed.data,
           select: { stock: true },
         });
         if (before) {
-          await recordStockChange(tx, id, before.stock, after.stock, "Edited in the dashboard");
+          await recordStockChange(tx, id, before.stock, saved.stock, "Edited in the dashboard");
         }
+        return saved.stock;
       });
+
+      if (before) await announceIfBack(id, before.stock, after);
     } else {
       await prisma.product.create({ data: parsed.data });
     }
@@ -276,6 +300,8 @@ export async function setProductNumber(
         await recordStockChange(tx, id, before.stock, stored, "Set from the product table");
       }
     });
+
+    if (field === "stock") await announceIfBack(id, before.stock, stored);
   } catch (error) {
     console.error("setProductNumber failed", error);
     return { ok: false, error: "failed" };
@@ -326,11 +352,15 @@ export async function restockProduct(
         },
       });
 
-      return after.stock;
+      return { after: after.stock, before: after.stock - amount };
     });
 
+    // Back from nothing, so anybody who left an address is told — after the
+    // commit, and only on the rise from zero: three to fifteen was never gone.
+    await announceIfBack(id, balance.before, balance.after);
+
     revalidateStorefront();
-    return { ok: true, balance };
+    return { ok: true, balance: balance.after };
   } catch (error) {
     console.error("restockProduct failed", error);
     return { ok: false, error: "failed" };
@@ -534,6 +564,10 @@ async function applyOrderStatus(
 
   const now = new Date();
 
+  /* Per call, not per module: this runs once per order in a bulk change, and
+     a list left over from the previous one would announce the wrong product. */
+  const returned: { productId: string; before: number; after: number }[] = [];
+
   try {
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
@@ -574,6 +608,15 @@ async function applyOrderStatus(
               note: "Order cancelled",
             },
           });
+
+          /* Collected here and announced after the commit. A cancellation is
+             the fourth way a product comes back, and to somebody waiting it is
+             indistinguishable from a delivery. */
+          returned.push({
+            productId: item.productId,
+            before: updated.stock - item.quantity,
+            after: updated.stock,
+          });
         }
       }
     });
@@ -598,6 +641,10 @@ async function applyOrderStatus(
       })),
       locale: await getLocale(),
     });
+  }
+
+  for (const item of returned) {
+    await announceIfBack(item.productId, item.before, item.after);
   }
 
   return "changed";
