@@ -25,25 +25,25 @@ test("an admin picks a file and it becomes the product's photo", async ({ page }
   await signIn(page, ADMIN.email, ADMIN.password);
   await page.goto("/dashboard/products/new");
 
-  const url = page.locator('input[name="image"]');
-  const before = await url.inputValue();
+  /* A new product starts with no photos at all, so the row appearing is the
+     upload's own doing rather than something that was already on the page. */
+  const posted = page.locator('input[name="photoUrl"]');
+  await expect(posted).toHaveCount(0);
 
-  // `.first()` is the main photo — the form has a second picker for the
-  // gallery, and the two are the same element type.
   await page.locator('input[type="file"]').first().setInputFiles({
     name: "photo.png",
     mimeType: "image/png",
     buffer: PNG,
   });
 
-  // The field is filled by the upload, not by the save — so a failure is
-  // reported while the reader is still looking at the field.
-  await expect(url, "the upload did not fill the image field").not.toHaveValue(before);
-  await expect(url).toHaveValue(/^\/api\/images\/[a-z0-9]+$/);
+  // The list is written by the upload, not by the save — so a failure is
+  // reported while the reader is still looking at the control.
+  await expect(posted, "the upload did not add a photo").toHaveCount(1);
+  await expect(posted).toHaveValue(/^\/api\/images\/[a-z0-9]+$/);
 
   // And the stored bytes come back as an image, with the type the server
   // decided rather than the one the form claimed.
-  const stored = await page.request.get(await url.inputValue());
+  const stored = await page.request.get(await posted.inputValue());
   expect(stored.status()).toBe(200);
   expect(stored.headers()["content-type"]).toBe("image/png");
   expect(stored.headers()["x-content-type-options"]).toBe("nosniff");
@@ -65,8 +65,8 @@ test("a script named like an image is refused", async ({ page }) => {
   await expect(alert, "a script was accepted as a photo").toBeVisible();
   await expect(alert).toContainText(/not an image/i);
 
-  // And nothing was written: the field still holds what it did.
-  await expect(page.locator('input[name="image"]')).not.toHaveValue(/^\/api\/images\//);
+  // And nothing was written: the product still has no photos.
+  await expect(page.locator('input[name="photoUrl"]')).toHaveCount(0);
 });
 
 test("the endpoint refuses a viewer, not just the button", async ({ page }) => {

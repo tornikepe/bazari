@@ -72,19 +72,21 @@ test("a product with more than one photo gets a gallery @engine", async ({ page 
   // --- add two ------------------------------------------------------------
   await openFirstProductInAdmin(page);
   const chooser = page.locator('label:has-text("Add a photo") input[type="file"]');
+  const before = await page.locator('input[name="photoUrl"]').count();
 
   for (const [index, blue] of [17, 240].entries()) {
     await chooser.setInputFiles({ name: `photo-${index}.png`, mimeType: "image/png", buffer: PNG(blue) });
-    // The upload happens on choosing the file, so the thumbnail appearing is
-    // the signal that the server accepted it.
-    await expect(page.getByRole("button", { name: new RegExp(`Remove photo ${index + 1}`) })).toBeVisible();
+    // The upload happens on choosing the file, so the row appearing is the
+    // signal that the server accepted it.
+    await expect(page.locator('input[name="photoUrl"]')).toHaveCount(before + index + 1);
   }
 
   // The URLs the uploads were given, so what happens to the bytes can be
   // checked once the photos are taken away again.
-  const uploaded = await page.locator('input[name="images"]').evaluateAll((inputs) =>
+  const all = await page.locator('input[name="photoUrl"]').evaluateAll((inputs) =>
     inputs.map((input) => (input as HTMLInputElement).value),
   );
+  const uploaded = all.slice(before);
   expect(uploaded, "the form did not post the uploaded photos").toHaveLength(2);
 
   await save(page);
@@ -119,8 +121,11 @@ test("a product with more than one photo gets a gallery @engine", async ({ page 
   } finally {
     // --- and take them away again ------------------------------------------
     await openFirstProductInAdmin(page);
-    for (const label of [/Remove photo 2/, /Remove photo 1/]) {
-      await page.getByRole("button", { name: label }).click();
+    /* Backwards, because removing the second renumbers the third — the labels
+       are positions and the positions move. */
+    for (const index of [3, 2]) {
+      const button = page.getByRole("button", { name: new RegExp(`Remove photo ${index}$`) });
+      if (await button.count()) await button.click();
     }
     await save(page);
 

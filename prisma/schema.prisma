@@ -113,10 +113,16 @@ model Product {
   /// Alert threshold — below this the dashboard flags the product.
   lowStockAt    Int              @default(10)
   image         String           @default("/products/placeholder.svg")
-  /// Extra photos, in the order they are shown. `image` stays the first one —
-  /// the card, the search result, the order line and the Open Graph tag all
-  /// want exactly one photo, and only the product page wants the rest.
-  images        String[]         @default([])
+  /// Every photo, in the order they are shown, as
+  /// `[{url, altKa, altEn}]`. Index 0 is the main one, and `image` above is a
+  /// mirror of its URL — the catalogue selects `image` for every card, and a
+  /// JSON lookup per row to draw twelve thumbnails is a cost paid on the
+  /// busiest page of the shop for a value that changes once a season.
+  ///
+  /// A column rather than a table, for the same reason `specs` is one: they
+  /// belong to exactly one product, are never queried on their own, are never
+  /// joined to, and the order is the array's.
+  photos        Json             @default("[]")
   /// Specifications, as an ordered list of `{labelKa,labelEn,valueKa,valueEn}`.
   /// A column rather than a table: they belong to exactly one product, are
   /// never queried on their own and never joined to. The order is the array's.

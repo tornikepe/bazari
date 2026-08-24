@@ -22,6 +22,7 @@ import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { RecordView } from "@/components/product/RecordView";
 import { WatchStock } from "@/components/product/WatchStock";
 import { VariantPicker } from "@/components/product/VariantPicker";
+import { parsePhotos, altOf } from "@/lib/product-photos";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -96,6 +97,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const discount = discountPercent(product.price, product.oldPrice);
   const soldOut = product.stock <= 0;
 
+  /* Parsed once. The column is JSON, so its shape is the parser's promise
+     rather than the database's, and a page that parsed it twice would be two
+     places to get that wrong. */
+  const photos = parsePhotos(product.photos);
+
   /* The cart line as it would be without variants. The picker overrides the
      price and the stock once a combination is chosen; everything else on a
      line is the product's whatever is picked. */
@@ -162,7 +168,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     /* schema.org takes a list, and Google shows more of a product that offers
        more than one photo. Absolute, because a structured-data consumer is not
        reading this from the page it was served on. */
-    image: [product.image, ...product.images].map((photo) => `${SITE_URL}${photo}`),
+    image: photos.map((photo) => `${SITE_URL}${photo.url}`),
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
     category: categoryName,
     offers: {
@@ -202,7 +208,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
      Deduplicated, because the same photo listed twice is never what anyone
      meant — the form already prevents it, and data can arrive from elsewhere. */
-  const photos = [...new Set([product.image, ...product.images])];
+
 
   const saleBadge =
     discount > 0 ? (
@@ -239,7 +245,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
             <Image
               src={product.image}
-              alt={name}
+              // The written description when there is one, the name when not.
+              alt={altOf(photos[0], locale, name)}
               fill
               sizes="(max-width: 1024px) 100vw, 560px"
               className="object-cover"

@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { parsePhotos } from "@/lib/product-photos";
 
 /**
  * Deleting the bytes behind a photo nobody points at any more.
@@ -36,8 +37,13 @@ export async function forgetUnusedImages(urls: string[]): Promise<number> {
 
   for (const id of ids) {
     const url = `/api/images/${id}`;
+    /* `photos` is JSON, so "does any product still point at this?" is a
+       containment test rather than an array membership one. The partial object
+       matches an element with that URL whatever its alt text says. */
     const stillUsed = await prisma.product.count({
-      where: { OR: [{ image: url }, { images: { has: url } }] },
+      where: {
+        OR: [{ image: url }, { photos: { array_contains: [{ url }] } }],
+      },
     });
     if (stillUsed === 0) unused.push(id);
   }
@@ -48,7 +54,7 @@ export async function forgetUnusedImages(urls: string[]): Promise<number> {
   return count;
 }
 
-/** Every photo a product refers to, main one first. */
-export function photosOf(product: { image: string; images: string[] }): string[] {
-  return [product.image, ...product.images];
+/** Every URL a product refers to, main one first. */
+export function photosOf(product: { image: string; photos: unknown }): string[] {
+  return [...new Set([product.image, ...parsePhotos(product.photos).map((photo) => photo.url)])];
 }

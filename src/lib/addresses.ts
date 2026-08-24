@@ -3,7 +3,7 @@
  *
  * Here rather than beside `saveAddress`: a `"use server"` module may only
  * export async functions, so a constant living there fails the build — the
- * same rule that moved `MAX_GALLERY` out of the admin actions.
+ * same rule that keeps `MAX_PHOTOS` out of the admin actions.
  */
 
 /** As many as a person plausibly has: home, work, and two others. */

@@ -71,11 +71,3 @@ export function checkUpload(bytes: Uint8Array): { ok: true; type: ImageType } | 
   return { ok: true, type };
 }
 
-/**
- * As many photos as a product page can show without becoming a slideshow.
- *
- * Here rather than beside the action that enforces it: a `"use server"` module
- * may only export async functions, and the form has to stop offering "add
- * another" at the same number the server stops accepting them.
- */
-export const MAX_GALLERY = 7;

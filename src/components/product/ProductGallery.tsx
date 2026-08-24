@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
+import { altOf, type Photo } from "@/lib/product-photos";
 
 /**
  * The product's photos.
@@ -24,12 +25,12 @@ export function ProductGallery({
   badge,
 }: {
   /** Main photo first. The caller guarantees at least two — one is not a gallery. */
-  photos: string[];
+  photos: Photo[];
   name: string;
   /** The discount flag, which belongs over the photo and not beside it. */
   badge?: React.ReactNode;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [active, setActive] = useState(0);
   const strip = useRef<HTMLDivElement>(null);
 
@@ -78,8 +79,12 @@ export function ProductGallery({
       >
         <Image
           key={active}
-          src={photos[active]!}
-          alt={photos.length > 1 ? fill(t.product.photoOf, { index: active + 1, name }) : name}
+          src={photos[active]!.url}
+          /* What the photo shows, when somebody has said. "Photo 3 of 7" is a
+             position rather than a description, and a listener who hears it
+             has been told nothing about the picture — so the fallback is the
+             product's name, not its index. */
+          alt={altOf(photos[active], locale, name)}
           fill
           sizes="(max-width: 1024px) 100vw, 560px"
           className="object-cover"
@@ -113,7 +118,10 @@ export function ProductGallery({
               index === active ? "border-brand-600" : "border-line hover:border-ink-300"
             }`}
           >
-            <Image src={photo} alt="" fill sizes="64px" className="object-cover" />
+            {/* Decorative: the button around it is already labelled, and a
+                screen reader announcing the description twice per thumbnail
+                would read the whole strip as one long sentence. */}
+            <Image src={photo.url} alt="" fill sizes="64px" className="object-cover" />
           </button>
         ))}
       </div>

@@ -22,7 +22,6 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
 | 🟠 | Order invoice | A PDF attached to the confirmation email. Needs a renderer, and **A3** |
-| 🟡 | Product images | Ordering, alt text per language, generated sizes |
 | 🟡 | Delivery options | Courier against pickup, zones, per-zone pricing |
 | 🟡 | Tax | Shown and recorded per order. Georgia is 18% |
 | 🟡 | Returns | A request flow, not only a policy page |

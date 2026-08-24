@@ -928,7 +928,10 @@ you own, and never in a fork.
   generated combinations, stock and price per combination — but every seeded product is sold in one
   form, so the product page looks exactly as it did. Add a question on any product in the dashboard
   and the picker appears.
-- **Product images.** All seeded products share `public/products/placeholder.svg`. Set a real
+- **Product images.** All seeded products share `public/products/placeholder.svg`. Uploading a real
+  one gives it an order and a description in both languages; the resizing is Next's own optimiser,
+  which serves a variant per breakpoint from the `sizes` each image declares — there is no second
+  resizer in this project and there should not be. Set a real
   image URL per product in the dashboard. The placeholder is deliberately transparent so it takes
   the card's own background and works in both themes; a real photograph on a white studio ground
   will look like a white square in dark mode, which is a fact about photographs rather than a bug.

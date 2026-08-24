@@ -7,13 +7,21 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { saveProduct } from "@/app/actions/admin";
-import { MAX_GALLERY } from "@/lib/image-upload";
 import { MAX_SPECS, parseSpecs, type Spec } from "@/lib/product-specs";
-import { AlertIcon, CloseIcon, PlusIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/ui/icons";
+import {
+  AlertIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CloseIcon,
+  PlusIcon,
+  SpinnerIcon,
+  TrashIcon,
+  UploadIcon,
+} from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { movePhoto, parsePhotos, MAX_PHOTOS, type Photo } from "@/lib/product-photos";
 
-const DEFAULT_IMAGE = "/products/placeholder.svg";
 
 export type ProductFormValues = {
   id?: string;
@@ -29,7 +37,7 @@ export type ProductFormValues = {
   oldPrice: number | null;
   stock: number;
   image: string;
-  images: string[];
+  photos: unknown;
   specs: unknown;
   brand: string;
   shippingDays: number;
@@ -52,9 +60,12 @@ export function ProductForm({
      about, the one thing they were never told: whether anything was saved. */
   const [error, setError] = useState<{ title: string; hint?: string } | null>(null);
 
-  // Only for the live preview — the value submitted is the input's own.
-  const [image, setImage] = useState(product?.image ?? DEFAULT_IMAGE);
-  const [gallery, setGallery] = useState<string[]>(product?.images ?? []);
+  /* One ordered list, and the first entry is the main photo. There used to be
+     a "main photo" field and a separate gallery beside it, which meant the
+     shop could not promote a photo it already had without deleting and
+     re-uploading it. */
+  const [photos, setPhotos] = useState<Photo[]>(() => parsePhotos(product?.photos));
+  const [linkDraft, setLinkDraft] = useState("");
 
   /* Rows are keyed by a number that never changes, not by their index:
      removing the second of four re-indexes the rest, and React would then
@@ -74,7 +85,7 @@ export function ProductForm({
    * here — a client-side check would only be a courtesy, and one that disagreed
    * with the server would be worse than none.
    */
-  async function upload(event: React.ChangeEvent<HTMLInputElement>, into: "main" | "gallery") {
+  async function upload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     // Cleared straight away so choosing the same file twice fires `change`
     // again — otherwise a retry after a failure does nothing at all.
@@ -102,8 +113,11 @@ export function ProductForm({
         return;
       }
 
-      if (into === "main") setImage(data.url);
-      else setGallery((current) => (current.includes(data.url!) ? current : [...current, data.url!]));
+      setPhotos((current) =>
+        current.some((photo) => photo.url === data.url)
+          ? current
+          : [...current, { url: data.url!, altKa: "", altEn: "" }].slice(0, MAX_PHOTOS),
+      );
     } catch {
       setUploadError(t.admin.imageFailed);
     } finally {
@@ -353,103 +367,149 @@ export function ProductForm({
         {/* ------------------------------ sidebar --------------------------- */}
         <div className="flex flex-col gap-4">
           <section className="card card-pad">
-            <h2 className="text-sm font-bold text-ink-900">{t.admin.image}</h2>
+            <h2 className="text-sm font-bold text-ink-900">{t.admin.photosTitle}</h2>
+            <p className="mt-1 text-xs text-ink-400">{t.admin.photosHint}</p>
 
-            <div className="relative mt-3 aspect-square overflow-hidden rounded-control bg-ink-50">
-              <Image
-                src={image || DEFAULT_IMAGE}
-                alt=""
-                fill
-                sizes="240px"
-                className="object-cover"
-                // A typo'd URL shouldn't blank the preview permanently.
-                onError={() => setImage(DEFAULT_IMAGE)}
-              />
-            </div>
+            {/* One row per photo: what it looks like, what it shows, and where
+                it sits. The order is the list's, so moving a photo to the top
+                is what makes it the main one — no second control for that. */}
+            <ul className="mt-3 flex flex-col gap-3">
+              {photos.map((photo, index) => (
+                <li key={photo.url} className="flex gap-3 border-t border-line pt-3 first:border-t-0 first:pt-0">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-line bg-ink-50">
+                    <Image src={photo.url} alt="" fill sizes="80px" className="object-cover" />
+                    {index === 0 && (
+                      <span className="absolute inset-x-0 bottom-0 bg-ink-900/80 py-0.5 text-center text-[0.625rem] font-bold text-white">
+                        {t.admin.photoMain}
+                      </span>
+                    )}
+                  </div>
 
-            <div className="mt-3 flex flex-col gap-2">
-              {/* Pick a file. The upload happens on choosing it rather than on
-                  saving the product, so the preview above is the real stored
-                  photo and not a local object URL that disappears on reload —
-                  and so a failed upload is reported while the reader is still
-                  looking at the field, not after they press save. */}
-              <label className="btn btn-outline btn-sm w-full cursor-pointer">
-                {uploading ? <SpinnerIcon size={15} /> : <UploadIcon size={15} />}
-                {uploading ? t.admin.imageUploading : t.admin.imageChoose}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/avif"
-                  disabled={uploading}
-                  onChange={(event) => upload(event, "main")}
-                  className="sr-only"
-                />
-              </label>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <input
+                      value={photo.altKa}
+                      placeholder={t.admin.photoAltKa}
+                      aria-label={`${t.admin.photoAltKa} — ${index + 1}`}
+                      maxLength={200}
+                      onChange={(event) =>
+                        setPhotos((current) =>
+                          current.map((row, i) =>
+                            i === index ? { ...row, altKa: event.target.value } : row,
+                          ),
+                        )
+                      }
+                      className="field h-8 px-2 text-xs"
+                    />
+                    <input
+                      value={photo.altEn}
+                      placeholder={t.admin.photoAltEn}
+                      aria-label={`${t.admin.photoAltEn} — ${index + 1}`}
+                      maxLength={200}
+                      onChange={(event) =>
+                        setPhotos((current) =>
+                          current.map((row, i) =>
+                            i === index ? { ...row, altEn: event.target.value } : row,
+                          ),
+                        )
+                      }
+                      className="field h-8 px-2 text-xs"
+                    />
+                  </div>
 
-              {uploadError && (
-                <p role="alert" className="flex items-center gap-1.5 text-xs text-danger">
-                  <AlertIcon size={13} className="shrink-0" />
-                  {uploadError}
-                </p>
-              )}
-
-              {/* The URL is still here and still the field that is saved. An
-                  upload writes into it; a link pasted by hand works exactly as
-                  it did before. */}
-              <input
-                name="image"
-                value={image}
-                onChange={(event) => setImage(event.target.value.trim() || DEFAULT_IMAGE)}
-                placeholder={DEFAULT_IMAGE}
-                aria-label={t.admin.imageOrUrl}
-                className="field text-xs"
-              />
-              <p className="text-xs text-ink-400">{t.admin.imageHint}</p>
-            </div>
-
-            {/* ------------------------- more photos ------------------------ */}
-            <h3 className="mt-5 border-t border-line pt-4 text-sm font-bold text-ink-900">
-              {t.admin.gallery}
-            </h3>
-            <p className="mt-1 text-xs text-ink-400">{t.admin.galleryHint}</p>
-
-            {gallery.length > 0 && (
-              <ul className="mt-3 grid grid-cols-4 gap-2">
-                {gallery.map((url, index) => (
-                  <li key={url} className="relative">
-                    <div className="relative aspect-square overflow-hidden border border-line bg-ink-50">
-                      <Image src={url} alt="" fill sizes="64px" className="object-cover" />
-                    </div>
-
-                    {/* Named by position, because "remove" seven times over is
-                        the same button seven times to a screen reader. */}
+                  {/* Buttons rather than dragging. A drag is unusable with a
+                      keyboard and awkward on a phone, and two arrows say the
+                      same thing to everybody. */}
+                  <div className="flex shrink-0 flex-col gap-1">
                     <button
                       type="button"
-                      onClick={() => setGallery((current) => current.filter((item) => item !== url))}
-                      aria-label={fill(t.admin.galleryRemove, { index: index + 1 })}
-                      className="absolute -top-2 -right-2 grid h-7 w-7 place-items-center border border-line bg-surface text-ink-500 hover:text-danger"
+                      disabled={index === 0}
+                      onClick={() => setPhotos((current) => movePhoto(current, index, -1))}
+                      aria-label={fill(t.admin.photoUp, { index: index + 1 })}
+                      className="btn btn-ghost h-7 w-7 rounded-control p-0 disabled:opacity-30"
+                    >
+                      <ChevronUpIcon size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === photos.length - 1}
+                      onClick={() => setPhotos((current) => movePhoto(current, index, 1))}
+                      aria-label={fill(t.admin.photoDown, { index: index + 1 })}
+                      className="btn btn-ghost h-7 w-7 rounded-control p-0 disabled:opacity-30"
+                    >
+                      <ChevronDownIcon size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPhotos((current) => current.filter((_, i) => i !== index))}
+                      aria-label={fill(t.admin.photoRemove, { index: index + 1 })}
+                      className="btn btn-ghost h-7 w-7 rounded-control p-0 text-ink-400 hover:text-danger"
                     >
                       <CloseIcon size={14} />
                     </button>
+                  </div>
 
-                    {/* The value that is actually posted. */}
-                    <input type="hidden" name="images" value={url} />
-                  </li>
-                ))}
-              </ul>
+                  {/* What is actually posted, read positionally on the server. */}
+                  <input type="hidden" name="photoUrl" value={photo.url} />
+                  <input type="hidden" name="photoAltKa" value={photo.altKa} />
+                  <input type="hidden" name="photoAltEn" value={photo.altEn} />
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-2 text-xs text-ink-400">{t.admin.photoAltHint}</p>
+
+            {photos.length < MAX_PHOTOS && (
+              <>
+                {/* The upload happens on choosing the file rather than on
+                    saving the product, so the thumbnail above is the real
+                    stored photo and a failed upload is reported while the
+                    reader is still looking at the control. */}
+                <label className="btn btn-outline btn-sm mt-3 w-full cursor-pointer">
+                  {uploading ? <SpinnerIcon size={15} /> : <UploadIcon size={15} />}
+                  {uploading ? t.admin.imageUploading : t.admin.photoAdd}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    disabled={uploading}
+                    onChange={upload}
+                    className="sr-only"
+                  />
+                </label>
+
+                {/* A link pasted by hand still works, exactly as it did. */}
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={linkDraft}
+                    onChange={(event) => setLinkDraft(event.target.value)}
+                    placeholder={t.admin.photoUrl}
+                    aria-label={t.admin.photoUrl}
+                    className="field h-8 flex-1 px-2 text-xs"
+                  />
+                  <button
+                    type="button"
+                    disabled={!linkDraft.trim()}
+                    onClick={() => {
+                      const url = linkDraft.trim();
+                      setLinkDraft("");
+                      setPhotos((current) =>
+                        current.some((photo) => photo.url === url)
+                          ? current
+                          : [...current, { url, altKa: "", altEn: "" }].slice(0, MAX_PHOTOS),
+                      );
+                    }}
+                    className="btn btn-outline btn-sm h-8"
+                  >
+                    {t.admin.photoUrlAdd}
+                  </button>
+                </div>
+              </>
             )}
 
-            {gallery.length < MAX_GALLERY && (
-              <label className="btn btn-outline btn-sm mt-3 w-full cursor-pointer">
-                {uploading ? <SpinnerIcon size={15} /> : <PlusIcon size={15} />}
-                {t.admin.galleryAdd}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/avif"
-                  disabled={uploading}
-                  onChange={(event) => upload(event, "gallery")}
-                  className="sr-only"
-                />
-              </label>
+            {uploadError && (
+              <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs text-danger">
+                <AlertIcon size={13} className="shrink-0" />
+                {uploadError}
+              </p>
             )}
           </section>
 

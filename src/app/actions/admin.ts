@@ -8,13 +8,14 @@ import { getLocale } from "@/lib/locale";
 import { slugify } from "@/lib/format";
 import { generateSku } from "@/lib/sku";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
-import { MAX_GALLERY } from "@/lib/image-upload";
 import { specsFromForm } from "@/lib/product-specs";
 import { forgetUnusedImages, photosOf } from "@/lib/product-images";
+import { DEFAULT_PHOTO, photosFromForm } from "@/lib/product-photos";
 import { releaseStockAlerts } from "@/lib/stock-emails";
 import type { Prisma } from "@/generated/prisma/client";
 
-const DEFAULT_IMAGE = "/products/placeholder.svg";
+// The placeholder every product without a photo of its own shares.
+const DEFAULT_IMAGE = DEFAULT_PHOTO;
 
 export type ActionResult =
   | { ok: true }
@@ -119,6 +120,13 @@ async function readProductForm(
     return { ok: false, error: "sku-taken" };
   }
 
+  /* The photo list, cleaned here rather than trusted from the form: a blank
+     field posts an empty string, the same photo twice would give the gallery
+     two identical thumbnails, and a broken client should not be able to write
+     an unbounded array. The order is the form's — that is the whole point of
+     the up and down buttons beside each one. */
+  const photos = photosFromForm(formData);
+
   return {
     ok: true,
     data: {
@@ -134,14 +142,12 @@ async function readProductForm(
       stock: Math.max(0, Math.floor(number(formData, "stock"))),
       costPrice: Math.max(0, tetri(formData, "costPrice")),
       lowStockAt: Math.max(0, Math.floor(number(formData, "lowStockAt", 10))),
-      image: text(formData, "image") || DEFAULT_IMAGE,
-      /* The extra photos, cleaned here rather than trusted from the form: a
-         blank field posts an empty string, and a photo repeated in the list
-         would give the gallery two identical thumbnails. Capped so a broken
-         client cannot write an unbounded array. */
-      images: [...new Set(formData.getAll("images").map((value) => String(value).trim()))]
-        .filter((url) => url.length > 0 && url !== text(formData, "image"))
-        .slice(0, MAX_GALLERY),
+      image: photos[0]?.url ?? DEFAULT_IMAGE,
+      /* The whole list, in the order the form posted it, put through the same
+         parser the product page reads with — so the form cannot store a shape
+         the page would then have to reject. `image` above is a mirror of the
+         first one; nothing else may set it. */
+      photos,
       /* Put through the same parser the product page reads with, so the form
          cannot store a shape the page would then have to reject. */
       specs: specsFromForm(formData),
@@ -221,7 +227,7 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
   const before = id
     ? await prisma.product.findUnique({
         where: { id },
-        select: { image: true, images: true, stock: true },
+        select: { image: true, photos: true, stock: true },
       })
     : null;
 
@@ -251,7 +257,7 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
   }
 
   if (before) {
-    const kept = new Set(photosOf(parsed.data as { image: string; images: string[] }));
+    const kept = new Set(photosOf(parsed.data as { image: string; photos: unknown }));
     /* Failing to tidy up is not a reason to tell the admin their save failed —
        the save happened. The worst case is a row nobody points at. */
     await forgetUnusedImages(photosOf(before).filter((url) => !kept.has(url))).catch((error) =>
@@ -372,7 +378,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
 
   const doomed = await prisma.product.findUnique({
     where: { id },
-    select: { image: true, images: true },
+    select: { image: true, photos: true },
   });
 
   try {
@@ -429,7 +435,7 @@ export async function bulkProducts(
          them, and the bytes behind those photos would be unreachable. */
       const doomed = await prisma.product.findMany({
         where: { id: { in: unique } },
-        select: { image: true, images: true },
+        select: { image: true, photos: true },
       });
 
       const { count } = await prisma.product.deleteMany({ where: { id: { in: unique } } });
