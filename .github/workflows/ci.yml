@@ -101,35 +101,31 @@ jobs:
       # It runs a subset (the specs tagged `@engine`), so the extra minutes are
       # spent only on what differs between engines.
       - run: npx playwright install --with-deps chromium webkit
-      - run: npm run test:e2e
 
-      # The look of the place, compared against baselines committed for this
-      # runner's platform. A screenshot is a picture of one browser on one
-      # operating system, so the Linux images live beside the macOS ones and
-      # neither is compared against the other.
+      # The whole suite, screenshots included: `visual` is one of the projects
+      # this runs, so comparing the images again in a step of their own did it
+      # twice — and when the first run failed, as a changed design makes it,
+      # the job stopped before the second ever started. Which is how the very
+      # artifact needed to refresh the baselines came to be the one thing a
+      # failing baseline did not produce.
       #
-      # A comparison. The Linux baselines are committed beside the macOS ones —
-      # a screenshot is a picture of one browser on one operating system, and
+      # The look of the place is compared against baselines committed for this
+      # runner's platform: a screenshot is a picture of one browser on one
+      # operating system, so the Linux images live beside the macOS ones and
       # neither set is ever compared against the other.
       #
       # To refresh them after a deliberate design change: run
       # `npm run test:visual:update` locally for the macOS pair, and take the
-      # Linux pair from the artifact this step uploads when it fails.
-      - run: npm run test:visual
-        id: visual
-
-      - uses: actions/upload-artifact@v4
-        if: failure() && steps.visual.conclusion == 'failure'
-        with:
-          name: visual-diff
-          path: |
-            test-results/
-            tests/e2e/visual.spec.ts-snapshots/
-          retention-days: 7
+      # Linux pair out of the artifact below — every `*-actual.png` in
+      # `test-results/` is a new baseline, named after the test that took it.
+      - run: npm run test:e2e
 
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: test-results
+          path: |
+            test-results/
+            playwright-report/
+            tests/e2e/visual.spec.ts-snapshots/
           retention-days: 7

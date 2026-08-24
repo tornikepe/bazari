@@ -444,7 +444,8 @@ place a division by 100 happens.
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
 | `npm test` | Unit tests (Vitest) |
-| `npm run test:e2e` | End-to-end tests (Playwright) |
+| `npm run test:e2e` | End-to-end tests (Playwright), screenshots included |
+| `npm run test:visual` | Just the thirty screenshots; `test:visual:update` accepts them |
 | `npm run setup:credentials` | Generate `AUTH_SECRET` and the three account passwords into `.env`. Never overwrites what is set; `-- --show` prints them, `-- --force` replaces them |
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:seed` | Seed catalogue, orders and the three accounts (idempotent) |
@@ -551,8 +552,8 @@ It has two named variants:
 ## Testing
 
 ```bash
-npm test            # unit — money, dates, contrast, SKUs, chart scale, chat tools
-npm run test:e2e    # end-to-end — the flows, and the security properties
+npm test            # unit — money, dates, contrast, SKUs, chart scale, the design rules
+npm run test:e2e    # end-to-end — the flows, the security properties, the screenshots
 ```
 
 The end-to-end suite covers what is easiest to break invisibly: authorization boundaries, the
@@ -584,6 +585,30 @@ The three tests that press Tab are excluded from WebKit, and that is a fact rath
 workaround: **Safari does not put links or buttons in the tab order** unless the reader turns on
 "Use keyboard navigation to move focus between controls". Measured rather than assumed — in
 WebKit, Tab on the home page cycles between the body and one text input.
+
+### The look of it
+
+Six pages, in two languages at two widths plus dark mode: thirty screenshots, compared pixel for
+pixel on every run. It is the only check that would notice a heading losing its weight or a price
+turning the colour of its background, and it is what makes a design change *measured* rather than
+admired.
+
+```bash
+npm run test:visual          # compare
+npm run test:visual:update   # accept, after looking at every diff
+```
+
+A screenshot is a picture of one browser on one operating system, so the baselines are committed
+per platform — `-darwin` beside `-linux` — and neither set is ever compared against the other.
+After a deliberate design change, refresh the macOS pair locally and take the Linux pair from the
+`test-results` artifact CI uploads when it fails: every `*-actual.png` in it is a new baseline,
+named after the test that took it.
+
+What is masked is the data — prices, stock counts, the four newest products — because this suite
+shares a database with tests that place orders and sell stock down. Their boxes still take up
+space, so a card that changes shape still fails. And it refuses to compare at all if the shop is
+not wearing its default brand colour, which is the only way thirty diffs about nothing ever get
+reported here.
 
 ---
 
