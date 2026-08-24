@@ -66,6 +66,23 @@ async function structureOf(page: import("@playwright/test").Page, path: string):
 
     const count = (selector: string) => document.querySelectorAll(selector).length;
 
+    /**
+     * `<header>` is the page's banner only when nothing sections it.
+     *
+     * The element and the landmark are not the same thing: inside `article`,
+     * `aside`, `main`, `nav` or `section` a `<header>` is the header *of that*
+     * and carries no role at all. Counting elements was fine while only the
+     * masthead had one — and then the shared page-title component started
+     * putting a `<header>` inside `<main>` on every page, and the count
+     * reported a second banner the site had not grown. Same rule for
+     * `<footer>` and `contentinfo`.
+     */
+    const SECTIONED = "article, aside, main, nav, section";
+    const landmarkCount = (selector: string) =>
+      [...document.querySelectorAll(selector)].filter(
+        (element) => !element.parentElement?.closest(SECTIONED),
+      ).length;
+
     // Two navigations with no names are "navigation" and "navigation" in the
     // landmark list, which is no help at all.
     const navs = [...document.querySelectorAll("nav")].filter(visible);
@@ -83,8 +100,8 @@ async function structureOf(page: import("@playwright/test").Page, path: string):
       skips,
       landmarks: {
         main: count("main"),
-        banner: count("header"),
-        contentinfo: count("footer"),
+        banner: landmarkCount("header"),
+        contentinfo: landmarkCount("footer"),
       },
       unnamedNavs: navs.length > 1 ? unnamedNavs : [],
     };

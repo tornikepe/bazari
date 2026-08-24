@@ -7,6 +7,7 @@ import { formatDateTime, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
 import { PaymentPanel } from "@/components/admin/PaymentPanel";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   ChevronLeftIcon,
   MailIcon,
@@ -74,33 +75,30 @@ export default async function AdminOrderDetailPage({
         {t.admin.orders}
       </Link>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-mono text-xl font-extrabold tracking-tight text-ink-900">
-            {order.number}
-          </h1>
-          <p className="mt-1 text-xs text-ink-400">
-            {t.admin.placedAt}: {formatDateTime(order.createdAt)}
-          </p>
-        </div>
+      <PageHeader
+        scale="panel"
+        code
+        title={order.number}
+        lead={`${t.admin.placedAt}: ${formatDateTime(order.createdAt)}`}
+        action={
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex items-center gap-3">
+              <StatusBadge status={order.status} t={t} />
+              <OrderStatusSelect id={order.id} status={order.status} />
+            </div>
 
-        <div className="flex flex-col items-end gap-1.5">
-          <div className="flex items-center gap-3">
-            <StatusBadge status={order.status} t={t} />
-            <OrderStatusSelect id={order.id} status={order.status} />
+            {/* When the order reached the status it is in now. Read from the
+                event log rather than from `updatedAt`, which moves whenever any
+                column changes — editing an address would have rewritten the
+                moment the order was confirmed. */}
+            {currentStatusAt && (
+              <p className="text-xs text-ink-400">
+                {t.admin.statusChangedAt}: {formatDateTime(currentStatusAt)}
+              </p>
+            )}
           </div>
-
-          {/* When the order reached the status it is in now. Read from the
-              event log rather than from `updatedAt`, which moves whenever any
-              column changes — editing an address would have rewritten the
-              moment the order was confirmed. */}
-          {currentStatusAt && (
-            <p className="text-xs text-ink-400">
-              {t.admin.statusChangedAt}: {formatDateTime(currentStatusAt)}
-            </p>
-          )}
-        </div>
-      </div>
+        }
+      />
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}

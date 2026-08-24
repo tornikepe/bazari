@@ -65,7 +65,13 @@ test("delivery rules reach the cart", async ({ page }) => {
     await save(page);
 
     await page.goto("/catalog");
-    await page.locator("article").first().getByRole("button").last().click();
+    // The first card that can actually be bought, not the first card. Nothing
+    // stops the catalogue opening on a product the checkout suite has sold
+    // out, and an out-of-stock card's button says so instead of offering the
+    // cart — so "the first article's last button" waited sixty seconds for a
+    // control that was never going to be clickable, and the restore below then
+    // had no time left to run.
+    await page.getByRole("button", { name: /add to cart/i }).first().click();
     await page.goto("/cart");
 
     await expect(page.locator("aside")).toContainText("7.50");

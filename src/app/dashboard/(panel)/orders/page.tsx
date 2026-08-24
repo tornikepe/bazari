@@ -13,6 +13,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyOrdersArt, NoResultsArt } from "@/components/ui/illustrations";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const SORTS = ["newest", "oldest", "total-desc", "total-asc"] as const;
 
@@ -114,10 +115,7 @@ export default async function AdminOrdersPage({
     <div className="mx-auto max-w-6xl">
       <ReadOnlyNotice />
 
-      <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-        {t.admin.orders}
-        <span className="ml-2 text-sm font-medium text-ink-400">{allCount}</span>
-      </h1>
+      <PageHeader scale="panel" title={t.admin.orders} count={allCount} />
 
       {/* status tabs */}
       <div className="mt-4 -mx-4 flex gap-1.5 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">

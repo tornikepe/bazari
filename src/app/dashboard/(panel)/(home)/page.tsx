@@ -14,6 +14,7 @@ import {
 import { ChartRangeTabs } from "@/components/admin/ChartRangeTabs";
 import { countText, fill } from "@/lib/i18n";
 import type { RawSearchParams } from "@/lib/filters";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   AlertIcon,
   ArrowRightIcon,
@@ -122,7 +123,7 @@ export default async function DashboardPage({
     <div className="mx-auto max-w-6xl">
       <ReadOnlyNotice />
 
-      <h1 className="text-xl font-extrabold tracking-tight text-ink-900">{t.admin.overview}</h1>
+      <PageHeader scale="panel" title={t.admin.overview} />
 
       {/* ------------------------------- stats ------------------------------ */}
       <div className="stagger mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

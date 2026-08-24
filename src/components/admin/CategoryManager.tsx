@@ -9,6 +9,7 @@ import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { CloseIcon, PencilIcon, PlusIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export type AdminCategory = {
   id: string;
@@ -74,26 +75,26 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
     <div className="mx-auto max-w-4xl">
       <ReadOnlyNotice />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-          {t.admin.categories}
-          <span className="ml-2 text-sm font-medium text-ink-400">{categories.length}</span>
-        </h1>
-
-        {canWrite && (
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setEditing("new");
-            }}
-            className="btn btn-primary btn-sm"
-          >
-            <PlusIcon size={15} />
-            {t.admin.newCategory}
-          </button>
-        )}
-      </div>
+      <PageHeader
+        scale="panel"
+        title={t.admin.categories}
+        count={categories.length}
+        action={
+          canWrite && (
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setEditing("new");
+              }}
+              className="btn btn-primary btn-sm"
+            >
+              <PlusIcon size={15} />
+              {t.admin.newCategory}
+            </button>
+          )
+        }
+      />
 
       {error && (
         <ErrorNote className="mt-4" title={error.title} hint={error.hint} />

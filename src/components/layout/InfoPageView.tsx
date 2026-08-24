@@ -4,7 +4,7 @@ import { getSettings } from "@/lib/settings";
 import { getPage } from "@/lib/info-store";
 import type { InfoSlug } from "@/lib/info-pages";
 import { MailIcon, MapPinIcon, PhoneIcon } from "@/components/ui/icons";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 /** Shared renderer for every footer information page. */
 export async function InfoPageView({ slug }: { slug: InfoSlug }) {
@@ -35,13 +35,14 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
 
   return (
     <div className="page">
-      <Breadcrumb items={[{ label: t.nav.home, href: "/" }, { label: page.title }]} />
-
+      {/* The trail sits inside the column rather than above it, so it starts
+          where the title starts instead of at the far edge of the screen. */}
       <article className="mx-auto max-w-3xl">
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
-          {page.title}
-        </h1>
-        <p className="mt-3 text-base leading-relaxed text-ink-600">{page.intro}</p>
+        <PageHeader
+          crumbs={[{ label: t.nav.home, href: "/" }, { label: page.title }]}
+          title={page.title}
+          lead={page.intro}
+        />
 
         {contact.length > 0 && (
           <section className="card mt-6 p-5">

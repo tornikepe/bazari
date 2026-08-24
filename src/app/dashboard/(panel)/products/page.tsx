@@ -15,6 +15,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyShelfArt, NoResultsArt } from "@/components/ui/illustrations";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const PAGE_SIZE = 20;
 const LOW_STOCK_THRESHOLD = 10;
@@ -156,19 +157,19 @@ export default async function AdminProductsPage({
     <div className="mx-auto max-w-6xl">
       <ReadOnlyNotice />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-          {t.admin.products}
-          <span className="ml-2 text-sm font-medium text-ink-400">{total}</span>
-        </h1>
-
-        <WriteOnly>
-        <Link href="/dashboard/products/new" className="btn btn-primary btn-sm">
-          <PlusIcon size={15} />
-          {t.admin.newProduct}
-        </Link>
-        </WriteOnly>
-      </div>
+      <PageHeader
+        scale="panel"
+        title={t.admin.products}
+        count={total}
+        action={
+          <WriteOnly>
+            <Link href="/dashboard/products/new" className="btn btn-primary btn-sm">
+              <PlusIcon size={15} />
+              {t.admin.newProduct}
+            </Link>
+          </WriteOnly>
+        }
+      />
 
       <div className="mt-4">
         <AdminToolbar

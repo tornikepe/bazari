@@ -516,6 +516,30 @@ token values in both themes rather than trusting the palette by eye.
 Motion is restrained and reversible: overlays animate in *and* out, opening slower than closing,
 and everything is switched off under `prefers-reduced-motion`.
 
+### Page templates
+
+Thirty-four routes, four templates. A new page starts by choosing one of them rather than by
+copying whichever page happened to be open — which is how the site ended up with four page
+paddings and four different ways to write a title in the first place.
+
+| Template | What it is | Routes |
+|---|---|---|
+| **Page** | `.page` for the margins, [`PageHeader`](src/components/layout/PageHeader.tsx) for the title, content below. The default; pick this unless there is a reason not to | `/catalog`, `/favorites`, `/cart`, `/checkout`, `/track`, `/account`, the eight information pages, and every `/dashboard` route |
+| **Record** | `.page`, a breadcrumb, then two columns with the title beside the thing itself rather than above both | `/product/[slug]` |
+| **Notice** | One centred card and no page furniture: a short title, a sentence, one or two buttons | `/login`, `/register`, `/forgot-password`, `/verify`, `/invite`, `/order/[number]`, `/checkout` with an empty cart, 404, and both error boundaries |
+| **Landing** | Full-width bands, a `display`-scale headline, no page header | `/` |
+
+`PageHeader` takes a trail, an eyebrow, a title, a count, one line of purpose, and an action that
+sits on the right — on a narrow screen the action wraps below the title instead of squeezing it.
+It has two named variants:
+
+- **`scale="panel"`** — the dashboard's smaller title. The dashboard is a denser place and had
+  already settled on this across all ten of its pages; the prop is there so one component makes
+  that decision instead of ten copies of the same class names.
+- **the account page** — [`AccountIdentity`](src/components/account/AccountIdentity.tsx) is the
+  same eyebrow / title / sub-line / action shape inside a card with the customer's initials
+  beside it. It is the one page whose header is about *who is reading it*.
+
 ---
 
 ## Testing

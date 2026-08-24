@@ -5,6 +5,7 @@ import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { CouponManager } from "@/components/admin/CouponManager";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyOrdersArt } from "@/components/ui/illustrations";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 /**
  * Discount codes.
@@ -25,15 +26,12 @@ export default async function AdminCouponsPage() {
     <div className="mx-auto max-w-4xl">
       <ReadOnlyNotice />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-            {t.admin.coupons}
-            <span className="ml-2 text-sm font-medium text-ink-400">{coupons.length}</span>
-          </h1>
-          <p className="mt-0.5 text-sm text-ink-500">{t.admin.couponsHint}</p>
-        </div>
-      </div>
+      <PageHeader
+        scale="panel"
+        title={t.admin.coupons}
+        count={coupons.length}
+        lead={t.admin.couponsHint}
+      />
 
       {coupons.length === 0 ? (
         <>

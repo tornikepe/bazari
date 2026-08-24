@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyCartArt } from "@/components/ui/illustrations";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { useChangeKey } from "@/components/ui/useChangeKey";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
@@ -30,7 +31,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   if (!hydrated) {
     return (
       <div className="page">
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">{t.cart.title}</h1>
+        <PageHeader title={t.cart.title} />
         <div className="mt-6" />
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
           <div className="flex flex-col gap-3">
@@ -47,7 +48,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   if (items.length === 0) {
     return (
       <div className="page">
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">{t.cart.title}</h1>
+        <PageHeader title={t.cart.title} />
 
         <EmptyState
           className="card mx-auto mt-6 max-w-md"
@@ -74,9 +75,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
 
   return (
     <div className="page">
-      <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
-        {t.cart.title}
-      </h1>
+      <PageHeader title={t.cart.title} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}

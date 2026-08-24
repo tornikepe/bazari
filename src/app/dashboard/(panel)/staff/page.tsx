@@ -4,6 +4,7 @@ import { getI18n } from "@/lib/locale";
 import { formatDate } from "@/lib/format";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { StaffManager } from "@/components/admin/StaffManager";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 /**
  * Who works here.
@@ -34,13 +35,12 @@ export default async function AdminStaffPage() {
     <div className="mx-auto max-w-4xl">
       <ReadOnlyNotice />
 
-      <div>
-        <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-          {t.admin.staff}
-          <span className="ml-2 text-sm font-medium text-ink-400">{staff.length}</span>
-        </h1>
-        <p className="mt-0.5 text-sm text-ink-500">{t.admin.staffHint}</p>
-      </div>
+      <PageHeader
+        scale="panel"
+        title={t.admin.staff}
+        count={staff.length}
+        lead={t.admin.staffHint}
+      />
 
       <div className="mt-4">
         <StaffManager

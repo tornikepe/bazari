@@ -111,13 +111,10 @@ npm run setup:credentials -- --force   # locally; set the Vercel one by hand
 Nine pages were built one at a time, and each solved the same problems slightly differently.
 Decide each rule once, then apply it everywhere.
 
-- **One page header** — eyebrow, title, one line of purpose, optional action on the right
 - **One card** — an optional header bar, one padding scale
 - **One way to show a row of figures**
 - **One table** — column alignment, zebra rules, the money column, the row-action column, and
   what a row becomes on a phone
-- **A page-template inventory** in the README: which template each route uses, so the next page
-  starts from a decision rather than a copy-paste
 - A one-page list of those rules, and a test that fails when a page invents another
 
 

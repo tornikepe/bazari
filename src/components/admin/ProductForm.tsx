@@ -11,6 +11,7 @@ import { MAX_GALLERY } from "@/lib/image-upload";
 import { MAX_SPECS, parseSpecs, type Spec } from "@/lib/product-specs";
 import { AlertIcon, CloseIcon, PlusIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const DEFAULT_IMAGE = "/products/placeholder.svg";
 
@@ -139,21 +140,21 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-4xl">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-          {product ? t.admin.editProduct : t.admin.newProduct}
-        </h1>
-
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/products" className="btn btn-outline btn-sm">
-            {t.admin.cancel}
-          </Link>
-          <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
-            {isPending && <SpinnerIcon size={15} />}
-            {isPending ? t.admin.saving : product ? t.admin.save : t.admin.create}
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        scale="panel"
+        title={product ? t.admin.editProduct : t.admin.newProduct}
+        action={
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard/products" className="btn btn-outline btn-sm">
+              {t.admin.cancel}
+            </Link>
+            <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
+              {isPending && <SpinnerIcon size={15} />}
+              {isPending ? t.admin.saving : product ? t.admin.save : t.admin.create}
+            </button>
+          </div>
+        }
+      />
 
       {error && <ErrorNote className="mt-4" title={error.title} hint={error.hint} />}
 

@@ -11,6 +11,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyPeopleArt, NoResultsArt } from "@/components/ui/illustrations";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const PAGE_SIZE = 20;
 const ROLES = ["customer", "admin", "viewer"] as const;
@@ -131,11 +132,12 @@ export default async function AdminCustomersPage({
     <div className="mx-auto max-w-6xl">
       <ReadOnlyNotice />
 
-      <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-        {t.admin.customers}
-        <span className="ml-2 text-sm font-medium text-ink-400">{allCount}</span>
-      </h1>
-      <p className="mt-1 text-sm text-ink-500">{t.admin.customersHint}</p>
+      <PageHeader
+        scale="panel"
+        title={t.admin.customers}
+        count={allCount}
+        lead={t.admin.customersHint}
+      />
 
       <div className="mt-5 grid gap-px border border-line bg-line sm:grid-cols-3">
         {stats.map((stat) => (

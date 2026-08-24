@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { AlertIcon, PackageIcon, SearchIcon, SpinnerIcon } from "@/components/ui/icons";
+import { AlertIcon, SearchIcon, SpinnerIcon } from "@/components/ui/icons";
 import Image from "next/image";
 import { formatDate, formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
 import { OrderProgress } from "@/components/order/OrderProgress";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { trackOrder, type TrackResult } from "@/app/actions/track";
 
 function TrackOrderForm() {
@@ -36,13 +37,10 @@ function TrackOrderForm() {
   return (
     <div className="page">
       <div className="mx-auto max-w-lg">
-        <div className="mb-6 text-center">
-          <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-pill bg-brand-50 text-brand-600">
-            <PackageIcon size={26} />
-          </span>
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">{t.track.title}</h1>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-ink-500">{t.track.subtitle}</p>
-        </div>
+        {/* The chip with a parcel in it used to sit above a centred title.
+            It was the only page that introduced itself that way, and the icon
+            said nothing the word "track" did not. */}
+        <PageHeader className="mb-6" title={t.track.title} lead={t.track.subtitle} />
 
         {found ? (
           <div className="flex flex-col gap-4">

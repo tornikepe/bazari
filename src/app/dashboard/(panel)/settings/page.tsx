@@ -2,6 +2,7 @@ import { getI18n } from "@/lib/locale";
 import { getSettings } from "@/lib/settings";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 /**
  * Everything about the shop that is not a product.
@@ -18,8 +19,7 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-3xl">
       <ReadOnlyNotice />
 
-      <h1 className="text-xl font-extrabold tracking-tight text-ink-900">{t.admin.settings}</h1>
-      <p className="mt-1 text-sm text-ink-500">{t.admin.settingsHint}</p>
+      <PageHeader scale="panel" title={t.admin.settings} lead={t.admin.settingsHint} />
 
       <SettingsForm settings={settings} />
     </div>

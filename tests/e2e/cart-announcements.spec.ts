@@ -17,12 +17,27 @@ const announcer = (page: import("@playwright/test").Page) =>
   // The storefront's own region, not the route announcer Next renders.
   page.locator('[role="status"]:not(#__next-route-announcer__)').first();
 
+/**
+ * The cards that can actually be bought.
+ *
+ * Not `article` — the catalogue can open on a product the checkout suite has
+ * sold out, and an out-of-stock card carries no add-to-cart button at all. A
+ * test that took the first card would then wait for a control that is not
+ * there and fail about the announcer, which was working perfectly.
+ */
+/** In both languages: one of these tests runs before the locale is switched. */
+const ADD_TO_CART = /add to cart|კალათაში/i;
+
+const buyableCards = (page: import("@playwright/test").Page) =>
+  page.locator("article").filter({ has: page.getByRole("button", { name: ADD_TO_CART }) });
+
 test("adding a product says what was added @engine", async ({ page }) => {
   await useEnglish(page);
   await page.goto("/catalog");
 
-  const productName = (await page.locator("article h3, article h2").first().innerText()).trim();
-  await page.locator("article").first().getByRole("button", { name: /add to cart/i }).click();
+  const first = buyableCards(page).first();
+  const productName = (await first.locator("h3, h2").first().innerText()).trim();
+  await first.getByRole("button", { name: ADD_TO_CART }).click();
 
   await expect(announcer(page), "nothing was announced when a product was added").toContainText(
     /added to the cart/i,
@@ -35,10 +50,10 @@ test("the announcement carries the new total @engine", async ({ page }) => {
   await useEnglish(page);
   await page.goto("/catalog");
 
-  await page.locator("article").first().getByRole("button", { name: /add to cart/i }).click();
+  await buyableCards(page).first().getByRole("button", { name: ADD_TO_CART }).click();
   await expect(announcer(page)).toContainText(/1 in total/i);
 
-  await page.locator("article").nth(1).getByRole("button", { name: /add to cart/i }).click();
+  await buyableCards(page).nth(1).getByRole("button", { name: ADD_TO_CART }).click();
   await expect(announcer(page), "the running total did not follow").toContainText(/2 in total/i);
 });
 
@@ -75,7 +90,7 @@ test("a cart restored from a previous visit is not announced @engine", async ({ 
 test("the region is polite and out of sight @engine", async ({ page }) => {
   await useEnglish(page);
   await page.goto("/catalog");
-  await page.locator("article").first().getByRole("button", { name: /add to cart/i }).click();
+  await buyableCards(page).first().getByRole("button", { name: ADD_TO_CART }).click();
   await expect(announcer(page)).not.toHaveText("");
 
   const region = await announcer(page).evaluate((el) => {
@@ -98,10 +113,9 @@ test("the add-to-cart button no longer carries its own live region @engine", asy
 
   // A live region on the control whose own label is changing announces the
   // label rather than the event, and only while that control is on screen.
-  const onButton = await page
-    .locator("article")
+  const onButton = await buyableCards(page)
     .first()
-    .getByRole("button", { name: /add to cart|კალათაში/i })
+    .getByRole("button", { name: ADD_TO_CART })
     .getAttribute("aria-live");
 
   expect(onButton, "the anti-pattern came back").toBeNull();

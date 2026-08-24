@@ -8,6 +8,7 @@ import { RoleBadge } from "@/components/admin/RoleBadge";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { ChevronLeftIcon } from "@/components/ui/icons";
 import { countText } from "@/lib/i18n";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 /**
  * One customer, and everything the shop actually knows about them.
@@ -92,12 +93,12 @@ export default async function AdminCustomerPage({
         {t.admin.customers}
       </Link>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-extrabold tracking-tight text-ink-900">
-          {user.name || user.email}
-        </h1>
-        <RoleBadge role={user.role} t={t} />
-      </div>
+      <PageHeader
+        className="mt-3"
+        scale="panel"
+        title={user.name || user.email}
+        action={<RoleBadge role={user.role} t={t} />}
+      />
 
       <div className="mt-5 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
         {figures.map((figure) => (

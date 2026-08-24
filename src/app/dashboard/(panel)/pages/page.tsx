@@ -2,6 +2,7 @@ import { getI18n } from "@/lib/locale";
 import { getAllPagesForEditing } from "@/lib/info-store";
 import { PageEditor } from "@/components/admin/PageEditor";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 /**
  * The footer's information pages, editable.
@@ -18,8 +19,7 @@ export default async function PagesAdminPage() {
     <div className="mx-auto max-w-5xl">
       <ReadOnlyNotice />
 
-      <h1 className="text-xl font-extrabold tracking-tight text-ink-900">{t.admin.pages}</h1>
-      <p className="mt-1 text-sm text-ink-500">{t.admin.pagesHint}</p>
+      <PageHeader scale="panel" title={t.admin.pages} lead={t.admin.pagesHint} />
 
       <div className="mt-5 flex flex-col gap-4">
         {pages.map((page) => (

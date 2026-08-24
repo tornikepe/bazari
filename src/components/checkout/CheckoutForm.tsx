@@ -9,6 +9,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { Price } from "@/components/ui/Price";
 import { SpinnerIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { formatPrice } from "@/lib/format";
 import type { Dictionary } from "@/lib/i18n";
 import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/orders";
@@ -199,9 +200,7 @@ export function CheckoutForm({
 
   return (
     <div className="page">
-      <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">
-        {t.checkout.title}
-      </h1>
+      <PageHeader title={t.checkout.title} />
 
       <form
         onSubmit={handleSubmit}
