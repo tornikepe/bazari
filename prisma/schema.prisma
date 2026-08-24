@@ -122,6 +122,14 @@ model Product {
   /// never queried on their own and never joined to. The order is the array's.
   specs         Json             @default("[]")
   brand         String           @default("")
+  /// Everything worth matching against, concatenated by the database.
+  ///
+  /// `GENERATED ALWAYS … STORED`, which Prisma has no syntax for — so it is
+  /// declared here only so drift detection knows the column exists and does
+  /// not offer to drop it, and `@ignore`d so nothing can try to write it. The
+  /// definition lives in the migration; the application reads it through one
+  /// raw query and nowhere else.
+  searchText    String?          @ignore
   shippingDays  Int              @default(14)
   isFeatured    Boolean          @default(false)
   isActive      Boolean          @default(true)

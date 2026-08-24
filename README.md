@@ -918,6 +918,12 @@ you own, and never in a fork.
 
 ## Notes and known limits
 
+- **The search does not stem Georgian, because Postgres cannot.** There is no Georgian dictionary
+  in stock Postgres — not on Neon, not in the `postgres:16` image CI runs — and a stemmer for a
+  language that inflects this much is a piece of linguistics rather than a configuration line. Full
+  text (the `simple` configuration) does the tokenising and the ranking; trigrams stand in for the
+  stemmer, which is what lets a word carrying a case ending find the bare form. What that cannot
+  rescue is a mistyped short word: "ankre" shares one trigram of three with "anker".
 - **Nothing in the seeded catalogue has variants.** The machinery is there — questions, answers,
   generated combinations, stock and price per combination — but every seeded product is sold in one
   form, so the product page looks exactly as it did. Add a question on any product in the dashboard

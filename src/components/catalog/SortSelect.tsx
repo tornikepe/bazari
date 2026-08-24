@@ -29,11 +29,16 @@ export function SortSelect({ filters }: { filters: CatalogFilters }) {
   const [open, setOpen] = useState(false);
 
   const labels: Record<Sort, string> = {
+    relevance: t.catalog.sortRelevance,
     newest: t.catalog.sortNewest,
     "price-asc": t.catalog.sortPriceAsc,
     "price-desc": t.catalog.sortPriceDesc,
     name: t.catalog.sortName,
   };
+
+  /* Relevance is not offered on an unsearched catalogue: "sorted by how well
+     it matches nothing" is a heading with nothing behind it. */
+  const options = SORT_OPTIONS.filter((option) => option !== "relevance" || filters.q);
 
   const apply = (sort: Sort) => {
     setOpen(false);
@@ -81,7 +86,7 @@ export function SortSelect({ filters }: { filters: CatalogFilters }) {
               one is the whole interaction, and `aria-checked` is what says
               which is in force. */}
           <div role="radiogroup" aria-label={t.catalog.sortAction} className="p-2">
-            {SORT_OPTIONS.map((option) => {
+            {options.map((option) => {
               const current = option === filters.sort;
               return (
                 <button
@@ -112,7 +117,7 @@ export function SortSelect({ filters }: { filters: CatalogFilters }) {
           onChange={(event) => apply(event.target.value as Sort)}
           className="field h-9 w-56 min-w-0 text-xs"
         >
-          {SORT_OPTIONS.map((option) => (
+          {options.map((option) => (
             <option key={option} value={option}>
               {labels[option]}
             </option>

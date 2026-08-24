@@ -3,36 +3,26 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import { PAGE_SIZE, type CatalogFilters, type Sort } from "@/lib/filters";
+import { matchingProductIds } from "@/lib/search";
 
 /**
- * What "matches this text" means, in one place.
+ * The search, as a filter the rest of the query can be built on.
  *
- * Exported because the header's suggestion endpoint needs the same answer. Two
- * copies would be two definitions, and the failure would be quiet and
- * infuriating: a product offered in the dropdown and missing from the results
- * page you land on after pressing enter.
+ * `matchingProductIds` answers *which products and in what order*; everything
+ * after that — category, brand, price, stock, paging — stays Prisma's. So the
+ * ranked ids arrive here as a plain `IN`, and their order is carried
+ * separately by whoever wants the relevance sort.
+ *
+ * An empty list is not the same as no search. A query that matched nothing
+ * must produce no results, and `{ id: { in: [] } }` says exactly that.
  */
-export function searchPredicate(query: string): Prisma.ProductWhereInput {
-  // Postgres `LIKE` is case-sensitive, so `mode: "insensitive"` is required
-  // for "anker" to match "Anker". (Georgian is caseless and unaffected.)
-  const contains = { contains: query, mode: "insensitive" } as const;
-
-  return {
-    isActive: true,
-    OR: [
-      { nameKa: contains },
-      { nameEn: contains },
-      { brand: contains },
-      { descriptionKa: contains },
-      { descriptionEn: contains },
-    ],
-  };
-}
-
-function buildWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
+function buildWhere(
+  filters: CatalogFilters,
+  matched: string[] | null,
+): Prisma.ProductWhereInput {
   const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
 
-  if (filters.q) and.push(searchPredicate(filters.q));
+  if (matched !== null) and.push({ id: { in: matched } });
 
   if (filters.category) and.push({ category: { slug: filters.category } });
   if (filters.brands.length) and.push({ brand: { in: filters.brands } });
@@ -78,12 +68,38 @@ export const productCardSelect = {
 export type ProductCardData = Prisma.ProductGetPayload<{ select: typeof productCardSelect }>;
 
 export async function getFilteredProducts(filters: CatalogFilters) {
-  const where = buildWhere(filters);
+  const matched = filters.q ? await matchingProductIds(filters.q) : null;
+  const where = buildWhere(filters, matched);
 
   const total = await prisma.product.count({ where });
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   // Clamp so a stale `?page=99` shows the last page instead of an empty grid.
   const page = Math.min(filters.page, pageCount);
+
+  /* Relevance is not a column, so it cannot be an `ORDER BY`. When it is the
+     sort, the filtered ids are read first, put back into the order the search
+     gave them, and only then paged — two queries where one would do, which at
+     this scale costs a few milliseconds and buys the one ordering a search
+     result actually wants. */
+  if (matched && filters.sort === "relevance") {
+    const ids = await prisma.product.findMany({ where, select: { id: true } });
+    const present = new Set(ids.map((row) => row.id));
+    const ordered = matched.filter((id) => present.has(id));
+    const slice = ordered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const rows = await prisma.product.findMany({
+      where: { id: { in: slice } },
+      select: productCardSelect,
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+
+    return {
+      items: slice.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])),
+      total,
+      page,
+      pageCount,
+    };
+  }
 
   const items = await prisma.product.findMany({
     where,
@@ -112,7 +128,8 @@ export function getCategoriesWithCounts() {
  * brand would hide every other checkbox and make multi-select impossible.
  */
 export async function getBrands(filters: CatalogFilters) {
-  const where = buildWhere({ ...filters, brands: [] });
+  const matched = filters.q ? await matchingProductIds(filters.q) : null;
+  const where = buildWhere({ ...filters, brands: [] }, matched);
 
   const rows = await prisma.product.findMany({
     where: { AND: [where, { brand: { not: "" } }] },

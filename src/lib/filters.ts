@@ -8,7 +8,13 @@
 
 export const PAGE_SIZE = 12;
 
-export const SORT_OPTIONS = ["newest", "price-asc", "price-desc", "name"] as const;
+/**
+ * `relevance` is first because it is the default *when there is a query*, and
+ * meaningless without one — a catalogue with nothing to match is not more or
+ * less relevant, it is just a catalogue. `parseFilters` falls back to `newest`
+ * when it is asked for on an unsearched page.
+ */
+export const SORT_OPTIONS = ["relevance", "newest", "price-asc", "price-desc", "name"] as const;
 export type Sort = (typeof SORT_OPTIONS)[number];
 
 export type CatalogFilters = {
@@ -59,15 +65,25 @@ export function parseFilters(params: RawSearchParams): CatalogFilters {
     [minPrice, maxPrice] = [maxPrice, minPrice];
   }
 
+  const q = one(params.q);
+
+  /* Relevance is the default while there is something to be relevant to, and
+     is not offered at all otherwise — "sorted by how well it matches nothing"
+     is a heading with no meaning behind it. A `?sort=relevance` left in a
+     bookmarked URL after the query was cleared falls back rather than showing
+     an arbitrary order under a confident label. */
+  const fallback: Sort = q ? "relevance" : "newest";
+  const asked = SORT_OPTIONS.includes(sortParam) ? sortParam : fallback;
+
   return {
-    q: one(params.q),
+    q,
     category: one(params.category),
     brands: many(params.brand),
     minPrice,
     maxPrice,
     inStock: one(params.stock) === "1",
     onSale: one(params.sale) === "1",
-    sort: SORT_OPTIONS.includes(sortParam) ? sortParam : "newest",
+    sort: asked === "relevance" && !q ? "newest" : asked,
     page: Number.isFinite(page) && page > 0 ? Math.floor(page) : 1,
   };
 }
@@ -128,7 +144,9 @@ export function buildQuery(
   if (next.maxPrice !== null) params.set("max", String(next.maxPrice));
   if (next.inStock) params.set("stock", "1");
   if (next.onSale) params.set("sale", "1");
-  if (next.sort !== "newest") params.set("sort", next.sort);
+  /* The default is not written into the URL, and which one is the default
+     depends on whether there is a query. */
+  if (next.sort !== (next.q ? "relevance" : "newest")) params.set("sort", next.sort);
 
   const page = "page" in overrides ? overrides.page : 1;
   if (page && page > 1) params.set("page", String(page));

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { clientIp, consume } from "@/lib/rate-limit";
-import { searchPredicate } from "@/lib/catalog";
+import { matchingProductIds } from "@/lib/search";
 
 /**
  * Product suggestions for the header search field.
@@ -35,9 +35,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const products = await prisma.product.findMany({
-      where: searchPredicate(query),
+    /* The same matcher and the same order the catalogue uses, which is the
+       whole point of it living in one place: a product offered in this
+       dropdown and missing from the page you land on after pressing enter is
+       the sort of fault nobody reports and everybody notices. */
+    const ranked = (await matchingProductIds(query)).slice(0, LIMIT);
+    if (ranked.length === 0) return NextResponse.json({ products: [] });
+
+    const rows = await prisma.product.findMany({
+      where: { id: { in: ranked } },
       select: {
+        id: true,
         slug: true,
         nameKa: true,
         nameEn: true,
@@ -45,10 +53,15 @@ export async function GET(request: NextRequest) {
         image: true,
         brand: true,
       },
-      // The newest match first, matching the catalogue's own default order so
-      // the first suggestion is the first result.
-      orderBy: { createdAt: "desc" },
-      take: LIMIT,
+    });
+
+    // Back into the order the search gave them; `IN` has none of its own. The
+    // id is dropped on the way out — the dropdown navigates by slug, and an id
+    // is an internal handle nothing outside the server needs.
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    const products = ranked.flatMap((id) => {
+      const row = byId.get(id);
+      return row ? [{ slug: row.slug, nameKa: row.nameKa, nameEn: row.nameEn, price: row.price, image: row.image, brand: row.brand }] : [];
     });
 
     return NextResponse.json({ products });
