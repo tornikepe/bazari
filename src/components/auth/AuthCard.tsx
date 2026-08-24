@@ -31,7 +31,7 @@ export function AuthCard({
           <Wordmark name={settings.name} className="text-xl" />
         </Link>
 
-        <div className="card p-6">
+        <div className="card card-pad">
           <h1 className="text-lg font-bold text-ink-900">{title}</h1>
           <p className="mt-1 text-sm text-ink-500">{hint}</p>
           {children}

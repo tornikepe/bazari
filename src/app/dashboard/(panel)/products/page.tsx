@@ -220,7 +220,7 @@ export default async function AdminProductsPage({
               enough to stay readable on a phone. */}
           <ul className="mt-3 flex flex-col gap-2 lg:hidden">
             {products.map((product) => (
-              <li key={product.id} className="card flex gap-3 p-3">
+              <li key={product.id} className="card flex gap-3 card-pad-tight">
                 <WriteOnly>
                   <label className="flex shrink-0 items-start pt-1">
                     <span className="sr-only">
@@ -275,30 +275,30 @@ export default async function AdminProductsPage({
 
           {/* Table from lg upwards */}
           <div className="card mt-3 hidden overflow-hidden lg:block">
-            <table className="w-full text-left">
-              <thead className="border-b border-line bg-ink-50 text-xs font-bold tracking-wide text-ink-500 uppercase">
+            <table className="table">
+              <thead>
                 <tr>
                   {/* No header checkbox: select-all lives above the table so
                       that it exists at every width, and a column heading of
                       one control reads as a column of data. */}
                   <WriteOnly>
-                    <th className="w-10 px-4 py-2.5">
+                    <th className="w-10">
                       <span className="sr-only">{t.admin.bulkSelectAll}</span>
                     </th>
                   </WriteOnly>
-                  <th className="px-4 py-2.5">{t.cart.item}</th>
-                  <th className="px-4 py-2.5">{t.admin.categoryField}</th>
-                  <th className="px-4 py-2.5 text-right">{t.admin.price}</th>
-                  <th className="px-4 py-2.5 text-right">{t.admin.stock}</th>
-                  <th className="px-4 py-2.5 text-right">{t.admin.status}</th>
+                  <th>{t.cart.item}</th>
+                  <th>{t.admin.categoryField}</th>
+                  <th className="figures">{t.admin.price}</th>
+                  <th className="figures">{t.admin.stock}</th>
+                  <th className="figures">{t.admin.status}</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-line">
+              <tbody>
                 {products.map((product) => (
-                  <tr key={product.id} className="transition-colors hover:bg-ink-50">
+                  <tr key={product.id}>
                     <WriteOnly>
-                      <td className="px-4 py-2.5">
+                      <td>
                         <label className="flex items-center">
                           <span className="sr-only">
                             {fill(t.admin.bulkSelectRow, {
@@ -315,7 +315,7 @@ export default async function AdminProductsPage({
                       </td>
                     </WriteOnly>
 
-                    <td className="px-4 py-2.5">
+                    <td>
                       <div className="flex items-center gap-3">
                         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-control bg-ink-50">
                           <Image
@@ -342,14 +342,14 @@ export default async function AdminProductsPage({
                       </div>
                     </td>
 
-                    <td className="px-4 py-2.5">
+                    <td>
                       <span className="text-xs text-ink-600">
                         {product.category.icon}{" "}
                         {locale === "ka" ? product.category.nameKa : product.category.nameEn}
                       </span>
                     </td>
 
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="figures">
                       <span className="text-sm font-semibold text-ink-900">
                         {formatPrice(product.price, locale)}
                       </span>
@@ -360,11 +360,11 @@ export default async function AdminProductsPage({
                       )}
                     </td>
 
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="figures">
                       <span className={`badge ${stockTone(product.stock)}`}>{product.stock}</span>
                     </td>
 
-                    <td className="px-4 py-2.5">
+                    <td>
                       <ProductRowActions id={product.id} isActive={product.isActive} />
                     </td>
                   </tr>

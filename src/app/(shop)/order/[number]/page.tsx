@@ -37,7 +37,7 @@ export default async function OrderConfirmationPage({
   return (
     <div className="page">
       <div className="mx-auto max-w-2xl">
-        <div className="card flex flex-col items-center px-6 py-10 text-center">
+        <div className="card card-pad-notice flex flex-col items-center text-center">
           <span className="grid h-16 w-16 place-items-center rounded-pill bg-success-soft text-success">
             <CheckIcon size={32} strokeWidth={3} />
           </span>
@@ -63,7 +63,7 @@ export default async function OrderConfirmationPage({
         </div>
 
         {/* items */}
-        <div className="card mt-4 p-5">
+        <div className="card mt-4 card-pad">
           <h2 className="text-sm font-bold text-ink-900">{t.admin.items}</h2>
 
           <ul className="mt-3 flex flex-col gap-3">

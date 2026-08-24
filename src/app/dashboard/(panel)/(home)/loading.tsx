@@ -23,7 +23,7 @@ export default async function DashboardHomeLoading() {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="card p-4">
+          <div key={index} className="card card-pad-tight">
             <Block className="h-3 w-1/2" />
             <Block className="mt-3 h-7 w-2/3" />
           </div>
@@ -31,7 +31,7 @@ export default async function DashboardHomeLoading() {
       </div>
 
       {/* The chart, which is the slow part: it reads every order in the range. */}
-      <div className="card mt-4 p-5">
+      <div className="card mt-4 card-pad">
         <div className="flex items-center justify-between">
           <Block className="h-4 w-32" />
           <Block className="h-8 w-44" />

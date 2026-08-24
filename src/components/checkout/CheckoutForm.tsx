@@ -186,8 +186,8 @@ export function CheckoutForm({
 
   if (hydrated && items.length === 0) {
     return (
-      <div className="page-container py-16">
-        <div className="card mx-auto flex max-w-md flex-col items-center gap-3 px-6 py-14 text-center">
+      <div className="page-notice">
+        <div className="card card-pad-notice mx-auto flex max-w-md flex-col items-center gap-3 text-center">
           <h1 className="text-lg font-bold text-ink-900">{t.cart.empty}</h1>
           <p className="text-sm text-ink-500">{t.cart.emptyHint}</p>
           <Link href="/catalog" className="btn btn-primary btn-md mt-2">
@@ -213,7 +213,7 @@ export function CheckoutForm({
               been used to fill the fields below, and a picker offering the
               thing that is already selected is a control with no purpose. */}
           {saved.length > 1 && (
-            <fieldset className="card p-5">
+            <fieldset className="card card-pad">
               <legend className="px-1 text-sm font-bold text-ink-900">
                 {t.account.addressPick}
               </legend>
@@ -278,7 +278,7 @@ export function CheckoutForm({
           )}
 
           {/* ---------------------------- contact --------------------------- */}
-          <fieldset className="card p-5">
+          <fieldset className="card card-pad">
             <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.contact}</legend>
 
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -313,7 +313,7 @@ export function CheckoutForm({
           </fieldset>
 
           {/* ---------------------------- delivery -------------------------- */}
-          <fieldset className="card p-5">
+          <fieldset className="card card-pad">
             <legend className="px-1 text-sm font-bold text-ink-900">
               {t.checkout.deliveryAddress}
             </legend>
@@ -352,7 +352,7 @@ export function CheckoutForm({
           </fieldset>
 
           {/* ---------------------------- payment --------------------------- */}
-          <fieldset className="card p-5">
+          <fieldset className="card card-pad">
             <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.payment}</legend>
 
             <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
@@ -383,7 +383,7 @@ export function CheckoutForm({
         </div>
 
         {/* ----------------------------- summary ---------------------------- */}
-        <aside className="card sticky top-[var(--header-h)] p-5">
+        <aside className="card sticky top-[var(--header-h)] card-pad">
           <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
 
           <ul className="mt-4 flex max-h-64 flex-col gap-3 overflow-y-auto">

@@ -1,5 +1,6 @@
 import { formatDate, formatPrice, shopDayKey } from "@/lib/format";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { Figures } from "@/components/ui/Figures";
 
 /**
  * Daily revenue over the trailing window.
@@ -220,15 +221,8 @@ export function SalesChart({
         </div>
       </div>
 
-      <figcaption className="mt-4 grid gap-px border border-line bg-line sm:grid-cols-3">
-        {summary.map((item) => (
-          <span key={item.label} className="bg-surface px-4 py-2.5">
-            <span className="label block text-ink-500">{item.label}</span>
-            <span className="mt-0.5 block text-sm font-bold text-ink-900 tabular-nums">
-              {item.value}
-            </span>
-          </span>
-        ))}
+      <figcaption>
+        <Figures className="mt-4" items={summary} columns={3} />
       </figcaption>
     </figure>
   );

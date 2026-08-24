@@ -208,7 +208,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="card p-5">
+    <section className="card card-pad">
       <h2 className="text-sm font-bold text-ink-900">{title}</h2>
       {note && <p className="mt-1 text-xs leading-relaxed text-ink-500">{note}</p>}
       <div className="mt-4 flex flex-col gap-4">{children}</div>

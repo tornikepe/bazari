@@ -24,8 +24,8 @@ export default function ShopError({
   }, [error]);
 
   return (
-    <div className="page-container py-20">
-      <div className="card mx-auto flex max-w-md flex-col items-center px-6 py-14 text-center">
+    <div className="page-notice">
+      <div className="card card-pad-notice mx-auto flex max-w-md flex-col items-center text-center">
         <ErrorArt size={96} />
 
         <h1 className="mt-5 text-lg font-bold tracking-tight text-ink-900">{t.common.error}</h1>

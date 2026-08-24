@@ -74,7 +74,7 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
       {coupons.length > 0 && (
         <ul className="flex flex-col gap-2">
           {coupons.map((coupon) => (
-            <li key={coupon.id} className="card flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+            <li key={coupon.id} className="card flex flex-wrap items-center gap-x-4 gap-y-2 card-pad-tight">
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-sm font-bold text-ink-900">{coupon.code}</span>
@@ -128,7 +128,7 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
       )}
 
       {!canWrite ? null : editing ? (
-        <form key={editing} onSubmit={submit} className="card flex flex-col gap-4 p-5">
+        <form key={editing} onSubmit={submit} className="card flex flex-col gap-4 card-pad">
           {current && <input type="hidden" name="id" value={current.id} />}
 
           <div className="grid gap-4 sm:grid-cols-2">

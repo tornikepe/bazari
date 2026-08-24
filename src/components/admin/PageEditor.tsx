@@ -44,7 +44,7 @@ export function PageEditor({ page }: { page: EditablePage }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="card p-5">
+    <form onSubmit={onSubmit} className="card card-pad">
       <input type="hidden" name="slug" value={page.slug} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">

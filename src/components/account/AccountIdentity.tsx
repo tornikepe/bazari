@@ -39,7 +39,7 @@ export function AccountIdentity({
   t: Dictionary;
 }) {
   return (
-    <div className="card flex flex-wrap items-center gap-x-4 gap-y-3 p-4 sm:p-5">
+    <div className="card flex flex-wrap items-center gap-x-4 gap-y-3 card-pad">
       <span
         aria-hidden="true"
         className="grid h-14 w-14 shrink-0 place-items-center bg-brand-solid text-xl font-extrabold tracking-tight text-brand-on-solid"

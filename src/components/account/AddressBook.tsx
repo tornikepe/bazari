@@ -72,7 +72,7 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
   }
 
   return (
-    <section className="card p-5">
+    <section className="card card-pad">
       <h2 className="text-sm font-bold text-ink-900">{t.account.addresses}</h2>
       <p className="mt-1 text-xs text-ink-400">{t.account.addressesHint}</p>
 

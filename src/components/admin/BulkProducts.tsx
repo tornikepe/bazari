@@ -115,7 +115,7 @@ export function BulkProducts({
           to say — a permanently visible toolbar of disabled buttons is noise on
           every visit for a feature used occasionally. */}
       {selected.size > 0 && (
-        <div className="card sticky top-[calc(var(--header-h)+0.5rem)] z-20 mt-3 flex flex-wrap items-center gap-2 p-3">
+        <div className="card sticky top-[calc(var(--header-h)+0.5rem)] z-20 mt-3 flex flex-wrap items-center gap-2 card-pad-tight">
           <p aria-live="polite" className="mr-auto text-sm font-bold text-ink-900">
             {fill(t.admin.bulkSelected, { count: selected.size })}
           </p>

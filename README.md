@@ -36,7 +36,7 @@
 - [Tech stack](#tech-stack)
 - [Scripts](#scripts)
 - [Project structure](#project-structure)
-- [Design system](#design-system)
+- [Design system](#design-system) — and [DESIGN.md](DESIGN.md), the rules on one page
 - [Testing](#testing)
 - [Deploying](#deploying)
 - [The storefront](#the-storefront) — the 3D hero, search suggestions, photo uploads, the theme fade
@@ -494,6 +494,12 @@ src/
 ---
 
 ## Design system
+
+The rules themselves are one page: **[DESIGN.md](DESIGN.md)** — the four templates, the page
+rhythm, the header, the card, the table, the figures. Each is enforced by
+[`tests/unit/design-rules.test.ts`](tests/unit/design-rules.test.ts), which fails when a page
+invents a ninth way to do one of those eight things. What follows here is the material the rules
+are made of.
 
 Every colour, radius, shadow, font and type-scale step is a design token at the top of
 [`src/app/globals.css`](src/app/globals.css), with the shared `.btn` / `.card` / `.field` /

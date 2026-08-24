@@ -261,7 +261,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* guarantees */}
-          <ul className="mt-6 flex flex-col gap-2.5 rounded-card border border-line bg-surface p-4">
+          <ul className="card card-pad-tight mt-6 flex flex-col gap-2.5">
             {guarantees.map((item) => (
               <li key={item.text} className="flex items-center gap-2.5 text-xs text-ink-600">
                 <item.icon size={16} className="shrink-0 text-brand-600" />

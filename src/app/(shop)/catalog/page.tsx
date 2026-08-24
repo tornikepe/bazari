@@ -77,7 +77,7 @@ export default async function CatalogPage({
               past it first — and by then the rail had scrolled away too.
               Capped to the viewport minus the header, with the overflow
               handled here. */}
-          <div className="sticky top-[var(--header-h)] card max-h-[calc(100dvh-var(--header-h)-1.5rem)] overflow-y-auto overscroll-contain p-4">
+          <div className="sticky top-[var(--header-h)] card max-h-[calc(100dvh-var(--header-h)-1.5rem)] overflow-y-auto overscroll-contain card-pad-tight">
             <h2 className="mb-3 text-sm font-extrabold tracking-tight text-ink-900">
               {t.catalog.filters}
             </h2>

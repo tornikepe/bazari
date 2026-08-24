@@ -131,7 +131,7 @@ export default async function DashboardPage({
           <Link
             key={stat.label}
             href={stat.href}
-            className="card hover-lift flex items-center gap-3.5 p-4"
+            className="card hover-lift flex items-center gap-3.5 card-pad-tight"
           >
             <span
               className={`grid h-11 w-11 shrink-0 place-items-center rounded-control ${stat.tone}`}
@@ -150,7 +150,7 @@ export default async function DashboardPage({
       </div>
 
       {/* ------------------------------- chart ------------------------------ */}
-      <section className="card mt-4 p-5">
+      <section className="card mt-4 card-pad">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold text-ink-900">{t.admin.salesChart}</h2>
@@ -166,7 +166,7 @@ export default async function DashboardPage({
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         {/* --------------------------- recent orders ------------------------ */}
         <section className="card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+          <div className="card-head flex items-center justify-between gap-3">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.recentOrders}</h2>
             <Link
               href="/dashboard/orders"
@@ -216,7 +216,7 @@ export default async function DashboardPage({
         <div className="flex flex-col gap-4">
           {/* --------------------------- top products ----------------------- */}
           <section className="card overflow-hidden">
-            <div className="border-b border-line px-5 py-3.5">
+            <div className="card-head">
               <h2 className="text-sm font-bold text-ink-900">{t.admin.topProducts}</h2>
               <p className="text-xs text-ink-400">{t.admin.topProductsHint}</p>
             </div>
@@ -244,7 +244,7 @@ export default async function DashboardPage({
 
           {/* ----------------------------- low stock ------------------------ */}
           <section className="card overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-line px-5 py-3.5">
+            <div className="card-head flex items-center gap-2">
               <AlertIcon size={15} className="text-warning" />
               <h2 className="text-sm font-bold text-ink-900">{t.admin.lowStockTitle}</h2>
             </div>
@@ -281,7 +281,7 @@ export default async function DashboardPage({
           {/* ------------------------------ coupons ------------------------- */}
           {coupons.length > 0 && (
             <section className="card overflow-hidden">
-              <h2 className="border-b border-line px-5 py-3.5 text-sm font-bold text-ink-900">
+              <h2 className="card-head text-sm font-bold text-ink-900">
                 {t.admin.coupons}
               </h2>
               <ul className="divide-y divide-line">

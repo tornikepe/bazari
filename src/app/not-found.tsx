@@ -26,7 +26,7 @@ export default async function NotFound() {
     <>
       <Header />
       <main className="flex-1">
-        <div className="page-container py-20">
+        <div className="page-notice">
           <div className="mx-auto max-w-lg">
             {/* The drawing rather than a giant numeral. "404" is a status code
                 — it means something to whoever wrote the link and nothing to

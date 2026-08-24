@@ -12,6 +12,7 @@ import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyPeopleArt, NoResultsArt } from "@/components/ui/illustrations";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Figures } from "@/components/ui/Figures";
 
 const PAGE_SIZE = 20;
 const ROLES = ["customer", "admin", "viewer"] as const;
@@ -139,16 +140,7 @@ export default async function AdminCustomersPage({
         lead={t.admin.customersHint}
       />
 
-      <div className="mt-5 grid gap-px border border-line bg-line sm:grid-cols-3">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-surface p-4">
-            <p className="label text-ink-500">{stat.label}</p>
-            <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-ink-900">
-              {stat.value}
-            </p>
-          </div>
-        ))}
-      </div>
+      <Figures className="mt-5" items={stats} columns={3} />
 
       <div className="mt-4">
         <AdminToolbar
@@ -212,7 +204,7 @@ export default async function AdminCustomersPage({
             {users.map((user) => {
               const money = spendByUser.get(user.id);
               return (
-                <li key={user.id} className="card p-3">
+                <li key={user.id} className="card card-pad-tight">
                   <Link href={`/dashboard/customers/${user.id}`} className="block">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -239,24 +231,24 @@ export default async function AdminCustomersPage({
           </ul>
 
           <div className="card mt-3 hidden overflow-hidden lg:block">
-            <table className="w-full text-left">
-              <thead className="border-b border-line bg-ink-50 text-xs font-bold tracking-wide text-ink-500 uppercase">
+            <table className="table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2.5">{t.admin.customer}</th>
-                  <th className="px-4 py-2.5">{t.admin.contactDetails}</th>
-                  <th className="px-4 py-2.5">{t.admin.role}</th>
-                  <th className="px-4 py-2.5">{t.admin.customerSince}</th>
-                  <th className="px-4 py-2.5 text-right">{t.admin.customerOrders}</th>
-                  <th className="px-4 py-2.5 text-right">{t.admin.customerSpend}</th>
+                  <th>{t.admin.customer}</th>
+                  <th>{t.admin.contactDetails}</th>
+                  <th>{t.admin.role}</th>
+                  <th>{t.admin.customerSince}</th>
+                  <th className="figures">{t.admin.customerOrders}</th>
+                  <th className="figures">{t.admin.customerSpend}</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-line">
+              <tbody>
                 {users.map((user) => {
                   const money = spendByUser.get(user.id);
                   return (
-                    <tr key={user.id} className="transition-colors hover:bg-ink-50">
-                      <td className="px-4 py-2.5">
+                    <tr key={user.id}>
+                      <td>
                         <Link
                           href={`/dashboard/customers/${user.id}`}
                           className="text-sm font-semibold text-ink-900 hover:text-brand-600"
@@ -268,26 +260,26 @@ export default async function AdminCustomersPage({
                         </p>
                       </td>
 
-                      <td className="px-4 py-2.5">
+                      <td>
                         <p className="text-xs text-ink-600">{user.email}</p>
                         <p className="text-xs text-ink-400">
                           {[user.phone, user.city].filter(Boolean).join(" · ") || "—"}
                         </p>
                       </td>
 
-                      <td className="px-4 py-2.5">
+                      <td>
                         <RoleBadge role={user.role} t={t} />
                       </td>
 
-                      <td className="px-4 py-2.5 text-xs text-ink-500">
+                      <td className="text-xs text-ink-500">
                         {formatDate(user.createdAt)}
                       </td>
 
-                      <td className="px-4 py-2.5 text-right text-sm text-ink-800">
+                      <td className="figures text-sm text-ink-800">
                         {user._count.orders}
                       </td>
 
-                      <td className="px-4 py-2.5 text-right text-sm font-bold text-ink-900">
+                      <td className="figures text-sm font-bold text-ink-900">
                         {formatPrice(money?.total ?? 0, locale)}
                       </td>
                     </tr>

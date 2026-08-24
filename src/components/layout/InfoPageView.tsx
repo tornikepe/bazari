@@ -45,7 +45,7 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
         />
 
         {contact.length > 0 && (
-          <section className="card mt-6 p-5">
+          <section className="card mt-6 card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.footer.contactUs}</h2>
             <ul className="mt-3 flex flex-col gap-2.5">
               {contact.map((row) => (
@@ -70,7 +70,7 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
 
         <div className="mt-6 flex flex-col gap-4">
           {page.sections.map((section) => (
-            <section key={section.heading} className="card p-5">
+            <section key={section.heading} className="card card-pad">
               <h2 className="text-sm font-bold text-ink-900">{section.heading}</h2>
               <div className="mt-2 flex flex-col gap-2">
                 {section.body.map((paragraph) => (

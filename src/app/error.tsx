@@ -28,7 +28,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="page-container py-20">
+    <div className="page-notice">
       <div className="mx-auto flex max-w-md flex-col items-center text-center">
         <ErrorArt size={96} />
 

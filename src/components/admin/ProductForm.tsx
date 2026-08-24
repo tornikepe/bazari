@@ -161,7 +161,7 @@ export function ProductForm({
       <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_18rem] lg:items-start">
         <div className="flex flex-col gap-4">
           {/* ------------------------------ basics --------------------------- */}
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.product.description}</h2>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -214,7 +214,7 @@ export function ProductForm({
           </section>
 
           {/* ------------------------- specifications ------------------------ */}
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.specs}</h2>
             <p className="mt-1 text-xs text-ink-400">{t.admin.specsHint}</p>
 
@@ -286,7 +286,7 @@ export function ProductForm({
           </section>
 
           {/* ------------------------- price and stock ----------------------- */}
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.price}</h2>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -334,7 +334,7 @@ export function ProductForm({
           </section>
 
           {/* ------------------------------ meta ----------------------------- */}
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.overview}</h2>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -352,7 +352,7 @@ export function ProductForm({
 
         {/* ------------------------------ sidebar --------------------------- */}
         <div className="flex flex-col gap-4">
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.image}</h2>
 
             <div className="relative mt-3 aspect-square overflow-hidden rounded-control bg-ink-50">
@@ -453,7 +453,7 @@ export function ProductForm({
             )}
           </section>
 
-          <section className="card p-5">
+          <section className="card card-pad">
             <label className="field-label" htmlFor="categoryId">
               {t.admin.categoryField}
             </label>

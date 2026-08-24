@@ -103,7 +103,7 @@ export default async function AdminOrderDetailPage({
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}
         <section className="card overflow-hidden">
-          <h2 className="border-b border-line px-5 py-3.5 text-sm font-bold text-ink-900">
+          <h2 className="card-head text-sm font-bold text-ink-900">
             {t.admin.items}
           </h2>
 
@@ -181,7 +181,7 @@ export default async function AdminOrderDetailPage({
 
         <div className="flex flex-col gap-4">
           {/* ----------------------------- customer -------------------------- */}
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.customer}</h2>
 
             <ul className="mt-3 flex flex-col gap-2.5">
@@ -202,7 +202,7 @@ export default async function AdminOrderDetailPage({
           </section>
 
           {/* ----------------------------- payment --------------------------- */}
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.payment}</h2>
 
             <dl className="mt-3 flex flex-col gap-2.5">
@@ -229,7 +229,7 @@ export default async function AdminOrderDetailPage({
           />
 
           {/* ----------------------------- timeline -------------------------- */}
-          <section className="card p-5">
+          <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.orderTimeline}</h2>
 
             <ol className="mt-3 flex flex-col">

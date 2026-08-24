@@ -78,7 +78,7 @@ export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
       {error && <ErrorNote title={error} />}
 
       {link && (
-        <div className="card border-brand-600 p-4">
+        <div className="card border-brand-600 card-pad-tight">
           <p className="text-sm font-bold text-ink-900">{t.admin.staffLinkTitle}</p>
           <p className="mt-1 text-xs text-ink-500">
             {fill(t.admin.staffLinkHint, { hours: INVITE_HOURS })}
@@ -111,7 +111,7 @@ export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
             const isMe = person.id === me;
 
             return (
-              <li key={person.id} className="card flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
+              <li key={person.id} className="card flex flex-wrap items-center gap-x-4 gap-y-3 card-pad-tight">
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink-900">
                     {person.name || person.email}
@@ -165,7 +165,7 @@ export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
       )}
 
       {!canWrite ? null : inviting ? (
-        <form onSubmit={invite} className="card flex flex-col gap-3 p-5">
+        <form onSubmit={invite} className="card flex flex-col gap-3 card-pad">
           <p className="text-sm font-bold text-ink-900">{t.admin.staffInviteTitle}</p>
 
           <div className="grid gap-3 sm:grid-cols-3">

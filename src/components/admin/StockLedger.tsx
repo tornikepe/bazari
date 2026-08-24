@@ -22,7 +22,7 @@ export async function StockLedger({ productId }: { productId: string }) {
 
   return (
     <section className="card mt-4 overflow-hidden">
-      <div className="border-b border-line px-5 py-3.5">
+      <div className="card-head">
         <h2 className="text-sm font-bold text-ink-900">{t.admin.stockLedger}</h2>
         <p className="mt-0.5 text-xs text-ink-500">{t.admin.stockLedgerHint}</p>
       </div>
@@ -31,20 +31,20 @@ export async function StockLedger({ productId }: { productId: string }) {
         <p className="px-5 py-8 text-center text-sm text-ink-500">{t.admin.noStockMovements}</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="table text-xs">
             <thead>
-              <tr className="border-b border-line bg-ink-50 text-ink-500">
-                <th className="px-5 py-2.5 font-semibold">{t.admin.stockLedger}</th>
-                <th className="px-3 py-2.5 text-right font-semibold">±</th>
-                <th className="px-3 py-2.5 text-right font-semibold">{t.admin.stockBalance}</th>
-                <th className="px-5 py-2.5 text-right font-semibold">{t.admin.orders}</th>
+              <tr>
+                <th>{t.admin.stockLedger}</th>
+                <th className="figures">±</th>
+                <th className="figures">{t.admin.stockBalance}</th>
+                <th className="figures">{t.admin.orders}</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-line">
+            <tbody>
               {movements.map((movement) => (
                 <tr key={movement.id}>
-                  <td className="px-5 py-2.5">
+                  <td>
                     <p className="font-semibold text-ink-800">
                       {t.stockReason[movement.reason]}
                     </p>
@@ -52,18 +52,18 @@ export async function StockLedger({ productId }: { productId: string }) {
                   </td>
 
                   <td
-                    className={`px-3 py-2.5 text-right font-mono font-bold ${
+                    className={`figures font-mono font-bold ${
                       movement.delta < 0 ? "text-danger" : "text-success"
                     }`}
                   >
                     {movement.delta > 0 ? `+${movement.delta}` : movement.delta}
                   </td>
 
-                  <td className="px-3 py-2.5 text-right font-mono font-semibold text-ink-800">
+                  <td className="figures font-mono font-semibold text-ink-800">
                     {movement.balance}
                   </td>
 
-                  <td className="px-5 py-2.5 text-right">
+                  <td className="figures">
                     {movement.order ? (
                       <Link
                         href={`/dashboard/orders/${movement.order.id}`}

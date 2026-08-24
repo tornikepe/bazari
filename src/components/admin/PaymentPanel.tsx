@@ -47,7 +47,7 @@ export function PaymentPanel({ payments }: { payments: PaymentRow[] }) {
   }
 
   return (
-    <section className="card p-5">
+    <section className="card card-pad">
       <h2 className="text-sm font-bold text-ink-900">{t.admin.paymentAttempts}</h2>
 
       {payments.length === 0 ? (

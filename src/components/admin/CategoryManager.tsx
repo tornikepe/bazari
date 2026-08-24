@@ -102,7 +102,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
 
       {/* ------------------------------- form ------------------------------- */}
       {canWrite && editing && (
-        <form onSubmit={handleSubmit} className="card mt-4 p-5">
+        <form onSubmit={handleSubmit} className="card mt-4 card-pad">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-ink-900">
               {editing === "new" ? t.admin.newCategory : t.admin.editCategory}
@@ -207,7 +207,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
 
       {/* ------------------------------- list ------------------------------- */}
       {categories.length === 0 ? (
-        <div className="card mt-5 px-6 py-16 text-center">
+        <div className="card card-pad-notice mt-5 text-center">
           <p className="text-sm text-ink-500">{t.admin.noCategories}</p>
         </div>
       ) : (
@@ -217,7 +217,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
         // sideways at 390px in Georgian, where the names run longer.
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {categories.map((category) => (
-            <li key={category.id} className="card flex min-w-0 items-center gap-3 p-4">
+            <li key={category.id} className="card flex min-w-0 items-center gap-3 card-pad-tight">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-control bg-ink-50 text-xl">
                 {category.icon}
               </span>

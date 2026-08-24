@@ -45,7 +45,7 @@ function TrackOrderForm() {
         {found ? (
           <div className="flex flex-col gap-4">
             {/* ------------------------------ header ------------------------ */}
-            <div className="card p-5 sm:p-6">
+            <div className="card card-pad">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                 <div className="min-w-0">
                   <h2 className="text-xs font-bold tracking-wider text-ink-400 uppercase">
@@ -68,7 +68,7 @@ function TrackOrderForm() {
             </div>
 
             {/* ------------------------------- items ------------------------ */}
-            <div className="card p-5 sm:p-6">
+            <div className="card card-pad">
               <h3 className="text-sm font-bold text-ink-900">{t.track.itemsTitle}</h3>
 
               <ul className="mt-3 divide-y divide-line">
@@ -90,7 +90,7 @@ function TrackOrderForm() {
             </div>
 
             {/* ------------------------------ payment ----------------------- */}
-            <div className="card p-5 sm:p-6">
+            <div className="card card-pad">
               <h3 className="text-sm font-bold text-ink-900">{t.track.paymentTitle}</h3>
 
               <dl className="mt-3 flex flex-col gap-2 text-sm">
@@ -158,7 +158,7 @@ function TrackOrderForm() {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="card p-6">
+          <form onSubmit={handleSubmit} className="card card-pad">
             <div className="flex flex-col gap-4">
               <div>
                 <label className="field-label" htmlFor="orderNumber">

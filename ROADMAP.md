@@ -106,23 +106,7 @@ npm run setup:credentials -- --force   # locally; set the Vercel one by hand
 
 ---
 
-## 8. One design across the whole site
+## 8. Order of work
 
-Nine pages were built one at a time, and each solved the same problems slightly differently.
-Decide each rule once, then apply it everywhere.
-
-- **One card** — an optional header bar, one padding scale
-- **One way to show a row of figures**
-- **One table** — column alignment, zebra rules, the money column, the row-action column, and
-  what a row becomes on a phone
-- A one-page list of those rules, and a test that fails when a page invents another
-
-
----
-
-## 9. Order of work
-
-1. **§8** — the design pass
-2. **§2** — craft, after the design pass: polishing pages that are about to be restyled is work
-   done twice
-3. **§5** and **§6**, last
+1. **§2** — craft
+2. **§5** and **§6**, last

@@ -206,7 +206,7 @@ export default async function AdminOrdersPage({
           {/* Cards below lg — an order row has too many columns for a phone. */}
           <ul className="mt-3 flex flex-col gap-2 lg:hidden">
             {orders.map((order) => (
-              <li key={order.id} className="card p-3">
+              <li key={order.id} className="card card-pad-tight">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
@@ -241,23 +241,23 @@ export default async function AdminOrdersPage({
 
           {/* Table from lg upwards */}
           <div className="card mt-3 hidden overflow-hidden lg:block">
-            <table className="w-full text-left">
-              <thead className="border-b border-line bg-ink-50 text-xs font-bold tracking-wide text-ink-500 uppercase">
+            <table className="table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2.5">{t.admin.orderNumber}</th>
-                  <th className="px-4 py-2.5">{t.admin.customer}</th>
-                  <th className="px-4 py-2.5">{t.admin.placedAt}</th>
-                  <th className="px-4 py-2.5">{t.admin.statusChangedAt}</th>
-                  <th className="px-4 py-2.5 text-right">{t.admin.total}</th>
-                  <th className="px-4 py-2.5">{t.admin.status}</th>
-                  <th className="px-4 py-2.5">{t.admin.updateStatus}</th>
+                  <th>{t.admin.orderNumber}</th>
+                  <th>{t.admin.customer}</th>
+                  <th>{t.admin.placedAt}</th>
+                  <th>{t.admin.statusChangedAt}</th>
+                  <th className="figures">{t.admin.total}</th>
+                  <th>{t.admin.status}</th>
+                  <th>{t.admin.updateStatus}</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-line">
+              <tbody>
                 {orders.map((order) => (
-                  <tr key={order.id} className="transition-colors hover:bg-ink-50">
-                    <td className="px-4 py-2.5">
+                  <tr key={order.id}>
+                    <td>
                       <Link
                         href={`/dashboard/orders/${order.id}`}
                         className="font-mono text-xs font-bold text-ink-900 hover:text-brand-600"
@@ -269,14 +269,14 @@ export default async function AdminOrdersPage({
                       </p>
                     </td>
 
-                    <td className="px-4 py-2.5">
+                    <td>
                       <p className="text-sm font-medium text-ink-800">{order.customerName}</p>
                       <p className="text-xs text-ink-400">
                         {order.phone} · {order.city}
                       </p>
                     </td>
 
-                    <td className="px-4 py-2.5 text-xs text-ink-500 tabular-nums">
+                    <td className="text-xs text-ink-500 tabular-nums">
                       {formatDateTime(order.createdAt)}
                     </td>
 
@@ -284,19 +284,19 @@ export default async function AdminOrdersPage({
                         order has not moved yet — an em dash says "nothing has
                         happened", a duplicated timestamp says "it was
                         confirmed the second it arrived", which is not true. */}
-                    <td className="px-4 py-2.5 text-xs text-ink-500 tabular-nums">
+                    <td className="text-xs text-ink-500 tabular-nums">
                       {order.events[0] ? formatDateTime(order.events[0].createdAt) : "—"}
                     </td>
 
-                    <td className="px-4 py-2.5 text-right text-sm font-bold text-ink-900">
+                    <td className="figures text-sm font-bold text-ink-900">
                       {formatPrice(order.total, locale)}
                     </td>
 
-                    <td className="px-4 py-2.5">
+                    <td>
                       <StatusBadge status={order.status} t={t} />
                     </td>
 
-                    <td className="px-4 py-2.5">
+                    <td>
                       <OrderStatusSelect id={order.id} status={order.status} />
                     </td>
                   </tr>

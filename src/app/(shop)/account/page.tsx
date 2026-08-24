@@ -134,7 +134,7 @@ export default async function AccountPage({
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:items-start">
         {/* ------------------------------ orders ----------------------------- */}
         <section id="orders" className="card overflow-hidden scroll-mt-[calc(var(--header-h)+1rem)]">
-          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+          <div className="card-head flex items-center justify-between gap-3">
             <h2 className="text-sm font-bold text-ink-900">{t.account.myOrders}</h2>
             {/* Only when the list is not the whole story. A count beside a
                 heading that shows every row is a number for its own sake. */}
