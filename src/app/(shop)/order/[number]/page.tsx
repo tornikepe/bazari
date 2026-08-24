@@ -8,6 +8,8 @@ import { readReceipts } from "@/lib/order-access";
 import { formatPrice } from "@/lib/format";
 import { Price } from "@/components/ui/Price";
 import { CheckIcon, TruckIcon } from "@/components/ui/icons";
+import { InvoiceHead } from "@/components/order/InvoiceHead";
+import { PrintButton } from "@/components/order/PrintButton";
 
 export default async function OrderConfirmationPage({
   params,
@@ -37,6 +39,18 @@ export default async function OrderConfirmationPage({
   return (
     <div className="page">
       <div className="mx-auto max-w-2xl">
+        <InvoiceHead
+          number={order.number}
+          createdAt={order.createdAt}
+          customer={{
+            name: order.customerName,
+            phone: order.phone,
+            email: order.email,
+            city: order.city,
+            address: order.address,
+          }}
+        />
+
         <div className="card card-pad-notice flex flex-col items-center text-center">
           <span className="grid h-16 w-16 place-items-center rounded-pill bg-success-soft text-success">
             <CheckIcon size={32} strokeWidth={3} />
@@ -139,6 +153,9 @@ export default async function OrderConfirmationPage({
         </div>
 
         <div className="mt-5 flex flex-wrap justify-center gap-3">
+          {/* First, because a receipt is the thing most people want off this
+              page and the rest is somewhere to go afterwards. */}
+          <PrintButton size="md" />
           <Link href="/" className="btn btn-outline btn-md">
             {t.orderDone.backHome}
           </Link>

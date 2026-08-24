@@ -933,6 +933,11 @@ you own, and never in a fork.
   runtime-derived zone answers differently on the server and in the browser, which is a hydration
   mismatch; UTC is deterministic but four hours wrong, which filed every order placed after
   midnight under the previous day.
+- **An order prints, but no invoice is emailed.** Both order pages — the shop's and the
+  shopper's — print as a document: the shop's name and contact details, the number, the date, who
+  it is for, the lines, the totals. It is deliberately not a fiscal document and says so on its
+  face; issuing one means a tax number and a numbering scheme an accountant signs off. Attaching a
+  PDF to the confirmation email needs a renderer and a verified sending domain.
 - **The shop installs, but does not run offline.** The manifest and icons are real — install it
   from the browser's own menu and it gets the shop's name, its colour and its square. There is no
   service worker, so there is nothing to serve when the network is gone, and Chromium therefore

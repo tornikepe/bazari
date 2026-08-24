@@ -203,6 +203,10 @@ const ka = {
     backHome: "მთავარზე დაბრუნება",
     notFound: "ასეთი შეკვეთა ვერ მოიძებნა",
     trackHint: "შეკვეთის სტატუსის შემოწმება",
+    invoice: "ინვოისი",
+    billTo: "მიმღები",
+    issued: "გაცემულია",
+    invoiceNote: "დემო პროექტი — ეს არ არის ფისკალური დოკუმენტი.",
   },
 
   theme: {
@@ -817,6 +821,7 @@ const ka = {
     errorTitle: "რაღაც შეგვეშალა",
     errorText: "გვერდის ჩატვირთვა ვერ მოხერხდა. სცადე თავიდან.",
     tryAgain: "თავიდან ცდა",
+    print: "ბეჭდვა",
   },
 } as const;
 
@@ -1016,6 +1021,10 @@ const en: Dictionary = {
     backHome: "Back to home",
     notFound: "Order not found",
     trackHint: "Check an order's status",
+    invoice: "Invoice",
+    billTo: "Bill to",
+    issued: "Issued",
+    invoiceNote: "Demo project — this is not a fiscal document.",
   },
 
   theme: {
@@ -1626,6 +1635,7 @@ const en: Dictionary = {
     errorTitle: "Something went wrong",
     errorText: "We couldn't load this page. Please try again.",
     tryAgain: "Try again",
+    print: "Print",
   },
 };
 

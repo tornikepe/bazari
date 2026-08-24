@@ -565,6 +565,19 @@
   }
 
   /*
+   * On paper and nowhere else.
+   *
+   * Printing hides the masthead, which is right — a navigation bar is no use on
+   * a sheet of paper. But it takes the shop's name with it, and an order
+   * printed with no name, no address and no phone number on it is not a
+   * document, it is a list. This is what goes back: the identity, the number,
+   * the date and who it is for, drawn only when there is a printer involved.
+   */
+  .print-only {
+    display: none;
+  }
+
+  /*
    * One table.
    *
    * The dashboard has four, and the first three had already converged by hand:
@@ -1686,6 +1699,10 @@
 
   body {
     background: #ffffff;
+  }
+
+  .print-only {
+    display: block;
   }
 
   /*

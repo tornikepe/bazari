@@ -8,6 +8,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
 import { PaymentPanel } from "@/components/admin/PaymentPanel";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { InvoiceHead } from "@/components/order/InvoiceHead";
+import { PrintButton } from "@/components/order/PrintButton";
 import {
   ChevronLeftIcon,
   MailIcon,
@@ -67,6 +69,18 @@ export default async function AdminOrderDetailPage({
 
   return (
     <div className="mx-auto max-w-4xl">
+      <InvoiceHead
+        number={order.number}
+        createdAt={order.createdAt}
+        customer={{
+          name: order.customerName,
+          phone: order.phone,
+          email: order.email,
+          city: order.city,
+          address: order.address,
+        }}
+      />
+
       <Link
         href="/dashboard/orders"
         className="mb-3 inline-flex items-center gap-1 text-xs text-ink-500 hover:text-brand-600"
@@ -83,6 +97,7 @@ export default async function AdminOrderDetailPage({
         action={
           <div className="flex flex-col items-end gap-1.5">
             <div className="flex items-center gap-3">
+              <PrintButton />
               <StatusBadge status={order.status} t={t} />
               <OrderStatusSelect id={order.id} status={order.status} />
             </div>
