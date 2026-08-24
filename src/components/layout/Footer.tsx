@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/settings";
 import { getPublishedPages } from "@/lib/info-store";
 import { getI18n } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
+import { InstallPrompt } from "@/components/layout/InstallPrompt";
 
 export async function Footer() {
   const [{ locale, t }, settings] = await Promise.all([getI18n(), getSettings()]);
@@ -102,7 +103,10 @@ export async function Footer() {
             © {new Date().getFullYear()} {settings.name}. {t.footer.rights}
           </p>
 
-          <p className="text-xs text-ink-400">{t.footer.demoNote}</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:justify-end">
+            <InstallPrompt />
+            <p className="text-xs text-ink-400">{t.footer.demoNote}</p>
+          </div>
         </div>
       </div>
     </footer>

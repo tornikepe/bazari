@@ -21,7 +21,6 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 - Saved views, inline editing, and bulk actions for orders and customers
 - A print stylesheet for the order page
 - Dark mode, reviewed page by page
-- A favicon set, a web manifest, an install prompt
 
 ---
 

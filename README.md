@@ -931,6 +931,13 @@ you own, and never in a fork.
   runtime-derived zone answers differently on the server and in the browser, which is a hydration
   mismatch; UTC is deterministic but four hours wrong, which filed every order placed after
   midnight under the previous day.
+- **The shop installs, but does not run offline.** The manifest and icons are real — install it
+  from the browser's own menu and it gets the shop's name, its colour and its square. There is no
+  service worker, so there is nothing to serve when the network is gone, and Chromium therefore
+  does not fire `beforeinstallprompt` — which is what the "install the app" line in the footer
+  waits for, and why you will usually not see it. Writing a service worker to make a button appear
+  would be the wrong way round: it is a caching strategy and an update strategy, and this shop has
+  neither yet.
 
 ---
 

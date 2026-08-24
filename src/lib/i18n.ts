@@ -400,6 +400,7 @@ const ka = {
     contactUs: "დაგვიკავშირდი",
     rights: "ყველა უფლება დაცულია.",
     demoNote: "დემო პროექტი — რეალური გადახდები არ მუშაობს.",
+    install: "დააინსტალირე აპლიკაცია",
   },
 
   admin: {
@@ -1193,6 +1194,7 @@ const en: Dictionary = {
     contactUs: "Contact us",
     rights: "All rights reserved.",
     demoNote: "Demo project — real payments are not processed.",
+    install: "Install the app",
   },
 
   admin: {
