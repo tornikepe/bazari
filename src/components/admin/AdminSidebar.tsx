@@ -135,7 +135,7 @@ export function AdminSidebar({
       </div>
 
       {/* Desktop rail */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-panel p-4 lg:flex">
+      <aside className="admin-rail sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-panel p-4 lg:flex">
         {nav}
       </aside>
 

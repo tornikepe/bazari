@@ -1688,9 +1688,18 @@
     background: #ffffff;
   }
 
-  /* Chrome and controls have no meaning on paper. */
-  header,
-  footer,
+  /*
+   * Chrome and controls have no meaning on paper.
+   *
+   * The masthead and the site footer, not every `<header>` and `<footer>`
+   * element: the shared page title renders as a `<header>` inside `<main>`,
+   * and hiding those took the title off every printed page — a printed order
+   * with no heading on it. The same rule the accessibility tree uses, since it
+   * is the same distinction: a `<header>` that something sections is the
+   * header *of that*, not the page's masthead.
+   */
+  header:not(:where(article, aside, main, nav, section) *),
+  footer:not(:where(article, aside, main, nav, section) *),
   nav,
   button,
   .btn,
@@ -1698,6 +1707,11 @@
   .marquee,
   .hero-orb,
   .buy-bar,
+  /* The dashboard rail. Its links go with `nav` above, but the panel they sit
+     on is an `<aside>` — and an empty dark column down the side of a printed
+     invoice is worse than the links were. Named rather than matched as
+     `aside`, which is also the cart's summary and the printed total. */
+  .admin-rail,
   /* The launcher is a `button` and already hidden; the open panel is not. */
   .chat-root {
     display: none !important;
