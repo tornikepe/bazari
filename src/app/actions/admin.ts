@@ -153,6 +153,40 @@ async function readProductForm(
   };
 }
 
+/**
+ * Writes the ledger row that explains a stock figure being set by hand.
+ *
+ * The schema promises that every change to `Product.stock` leaves a row behind,
+ * so "why is this out of stock?" is always answerable. Selling and cancelling
+ * kept that promise; the admin form did not — typing a new number in it moved
+ * the figure and left no trace at all, which is the one case where a trace is
+ * most wanted, because a person did it.
+ *
+ * `correction` rather than `restock` when the figure goes up, and it is a
+ * judgement call worth stating: the form is where somebody fixes a miscount as
+ * often as they record a delivery, and the ledger should not claim to know
+ * which. A restock button that says so is the right home for `restock`.
+ */
+async function recordStockChange(
+  tx: Prisma.TransactionClient,
+  productId: string,
+  from: number,
+  to: number,
+  note: string,
+) {
+  if (from === to) return;
+
+  await tx.stockMovement.create({
+    data: {
+      productId,
+      delta: to - from,
+      reason: "correction",
+      balance: to,
+      note,
+    },
+  });
+}
+
 export async function saveProduct(id: string | null, formData: FormData): Promise<ActionResult> {
   if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
 
@@ -161,14 +195,29 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
 
   /* What it points at now, so the photos it stops pointing at can have their
      bytes cleaned up after the save. Read before, compared after: an upload
-     that is merely being reordered must not be deleted. */
+     that is merely being reordered must not be deleted. The stock comes along
+     for the ledger row below. */
   const before = id
-    ? await prisma.product.findUnique({ where: { id }, select: { image: true, images: true } })
+    ? await prisma.product.findUnique({
+        where: { id },
+        select: { image: true, images: true, stock: true },
+      })
     : null;
 
   try {
     if (id) {
-      await prisma.product.update({ where: { id }, data: parsed.data });
+      await prisma.$transaction(async (tx) => {
+        // The figure comes back from the row rather than from the form, so the
+        // ledger records what the product actually holds.
+        const after = await tx.product.update({
+          where: { id },
+          data: parsed.data,
+          select: { stock: true },
+        });
+        if (before) {
+          await recordStockChange(tx, id, before.stock, after.stock, "Edited in the dashboard");
+        }
+      });
     } else {
       await prisma.product.create({ data: parsed.data });
     }
@@ -188,6 +237,52 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
 
   revalidateStorefront();
   return { ok: true };
+}
+
+/**
+ * One number, changed from the table.
+ *
+ * Two fields and no more. Price and stock are what a shop owner changes daily
+ * and what the form makes them open a page and scroll for; everything else on
+ * a product is either prose, which needs a text area, or a decision, which
+ * needs the form's context. A general "set any column from the table" action
+ * would be a much larger hole in a Server Action reachable by direct POST.
+ *
+ * `price` arrives in lari because that is what was typed, and is stored in
+ * tetri like every other amount here. `stock` writes a ledger row, the same as
+ * the form does — a figure that moved with nothing to explain it is exactly
+ * what the ledger exists to prevent.
+ */
+export async function setProductNumber(
+  id: string,
+  field: "price" | "stock",
+  value: number,
+): Promise<ActionResult & { value?: number }> {
+  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  if (field !== "price" && field !== "stock") return { ok: false, error: "invalid" };
+  if (!Number.isFinite(value) || value < 0) return { ok: false, error: "invalid" };
+
+  const stored = field === "price" ? Math.round(value * 100) : Math.floor(value);
+  // A product with no price is not a product; the form refuses it too.
+  if (field === "price" && stored <= 0) return { ok: false, error: "invalid" };
+
+  const before = await prisma.product.findUnique({ where: { id }, select: { stock: true } });
+  if (!before) return { ok: false, error: "invalid" };
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.product.update({ where: { id }, data: { [field]: stored } });
+      if (field === "stock") {
+        await recordStockChange(tx, id, before.stock, stored, "Set from the product table");
+      }
+    });
+  } catch (error) {
+    console.error("setProductNumber failed", error);
+    return { ok: false, error: "failed" };
+  }
+
+  revalidateStorefront();
+  return { ok: true, value: stored };
 }
 
 export async function deleteProduct(id: string): Promise<ActionResult> {

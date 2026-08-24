@@ -16,6 +16,7 @@ import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyShelfArt, NoResultsArt } from "@/components/ui/illustrations";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { EditableNumber } from "@/components/admin/EditableNumber";
 
 const PAGE_SIZE = 20;
 const LOW_STOCK_THRESHOLD = 10;
@@ -350,9 +351,20 @@ export default async function AdminProductsPage({
                     </td>
 
                     <td className="figures">
-                      <span className="text-sm font-semibold text-ink-900">
-                        {formatPrice(product.price, locale)}
-                      </span>
+                      <EditableNumber
+                        id={product.id}
+                        field="price"
+                        /* Lari, because that is the unit somebody types in.
+                           The action turns it back into tetri, which is the
+                           only unit anything downstream of it sees. */
+                        value={product.price / 100}
+                        name={locale === "ka" ? product.nameKa : product.nameEn}
+                        display={
+                          <span className="text-sm font-semibold text-ink-900">
+                            {formatPrice(product.price, locale)}
+                          </span>
+                        }
+                      />
                       {product.oldPrice && (
                         <span className="block text-xs text-ink-400 line-through">
                           {formatPrice(product.oldPrice, locale)}
@@ -361,7 +373,17 @@ export default async function AdminProductsPage({
                     </td>
 
                     <td className="figures">
-                      <span className={`badge ${stockTone(product.stock)}`}>{product.stock}</span>
+                      <EditableNumber
+                        id={product.id}
+                        field="stock"
+                        value={product.stock}
+                        name={locale === "ka" ? product.nameKa : product.nameEn}
+                        display={
+                          <span className={`badge ${stockTone(product.stock)}`}>
+                            {product.stock}
+                          </span>
+                        }
+                      />
                     </td>
 
                     <td>
