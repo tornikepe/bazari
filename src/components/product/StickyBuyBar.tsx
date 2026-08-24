@@ -28,9 +28,19 @@ export function StickyBuyBar({
   product,
   /** The element to watch — the real purchase panel. */
   watchId,
+  /**
+   * Whether this product is sold in more than one form.
+   *
+   * When it is, the bar cannot add to the cart: there is no such thing as
+   * "this product" in a cart, only a size and a colour, and a bar that added
+   * one anyway would pick for the shopper. It takes them back to the choice
+   * instead — which is what they were going to have to do regardless.
+   */
+  needsChoice = false,
 }: {
   product: Omit<CartItem, "quantity">;
   watchId: string;
+  needsChoice?: boolean;
 }) {
   const { locale, t } = useI18n();
   const [shown, setShown] = useState(false);
@@ -91,14 +101,27 @@ export function StickyBuyBar({
           <Price value={product.price} size="sm" />
         </div>
 
-        <AddToCartButton
-          product={product}
-          size="md"
-          showIcon={false}
-          // Never a focus target while hidden — a keyboard user tabbing the
-          // page must not land on a button they cannot see.
-          disabled={!shown}
-        />
+        {needsChoice ? (
+          <a
+            href={`#${watchId}`}
+            // Never a focus target while hidden, for the same reason the
+            // button below is not.
+            tabIndex={shown ? undefined : -1}
+            aria-hidden={!shown}
+            className="btn btn-primary btn-md shrink-0"
+          >
+            {t.product.variantChoose}
+          </a>
+        ) : (
+          <AddToCartButton
+            product={product}
+            size="md"
+            showIcon={false}
+            // Never a focus target while hidden — a keyboard user tabbing the
+            // page must not land on a button they cannot see.
+            disabled={!shown}
+          />
+        )}
 
         {soldOut && <span className="sr-only">{t.product.outOfStock}</span>}
       </div>

@@ -21,13 +21,24 @@ import { getBoughtTogether } from "@/lib/cross-sell";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { RecordView } from "@/components/product/RecordView";
 import { WatchStock } from "@/components/product/WatchStock";
+import { VariantPicker } from "@/components/product/VariantPicker";
 
 const LOW_STOCK_THRESHOLD = 10;
 
 function getProduct(slug: string) {
   return prisma.product.findFirst({
     where: { slug, isActive: true },
-    include: { category: true },
+    include: {
+      category: true,
+      options: {
+        orderBy: { sortOrder: "asc" },
+        include: { values: { orderBy: { sortOrder: "asc" } } },
+      },
+      variants: {
+        orderBy: { sortOrder: "asc" },
+        include: { values: { select: { valueId: true } } },
+      },
+    },
   });
 }
 
@@ -84,6 +95,37 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const categoryName = locale === "ka" ? product.category.nameKa : product.category.nameEn;
   const discount = discountPercent(product.price, product.oldPrice);
   const soldOut = product.stock <= 0;
+
+  /* The cart line as it would be without variants. The picker overrides the
+     price and the stock once a combination is chosen; everything else on a
+     line is the product's whatever is picked. */
+  const line = {
+    productId: product.id,
+    slug: product.slug,
+    nameKa: product.nameKa,
+    nameEn: product.nameEn,
+    image: product.image,
+    price: product.price,
+    stock: product.stock,
+  };
+
+  const options = product.options.map((option) => ({
+    id: option.id,
+    name: locale === "ka" ? option.nameKa : option.nameEn,
+    values: option.values.map((value) => ({
+      id: value.id,
+      label: locale === "ka" ? value.valueKa : value.valueEn,
+    })),
+  }));
+
+  const variants = product.variants.map((variant) => ({
+    id: variant.id,
+    sku: variant.sku,
+    price: variant.price,
+    stock: variant.stock,
+    isActive: variant.isActive,
+    valueIds: variant.values.map((value) => value.valueId),
+  }));
 
   /* What the shop typed, ahead of what the application knows.
      The four rows below — brand, category, SKU, shipping — are derived facts
@@ -252,17 +294,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {soldOut && <WatchStock productId={product.id} />}
 
           <div className="mt-6" id="buy-panel">
-            <ProductPurchasePanel
-              product={{
-                productId: product.id,
-                slug: product.slug,
-                nameKa: product.nameKa,
-                nameEn: product.nameEn,
-                image: product.image,
-                price: product.price,
-                stock: product.stock,
-              }}
-            />
+            {/* A product with no options is exactly what it was before any of
+                this existed: one price, one stock figure, one button. */}
+            {options.length > 0 ? (
+              <VariantPicker product={line} options={options} variants={variants} />
+            ) : (
+              <ProductPurchasePanel product={line} />
+            )}
           </div>
 
           {/* guarantees */}
@@ -354,18 +392,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <RecordView productId={product.id} />
 
       {/* Follows the visitor down the page once the panel above is gone. */}
-      <StickyBuyBar
-        watchId="buy-panel"
-        product={{
-          productId: product.id,
-          slug: product.slug,
-          nameKa: product.nameKa,
-          nameEn: product.nameEn,
-          image: product.image,
-          price: product.price,
-          stock: product.stock,
-        }}
-      />
+      <StickyBuyBar watchId="buy-panel" product={line} needsChoice={options.length > 0} />
     </div>
   );
 }

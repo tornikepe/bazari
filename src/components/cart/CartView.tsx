@@ -14,6 +14,7 @@ import { EmptyCartArt } from "@/components/ui/illustrations";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { useChangeKey } from "@/components/ui/useChangeKey";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { lineKey } from "@/lib/cart-store";
 
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
@@ -85,12 +86,16 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
           {items.map((item) => {
             const name = locale === "ka" ? item.nameKa : item.nameEn;
             const max = Math.max(1, item.stock);
+            /* The product *and* the combination: one red medium and one blue
+               medium are two lines, and keying either by the product alone
+               would make them one. */
+            const key = lineKey(item);
 
             return (
               // Rows share the same rule as everything else. The container draws the
               // outer edge, so the first row must not draw one above itself.
               <article
-                key={item.productId}
+                key={key}
                 className="flex gap-3 border-line p-3 not-first:border-t sm:gap-4 sm:p-4"
               >
                 <Link
@@ -108,6 +113,10 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
                     {name}
                   </Link>
 
+                  {item.variantLabel && (
+                    <p className="mt-0.5 text-xs text-ink-500">{item.variantLabel}</p>
+                  )}
+
                   <div className="mt-1">
                     <Price value={item.price} size="sm" />
                   </div>
@@ -116,7 +125,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
                     <div className="flex items-center rounded-control border border-line">
                       <button
                         type="button"
-                        onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                        onClick={() => setQuantity(key, item.quantity - 1)}
                         aria-label="-"
                         className="btn btn-ghost h-8 w-8 rounded-none rounded-l-control p-0"
                       >
@@ -128,14 +137,14 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
                         min={1}
                         max={max}
                         onChange={(event) =>
-                          setQuantity(item.productId, Number(event.target.value) || 1)
+                          setQuantity(key, Number(event.target.value) || 1)
                         }
                         aria-label={t.cart.quantity}
                         className="h-8 w-11 border-x border-line bg-transparent text-center text-sm font-semibold outline-none"
                       />
                       <button
                         type="button"
-                        onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                        onClick={() => setQuantity(key, item.quantity + 1)}
                         disabled={item.quantity >= max}
                         aria-label="+"
                         className="btn btn-ghost h-8 w-8 rounded-none rounded-r-control p-0"
@@ -152,7 +161,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
                       <LineTotal value={item.price * item.quantity} />
                       <button
                         type="button"
-                        onClick={() => remove(item.productId)}
+                        onClick={() => remove(key)}
                         aria-label={t.cart.remove}
                         className="btn btn-ghost h-8 w-8 rounded-control p-0 text-ink-400 hover:text-danger"
                       >

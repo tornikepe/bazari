@@ -13,6 +13,7 @@ import { toMinor, PAYMENT_WINDOW_MINUTES } from "@/lib/payments";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
 import { sendLowStockEmail, type LowStockItem } from "@/lib/stock-emails";
 import { crossedLowStock } from "@/lib/stock";
+import { labelFor } from "@/lib/variants";
 import { getLocale } from "@/lib/locale";
 
 export type PlaceOrderInput = {
@@ -23,7 +24,7 @@ export type PlaceOrderInput = {
   address: string;
   note: string;
   /** Only ids and quantities — prices are re-read from the database. */
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; variantId?: string; quantity: number }[];
   /** Optional discount code; re-validated server-side before it's applied. */
   couponCode?: string;
   paymentMethod?: string;
@@ -61,13 +62,24 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   if (!customerName || !phone || !city || !address) return { ok: false, error: "invalid" };
   if (!Array.isArray(input.items) || input.items.length === 0) return { ok: false, error: "empty" };
 
-  // Normalise and de-duplicate before touching the database.
-  const wanted = new Map<string, number>();
+  /* Normalised and de-duplicated before touching the database, by the product
+     *and* the combination: one red medium and one blue medium are two lines,
+     and folding them onto the product id would deliver two of whichever came
+     second. */
+  const wanted = new Map<string, { productId: string; variantId?: string; quantity: number }>();
   for (const item of input.items) {
     if (typeof item?.productId !== "string") continue;
     const quantity = Math.floor(Number(item.quantity));
     if (!Number.isFinite(quantity) || quantity < 1) continue;
-    wanted.set(item.productId, (wanted.get(item.productId) ?? 0) + quantity);
+
+    const variantId = typeof item.variantId === "string" && item.variantId ? item.variantId : undefined;
+    const key = variantId ? `${item.productId}:${variantId}` : item.productId;
+    const seen = wanted.get(key);
+    wanted.set(key, {
+      productId: item.productId,
+      variantId,
+      quantity: (seen?.quantity ?? 0) + quantity,
+    });
   }
   if (wanted.size === 0) return { ok: false, error: "empty" };
 
@@ -84,23 +96,76 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // order would attach the order to a user the "my orders" page never shows.
   if (user.role !== "customer") return { ok: false, error: "sign-in-required" };
 
-  const products = await prisma.product.findMany({
-    where: { id: { in: [...wanted.keys()], }, isActive: true },
-  });
-  if (products.length !== wanted.size) return { ok: false, error: "unavailable" };
+  const productIds = [...new Set([...wanted.values()].map((row) => row.productId))];
 
-  // Prices come from the database, never from the submitted payload — the
-  // cart lives in localStorage and is fully user-editable.
-  const lines = products.map((product) => {
-    const quantity = Math.min(wanted.get(product.id) ?? 0, product.stock);
-    return { product, quantity };
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds }, isActive: true },
+    include: {
+      options: {
+        orderBy: { sortOrder: "asc" },
+        include: { values: { orderBy: { sortOrder: "asc" } } },
+      },
+      variants: { include: { values: { select: { valueId: true } } } },
+    },
+  });
+  if (products.length !== productIds.length) return { ok: false, error: "unavailable" };
+
+  const byId = new Map(products.map((product) => [product.id, product]));
+
+  /* Prices, stock and codes come from the database, never from the submitted
+     payload — the cart lives in localStorage and every figure in it is
+     editable. That is now true of the combination as well: a request naming a
+     variant that belongs to another product, or one that is switched off, buys
+     nothing. */
+  const lines = [...wanted.values()].map((row) => {
+    const product = byId.get(row.productId)!;
+    const variant = row.variantId
+      ? (product.variants.find((candidate) => candidate.id === row.variantId) ?? null)
+      : null;
+
+    // A product sold in several forms cannot be bought as itself, and a
+    // variant that was switched off cannot be bought at all.
+    const mismatched =
+      (product.variants.length > 0 && !variant) ||
+      (row.variantId !== undefined && !variant) ||
+      (variant !== null && !variant.isActive);
+
+    const available = variant ? variant.stock : product.stock;
+    const quantity = mismatched ? 0 : Math.min(row.quantity, available);
+
+    const label = variant
+      ? labelFor(
+          product.options.map((option) => ({
+            id: option.id,
+            name: option.nameEn,
+            values: option.values.map((value) => ({ id: value.id, label: value.valueEn })),
+          })),
+          {
+            id: variant.id,
+            sku: variant.sku,
+            price: variant.price,
+            stock: variant.stock,
+            isActive: variant.isActive,
+            valueIds: variant.values.map((value) => value.valueId),
+          },
+        )
+      : "";
+
+    return {
+      product,
+      variant,
+      quantity,
+      price: variant?.price ?? product.price,
+      sku: variant?.sku ?? product.sku,
+      label,
+    };
   });
 
   if (lines.some((line) => line.quantity < 1)) return { ok: false, error: "unavailable" };
 
   // Tetri throughout: price is a whole number and quantity is an integer, so
   // this sum is exact and needs no rounding at all.
-  const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  const subtotal = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
   // Read here rather than trusted from the client, exactly like the prices
   // above: the cart lives in localStorage and every figure in it is editable.
   const settings = await getSettings();
@@ -151,15 +216,19 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
               : "cash_on_delivery",
             status: "pending",
             items: {
-              create: lines.map(({ product, quantity }) => ({
+              create: lines.map(({ product, variant, quantity, price, sku, label }) => ({
                 productId: product.id,
                 nameKa: product.nameKa,
                 nameEn: product.nameEn,
-                sku: product.sku,
+                sku,
                 image: product.image,
-                price: product.price,
+                price,
                 costPrice: product.costPrice,
                 quantity,
+                variantId: variant?.id ?? null,
+                // Snapshotted like the name and the price beside it: a variant
+                // renamed or withdrawn next year must not rewrite this order.
+                variantLabel: label,
               })),
             },
             // Opens the order's timeline; the dashboard appends to it on every
@@ -182,11 +251,23 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           },
         });
 
-        for (const { product, quantity } of lines) {
-          // Conditional decrement: the `gte` guard is evaluated by the database
-          // as part of the write, so two shoppers racing for the last unit
-          // cannot both succeed. A plain `update` would read-then-write and let
-          // both through, driving stock negative.
+        for (const { product, variant, quantity, label } of lines) {
+          /* Conditional decrement: the `gte` guard is evaluated by the database
+             as part of the write, so two shoppers racing for the last unit
+             cannot both succeed. A plain `update` would read-then-write and let
+             both through, driving stock negative.
+             
+             For a variant it is the variant's own figure that is guarded — the
+             product's is a sum, and a sum being large enough says nothing about
+             whether the medium red one is. */
+          if (variant) {
+            const took = await tx.productVariant.updateMany({
+              where: { id: variant.id, stock: { gte: quantity } },
+              data: { stock: { decrement: quantity } },
+            });
+            if (took.count === 0) throw new OutOfStockError();
+          }
+
           const claimed = await tx.product.updateMany({
             where: { id: product.id, stock: { gte: quantity } },
             data: { stock: { decrement: quantity } },
@@ -226,6 +307,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
               reason: "sale",
               balance: updated.stock,
               orderId: created.id,
+              // The ledger is per product, so which combination left the shelf
+              // is written here rather than given a column of its own.
+              note: label,
             },
           });
         }
@@ -252,11 +336,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         to: input.email?.trim() ?? "",
         number: order.number,
         total,
-        items: lines.map(({ product, quantity }) => ({
-          nameKa: product.nameKa,
-          nameEn: product.nameEn,
+        items: lines.map(({ product, quantity, price, label }) => ({
+          // The combination belongs in the name here: an email listing "T-shirt
+          // ×2" when two different ones were bought is a support call.
+          nameKa: label ? `${product.nameKa} · ${label}` : product.nameKa,
+          nameEn: label ? `${product.nameEn} · ${label}` : product.nameEn,
           quantity,
-          price: product.price,
+          price,
         })),
         locale: await getLocale(),
       });

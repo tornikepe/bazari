@@ -133,6 +133,11 @@ export default async function AdminOrderDetailPage({
                   <p className="clamp-2-xs text-xs leading-snug font-medium text-ink-800">
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </p>
+                  {/* The snapshot, not a lookup: a combination withdrawn next
+                      year must not blank out what this order says was sold. */}
+                  {item.variantLabel && (
+                    <p className="mt-0.5 text-xs text-ink-500">{item.variantLabel}</p>
+                  )}
                   <p className="mt-0.5 font-mono text-xs text-ink-400">{item.sku}</p>
                   <p className="mt-0.5 text-xs text-ink-400">
                     {item.quantity} × {formatPrice(item.price, locale)}

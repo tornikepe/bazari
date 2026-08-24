@@ -91,6 +91,9 @@ export default async function OrderConfirmationPage({
                   <p className="clamp-2 text-sm leading-snug font-medium text-ink-800">
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </p>
+                  {item.variantLabel && (
+                    <p className="mt-0.5 text-xs text-ink-500">{item.variantLabel}</p>
+                  )}
                   <p className="mt-0.5 text-xs text-ink-400">
                     {item.quantity} × {formatPrice(item.price, locale)}
                   </p>

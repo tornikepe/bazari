@@ -918,6 +918,10 @@ you own, and never in a fork.
 
 ## Notes and known limits
 
+- **Nothing in the seeded catalogue has variants.** The machinery is there — questions, answers,
+  generated combinations, stock and price per combination — but every seeded product is sold in one
+  form, so the product page looks exactly as it did. Add a question on any product in the dashboard
+  and the picker appears.
 - **Product images.** All seeded products share `public/products/placeholder.svg`. Set a real
   image URL per product in the dashboard. The placeholder is deliberately transparent so it takes
   the card's own background and works in both themes; a real photograph on a white studio ground

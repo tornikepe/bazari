@@ -98,44 +98,111 @@ model Category {
 /// Neither is acceptable for deciding what a card is charged, so every amount
 /// in this schema is an integer and only the display layer divides by 100.
 model Product {
-  id            String          @id @default(cuid())
-  slug          String          @unique
+  id            String           @id @default(cuid())
+  slug          String           @unique
   nameKa        String
   nameEn        String
-  descriptionKa String          @default("")
-  descriptionEn String          @default("")
-  sku           String          @unique
+  descriptionKa String           @default("")
+  descriptionEn String           @default("")
+  sku           String           @unique
   price         Int
   oldPrice      Int?
   /// What the shop paid. Drives the margin figures in the dashboard.
-  costPrice     Int             @default(0)
-  stock         Int             @default(0)
+  costPrice     Int              @default(0)
+  stock         Int              @default(0)
   /// Alert threshold — below this the dashboard flags the product.
-  lowStockAt    Int             @default(10)
-  image         String          @default("/products/placeholder.svg")
+  lowStockAt    Int              @default(10)
+  image         String           @default("/products/placeholder.svg")
   /// Extra photos, in the order they are shown. `image` stays the first one —
   /// the card, the search result, the order line and the Open Graph tag all
   /// want exactly one photo, and only the product page wants the rest.
-  images        String[]        @default([])
+  images        String[]         @default([])
   /// Specifications, as an ordered list of `{labelKa,labelEn,valueKa,valueEn}`.
   /// A column rather than a table: they belong to exactly one product, are
   /// never queried on their own and never joined to. The order is the array's.
-  specs         Json            @default("[]")
-  brand         String          @default("")
-  shippingDays  Int             @default(14)
-  isFeatured    Boolean         @default(false)
-  isActive      Boolean         @default(true)
+  specs         Json             @default("[]")
+  brand         String           @default("")
+  shippingDays  Int              @default(14)
+  isFeatured    Boolean          @default(false)
+  isActive      Boolean          @default(true)
   categoryId    String
-  category      Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category      Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
   stockMoves    StockMovement[]
   stockAlerts   StockAlert[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  options       ProductOption[]
+  variants      ProductVariant[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@index([categoryId])
   @@index([isActive])
   @@index([createdAt])
+}
+
+/// A question a shopper is asked about a product — "Size", "Colour".
+///
+/// Separate from the thing they end up buying. A combination has its own
+/// barcode and its own pile in the stockroom; an option is a question. Folding
+/// the two together into one row with a text label would make "show me every
+/// red one" a string search.
+model ProductOption {
+  id        String               @id @default(cuid())
+  productId String
+  product   Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  nameKa    String
+  nameEn    String
+  sortOrder Int                  @default(0)
+  values    ProductOptionValue[]
+
+  @@index([productId])
+}
+
+/// One answer to that question — "M", "Red".
+model ProductOptionValue {
+  id        String         @id @default(cuid())
+  optionId  String
+  option    ProductOption  @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  valueKa   String
+  valueEn   String
+  sortOrder Int            @default(0)
+  variants  VariantValue[]
+
+  @@index([optionId])
+}
+
+/// One buyable combination: its own SKU, its own stock, its own price.
+///
+/// Generated from the options rather than typed in one by one — three sizes
+/// and two colours is six rows, and nobody should have to enter six rows to
+/// say "six".
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku       String  @unique
+  /// Tetri. Null means "the product's price", which is not the same as zero
+  /// and is why this is nullable.
+  price     Int?
+  stock     Int     @default(0)
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  values     VariantValue[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+/// Which values make up which combination.
+model VariantValue {
+  variantId String
+  valueId   String
+  variant   ProductVariant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  value     ProductOptionValue @relation(fields: [valueId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, valueId])
+  @@index([valueId])
 }
 
 /// Somebody waiting for a product to come back.
@@ -277,6 +344,13 @@ model OrderItem {
   /// product's cost is later updated.
   costPrice Int      @default(0)
   quantity  Int
+
+  /// Which combination, while it still exists.
+  variantId    String?
+  variant      ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  /// And what it was called, snapshotted like the name and the price beside
+  /// it: a variant renamed or deleted next year must not rewrite an old order.
+  variantLabel String          @default("")
 
   @@index([orderId])
 }

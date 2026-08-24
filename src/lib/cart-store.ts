@@ -17,7 +17,28 @@ export type CartItem = {
   price: number;
   stock: number;
   quantity: number;
+  /**
+   * Which combination, for a product sold in more than one form.
+   *
+   * Absent for everything else, which is most things — a product with no
+   * options has no variants, and a cart line for it is exactly the shape it
+   * was before any of this existed.
+   */
+  variantId?: string;
+  /** What that combination is called — "M · Red" — snapshotted for the line. */
+  variantLabel?: string;
 };
+
+/**
+ * What makes two lines the same line.
+ *
+ * The product *and* the combination. A cart holding one red medium and one
+ * blue medium is holding two things, and merging them on the product id alone
+ * would quietly deliver two of whichever was added second.
+ */
+export function lineKey(item: { productId: string; variantId?: string }): string {
+  return item.variantId ? `${item.productId}:${item.variantId}` : item.productId;
+}
 
 // v2: prices moved from lari to tetri. A v1 cart read under the new rules
 // would price a ₾149 item at ₾1.49, so the key is bumped rather than migrated
@@ -104,7 +125,8 @@ export function getServerSnapshot() {
 
 export function addItem(item: Omit<CartItem, "quantity">, quantity = 1) {
   const cap = Math.max(1, item.stock);
-  const existing = items.find((entry) => entry.productId === item.productId);
+  const key = lineKey(item);
+  const existing = items.find((entry) => lineKey(entry) === key);
 
   if (!existing) {
     commit([...items, { ...item, quantity: Math.min(quantity, cap) }]);
@@ -113,25 +135,25 @@ export function addItem(item: Omit<CartItem, "quantity">, quantity = 1) {
 
   commit(
     items.map((entry) =>
-      entry.productId === item.productId
+      lineKey(entry) === key
         ? { ...entry, ...item, quantity: Math.min(entry.quantity + quantity, cap) }
         : entry,
     ),
   );
 }
 
-export function setItemQuantity(productId: string, quantity: number) {
+export function setItemQuantity(key: string, quantity: number) {
   commit(
     items.flatMap((entry) => {
-      if (entry.productId !== productId) return [entry];
+      if (lineKey(entry) !== key) return [entry];
       if (quantity < 1) return [];
       return [{ ...entry, quantity: Math.min(quantity, Math.max(1, entry.stock)) }];
     }),
   );
 }
 
-export function removeItem(productId: string) {
-  commit(items.filter((entry) => entry.productId !== productId));
+export function removeItem(key: string) {
+  commit(items.filter((entry) => lineKey(entry) !== key));
 }
 
 export function clearCart() {

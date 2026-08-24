@@ -22,7 +22,6 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
 | 🟠 | Order invoice | A PDF on the confirmation email. Printing works; the attachment needs a renderer, and a sending domain — blocked on **A3** |
-| 🟡 | Product variants | Size and colour. A schema change, and the largest item here |
 | 🟡 | Search | Postgres full-text with Georgian stemming, in place of `contains` |
 | 🟡 | Product images | Ordering, alt text per language, generated sizes |
 | 🟡 | Delivery options | Courier against pickup, zones, per-zone pricing |

@@ -139,7 +139,11 @@ export function CheckoutForm({
     try {
       const result = await placeOrder({
         ...form,
-        items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+        items: items.map((item) => ({
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: item.quantity,
+        })),
         couponCode: coupon?.ok ? coupon.code : undefined,
         paymentMethod: payment,
       });
@@ -404,6 +408,11 @@ export function CheckoutForm({
 
                 <span className="clamp-2-xs flex-1 text-xs leading-snug text-ink-700">
                   {locale === "ka" ? item.nameKa : item.nameEn}
+                  {/* Two lines of the same product differ only here, so a
+                      summary that left it out would show the same row twice. */}
+                  {item.variantLabel && (
+                    <span className="block text-ink-400">{item.variantLabel}</span>
+                  )}
                 </span>
 
                 <span className="shrink-0 text-xs font-semibold text-ink-900">
