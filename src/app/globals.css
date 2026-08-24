@@ -1703,6 +1703,11 @@
   nav,
   button,
   .btn,
+  /* Controls, not content. A dropdown prints as a box with one of its options
+     showing and a chevron nobody can press; the order's status is already in
+     the badge beside it, which is the part worth keeping. */
+  select,
+  input[type="checkbox"],
   [role="menu"],
   .marquee,
   .hero-orb,

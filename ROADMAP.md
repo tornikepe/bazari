@@ -19,7 +19,6 @@ Only what is left. ⛔ marks work blocked on something that cannot be produced h
 ## 2. Design
 
 - Saved views, inline editing, and bulk actions for orders and customers
-- A print stylesheet for the order page
 
 ---
 

@@ -14,6 +14,8 @@ import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyOrdersArt, NoResultsArt } from "@/components/ui/illustrations";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { BulkOrders } from "@/components/admin/BulkOrders";
+import { WriteOnly } from "@/components/admin/StaffRoleProvider";
 
 const SORTS = ["newest", "oldest", "total-desc", "total-asc"] as const;
 
@@ -203,11 +205,26 @@ export default async function AdminOrdersPage({
             })}
           </p>
 
+          <BulkOrders ids={orders.map((order) => order.id)}>
           {/* Cards below lg — an order row has too many columns for a phone. */}
           <ul className="mt-3 flex flex-col gap-2 lg:hidden">
             {orders.map((order) => (
               <li key={order.id} className="card card-pad-tight">
                 <div className="flex items-start justify-between gap-3">
+                  <WriteOnly>
+                    <label className="flex shrink-0 items-start pt-0.5">
+                      <span className="sr-only">
+                        {fill(t.admin.bulkSelectOrder, { number: order.number })}
+                      </span>
+                      <input
+                        type="checkbox"
+                        name="order-id"
+                        value={order.id}
+                        className="h-4 w-4 accent-brand-600"
+                      />
+                    </label>
+                  </WriteOnly>
+
                   <div className="min-w-0">
                     <Link
                       href={`/dashboard/orders/${order.id}`}
@@ -244,6 +261,14 @@ export default async function AdminOrdersPage({
             <table className="table">
               <thead>
                 <tr>
+                  {/* No header checkbox: select-all lives above the table so it
+                      exists at every width, and a column heading made of one
+                      control reads as a column of data. */}
+                  <WriteOnly>
+                    <th className="w-10">
+                      <span className="sr-only">{t.admin.bulkSelectAll}</span>
+                    </th>
+                  </WriteOnly>
                   <th>{t.admin.orderNumber}</th>
                   <th>{t.admin.customer}</th>
                   <th>{t.admin.placedAt}</th>
@@ -257,6 +282,22 @@ export default async function AdminOrdersPage({
               <tbody>
                 {orders.map((order) => (
                   <tr key={order.id}>
+                    <WriteOnly>
+                      <td>
+                        <label className="flex items-center">
+                          <span className="sr-only">
+                            {fill(t.admin.bulkSelectOrder, { number: order.number })}
+                          </span>
+                          <input
+                            type="checkbox"
+                            name="order-id"
+                            value={order.id}
+                            className="h-4 w-4 accent-brand-600"
+                          />
+                        </label>
+                      </td>
+                    </WriteOnly>
+
                     <td>
                       <Link
                         href={`/dashboard/orders/${order.id}`}
@@ -304,6 +345,7 @@ export default async function AdminOrdersPage({
               </tbody>
             </table>
           </div>
+          </BulkOrders>
 
           <AdminPagination
             basePath="/dashboard/orders"

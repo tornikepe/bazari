@@ -7,7 +7,7 @@ import { sendOrderShippedEmail } from "@/lib/order-emails";
 import { getLocale } from "@/lib/locale";
 import { slugify } from "@/lib/format";
 import { generateSku } from "@/lib/sku";
-import { isOrderStatus } from "@/lib/order-status";
+import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { MAX_GALLERY } from "@/lib/image-upload";
 import { specsFromForm } from "@/lib/product-specs";
 import { forgetUnusedImages, photosOf } from "@/lib/product-images";
@@ -353,14 +353,23 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
 /* Orders                                                              */
 /* ------------------------------------------------------------------ */
 
-export async function updateOrderStatus(id: string, status: string): Promise<ActionResult> {
-  const admin = await getCurrentAdmin();
-  if (!admin) return { ok: false, error: "unauthorized" };
-
-  // Narrows the incoming string to the schema enum — this is a Server Action,
-  // so `status` can be anything a POST body contains.
-  if (!isOrderStatus(status)) return { ok: false, error: "invalid" };
-
+/**
+ * Moves one order, and tells the caller whether it actually moved.
+ *
+ * Split out of `updateOrderStatus` so that changing twelve orders at once is
+ * the same operation twelve times rather than a second implementation of it.
+ * That distinction is not cosmetic: cancelling an order returns its stock to
+ * the catalogue and writes a ledger row for each line, and a bulk path that
+ * only wrote the new status would have quietly sold that stock twice.
+ *
+ * Returns `"unchanged"` for an order already in the asked-for status, so a
+ * selection of twenty of which three move reports three.
+ */
+async function applyOrderStatus(
+  actor: string,
+  id: string,
+  status: OrderStatus,
+): Promise<"changed" | "unchanged" | "failed"> {
   const order = await prisma.order.findUnique({
     where: { id },
     select: {
@@ -373,8 +382,8 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
       },
     },
   });
-  if (!order) return { ok: false, error: "failed" };
-  if (order.status === status) return { ok: true };
+  if (!order) return "failed";
+  if (order.status === status) return "unchanged";
 
   const now = new Date();
 
@@ -393,7 +402,7 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
       });
 
       await tx.orderEvent.create({
-        data: { orderId: id, status, actor: admin.email },
+        data: { orderId: id, status, actor },
       });
 
       // Cancelling releases the reserved stock back to the catalogue, with a
@@ -422,13 +431,13 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
       }
     });
   } catch (error) {
-    console.error("updateOrderStatus failed", error);
-    return { ok: false, error: "failed" };
+    console.error("applyOrderStatus failed", error);
+    return "failed";
   }
 
   // Sent after the transaction commits, and only on the actual transition —
-  // re-saving an order that is already `shipped` returns early above, so the
-  // customer cannot be mailed the same notice twice.
+  // an order already `shipped` returned above, so the customer cannot be
+  // mailed the same notice twice.
   if (status === "shipped") {
     await sendOrderShippedEmail({
       to: order.email,
@@ -444,8 +453,67 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
     });
   }
 
+  return "changed";
+}
+
+export async function updateOrderStatus(id: string, status: string): Promise<ActionResult> {
+  const admin = await getCurrentAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
+
+  // Narrows the incoming string to the schema enum — this is a Server Action,
+  // so `status` can be anything a POST body contains.
+  if (!isOrderStatus(status)) return { ok: false, error: "invalid" };
+
+  const outcome = await applyOrderStatus(admin.email, id, status);
+  if (outcome === "failed") return { ok: false, error: "failed" };
+
   revalidatePath("/dashboard/orders");
   revalidatePath(`/dashboard/orders/${id}`);
   revalidatePath("/dashboard");
   return { ok: true };
+}
+
+/**
+ * The same move, applied to a selection.
+ *
+ * Sequential rather than in parallel, and deliberately: each one is a
+ * transaction that can touch the same product rows as the next — two
+ * cancellations of orders holding the same product, run at once, are two
+ * increments racing for one stock figure. Twelve orders at a few hundred
+ * milliseconds each is a wait; a wrong stock count is a wrong shop.
+ */
+export async function bulkOrders(
+  status: string,
+  ids: string[],
+): Promise<ActionResult & { count?: number }> {
+  const admin = await getCurrentAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
+
+  if (!isOrderStatus(status)) return { ok: false, error: "invalid" };
+
+  /* Deduplicated and capped, like the product path: the ids arrive from a
+     form, so a crafted post can carry any number of them. */
+  const unique = [...new Set(ids.filter((id) => typeof id === "string" && id.length > 0))].slice(
+    0,
+    100,
+  );
+  if (unique.length === 0) return { ok: false, error: "invalid" };
+
+  let changed = 0;
+  let failed = 0;
+
+  for (const id of unique) {
+    const outcome = await applyOrderStatus(admin.email, id, status);
+    if (outcome === "changed") changed += 1;
+    if (outcome === "failed") failed += 1;
+    revalidatePath(`/dashboard/orders/${id}`);
+  }
+
+  revalidatePath("/dashboard/orders");
+  revalidatePath("/dashboard");
+
+  // One failure out of twelve is still a failure worth saying so, but the
+  // eleven that moved have moved and the reader needs to know that too.
+  if (failed > 0 && changed === 0) return { ok: false, error: "failed" };
+  return { ok: true, count: changed };
 }
