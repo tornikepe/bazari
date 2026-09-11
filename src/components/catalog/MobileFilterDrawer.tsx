@@ -50,7 +50,10 @@ export function MobileFilterDrawer({
           side="bottom"
           closeLabel={t.nav.close}
           label={t.catalog.filters}
-          className="max-h-[85vh] border-t border-line bg-surface"
+          // `dvh`, not `vh`: on iOS Safari `vh` is the viewport with the address
+          // bar hidden, so a sheet sized in it hangs off the bottom of the screen
+          // whenever the bar is showing — which is whenever it was just opened.
+          className="max-h-[85dvh] border-t border-line bg-surface"
         >
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <h2 className="text-base font-bold text-ink-900">{t.catalog.filters}</h2>
@@ -64,7 +67,9 @@ export function MobileFilterDrawer({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 pb-4">
+            {/* `overscroll-contain`: reaching the end of the filters must not
+                start scrolling the catalogue underneath the sheet. */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
               <FilterSidebar
                 filters={filters}
                 categories={categories}

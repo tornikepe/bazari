@@ -315,7 +315,7 @@ export function HeaderBar({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4">
               <p className="mb-2 px-1 text-xs font-bold tracking-wider text-ink-400 uppercase">
                 {t.nav.categories}
               </p>

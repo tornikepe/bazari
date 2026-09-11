@@ -99,6 +99,29 @@ export default defineConfig({
       // `keyboard.spec.ts`.
       grepInvert: /@tab-order/,
     },
+
+    /**
+     * Gecko, the third engine, on the same engine-sensitive slice as WebKit.
+     *
+     * Not because many shoppers use it — because it is the one engine with
+     * nothing in common with the other two. Chromium and WebKit share a
+     * lineage and, often, a bug; Firefox's layout, focus and form handling
+     * were written separately, and a test that passes in all three has been
+     * checked against three opinions rather than one and a half.
+     */
+    {
+      name: "firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        // On macOS Firefox follows the system's "full keyboard access"
+        // setting, which is off by default, and keeps links and buttons out
+        // of the Tab order exactly as Safari does. Unlike Safari it can be
+        // told otherwise: 7 is "everything", the Windows and Linux default —
+        // so the tab-order specs run here rather than being skipped.
+        launchOptions: { firefoxUserPrefs: { "accessibility.tabfocus": 7 } },
+      },
+      grep: /@engine/,
+    },
   ],
 
   webServer: {

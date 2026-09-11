@@ -142,7 +142,7 @@ export default async function AdminOrdersPage({
             {tab.label}
             <span
               className={`text-xs ${
-                (status ?? "") === tab.value ? "text-ink-300" : "text-ink-400"
+                (status ?? "") === tab.value ? "text-panel-muted" : "text-ink-400"
               }`}
             >
               {tab.count}

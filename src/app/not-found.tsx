@@ -41,7 +41,7 @@ export default async function NotFound() {
               <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
                 {t.common.notFoundText}
               </p>
-              <p className="mt-2 font-mono text-xs text-ink-300">404</p>
+              <p className="mt-2 font-mono text-xs text-ink-400">404</p>
             </div>
 
             {/* A dead end is a bad empty state — most people arriving here

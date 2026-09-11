@@ -39,7 +39,7 @@ export function AdminPagination({
           {labels.previous}
         </Link>
       ) : (
-        <span className="btn btn-outline btn-sm pointer-events-none opacity-45">
+        <span aria-disabled="true" className="btn btn-outline btn-sm pointer-events-none opacity-45">
           <ChevronLeftIcon size={15} />
           {labels.previous}
         </span>
@@ -55,7 +55,7 @@ export function AdminPagination({
           <ChevronRightIcon size={15} />
         </Link>
       ) : (
-        <span className="btn btn-outline btn-sm pointer-events-none opacity-45">
+        <span aria-disabled="true" className="btn btn-outline btn-sm pointer-events-none opacity-45">
           {labels.next}
           <ChevronRightIcon size={15} />
         </span>

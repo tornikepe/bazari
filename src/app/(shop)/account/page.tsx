@@ -105,28 +105,32 @@ export default async function AccountPage({
           figures belong to each other, and the rule between them is the same
           one that separates everything else on this site. `gap-px` over a
           line-coloured background is what draws it — one border, not four. */}
+      {/* `dt` and `dd` sit directly in each group: a `<dl>` allows nothing
+          between a group's `div` and its terms, and the wrapper that used to
+          hold them read as a list with no items. The icon lives inside the
+          term instead, where decoration beside a label belongs. */}
       <dl className="mt-4 grid grid-cols-2 gap-px border border-line bg-line lg:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="flex items-center gap-3 bg-surface p-4">
-            {/* Hidden on a phone, where two cells share 390px: the icon and
-                its gap take 52 of the ~146px a cell has, and "₾27,892.00"
-                arrived as "₾27,892…". The label already says which figure this
-                is; the icon is decoration and goes first. */}
-            <span
-              aria-hidden="true"
-              className="hidden h-10 w-10 shrink-0 place-items-center bg-brand-50 text-brand-600 sm:grid"
-            >
-              <stat.icon size={18} />
-            </span>
-            <div className="min-w-0">
-              <dt className="truncate text-xs text-ink-500">{stat.label}</dt>
-              {/* `tabular-nums` so four figures in a row line up by digit — a
-                  strip of numbers that does not is the thing that makes a
-                  dashboard look homemade. */}
-              <dd className="truncate text-base font-extrabold tracking-tight text-ink-900 tabular-nums sm:text-lg">
-                {stat.value}
-              </dd>
-            </div>
+          <div key={stat.label} className="bg-surface p-4">
+            <dt className="flex items-center gap-3 text-xs text-ink-500">
+              {/* Hidden on a phone, where two cells share 390px: the icon and
+                  its gap take 52 of the ~146px a cell has, and "₾27,892.00"
+                  arrived as "₾27,892…". The label already says which figure
+                  this is; the icon is decoration and goes first. */}
+              <span
+                aria-hidden="true"
+                className="hidden h-10 w-10 shrink-0 place-items-center bg-brand-50 text-brand-600 sm:grid"
+              >
+                <stat.icon size={18} />
+              </span>
+              <span className="truncate">{stat.label}</span>
+            </dt>
+            {/* `tabular-nums` so four figures in a row line up by digit — a
+                strip of numbers that does not is the thing that makes a
+                dashboard look homemade. */}
+            <dd className="truncate text-base font-extrabold tracking-tight text-ink-900 tabular-nums sm:pl-[3.25rem] sm:text-lg">
+              {stat.value}
+            </dd>
           </div>
         ))}
       </dl>
@@ -173,7 +177,10 @@ export default async function AccountPage({
                     }`}
                   >
                     {value ? t.status[value] : t.account.orderFilterAll}
-                    <span className={active ? "text-ink-300" : "text-ink-400"}>
+                    {/* `panel-muted`, the token for quiet text on the dark
+                        panel in both themes — `ink-300` is a light grey in
+                        one theme and a near-panel grey in the other. */}
+                    <span className={active ? "text-panel-muted" : "text-ink-400"}>
                       {value ? countFor(value) : total}
                     </span>
                   </Link>

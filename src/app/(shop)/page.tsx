@@ -222,12 +222,16 @@ export default async function HomePage() {
       */}
       <section className="page-container pb-12 lg:pb-16">
         <div className="flex flex-col justify-between gap-6 bg-brand-solid px-6 py-10 text-brand-on-solid sm:flex-row sm:items-end sm:px-10">
+          {/* Full opacity throughout. White on the brand red clears AA by a
+              hair (4.6:1), and dimming a line to 80% put it under. Hierarchy
+              here is size and weight, not transparency — the same rule the
+              cube follows. */}
           <div>
-            <p className="label text-brand-on-solid opacity-80">{t.nav.deals}</p>
+            <p className="label text-brand-on-solid">{t.nav.deals}</p>
             <h2 className="mt-3 max-w-lg text-2xl leading-tight font-extrabold tracking-tight">
               {t.home.dealsTitle}
             </h2>
-            <p className="mt-2 max-w-md text-sm opacity-90">{t.home.dealsText}</p>
+            <p className="mt-2 max-w-md text-sm">{t.home.dealsText}</p>
           </div>
 
           <Link
