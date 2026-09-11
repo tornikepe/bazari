@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin, getCurrentUser } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
+import { getLocale } from "@/lib/locale";
+import { sendReturnUpdateEmail } from "@/lib/return-emails";
+import { audit } from "@/lib/audit";
 import { consume } from "@/lib/rate-limit";
 import {
   canMoveReturn,
@@ -145,6 +148,7 @@ export async function moveReturn(
     select: {
       status: true,
       orderId: true,
+      order: { select: { number: true, email: true } },
       items: {
         select: {
           quantity: true,
@@ -206,6 +210,26 @@ export async function moveReturn(
     console.error("moveReturn failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: "return.move",
+    entityId: id,
+    label: request.order.number,
+    changes: { status: [request.status, status] },
+  });
+
+  // After the commit, and never into the failure path: the answer is
+  // recorded either way, and a mail outage must not turn it into an error.
+  // Written in the language the staff member is using — the shopper's own
+  // is not recorded on the order.
+  await sendReturnUpdateEmail({
+    to: request.order.email,
+    number: request.order.number,
+    status: status as Exclude<ReturnStatus, "requested">,
+    staffNote: note,
+    locale: await getLocale(),
+  }).catch((error) => console.error("sendReturnUpdateEmail failed", error));
 
   revalidatePath("/dashboard/returns");
   revalidatePath(`/dashboard/orders/${request.orderId}`);

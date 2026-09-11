@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { audit } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth";
 import { generateSku } from "@/lib/sku";
 import { combinations, totalStock, type Option } from "@/lib/variants";
@@ -60,7 +61,8 @@ export async function saveVariants(
   options: OptionInput[],
   variants: VariantInput[],
 ): Promise<VariantResult> {
-  if (!(await getCurrentAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await getCurrentAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   if (!Array.isArray(options) || options.length > MAX_OPTIONS) return { ok: false, error: "invalid" };
 
@@ -87,7 +89,7 @@ export async function saveVariants(
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { id: true, category: { select: { slug: true } } },
+    select: { id: true, nameEn: true, nameKa: true, category: { select: { slug: true } } },
   });
   if (!product) return { ok: false, error: "invalid" };
 
@@ -282,6 +284,14 @@ export async function saveVariants(
     console.error("saveVariants failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: "product.variants",
+    entityId: productId,
+    label: product.nameEn || product.nameKa,
+    changes: { options: [null, clean.length], variants: [null, variants.length] },
+  });
 
   revalidatePath("/catalog");
   revalidatePath(`/dashboard/products/${productId}`);

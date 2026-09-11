@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { audit, diff } from "@/lib/audit";
 
 /**
  * Creating and retiring discount codes.
@@ -24,7 +25,8 @@ function requireAdmin() {
 }
 
 export async function saveCoupon(formData: FormData): Promise<CouponResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   const id = String(formData.get("id") ?? "").trim();
 
@@ -63,9 +65,25 @@ export async function saveCoupon(formData: FormData): Promise<CouponResult> {
     return { ok: false, error: "invalid" };
   }
 
+  const before = id
+    ? await prisma.coupon.findUnique({
+        where: { id },
+        select: {
+          code: true,
+          percentOff: true,
+          amountOff: true,
+          minOrderTotal: true,
+          maxUses: true,
+          expiresAt: true,
+          isActive: true,
+        },
+      })
+    : null;
+
+  let createdId: string | null = null;
   try {
     if (id) await prisma.coupon.update({ where: { id }, data });
-    else await prisma.coupon.create({ data });
+    else createdId = (await prisma.coupon.create({ data, select: { id: true } })).id;
   } catch (error) {
     // The code is the only unique column, so a clash is the likely cause and
     // the one the reader can do something about.
@@ -75,6 +93,24 @@ export async function saveCoupon(formData: FormData): Promise<CouponResult> {
     console.error("saveCoupon failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: before ? "coupon.update" : "coupon.create",
+    entityId: id || createdId || "",
+    label: code,
+    changes: before
+      ? diff(before, data, [
+          "code",
+          "percentOff",
+          "amountOff",
+          "minOrderTotal",
+          "maxUses",
+          "expiresAt",
+          "isActive",
+        ])
+      : {},
+  });
 
   revalidatePath("/dashboard/coupons");
   return { ok: true };
@@ -89,14 +125,28 @@ export async function saveCoupon(formData: FormData): Promise<CouponResult> {
  * and leaves the history readable.
  */
 export async function setCouponActive(id: string, isActive: boolean): Promise<CouponResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
+  let coupon: { code: string; isActive: boolean } | null = null;
   try {
-    await prisma.coupon.update({ where: { id }, data: { isActive } });
+    coupon = await prisma.coupon.update({
+      where: { id },
+      data: { isActive },
+      select: { code: true, isActive: true },
+    });
   } catch (error) {
     console.error("setCouponActive failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: "coupon.active",
+    entityId: id,
+    label: coupon.code,
+    changes: { isActive: [!isActive, isActive] },
+  });
 
   revalidatePath("/dashboard/coupons");
   return { ok: true };

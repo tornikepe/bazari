@@ -13,6 +13,7 @@ import { forgetUnusedImages, photosOf } from "@/lib/product-images";
 import { DEFAULT_PHOTO, photosFromForm } from "@/lib/product-photos";
 import { releaseStockAlerts } from "@/lib/stock-emails";
 import type { Prisma } from "@/generated/prisma/client";
+import { audit, diff } from "@/lib/audit";
 
 // The placeholder every product without a photo of its own shares.
 const DEFAULT_IMAGE = DEFAULT_PHOTO;
@@ -29,9 +30,26 @@ export type ActionResult =
  * rather than relying on the panel layout's redirect.
  */
 async function requireAdmin() {
-  const admin = await getCurrentAdmin();
-  return admin !== null;
+  return getCurrentAdmin();
 }
+
+/** The columns of a product the audit log reports when they move. */
+const PRODUCT_AUDIT_FIELDS = [
+  "nameKa",
+  "nameEn",
+  "slug",
+  "sku",
+  "price",
+  "oldPrice",
+  "costPrice",
+  "stock",
+  "lowStockAt",
+  "brand",
+  "shippingDays",
+  "isFeatured",
+  "isActive",
+  "categoryId",
+] as const;
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -215,7 +233,8 @@ async function announceIfBack(productId: string, before: number, after: number) 
 }
 
 export async function saveProduct(id: string | null, formData: FormData): Promise<ActionResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   const parsed = await readProductForm(formData, id ?? undefined);
   if (!parsed.ok) return { ok: false, error: parsed.error };
@@ -227,9 +246,29 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
   const before = id
     ? await prisma.product.findUnique({
         where: { id },
-        select: { image: true, photos: true, stock: true },
+        select: {
+          image: true,
+          photos: true,
+          stock: true,
+          // The rest is for the audit log: what the row said before this save.
+          nameKa: true,
+          nameEn: true,
+          slug: true,
+          sku: true,
+          price: true,
+          oldPrice: true,
+          costPrice: true,
+          lowStockAt: true,
+          brand: true,
+          shippingDays: true,
+          isFeatured: true,
+          isActive: true,
+          categoryId: true,
+        },
       })
     : null;
+
+  let createdId: string | null = null;
 
   try {
     if (id) {
@@ -249,12 +288,30 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
 
       if (before) await announceIfBack(id, before.stock, after);
     } else {
-      await prisma.product.create({ data: parsed.data });
+      createdId = (await prisma.product.create({ data: parsed.data, select: { id: true } })).id;
     }
   } catch (error) {
     console.error("saveProduct failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: before ? "product.update" : "product.create",
+    entityId: id ?? createdId ?? "",
+    label: parsed.data.nameEn || parsed.data.nameKa,
+    // Narrowed to the audited columns: `diff` compares by value, and the
+    // create-input carries `photos` and `specs` in shapes the row does not.
+    changes: before
+      ? diff(
+          before,
+          Object.fromEntries(
+            PRODUCT_AUDIT_FIELDS.map((field) => [field, parsed.data[field]]),
+          ) as Partial<typeof before>,
+          PRODUCT_AUDIT_FIELDS,
+        )
+      : {},
+  });
 
   if (before) {
     const kept = new Set(photosOf(parsed.data as { image: string; photos: unknown }));
@@ -288,7 +345,8 @@ export async function setProductNumber(
   field: "price" | "stock",
   value: number,
 ): Promise<ActionResult & { value?: number }> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
   if (field !== "price" && field !== "stock") return { ok: false, error: "invalid" };
   if (!Number.isFinite(value) || value < 0) return { ok: false, error: "invalid" };
 
@@ -296,7 +354,10 @@ export async function setProductNumber(
   // A product with no price is not a product; the form refuses it too.
   if (field === "price" && stored <= 0) return { ok: false, error: "invalid" };
 
-  const before = await prisma.product.findUnique({ where: { id }, select: { stock: true } });
+  const before = await prisma.product.findUnique({
+    where: { id },
+    select: { stock: true, price: true, nameEn: true, nameKa: true },
+  });
   if (!before) return { ok: false, error: "invalid" };
 
   try {
@@ -312,6 +373,14 @@ export async function setProductNumber(
     console.error("setProductNumber failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: field === "stock" ? "product.stock" : "product.update",
+    entityId: id,
+    label: before.nameEn || before.nameKa,
+    changes: { [field]: [before[field], stored] },
+  });
 
   revalidateStorefront();
   return { ok: true, value: stored };
@@ -335,7 +404,8 @@ export async function restockProduct(
   quantity: number,
   note: string,
 ): Promise<ActionResult & { balance?: number }> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   const amount = Math.floor(Number(quantity));
   if (!Number.isFinite(amount) || amount < 1) return { ok: false, error: "invalid" };
@@ -365,6 +435,18 @@ export async function restockProduct(
     // commit, and only on the rise from zero: three to fifteen was never gone.
     await announceIfBack(id, balance.before, balance.after);
 
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { nameEn: true, nameKa: true },
+    });
+    await audit({
+      actor: admin.email,
+      action: "product.stock",
+      entityId: id,
+      label: product?.nameEn || product?.nameKa || "",
+      changes: { stock: [balance.before, balance.after] },
+    });
+
     revalidateStorefront();
     return { ok: true, balance: balance.after };
   } catch (error) {
@@ -374,11 +456,12 @@ export async function restockProduct(
 }
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   const doomed = await prisma.product.findUnique({
     where: { id },
-    select: { image: true, photos: true },
+    select: { image: true, photos: true, nameEn: true, nameKa: true, sku: true },
   });
 
   try {
@@ -392,6 +475,13 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
     await forgetUnusedImages(photosOf(doomed)).catch((error) =>
       console.error("forgetUnusedImages failed", error),
     );
+    await audit({
+      actor: admin.email,
+      action: "product.delete",
+      entityId: id,
+      label: doomed.nameEn || doomed.nameKa,
+      changes: { sku: [doomed.sku, null] },
+    });
   }
 
   revalidateStorefront();
@@ -418,7 +508,8 @@ export async function bulkProducts(
   action: BulkAction,
   ids: string[],
 ): Promise<ActionResult & { count?: number }> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   /* Deduplicated and capped. The ids arrive from a form, so a crafted post can
      carry any number of them; the cap is the page size, which is the most a
@@ -435,7 +526,7 @@ export async function bulkProducts(
          them, and the bytes behind those photos would be unreachable. */
       const doomed = await prisma.product.findMany({
         where: { id: { in: unique } },
-        select: { image: true, photos: true },
+        select: { id: true, image: true, photos: true, nameEn: true, nameKa: true },
       });
 
       const { count } = await prisma.product.deleteMany({ where: { id: { in: unique } } });
@@ -444,14 +535,42 @@ export async function bulkProducts(
         console.error("forgetUnusedImages failed", error),
       );
 
+      // One row per product rather than one for the batch: the question the
+      // log answers is "what happened to *this* product", and a batch row
+      // naming twelve ids answers it for none of them.
+      for (const product of doomed) {
+        await audit({
+          actor: admin.email,
+          action: "product.delete",
+          entityId: product.id,
+          label: product.nameEn || product.nameKa,
+        });
+      }
+
       revalidateStorefront();
       return { ok: true, count };
     }
 
+    const isActive = action === "publish";
+    const moving = await prisma.product.findMany({
+      where: { id: { in: unique }, isActive: !isActive },
+      select: { id: true, nameEn: true, nameKa: true },
+    });
+
     const { count } = await prisma.product.updateMany({
       where: { id: { in: unique } },
-      data: { isActive: action === "publish" },
+      data: { isActive },
     });
+
+    for (const product of moving) {
+      await audit({
+        actor: admin.email,
+        action: "product.active",
+        entityId: product.id,
+        label: product.nameEn || product.nameKa,
+        changes: { isActive: [!isActive, isActive] },
+      });
+    }
 
     revalidateStorefront();
     return { ok: true, count };
@@ -462,12 +581,24 @@ export async function bulkProducts(
 }
 
 export async function toggleProductActive(id: string): Promise<ActionResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
-  const product = await prisma.product.findUnique({ where: { id }, select: { isActive: true } });
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { isActive: true, nameEn: true, nameKa: true },
+  });
   if (!product) return { ok: false, error: "failed" };
 
   await prisma.product.update({ where: { id }, data: { isActive: !product.isActive } });
+
+  await audit({
+    actor: admin.email,
+    action: "product.active",
+    entityId: id,
+    label: product.nameEn || product.nameKa,
+    changes: { isActive: [product.isActive, !product.isActive] },
+  });
 
   revalidateStorefront();
   return { ok: true };
@@ -478,7 +609,8 @@ export async function toggleProductActive(id: string): Promise<ActionResult> {
 /* ------------------------------------------------------------------ */
 
 export async function saveCategory(id: string | null, formData: FormData): Promise<ActionResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   const nameKa = text(formData, "nameKa");
   const nameEn = text(formData, "nameEn");
@@ -498,28 +630,50 @@ export async function saveCategory(id: string | null, formData: FormData): Promi
     sortOrder: Math.floor(number(formData, "sortOrder")),
   };
 
+  const before = id
+    ? await prisma.category.findUnique({
+        where: { id },
+        select: { slug: true, nameKa: true, nameEn: true, icon: true, sortOrder: true },
+      })
+    : null;
+
+  let createdId: string | null = null;
   try {
     if (id) {
       await prisma.category.update({ where: { id }, data });
     } else {
-      await prisma.category.create({ data });
+      createdId = (await prisma.category.create({ data, select: { id: true } })).id;
     }
   } catch (error) {
     console.error("saveCategory failed", error);
     return { ok: false, error: "failed" };
   }
 
+  await audit({
+    actor: admin.email,
+    action: before ? "category.update" : "category.create",
+    entityId: id ?? createdId ?? "",
+    label: data.nameEn,
+    changes: before ? diff(before, data, ["slug", "nameKa", "nameEn", "icon", "sortOrder"]) : {},
+  });
+
   revalidateStorefront();
   return { ok: true };
 }
 
 export async function deleteCategory(id: string): Promise<ActionResult> {
-  if (!(await requireAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   // The schema cascades, so this check is what stops a delete from silently
   // taking a category's products with it.
   const count = await prisma.product.count({ where: { categoryId: id } });
   if (count > 0) return { ok: false, error: "has-products" };
+
+  const doomed = await prisma.category.findUnique({
+    where: { id },
+    select: { nameEn: true, nameKa: true, slug: true },
+  });
 
   try {
     await prisma.category.delete({ where: { id } });
@@ -527,6 +681,14 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
     console.error("deleteCategory failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: "category.delete",
+    entityId: id,
+    label: doomed?.nameEn || doomed?.nameKa || "",
+    changes: doomed ? { slug: [doomed.slug, null] } : {},
+  });
 
   revalidateStorefront();
   return { ok: true };
@@ -648,6 +810,16 @@ async function applyOrderStatus(
     console.error("applyOrderStatus failed", error);
     return "failed";
   }
+
+  // The move, with a name on it. The order's own timeline records the same
+  // thing; the audit log is where it sits beside every other kind of change.
+  await audit({
+    actor,
+    action: "order.status",
+    entityId: id,
+    label: order.number,
+    changes: { status: [order.status, status] },
+  });
 
   // Sent after the transaction commits, and only on the actual transition —
   // an order already `shipped` returned above, so the customer cannot be

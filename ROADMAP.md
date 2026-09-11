@@ -25,7 +25,6 @@ done it for overflow boxes since iOS 13, and `-webkit-overflow-scrolling` is a n
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
 | 🟠 | Order invoice | A PDF attached to the confirmation email. Needs a renderer, and **A3** |
-| 🟠 | Return emails | Tell the shopper when the shop answers a request. Written into the row already; sending needs **A3** |
 | 🟢 | Reviews | Only if they are real |
 | 🟢 | Abandoned-cart email | Blocked on **A3** |
 
@@ -41,6 +40,9 @@ Done since the last cut:
   within the window (a setting, 14 days), picks the lines and a reason; the shop answers
   from **Dashboard → Returns** and the reply appears on the shopper's order page. Marking a
   return received puts the stock back through the ledger.
+- **Return emails.** The shopper is written to when the shop approves, rejects, receives or
+  refunds — with the shop's reply in the message. Like every other email here it goes to the
+  server log until **A3** gives it a sending domain.
 - **Wishlist on the account.** A signed-in shopper's hearts are written to the account and
   come back in any browser; the browser's own list is kept and merged on sign-in, and a
   removal survives a closed tab. The product page has its own heart now, beside the cart.
@@ -63,7 +65,6 @@ Firefox as a third engine on the engine-sensitive slice (`--project=firefox`).
 
 ## 4. Operations
 
-- An admin audit log: who changed which price, and when
 - Error tracking — Sentry with source maps. Blocked on **A8**
 - Uptime alerting to your phone
 - Backups: confirm retention, and restore once to prove it works
@@ -72,6 +73,12 @@ Firefox as a third engine on the engine-sensitive slice (`--project=firefox`).
 - A staging database, so migrations are rehearsed before production. (Three migrations in
   this cut were rehearsed on a throwaway database first — see §3 — which is the manual
   version of this)
+
+Done since the last cut: **Dashboard → Audit log**. Every write a staff member can make —
+a product, a price typed over in the table, a stock figure, a category, an order's status, a
+payment, a return, a coupon, a zone, the settings, an information page, a staff or customer
+account — leaves a row with who, when, and `field: before → after`. Append-only; the
+read-only role can read it.
 
 Rate limiting on checkout was already there (`placeOrder`, ten an hour per address) and
 should not have been on this list.

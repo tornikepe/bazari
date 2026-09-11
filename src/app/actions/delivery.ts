@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { audit, diff } from "@/lib/audit";
 
 export type DeliveryZoneResult =
   | { ok: true }
@@ -57,16 +58,34 @@ export async function saveDeliveryZone(formData: FormData): Promise<DeliveryZone
   const sortOrder = Math.max(0, Math.floor(Number(formData.get("sortOrder")) || 0));
   const data = { nameKa, nameEn, fee, freeAbove, sortOrder, isActive: formData.get("isActive") === "on" };
 
+  const before = id
+    ? await prisma.deliveryZone.findUnique({
+        where: { id },
+        select: { nameKa: true, nameEn: true, fee: true, freeAbove: true, sortOrder: true, isActive: true },
+      })
+    : null;
+
+  let createdId: string | null = null;
   try {
     if (id) {
       await prisma.deliveryZone.update({ where: { id }, data });
     } else {
-      await prisma.deliveryZone.create({ data });
+      createdId = (await prisma.deliveryZone.create({ data, select: { id: true } })).id;
     }
   } catch (error) {
     console.error("saveDeliveryZone failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: before ? "zone.update" : "zone.create",
+    entityId: id ?? createdId ?? "",
+    label: nameEn,
+    changes: before
+      ? diff(before, data, ["nameKa", "nameEn", "fee", "freeAbove", "sortOrder", "isActive"])
+      : {},
+  });
 
   revalidate();
   return { ok: true };
@@ -84,12 +103,21 @@ export async function deleteDeliveryZone(id: string): Promise<DeliveryZoneResult
   if (!admin) return { ok: false, error: "unauthorized" };
   if (typeof id !== "string" || !id) return { ok: false, error: "invalid" };
 
+  let doomed: { nameEn: string; fee: number } | null = null;
   try {
-    await prisma.deliveryZone.delete({ where: { id } });
+    doomed = await prisma.deliveryZone.delete({ where: { id }, select: { nameEn: true, fee: true } });
   } catch (error) {
     console.error("deleteDeliveryZone failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: "zone.delete",
+    entityId: id,
+    label: doomed.nameEn,
+    changes: { fee: [doomed.fee, null] },
+  });
 
   revalidate();
   return { ok: true };

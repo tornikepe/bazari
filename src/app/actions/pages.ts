@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { audit, diff } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth";
 import { INFO_SLUGS, type InfoSlug } from "@/lib/info-pages";
 
@@ -42,6 +43,19 @@ export async function savePage(formData: FormData): Promise<PageResult> {
     isPublished: formData.get("isPublished") === "on",
   };
 
+  const before = await prisma.infoPage.findUnique({
+    where: { slug },
+    select: {
+      titleKa: true,
+      titleEn: true,
+      introKa: true,
+      introEn: true,
+      bodyKa: true,
+      bodyEn: true,
+      isPublished: true,
+    },
+  });
+
   try {
     await prisma.infoPage.upsert({
       where: { slug },
@@ -51,6 +65,28 @@ export async function savePage(formData: FormData): Promise<PageResult> {
   } catch (error) {
     console.error("savePage failed", error);
     return { ok: false, error: "failed" };
+  }
+
+  /* Which fields moved, not what they became: a page body is thousands of
+     characters, and a log row that carried two copies of it would be a
+     backup, not a note. The dashboard shows "bodyEn changed", which is the
+     answer to the question the log is for. */
+  const moved = before
+    ? Object.keys(diff(before, data, Object.keys(data) as (keyof typeof data)[]))
+    : Object.keys(data);
+  if (moved.length > 0) {
+    await audit({
+      actor: admin.email,
+      action: "page.update",
+      entityId: slug,
+      label: data.titleEn || slug,
+      changes: Object.fromEntries(
+        moved.map((field) => [
+          field,
+          field === "isPublished" ? [before?.isPublished ?? null, data.isPublished] : [null, null],
+        ]),
+      ),
+    });
   }
 
   // The footer links these on every page, so the whole tree is stale.

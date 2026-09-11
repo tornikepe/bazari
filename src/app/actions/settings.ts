@@ -6,6 +6,8 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { SETTINGS_ID } from "@/lib/settings";
 import { checkBrandColor } from "@/lib/brand-theme";
 import { isVatRate } from "@/lib/tax";
+import { audit, diff } from "@/lib/audit";
+import { getSettings } from "@/lib/settings";
 
 export type SettingsResult =
   | { ok: true }
@@ -111,6 +113,10 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     returnWindowDays,
   };
 
+  // What the shop said before, for the log: a shipping fee that quietly
+  // became free is exactly the change somebody asks about a month later.
+  const before = await getSettings();
+
   try {
     await prisma.shopSettings.upsert({
       where: { id: SETTINGS_ID },
@@ -120,6 +126,11 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
   } catch (error) {
     console.error("saveSettings failed", error);
     return { ok: false, error: "failed" };
+  }
+
+  const changes = diff(before, data, Object.keys(data) as (keyof typeof data)[]);
+  if (Object.keys(changes).length > 0) {
+    await audit({ actor: admin.email, action: "settings.update", label: data.name, changes });
   }
 
   // Every page reads some of this — the header the name, the cart the shipping

@@ -3,6 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { audit } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth-hash";
 import { isStaffRole } from "@/lib/staff";
@@ -41,7 +42,7 @@ export async function setStaffRole(userId: string, role: string): Promise<StaffR
 
   const target = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true },
+    select: { role: true, email: true },
   });
   if (!target) return { ok: false, error: "invalid" };
 
@@ -65,6 +66,14 @@ export async function setStaffRole(userId: string, role: string): Promise<StaffR
     return { ok: false, error: "failed" };
   }
 
+  await audit({
+    actor: admin.email,
+    action: "staff.role",
+    entityId: userId,
+    label: target.email,
+    changes: { role: [target.role, role] },
+  });
+
   revalidatePath("/dashboard/staff");
   return { ok: true };
 }
@@ -76,7 +85,7 @@ export async function setStaffDisabled(userId: string, disabled: boolean): Promi
 
   const target = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true },
+    select: { role: true, email: true, disabledAt: true },
   });
   if (!target) return { ok: false, error: "invalid" };
 
@@ -97,6 +106,14 @@ export async function setStaffDisabled(userId: string, disabled: boolean): Promi
     console.error("setStaffDisabled failed", error);
     return { ok: false, error: "failed" };
   }
+
+  await audit({
+    actor: admin.email,
+    action: "staff.disable",
+    entityId: userId,
+    label: target.email,
+    changes: { disabled: [target.disabledAt !== null, disabled] },
+  });
 
   revalidatePath("/dashboard/staff");
   return { ok: true };
@@ -153,6 +170,14 @@ export async function inviteStaff(formData: FormData): Promise<StaffResult> {
         });
 
     const token = await issueInvite(user.id);
+
+    await audit({
+      actor: admin.email,
+      action: "staff.invite",
+      entityId: user.id,
+      label: email,
+      changes: { role: [existing?.role ?? null, role] },
+    });
 
     revalidatePath("/dashboard/staff");
     return { ok: true, inviteUrl: `/invite?token=${token}` };

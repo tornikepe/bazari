@@ -150,6 +150,14 @@ export const RefreshIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A clock — time, and by extension a record of it. */
+export const ClockIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </Icon>
+);
+
 export const HeadphonesIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M3 14v-2a9 9 0 0 1 18 0v2" />

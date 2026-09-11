@@ -780,6 +780,34 @@ model ProductImage {
   @@index([createdAt])
 }
 
+/// Who changed what in the dashboard, and when.
+///
+/// Append-only, like the stock ledger, and for the same reason: "why is this
+/// product ₾149 when it was ₾129 last week?" needs an answer with a name on
+/// it. The stock ledger explains one column of one table; this explains every
+/// write a staff member can make — a price, a status, a setting, a zone.
+///
+/// `changes` holds only what moved, as `{ field: [before, after] }`, so a
+/// row reads as a sentence rather than as two copies of a product. `label`
+/// is what the thing was called at the time, so the log still reads after
+/// the thing is deleted.
+model AuditEntry {
+  id        String   @id @default(cuid())
+  /// Email of the staff member. Never empty: the system's own writes — a
+  /// sale, an expiry — belong to the ledgers, not here.
+  actor     String
+  /// `product.update`, `order.status`, `settings.update` — see `audit.ts`.
+  action    String
+  entity    String
+  entityId  String   @default("")
+  label     String   @default("")
+  changes   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+}
+
 /// A footer information page — about, FAQ, shipping, returns, and so on.
 ///
 /// Bilingual columns rather than a row per language, matching `Category` and

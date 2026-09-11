@@ -403,7 +403,8 @@ through the ledger; a customer list with real lifetime totals; and an append-onl
 so "why is this out of stock?" always has an answer.
 
 **Two staff roles.** `admin`, and a read-only `viewer` enforced in the Server Actions rather
-than by hiding buttons.
+than by hiding buttons. **An audit log** under both: every write an admin makes leaves a row
+with who, when, and `field: before → after`, and the viewer can read it.
 
 **Accounts** — email sign-up with verification codes, password reset, and optional Google and
 Facebook sign-in. An account is required to check out, so no order can exist without an owner.
@@ -1011,9 +1012,9 @@ you own, and never in a fork.
   all degrade the same way: without `RESEND_API_KEY` the message is written to the *server* log and
   never to the browser. That is deliberate — it keeps local development workable without ever
   handing a one-time code to the caller.
-- **Returns are asked for and answered, but nobody is emailed about them.** The shopper asks
-  from the order page and reads the shop's reply there; a message when the reply arrives is
-  written into the same row and waits on a sending domain, like every other email here.
+- **Returns are asked for and answered on the order page**, and the shopper is emailed when the
+  shop answers — with the reply in the message — as far as any email is sent here at all:
+  without a sending domain it goes to the server log like the rest.
 - **An order prints, but no invoice is emailed.** Both order pages — the shop's and the
   shopper's — print as a document: the shop's name and contact details, the number, the date, who
   it is for, the lines, the totals. It is deliberately not a fiscal document and says so on its

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { audit } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth";
 
 /**
@@ -26,7 +27,13 @@ export type CustomerResult =
   | { ok: true; count?: number }
   | { ok: false; error: "unauthorized" | "invalid" | "staff" | "failed" };
 
-async function apply(ids: string[], disabled: boolean): Promise<number> {
+async function apply(ids: string[], disabled: boolean, actor: string): Promise<number> {
+  // Who is about to move, for the log — only the rows the update will touch.
+  const moving = await prisma.user.findMany({
+    where: { id: { in: ids }, role: "customer", disabledAt: disabled ? null : { not: null } },
+    select: { id: true, email: true },
+  });
+
   const { count } = await prisma.user.updateMany({
     // `role: "customer"` in the filter, not checked beforehand: a crafted post
     // carrying a staff id updates nothing rather than being told it was
@@ -38,6 +45,17 @@ async function apply(ids: string[], disabled: boolean): Promise<number> {
       sessionVersion: { increment: 1 },
     },
   });
+
+  for (const user of moving) {
+    await audit({
+      actor,
+      action: "customer.disable",
+      entityId: user.id,
+      label: user.email,
+      changes: { disabled: [!disabled, disabled] },
+    });
+  }
+
   return count;
 }
 
@@ -45,7 +63,8 @@ export async function setCustomerDisabled(
   userId: string,
   disabled: boolean,
 ): Promise<CustomerResult> {
-  if (!(await getCurrentAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await getCurrentAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
   if (typeof userId !== "string" || userId.length === 0) return { ok: false, error: "invalid" };
 
   const target = await prisma.user.findUnique({
@@ -56,7 +75,7 @@ export async function setCustomerDisabled(
   if (target.role !== "customer") return { ok: false, error: "staff" };
 
   try {
-    await apply([userId], disabled);
+    await apply([userId], disabled, admin.email);
   } catch (error) {
     console.error("setCustomerDisabled failed", error);
     return { ok: false, error: "failed" };
@@ -72,7 +91,8 @@ export async function bulkCustomers(
   disabled: boolean,
   ids: string[],
 ): Promise<CustomerResult> {
-  if (!(await getCurrentAdmin())) return { ok: false, error: "unauthorized" };
+  const admin = await getCurrentAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
 
   /* Deduplicated and capped, like the product and order paths: the ids arrive
      from a form, so a crafted post can carry any number of them. */
@@ -84,7 +104,7 @@ export async function bulkCustomers(
 
   let count: number;
   try {
-    count = await apply(unique, disabled);
+    count = await apply(unique, disabled, admin.email);
   } catch (error) {
     console.error("bulkCustomers failed", error);
     return { ok: false, error: "failed" };

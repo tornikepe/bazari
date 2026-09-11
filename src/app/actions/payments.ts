@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { audit } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth";
 import { getAdapter, fromMinor } from "@/lib/payments";
 import { expireStalePayments } from "@/lib/payments/service";
@@ -22,7 +23,14 @@ export async function markPaymentReceived(paymentId: string): Promise<PaymentAct
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    select: { id: true, orderId: true, provider: true, state: true },
+    select: {
+      id: true,
+      orderId: true,
+      provider: true,
+      state: true,
+      amount: true,
+      order: { select: { number: true } },
+    },
   });
 
   if (!payment) return { ok: false, error: "invalid" };
@@ -42,6 +50,15 @@ export async function markPaymentReceived(paymentId: string): Promise<PaymentAct
         note: `Payment marked received by ${admin.email}`,
       },
     });
+  });
+
+  await audit({
+    actor: admin.email,
+    action: "payment.received",
+    entity: "order",
+    entityId: payment.orderId,
+    label: payment.order.number,
+    changes: { paymentState: [payment.state, "captured"], amount: [payment.amount, payment.amount] },
   });
 
   revalidatePath("/dashboard/orders");
@@ -128,6 +145,15 @@ export async function refundPayment(paymentId: string): Promise<PaymentActionRes
         note: `Refunded ${fromMinor(outstanding)} GEL by ${admin.email}`,
       },
     });
+  });
+
+  await audit({
+    actor: admin.email,
+    action: "payment.refund",
+    entity: "order",
+    entityId: payment.orderId,
+    label: payment.order.number,
+    changes: { refunded: [payment.refunded, payment.amount] },
   });
 
   revalidatePath("/dashboard/orders");
