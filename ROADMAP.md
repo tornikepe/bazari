@@ -73,13 +73,15 @@ of which exactly three succeed.
 - Error tracking — Sentry with source maps. Blocked on **A8**
 - Uptime alerting to your phone
 - Backups: confirm retention, and restore once to prove it works
-- Analytics, privacy-friendly, no cookie banner
 - A custom domain
 - A staging database, so migrations are rehearsed before production. (`npm run
   test:e2e:scratch` rehearses every migration on a throwaway database each time it runs,
   which is most of what a staging database is for)
 
-Done since the last cut: **Dashboard → Audit log**. Every write a staff member can make —
+Done since the last cut: **Dashboard → Traffic** — page views counted per day and path
+from a beacon the page sends, with no cookie set and no address kept; a day's visitors are
+told apart by a keyed hash under a key that changes at midnight, so "how many people" has an
+answer and "who" cannot be asked. The privacy page says so. And **Dashboard → Audit log**. Every write a staff member can make —
 a product, a price typed over in the table, a stock figure, a category, an order's status, a
 payment, a return, a coupon, a zone, the settings, an information page, a staff or customer
 account — leaves a row with who, when, and `field: before → after`. Append-only; the

@@ -53,6 +53,7 @@ const STAFF = [
   "/dashboard/pages",
   "/dashboard/settings",
   "/dashboard/audit",
+  "/dashboard/traffic",
 ];
 
 async function audit(page: import("@playwright/test").Page, path: string) {

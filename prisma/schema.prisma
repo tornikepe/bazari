@@ -780,6 +780,37 @@ model ProductImage {
   @@index([createdAt])
 }
 
+/// Page views, counted per shop day and path, with no cookie set and no
+/// address kept.
+///
+/// The row is the whole record: "the catalogue was opened 312 times on the
+/// 11th". Nothing about who. A page is counted from a beacon the browser
+/// sends on each navigation, so a crawler without JavaScript is not counted —
+/// which is the right answer for a figure meant to say how many people came.
+model PageView {
+  /// `YYYY-MM-DD` in shop time, like the sales chart's buckets.
+  day   String
+  path  String
+  views Int    @default(0)
+
+  @@id([day, path])
+  @@index([day])
+}
+
+/// One row per visitor per day, so "how many people" has an answer without
+/// anybody being followed.
+///
+/// `hash` is a keyed hash of the address and the browser under a key that
+/// changes every day, so it cannot be turned back into an address and means
+/// nothing tomorrow — the same person is a different row on Tuesday, which is
+/// exactly the point.
+model DailyVisitor {
+  day  String
+  hash String
+
+  @@id([day, hash])
+}
+
 /// Who changed what in the dashboard, and when.
 ///
 /// Append-only, like the stock ledger, and for the same reason: "why is this

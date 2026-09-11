@@ -16,7 +16,16 @@ import type { Dictionary } from "@/lib/i18n";
  * a row of tabs that reflows when you press one is the exact thing the rest of
  * the site goes out of its way to avoid.
  */
-export function ChartRangeTabs({ active, t }: { active: RangeDays; t: Dictionary }) {
+export function ChartRangeTabs({
+  active,
+  t,
+  basePath = "/dashboard",
+}: {
+  active: RangeDays;
+  t: Dictionary;
+  /** Which page the window belongs to; the overview's by default. */
+  basePath?: string;
+}) {
   return (
     <div role="group" aria-label={t.admin.chartRange} className="flex items-center border border-line">
       {RANGE_DAYS.map((days) => {
@@ -24,7 +33,7 @@ export function ChartRangeTabs({ active, t }: { active: RangeDays; t: Dictionary
         return (
           <Link
             key={days}
-            href={`/dashboard?range=${days}`}
+            href={`${basePath}?range=${days}`}
             aria-current={current ? "true" : undefined}
             scroll={false}
             className={`w-20 py-1.5 text-center text-xs font-bold transition-colors not-first:border-l not-first:border-line ${

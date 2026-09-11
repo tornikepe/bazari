@@ -345,7 +345,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
             "bz_session — შესვლის სესია, ხელმოწერილი, httpOnly, 7 დღე. მისი გარეშე ანგარიშში შესვლა შეუძლებელია.",
             "bz_receipts — ხელმოწერილი სია იმ შეკვეთების, რომლებიც ამ ბრაუზერიდან გააფორმე, 30 დღე. ის უზრუნველყოფს, რომ შენს შეკვეთას მხოლოდ შენ ხედავ.",
             "cm_locale — არჩეული ენა. bz_theme — არჩეული თემა. ერთი წელი.",
-            "ანალიტიკის ან რეკლამის cookie არ გვაქვს, ამიტომ თანხმობის ფანჯარაც არ არის საჭირო.",
+            "ანალიტიკის ან რეკლამის cookie არ გვაქვს, ამიტომ თანხმობის ფანჯარაც არ არის საჭირო. გვერდის ნახვებს ვითვლით — რომელი გვერდი რამდენჯერ გაიხსნა დღეში — მაგრამ არც ვინაობას, არც მისამართს არ ვინახავთ: ერთი დღის ვიზიტორები ერთმანეთისგან იმ დღის გასაღებით განსხვავდება, რომელიც შუაღამისას იცვლება და ვერავის უკან ვერ მიაბრუნებ.",
           ],
         },
         {
@@ -393,7 +393,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
             "bz_session — your sign-in session. Signed, httpOnly, 7 days. Without it you cannot stay signed in.",
             "bz_receipts — a signed list of orders placed from this browser, 30 days. It is what stops anyone else opening your order.",
             "cm_locale — your chosen language. bz_theme — your chosen theme. One year.",
-            "There are no analytics or advertising cookies, which is why there is no consent banner.",
+            "There are no analytics or advertising cookies, which is why there is no consent banner. Page views are counted — which page, how many times, on which day — but nothing about who: a day's visitors are told apart by a key that changes at midnight and cannot be turned back into anybody.",
           ],
         },
         {

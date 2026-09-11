@@ -402,6 +402,11 @@ who moved each status and when; return requests answered in place, with the good
 through the ledger; a customer list with real lifetime totals; and an append-only stock ledger,
 so "why is this out of stock?" always has an answer.
 
+**Traffic, without a cookie banner.** Page views are counted per day and path from a beacon
+the page sends; nothing about who. A day's visitors are told apart by a keyed hash under a key
+that changes at midnight, so the dashboard can say how many people came and nobody can ask
+which. There is no consent banner because there is nothing it would be asking about.
+
 **Two staff roles.** `admin`, and a read-only `viewer` enforced in the Server Actions rather
 than by hiding buttons. **An audit log** under both: every write an admin makes leaves a row
 with who, when, and `field: before → after`, and the viewer can read it.

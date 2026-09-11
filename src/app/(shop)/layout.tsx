@@ -4,6 +4,7 @@ import { CartAnnouncer } from "@/components/cart/CartAnnouncer";
 import { Header } from "@/components/layout/Header";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { isChatConfigured } from "@/lib/chat/providers";
+import { TrafficBeacon } from "@/components/layout/TrafficBeacon";
 
 /** Storefront chrome. The admin section deliberately sits outside this group. */
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
@@ -27,6 +28,9 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
           one that fails when pressed. The dashboard is outside this layout —
           staff have the real data, not a chat window onto it. */}
       <ChatWidget available={isChatConfigured()} />
+      {/* Counts the page. Storefront only — staff opening the dashboard are
+          not traffic — and the beacon carries the path and nothing else. */}
+      <TrafficBeacon />
     </>
   );
 }

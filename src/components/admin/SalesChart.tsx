@@ -67,21 +67,48 @@ export function niceCeiling(value: number) {
   return Math.max(4, Math.ceil(10 * magnitude) * 4);
 }
 
+/**
+ * What a bar's figure means, when it is not money.
+ *
+ * The chart was drawn for revenue and is now also drawn for page views; the
+ * bars, the scale and the axis are the same job, and only how a value is
+ * written and what the three figures under it are called differ. Money is
+ * the default so the overview page reads as it always did.
+ */
+export type ChartVoice = {
+  /** A value, as text: `formatPrice` for money, the plain count otherwise. */
+  format: (value: number) => string;
+  /** What a day with nothing in it is called on hover. */
+  nothing: string;
+  /** Shown instead of the chart when every day is empty. */
+  empty: string;
+  labels: { total: string; average: string; peak: string };
+};
+
 export function SalesChart({
   data,
   locale,
   t,
+  voice,
 }: {
   data: { date: string; total: number }[];
   locale: Locale;
   t: Dictionary;
+  voice?: ChartVoice;
 }) {
+  const say: ChartVoice = voice ?? {
+    format: (value) => formatPrice(value, locale),
+    nothing: t.admin.chartNoRevenue,
+    empty: t.admin.noSales,
+    labels: { total: t.admin.chartTotal, average: t.admin.chartAverage, peak: t.admin.chartPeak },
+  };
+
   const peak = Math.max(...data.map((day) => day.total), 0);
   const total = data.reduce((sum, day) => sum + day.total, 0);
   const average = data.length > 0 ? Math.round(total / data.length) : 0;
 
   if (peak === 0) {
-    return <p className="py-12 text-center text-sm text-ink-400">{t.admin.noSales}</p>;
+    return <p className="py-12 text-center text-sm text-ink-400">{say.empty}</p>;
   }
 
   const ceiling = niceCeiling(peak);
@@ -125,9 +152,9 @@ export function SalesChart({
   ];
 
   const summary = [
-    { label: t.admin.chartTotal, value: formatPrice(total, locale) },
-    { label: t.admin.chartAverage, value: formatPrice(average, locale) },
-    { label: t.admin.chartPeak, value: formatPrice(peak, locale) },
+    { label: say.labels.total, value: say.format(total) },
+    { label: say.labels.average, value: say.format(average) },
+    { label: say.labels.peak, value: say.format(peak) },
   ];
 
   return (
@@ -144,7 +171,7 @@ export function SalesChart({
               style={{ bottom: `${fraction * 100}%` }}
               className="absolute right-0 translate-y-1/2 text-xs whitespace-nowrap text-ink-400 tabular-nums"
             >
-              {formatPrice(Math.round(ceiling * fraction), locale)}
+              {say.format(Math.round(ceiling * fraction))}
             </span>
           ))}
         </div>
@@ -173,7 +200,7 @@ export function SalesChart({
                     key={day.date}
                     className="group relative flex h-full flex-1 items-end"
                     title={`${formatDate(day.date)} · ${
-                      day.total === 0 ? t.admin.chartNoRevenue : formatPrice(day.total, locale)
+                      day.total === 0 ? say.nothing : say.format(day.total)
                     }`}
                   >
                     <span

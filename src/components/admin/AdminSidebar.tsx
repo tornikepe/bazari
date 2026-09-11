@@ -22,6 +22,7 @@ import {
   FileIcon,
   RefreshIcon,
   ClockIcon,
+  EyeIcon,
   SettingsIcon,
   ShieldIcon,
   UsersIcon,
@@ -47,6 +48,7 @@ export function AdminSidebar({
     { href: "/dashboard/staff", label: t.admin.staff, icon: ShieldIcon },
     { href: "/dashboard/pages", label: t.admin.pages, icon: FileIcon },
     { href: "/dashboard/settings", label: t.admin.settings, icon: SettingsIcon },
+    { href: "/dashboard/traffic", label: t.admin.traffic, icon: EyeIcon },
     { href: "/dashboard/audit", label: t.admin.audit, icon: ClockIcon },
   ];
 
