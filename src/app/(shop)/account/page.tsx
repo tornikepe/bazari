@@ -9,7 +9,14 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { isOrderStatus, ORDER_STATUSES } from "@/lib/order-status";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { VerifyBanner } from "@/components/account/VerifyBanner";
-import { BagIcon, ChevronRightIcon, TagIcon, TruckIcon, UserIcon } from "@/components/ui/icons";
+import {
+  BagIcon,
+  ChevronRightIcon,
+  HeartIcon,
+  TagIcon,
+  TruckIcon,
+  UserIcon,
+} from "@/components/ui/icons";
 import { AccountIdentity } from "@/components/account/AccountIdentity";
 import { AddressBook } from "@/components/account/AddressBook";
 import type { RawSearchParams } from "@/lib/filters";
@@ -41,7 +48,7 @@ export default async function AccountPage({
   /* The session carries what every page needs; "member since" is wanted by
      this one page only, so it is read here rather than added to the cookie
      that every request in the shop parses. */
-  const [orders, orderCount, byStatus, addresses, account, spending] = await Promise.all([
+  const [orders, orderCount, byStatus, addresses, account, spending, favoriteCount] = await Promise.all([
     prisma.order.findMany({
       where: { userId: user.id, ...(status ? { status } : {}) },
       orderBy: { createdAt: "desc" },
@@ -66,6 +73,9 @@ export default async function AccountPage({
       where: { userId: user.id, status: { not: "cancelled" } },
       _sum: { total: true },
     }),
+    // The wishlist as the account holds it — the browser's copy is merged
+    // into this on arrival, so the figure is the whole list, not one tab's.
+    prisma.favorite.count({ where: { userId: user.id } }),
   ]);
 
   const spent = spending._sum.total ?? 0;
@@ -257,6 +267,25 @@ export default async function AccountPage({
         <div className="flex flex-col gap-4">
           <ProfileForm user={user} justSaved={justSaved} />
           <AddressBook addresses={addresses} />
+
+          {/* The wishlist lives on the account now, and this is the account:
+              a count and the way to it, nothing more — the list itself has a
+              page of its own. */}
+          <Link
+            href="/favorites"
+            className="card flex items-center gap-3 card-pad-tight transition-colors hover:bg-ink-50"
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center bg-brand-50 text-brand-600">
+              <HeartIcon size={18} filled={favoriteCount > 0} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold text-ink-900">{t.favorites.title}</span>
+              <span className="block text-xs text-ink-500">
+                {countText(t.favorites.countOne, t.favorites.count, favoriteCount)}
+              </span>
+            </span>
+            <ChevronRightIcon size={16} aria-hidden="true" className="shrink-0 text-ink-400" />
+          </Link>
         </div>
       </div>
     </div>

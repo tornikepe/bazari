@@ -27,7 +27,6 @@ done it for overflow boxes since iOS 13, and `-webkit-overflow-scrolling` is a n
 | 🟠 | Order invoice | A PDF attached to the confirmation email. Needs a renderer, and **A3** |
 | 🟠 | Return emails | Tell the shopper when the shop answers a request. Written into the row already; sending needs **A3** |
 | 🟢 | Reviews | Only if they are real |
-| 🟢 | Wishlist on the account | It lives in `localStorage` and is lost when the browser is cleared |
 | 🟢 | Abandoned-cart email | Blocked on **A3** |
 
 Done since the last cut:
@@ -42,6 +41,9 @@ Done since the last cut:
   within the window (a setting, 14 days), picks the lines and a reason; the shop answers
   from **Dashboard → Returns** and the reply appears on the shopper's order page. Marking a
   return received puts the stock back through the ledger.
+- **Wishlist on the account.** A signed-in shopper's hearts are written to the account and
+  come back in any browser; the browser's own list is kept and merged on sign-in, and a
+  removal survives a closed tab. The product page has its own heart now, beside the cart.
 
 ---
 

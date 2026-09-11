@@ -81,3 +81,49 @@ export function toggleFavorite(productId: string) {
 export function clearFavorites() {
   commit(EMPTY);
 }
+
+/**
+ * Replaces the list wholesale — what the account sync does on arrival, once
+ * the browser's ids and the account's have been reconciled on the server.
+ *
+ * Silent when nothing changes, so a sync that finds the two already agreeing
+ * does not wake every subscriber for no reason.
+ */
+export function replaceFavorites(next: string[]) {
+  const same = next.length === ids.length && next.every((id, index) => id === ids[index]);
+  if (same) return;
+  commit([...next]);
+}
+
+/* ------------------------------------------------------------------ */
+/* What the account has confirmed                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The list as the account last acknowledged it, kept beside the list itself.
+ *
+ * A heart pressed and the tab closed in the same breath is a write that may
+ * never have arrived. Without a record of what *did* arrive, the next visit
+ * could only merge — and a merge would press the heart back. With it, the
+ * next visit sees "the browser has this and the account was last known not
+ * to" and sends exactly that difference. Signed-out browsers never write it.
+ */
+const SYNCED_KEY = "bazari.favorites.synced.v1";
+
+export function readSynced(): string[] {
+  try {
+    const raw = window.localStorage.getItem(SYNCED_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeSynced(next: string[]) {
+  try {
+    window.localStorage.setItem(SYNCED_KEY, JSON.stringify(next));
+  } catch {
+    // Nothing to do: the next sync simply sends more than it needed to.
+  }
+}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart, type CartItem } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
+import { FavoriteButton } from "@/components/product/FavoriteButton";
 import { MinusIcon, PlusIcon } from "@/components/ui/icons";
 
 /** Quantity stepper plus the two purchase buttons. */
@@ -75,6 +76,12 @@ export function ProductPurchasePanel({ product }: { product: Omit<CartItem, "qua
             {t.product.buyNow}
           </button>
         )}
+
+        {/* The product's own heart. Every card in the shop had one and the
+            product's own page did not, so the one place a shopper had read
+            enough to decide was the one place they could not save it. Sized
+            to the buttons beside it rather than to the chip on a card. */}
+        <FavoriteButton productId={product.productId} size="control" />
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { HeaderBar } from "@/components/layout/HeaderBar";
+import { FavoritesSync } from "@/components/product/FavoritesSync";
 
 async function HeaderContent() {
   const [categories, user] = await Promise.all([
@@ -13,10 +14,16 @@ async function HeaderContent() {
   ]);
 
   return (
-    <HeaderBar
-      categories={categories}
-      user={user ? { name: user.name, email: user.email, role: user.role } : null}
-    />
+    <>
+      <HeaderBar
+        categories={categories}
+        user={user ? { name: user.name, email: user.email, role: user.role } : null}
+      />
+      {/* Here rather than in the layout, because this is where the session is
+          already read: the sync is only mounted for a shopper, and mounting it
+          for a guest would be a call the action refuses on every page. */}
+      {user?.role === "customer" && <FavoritesSync />}
+    </>
   );
 }
 

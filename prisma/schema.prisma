@@ -200,6 +200,7 @@ model Product {
   stockAlerts   StockAlert[]
   options       ProductOption[]
   variants      ProductVariant[]
+  favorites     Favorite[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -508,6 +509,7 @@ model User {
   orders         Order[]
   tokens         VerificationToken[]
   addresses      Address[]
+  favorites      Favorite[]
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   savedViews     SavedView[]
@@ -540,6 +542,25 @@ model SavedView {
   /// points at, which is what "save" means when the name is already on screen.
   @@unique([userId, page, name])
   @@index([userId, page])
+}
+
+/// A product a customer has marked to come back to.
+///
+/// The wishlist lived only in `localStorage`, which meant it lived only in
+/// one browser and only until that browser was cleared. This is the same list
+/// kept on the account: a signed-in customer's browser list is merged into it
+/// on arrival, and every heart pressed after that is written here as well.
+/// The browser copy stays — it is what the page reads, and it works signed
+/// out — this is what makes it survive.
+model Favorite {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, productId])
+  @@index([userId, createdAt])
 }
 
 /// A delivery address a customer has saved.

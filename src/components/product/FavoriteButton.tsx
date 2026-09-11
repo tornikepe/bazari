@@ -16,9 +16,15 @@ export function useFavorites() {
 
 export function FavoriteButton({
   productId,
+  size = "chip",
   className = "",
 }: {
   productId: string;
+  /**
+   * `chip` sits on a card's photo; `control` stands in a row of buttons on
+   * the product page and takes their height, so the row has one bottom edge.
+   */
+  size?: "chip" | "control";
   className?: string;
 }) {
   const { t } = useI18n();
@@ -46,13 +52,15 @@ export function FavoriteButton({
       // So the chip itself grows. Not to 44: this is a secondary action sitting
       // on top of the card's own link, and at 44 it starts covering the product
       // photo it is meant to sit quietly on top of.
-      className={`grid h-10 w-10 place-items-center transition-colors ${
+      className={`grid place-items-center transition-colors ${
+        size === "chip" ? "h-10 w-10" : "min-h-[3.25rem] w-full border border-line sm:w-[3.25rem] sm:shrink-0"
+      } ${
         isFavorite
           ? "bg-brand-solid text-brand-on-solid"
           : "bg-surface text-ink-500 hover:text-brand-600"
       } ${className}`}
     >
-      <HeartIcon size={16} filled={isFavorite} />
+      <HeartIcon size={size === "chip" ? 16 : 18} filled={isFavorite} />
     </button>
   );
 }
