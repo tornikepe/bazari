@@ -510,6 +510,7 @@ model User {
   tokens         VerificationToken[]
   addresses      Address[]
   favorites      Favorite[]
+  cart           CartSnapshot?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   savedViews     SavedView[]
@@ -778,6 +779,24 @@ model ProductImage {
   createdAt   DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// What a signed-in shopper has in the cart right now, so a cart left behind
+/// can be written about the next day.
+///
+/// The cart itself stays in the browser; this is a copy of it, one row per
+/// customer, replaced on every change and deleted when the cart empties —
+/// which an order does. `remindedAt` is set when the one reminder goes, so
+/// nobody is written to twice about the same cart.
+model CartSnapshot {
+  userId     String    @id
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// `[{productId, variantId?, quantity}]` — ids only; prices are re-read.
+  items      Json
+  updatedAt  DateTime  @updatedAt
+  remindedAt DateTime?
+
+  @@index([updatedAt])
 }
 
 /// Page views, counted per shop day and path, with no cookie set and no

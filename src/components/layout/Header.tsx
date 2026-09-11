@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { HeaderBar } from "@/components/layout/HeaderBar";
 import { FavoritesSync } from "@/components/product/FavoritesSync";
+import { CartSync } from "@/components/cart/CartSync";
 
 async function HeaderContent() {
   const [categories, user] = await Promise.all([
@@ -22,7 +23,12 @@ async function HeaderContent() {
       {/* Here rather than in the layout, because this is where the session is
           already read: the sync is only mounted for a shopper, and mounting it
           for a guest would be a call the action refuses on every page. */}
-      {user?.role === "customer" && <FavoritesSync />}
+      {user?.role === "customer" && (
+        <>
+          <FavoritesSync />
+          <CartSync />
+        </>
+      )}
     </>
   );
 }

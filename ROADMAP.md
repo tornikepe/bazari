@@ -25,7 +25,6 @@ done it for overflow boxes since iOS 13, and `-webkit-overflow-scrolling` is a n
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
 | 🟢 | Reviews | Only if they are real |
-| 🟢 | Abandoned-cart email | Blocked on **A3** |
 
 Done since the last cut:
 
@@ -45,6 +44,11 @@ Done since the last cut:
 - **Return emails.** The shopper is written to when the shop approves, rejects, receives or
   refunds — with the shop's reply in the message. Like every other email here it goes to the
   server log until **A3** gives it a sending domain.
+- **Abandoned-cart email.** A signed-in shopper's cart is copied to the server as it changes
+  and forgotten when it empties; a cart left for a day is written about once, never to somebody
+  who ordered since, never about a cart older than a week. Sent by `/api/cron/daily`, which
+  Vercel calls on the schedule in `vercel.json` with `CRON_SECRET` — the same sweep expires the
+  payment attempts nobody came back for. Sending waits on **A3**; the secret is **A10**.
 - **Wishlist on the account.** A signed-in shopper's hearts are written to the account and
   come back in any browser; the browser's own list is kept and merged on sign-in, and a
   removal survives a closed tab. The product page has its own heart now, beside the cart.
@@ -122,7 +126,8 @@ the audit log, the traffic page and the PDF written up where they belong.
 | **A6** | Real business details — address, phone, hours, tax ID | They are facts about a business |
 | **A7** | A full Xcode install, then `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` | It needs your password |
 | **A8** | A Sentry account | An account and a billing decision |
-| **A9** | Run the three new migrations against production: `npm run db:migrate` (or `prisma migrate deploy`) after merging | They were rehearsed on a throwaway database, not on yours |
+| **A9** | Run the new migrations against production: `npm run db:migrate` (or `prisma migrate deploy`) after merging — seven of them since the last cut | They were rehearsed on a throwaway database, not on yours |
+| **A10** | Set `CRON_SECRET` in the Vercel project (any long random string) | Without it the daily sweep refuses every call, and no cart reminder or payment expiry ever runs |
 
 ```bash
 # A1 — register the client at console.cloud.google.com/apis/credentials with these

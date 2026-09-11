@@ -158,6 +158,11 @@ export default defineConfig({
       // before anything is sent to Google.
       GOOGLE_CLIENT_ID: "e2e-render-only",
       GOOGLE_CLIENT_SECRET: "e2e-render-only",
+
+      // The daily housekeeping route refuses everything without a secret, so
+      // the suite that calls it has to hold one. Nothing outside the suite
+      // ever sees this value.
+      CRON_SECRET: "e2e-cron-secret",
     },
   },
 });

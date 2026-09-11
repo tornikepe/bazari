@@ -390,6 +390,7 @@ against the source (`grep process.env`), not against memory.
 | `CHAT_MONTHLY_REQUEST_CAP` | optional | Ceiling on requests per month — the one that does the work on a free tier, where no number of requests adds up to a cost. Unset means unlimited. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | optional | The Google button. Rendered only when both are set. |
 | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | optional | The Facebook button. Same rule. |
+| `CRON_SECRET` | for the daily sweep | The bearer token `/api/cron/daily` expects — Vercel sends it on the schedule in `vercel.json`. Unset, the route refuses every call, and no payment attempt expires and no cart reminder goes. |
 | `DATABASE_POOL_MAX` | optional | Connections per instance. Defaults to 3 on Vercel, where many short-lived instances share one plan, and 10 elsewhere, where one process takes every request. |
 | `VERCEL` | set by Vercel | Read only to pick that default. |
 | `LOAD_URL`, `LOAD_CONNECTIONS`, `LOAD_SECONDS`, `LOAD_P99_MS` | `npm run load` only | Where to aim the load test, how hard, for how long, and the tail it may not exceed. |
@@ -1060,8 +1061,8 @@ you own, and never in a fork.
   mismatch; UTC is deterministic but four hours wrong, which filed every order placed after
   midnight under the previous day.
 - **Nothing is emailed at all without a sending domain.** Order confirmations, shipping notices,
-  the low-stock alert to the shop and the back-in-stock message to a shopper are all written and
-  all degrade the same way: without `RESEND_API_KEY` the message is written to the *server* log and
+  return answers, the abandoned-cart reminder, the low-stock alert to the shop and the
+  back-in-stock message to a shopper are all written and all degrade the same way: without `RESEND_API_KEY` the message is written to the *server* log and
   never to the browser. That is deliberate — it keeps local development workable without ever
   handing a one-time code to the caller.
 - **Returns are asked for and answered on the order page**, and the shopper is emailed when the
@@ -1073,6 +1074,10 @@ you own, and never in a fork.
   snapshotted columns, so it comes out the same every time. It is deliberately not a fiscal
   document and says so on its face; issuing one means a tax number and a numbering scheme an
   accountant signs off.
+- **The daily sweep needs a scheduler.** `/api/cron/daily` expires payment attempts nobody came
+  back for and writes once to shoppers who left a cart for a day. `vercel.json` schedules it at
+  06:00 UTC and Vercel sends `CRON_SECRET` as a bearer token; anywhere else, a crontab with
+  `curl` does the same. Unset, the route refuses every call.
 - **The shop installs, but does not run offline.** The manifest and icons are real — install it
   from the browser's own menu and it gets the shop's name, its colour and its square. There is no
   service worker, so there is nothing to serve when the network is gone, and Chromium therefore
