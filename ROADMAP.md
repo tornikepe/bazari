@@ -24,12 +24,14 @@ done it for overflow boxes since iOS 13, and `-webkit-overflow-scrolling` is a n
 | | Item | What it needs |
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
-| 🟠 | Order invoice | A PDF attached to the confirmation email. Needs a renderer, and **A3** |
 | 🟢 | Reviews | Only if they are real |
 | 🟢 | Abandoned-cart email | Blocked on **A3** |
 
 Done since the last cut:
 
+- **Order invoice.** A PDF drawn from the order's own columns — the same document the page
+  prints, in either language, with Noto Sans Georgian embedded — downloadable from both order
+  pages and attached to the confirmation email. The email itself still waits on **A3**.
 - **Tax.** Every order records the VAT inside its total and the rate it was worked out at
   (`Order.tax`, `Order.taxRate`); the cart, the checkout, both order pages and the printed
   invoice show "including VAT 18%". The rate is a setting; zero hides the line.

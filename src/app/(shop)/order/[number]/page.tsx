@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { readReceipts } from "@/lib/order-access";
 import { formatPrice } from "@/lib/format";
 import { Price } from "@/components/ui/Price";
-import { CheckIcon, MapPinIcon, TruckIcon } from "@/components/ui/icons";
+import { CheckIcon, FileIcon, MapPinIcon, TruckIcon } from "@/components/ui/icons";
 import { getSettings } from "@/lib/settings";
 import { InvoiceHead } from "@/components/order/InvoiceHead";
 import { PrintButton } from "@/components/order/PrintButton";
@@ -256,6 +256,16 @@ export default async function OrderConfirmationPage({
           {/* First, because a receipt is the thing most people want off this
               page and the rest is somewhere to go afterwards. */}
           <PrintButton size="md" />
+          {/* The same document as a file: the route draws it from the
+              order's own columns, so it is the receipt however it is kept. */}
+          <a
+            href={`/api/orders/${encodeURIComponent(order.number)}/invoice`}
+            download={`${order.number}.pdf`}
+            className="btn btn-outline btn-md"
+          >
+            <FileIcon size={15} />
+            {t.orderDone.downloadPdf}
+          </a>
           <Link href="/" className="btn btn-outline btn-md">
             {t.orderDone.backHome}
           </Link>

@@ -17,6 +17,7 @@ import { crossedLowStock } from "@/lib/stock";
 import { labelFor } from "@/lib/variants";
 import { getLocale } from "@/lib/locale";
 import { vatIncluded } from "@/lib/tax";
+import { renderInvoicePdf } from "@/lib/invoice-pdf";
 
 export type PlaceOrderInput = {
   customerName: string;
@@ -376,12 +377,57 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       // without an account.
       await rememberReceipt(order.number);
 
+      /* The invoice, drawn from the same figures that were just written and
+         attached to the confirmation. Best effort, like the mail itself: a
+         font file that cannot be read must not fail a sale, so a failure here
+         means a message without an attachment rather than no message. */
+      const email = input.email?.trim() ?? "";
+      const invoice = email
+        ? await renderInvoicePdf(
+            {
+              number: order.number,
+              createdAt: order.createdAt,
+              customerName,
+              phone,
+              email,
+              city,
+              address,
+              deliveryMethod: pickup ? "pickup" : "courier",
+              deliveryZoneKa: zone?.nameKa ?? "",
+              deliveryZoneEn: zone?.nameEn ?? "",
+              items: lines.map(({ product, quantity, price, sku, label }) => ({
+                nameKa: product.nameKa,
+                nameEn: product.nameEn,
+                variantLabel: label,
+                sku,
+                quantity,
+                price,
+              })),
+              subtotal,
+              shipping,
+              discount,
+              total,
+              tax,
+              taxRate,
+              couponCode: input.couponCode && couponId ? input.couponCode.toUpperCase() : null,
+            },
+            settings,
+            await getLocale(),
+          ).catch((error) => {
+            console.error("renderInvoicePdf failed", error);
+            return null;
+          })
+        : null;
+
       // Deliberately not awaited into the failure path: the order is already
       // committed, and a mail outage must not turn a paid basket into an error.
       await sendOrderPlacedEmail({
-        to: input.email?.trim() ?? "",
+        to: email,
         number: order.number,
         total,
+        attachments: invoice
+          ? [{ filename: `${order.number}.pdf`, content: invoice, contentType: "application/pdf" }]
+          : undefined,
         items: lines.map(({ product, quantity, price, label }) => ({
           // The combination belongs in the name here: an email listing "T-shirt
           // ×2" when two different ones were bought is a support call.

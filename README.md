@@ -1046,11 +1046,12 @@ you own, and never in a fork.
 - **Returns are asked for and answered on the order page**, and the shopper is emailed when the
   shop answers — with the reply in the message — as far as any email is sent here at all:
   without a sending domain it goes to the server log like the rest.
-- **An order prints, but no invoice is emailed.** Both order pages — the shop's and the
-  shopper's — print as a document: the shop's name and contact details, the number, the date, who
-  it is for, the lines, the totals. It is deliberately not a fiscal document and says so on its
-  face; issuing one means a tax number and a numbering scheme an accountant signs off. Attaching a
-  PDF to the confirmation email needs a renderer and a verified sending domain.
+- **An order prints, downloads as a PDF, and the PDF goes with the confirmation email** — as
+  far as any email goes here at all. Both order pages print as a document, and "Download PDF"
+  draws the same document with `pdfkit` and Noto Sans Georgian embedded, from the order's own
+  snapshotted columns, so it comes out the same every time. It is deliberately not a fiscal
+  document and says so on its face; issuing one means a tax number and a numbering scheme an
+  accountant signs off.
 - **The shop installs, but does not run offline.** The manifest and icons are real — install it
   from the browser's own menu and it gets the shop's name, its colour and its square. There is no
   service worker, so there is nothing to serve when the network is gone, and Chromium therefore

@@ -229,6 +229,7 @@ const ka = {
     billTo: "მიმღები",
     issued: "გაცემულია",
     invoiceNote: "დემო პროექტი — ეს არ არის ფისკალური დოკუმენტი.",
+    downloadPdf: "PDF-ის ჩამოტვირთვა",
   },
 
   theme: {
@@ -1251,6 +1252,7 @@ const en: Dictionary = {
     billTo: "Bill to",
     issued: "Issued",
     invoiceNote: "Demo project — this is not a fiscal document.",
+    downloadPdf: "Download PDF",
   },
 
   theme: {

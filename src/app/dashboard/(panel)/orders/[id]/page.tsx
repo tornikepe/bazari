@@ -13,6 +13,7 @@ import { PrintButton } from "@/components/order/PrintButton";
 import { TaxNote } from "@/components/ui/TaxNote";
 import {
   ChevronLeftIcon,
+  FileIcon,
   MailIcon,
   MapPinIcon,
   PhoneIcon,
@@ -111,6 +112,14 @@ export default async function AdminOrderDetailPage({
           <div className="flex flex-col items-end gap-1.5">
             <div className="flex items-center gap-3">
               <PrintButton />
+              <a
+                href={`/api/orders/${encodeURIComponent(order.number)}/invoice`}
+                download={`${order.number}.pdf`}
+                className="btn btn-outline btn-sm"
+              >
+                <FileIcon size={15} />
+                {t.orderDone.downloadPdf}
+              </a>
               <StatusBadge status={order.status} t={t} />
               <OrderStatusSelect id={order.id} status={order.status} />
             </div>

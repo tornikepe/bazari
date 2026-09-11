@@ -19,6 +19,8 @@ export type MailInput = {
   /** Plain text is required; some clients never render the HTML part. */
   text: string;
   html: string;
+  /** Files to go with it — an invoice. Kept small: mail is not a file store. */
+  attachments?: { filename: string; content: Buffer; contentType: string }[];
 };
 
 const API_URL = "https://api.resend.com/emails";
@@ -87,10 +89,14 @@ export async function sendMail(input: MailInput): Promise<boolean> {
     }
 
     // Local development: the developer reads this from their own terminal.
+    const attached = (input.attachments ?? [])
+      .map((file) => `       attached: ${file.filename} (${Math.round(file.content.byteLength / 1024)} KB)`)
+      .join("\n");
     console.info(
       `\n[mail] no RESEND_API_KEY — would have sent to ${input.to}\n` +
         `       subject: ${input.subject}\n` +
-        `${input.text.replace(/^/gm, "       ")}\n`,
+        `${input.text.replace(/^/gm, "       ")}\n` +
+        (attached ? `${attached}\n` : ""),
     );
     return true;
   }
@@ -108,6 +114,16 @@ export async function sendMail(input: MailInput): Promise<boolean> {
         subject: input.subject,
         text: input.text,
         html: input.html,
+        // The provider takes the bytes base64-encoded in the JSON body.
+        ...(input.attachments && input.attachments.length > 0
+          ? {
+              attachments: input.attachments.map((file) => ({
+                filename: file.filename,
+                content: file.content.toString("base64"),
+                content_type: file.contentType,
+              })),
+            }
+          : {}),
       }),
     });
 

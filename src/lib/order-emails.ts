@@ -1,6 +1,6 @@
 import "server-only";
 
-import { sendMail } from "@/lib/mail";
+import { sendMail, type MailInput } from "@/lib/mail";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { formatPrice } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
@@ -22,6 +22,8 @@ export type OrderMailInput = {
   total: number;
   items: Line[];
   locale: Locale;
+  /** The invoice, when the caller has drawn one. */
+  attachments?: MailInput["attachments"];
 };
 
 const COPY = {
@@ -149,6 +151,7 @@ async function send(input: OrderMailInput, kind: "placed" | "shipped") {
   return sendMail({
     to: input.to,
     subject: `${subject} ${input.number} — ${SITE_TITLE}`,
+    attachments: input.attachments,
     text: [
       heading,
       "",
