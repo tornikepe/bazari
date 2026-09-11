@@ -24,6 +24,27 @@ export const DEFAULT_SHIPPING: ShippingRules = {
   shippingFee: DEFAULT_SETTINGS.shippingFee,
 };
 
+/** A courier zone, as the rule needs it: what it costs, and when it is free. */
+export type ZoneRules = {
+  /** Tetri. */
+  fee: number;
+  /** Tetri. Null defers to the shop-wide threshold. */
+  freeAbove: number | null;
+};
+
+/**
+ * How the order leaves the shop.
+ *
+ * `courier` with no zone is the rule as it always was — one fee everywhere —
+ * and is what a shop with no zones configured gets. A zone narrows it to a
+ * place. `pickup` costs nothing, because nothing is sent.
+ */
+export type DeliveryChoice =
+  | { method: "pickup" }
+  | { method: "courier"; zone?: ZoneRules | null };
+
+export const DEFAULT_DELIVERY: DeliveryChoice = { method: "courier" };
+
 /**
  * The single place the rule is applied.
  *
@@ -38,7 +59,14 @@ export function shippingFor(
   subtotal: number,
   itemCount: number,
   rules: ShippingRules = DEFAULT_SHIPPING,
+  choice: DeliveryChoice = DEFAULT_DELIVERY,
 ) {
   if (itemCount === 0) return 0;
-  return subtotal >= rules.freeShippingThreshold ? 0 : rules.shippingFee;
+  if (choice.method === "pickup") return 0;
+
+  const zone = choice.zone;
+  if (!zone) return subtotal >= rules.freeShippingThreshold ? 0 : rules.shippingFee;
+
+  const threshold = zone.freeAbove ?? rules.freeShippingThreshold;
+  return subtotal >= threshold ? 0 : zone.fee;
 }

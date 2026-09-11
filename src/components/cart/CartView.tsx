@@ -7,6 +7,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { Price } from "@/components/ui/Price";
 import { MinusIcon, PlusIcon, TrashIcon, TruckIcon } from "@/components/ui/icons";
+import { TaxNote } from "@/components/ui/TaxNote";
 import { formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -216,6 +217,8 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
               </dd>
             </div>
           </dl>
+
+          <TaxNote total={total} rate={settings.vatRate} locale={locale} t={t} className="mt-1.5" />
 
           {remaining > 0 && (
             <div className="mt-4 flex items-start gap-2 rounded-control bg-accent-50 p-3 text-xs leading-snug text-accent-800">

@@ -5,7 +5,14 @@ const values = {
   freeShippingThreshold: "200,00 ₾",
   shippingFee: "15,00 ₾",
   shopName: "Bazari",
+  returnWindow: "14",
 };
+
+describe("substitute", () => {
+  it("resolves the return window from the settings, like the shipping figures", () => {
+    expect(substitute("within {returnWindow} days", values)).toBe("within 14 days");
+  });
+});
 
 describe("parseSections", () => {
   it("splits on headings", () => {

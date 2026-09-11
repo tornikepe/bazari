@@ -20,6 +20,7 @@ import {
   MenuIcon,
   PackageIcon,
   FileIcon,
+  RefreshIcon,
   SettingsIcon,
   ShieldIcon,
   UsersIcon,
@@ -39,6 +40,7 @@ export function AdminSidebar({
     { href: "/dashboard/products", label: t.admin.products, icon: PackageIcon },
     { href: "/dashboard/categories", label: t.admin.categories, icon: GridIcon },
     { href: "/dashboard/orders", label: t.admin.orders, icon: BagIcon },
+    { href: "/dashboard/returns", label: t.admin.returns, icon: RefreshIcon },
     { href: "/dashboard/coupons", label: t.admin.coupons, icon: TagIcon },
     { href: "/dashboard/customers", label: t.admin.customers, icon: UsersIcon },
     { href: "/dashboard/staff", label: t.admin.staff, icon: ShieldIcon },
@@ -135,7 +137,11 @@ export function AdminSidebar({
       </div>
 
       {/* Desktop rail */}
-      <aside className="admin-rail sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-panel p-4 lg:flex">
+      {/* `h-dvh` and `overflow-y-auto`: on a short window the rail's own
+          content is taller than the rail, and without the scroll its last
+          rows — the account, the sign-out — rendered past its bottom edge
+          onto the page's canvas, grey text on grey. */}
+      <aside className="admin-rail sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-y-auto bg-panel p-4 lg:flex">
         {nav}
       </aside>
 

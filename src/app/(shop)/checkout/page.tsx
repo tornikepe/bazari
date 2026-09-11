@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
+import { getActiveZones } from "@/lib/delivery";
 
 /**
  * Checkout requires an account.
@@ -23,20 +24,25 @@ export default async function CheckoutPage() {
   if (!user) redirect("/login?next=%2Fcheckout");
   if (user.role !== "customer") redirect("/cart");
 
-  const saved = await prisma.address.findMany({
-    where: { userId: user.id },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-    select: {
-      id: true,
-      label: true,
-      fullName: true,
-      phone: true,
-      city: true,
-      street: true,
-      note: true,
-      isDefault: true,
-    },
-  });
+  const [saved, zones] = await Promise.all([
+    prisma.address.findMany({
+      where: { userId: user.id },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        label: true,
+        fullName: true,
+        phone: true,
+        city: true,
+        street: true,
+        note: true,
+        isDefault: true,
+      },
+    }),
+    // The same list `placeOrder` reads, so the form cannot offer a zone the
+    // action will then refuse.
+    getActiveZones(),
+  ]);
 
   /* The default address wins over the profile fields when there is one: a
      customer who has taken the trouble to save "work, and send it to the
@@ -55,6 +61,7 @@ export default async function CheckoutPage() {
         note: preferred?.note ?? "",
       }}
       saved={saved}
+      zones={zones}
     />
   );
 }

@@ -3,7 +3,8 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { shippingFor } from "@/lib/cart-rules";
+import { shippingFor, type DeliveryChoice } from "@/lib/cart-rules";
+import { getActiveZones } from "@/lib/delivery";
 import { getSettings } from "@/lib/settings";
 import { checkCoupon } from "@/lib/coupons";
 import { isPaymentMethod } from "@/lib/payment";
@@ -15,6 +16,7 @@ import { sendLowStockEmail, type LowStockItem } from "@/lib/stock-emails";
 import { crossedLowStock } from "@/lib/stock";
 import { labelFor } from "@/lib/variants";
 import { getLocale } from "@/lib/locale";
+import { vatIncluded } from "@/lib/tax";
 
 export type PlaceOrderInput = {
   customerName: string;
@@ -28,6 +30,10 @@ export type PlaceOrderInput = {
   /** Optional discount code; re-validated server-side before it's applied. */
   couponCode?: string;
   paymentMethod?: string;
+  /** `courier` or `pickup`; anything else is refused. */
+  deliveryMethod?: string;
+  /** Required for a courier when the shop has zones; ignored otherwise. */
+  deliveryZoneId?: string;
 };
 
 export type PlaceOrderResult =
@@ -59,8 +65,29 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const throttle = await consume(`order:ip:${await clientIp()}`, 10, 60 * 60);
   if (!throttle.ok) return { ok: false, error: "rate-limited" };
 
-  if (!customerName || !phone || !city || !address) return { ok: false, error: "invalid" };
+  if (!customerName || !phone) return { ok: false, error: "invalid" };
   if (!Array.isArray(input.items) || input.items.length === 0) return { ok: false, error: "empty" };
+
+  // How it leaves the shop. Decided from the settings and the zone table, not
+  // from what the form claims is on offer: a request asking to collect from a
+  // shop that offers no collection buys nothing.
+  const settings = await getSettings();
+  const pickup = input.deliveryMethod === "pickup";
+  if (pickup && !settings.pickupEnabled) return { ok: false, error: "invalid" };
+  if (!pickup && input.deliveryMethod !== undefined && input.deliveryMethod !== "courier") {
+    return { ok: false, error: "invalid" };
+  }
+  // A courier needs somewhere to go. A collection does not.
+  if (!pickup && (!city || !address)) return { ok: false, error: "invalid" };
+
+  const zones = pickup ? [] : await getActiveZones();
+  const zone = zones.find((candidate) => candidate.id === input.deliveryZoneId) ?? null;
+  // With zones configured, a courier order must name one of them: the fee
+  // depends on it, and "no zone" would be the shop-wide fee slipping past
+  // the prices the shop actually set.
+  if (!pickup && zones.length > 0 && !zone) return { ok: false, error: "invalid" };
+
+  const delivery: DeliveryChoice = pickup ? { method: "pickup" } : { method: "courier", zone };
 
   /* Normalised and de-duplicated before touching the database, by the product
      *and* the combination: one red medium and one blue medium are two lines,
@@ -168,8 +195,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const subtotal = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
   // Read here rather than trusted from the client, exactly like the prices
   // above: the cart lives in localStorage and every figure in it is editable.
-  const settings = await getSettings();
-  const shipping = shippingFor(subtotal, lines.length, settings);
+  const shipping = shippingFor(subtotal, lines.length, settings, delivery);
 
   // The discount is recomputed here rather than trusted from the client, so a
   // tampered request can't invent one.
@@ -183,7 +209,21 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
   }
 
+  // The setting exists to be obeyed. The form hides the option, but this is a
+  // Server Action and takes a POST from anywhere.
+  const paymentMethod = isPaymentMethod(input.paymentMethod)
+    ? input.paymentMethod
+    : "cash_on_delivery";
+  if (paymentMethod === "cash_on_delivery" && !settings.codEnabled) {
+    return { ok: false, error: "invalid" };
+  }
+
   const total = subtotal + shipping - discount;
+  // The VAT inside that total, at today's rate. Both are written to the order:
+  // the figure so the receipt can show it, the rate so a change next year
+  // does not rewrite what this order paid.
+  const taxRate = settings.vatRate;
+  const tax = vatIncluded(total, taxRate);
 
   // A few attempts in case two orders draw the same random number.
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -204,6 +244,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             city,
             address,
             note: input.note?.trim() ?? "",
+            deliveryMethod: pickup ? "pickup" : "courier",
+            deliveryZoneId: zone?.id ?? null,
+            // The zone's name as it is today, so a rename or a deletion later
+            // cannot blank out where this order went.
+            deliveryZoneKa: zone?.nameKa ?? "",
+            deliveryZoneEn: zone?.nameEn ?? "",
             // Stored broken down so the invoice can be reproduced later even
             // if prices or the shipping rules change.
             subtotal,
@@ -211,9 +257,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             discount,
             couponId,
             total,
-            paymentMethod: isPaymentMethod(input.paymentMethod)
-              ? input.paymentMethod
-              : "cash_on_delivery",
+            tax,
+            taxRate,
+            paymentMethod,
             status: "pending",
             items: {
               create: lines.map(({ product, variant, quantity, price, sku, label }) => ({

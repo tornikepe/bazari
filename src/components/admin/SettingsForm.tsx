@@ -170,6 +170,60 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
           />
           {t.admin.codEnabled}
         </label>
+
+        <div className="border-t border-line pt-4">
+          <label className="flex items-center gap-2.5 text-sm text-ink-700">
+            <input
+              type="checkbox"
+              name="pickupEnabled"
+              defaultChecked={settings.pickupEnabled}
+              disabled={!canWrite}
+              className="h-4 w-4"
+            />
+            {t.admin.pickupEnabled}
+          </label>
+          <p className="mt-1 text-xs text-ink-400">{t.admin.pickupEnabledHint}</p>
+        </div>
+
+        <Field
+          name="pickupAddress"
+          label={t.admin.pickupAddressField}
+          hint={t.admin.pickupAddressHint}
+          defaultValue={settings.pickupAddress}
+          disabled={!canWrite}
+        />
+      </Section>
+
+      <Section title={t.admin.settingsReturns} note={t.admin.returnWindowHint}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            name="returnWindowDays"
+            label={t.admin.returnWindowField}
+            type="number"
+            step="1"
+            min="0"
+            max="365"
+            defaultValue={settings.returnWindowDays}
+            required
+            disabled={!canWrite}
+          />
+        </div>
+      </Section>
+
+      <Section title={t.admin.settingsTax} note={t.admin.vatRateHint}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            name="vatRate"
+            label={t.admin.vatRateField}
+            type="number"
+            step="1"
+            min="0"
+            max="50"
+            defaultValue={settings.vatRate}
+            required
+            disabled={!canWrite}
+          />
+        </div>
       </Section>
 
       {canWrite && (

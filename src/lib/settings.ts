@@ -45,6 +45,10 @@ export const getSettings = cache(async (): Promise<ShopSettings> => {
       freeShippingThreshold: row.freeShippingThreshold,
       shippingFee: row.shippingFee,
       codEnabled: row.codEnabled,
+      vatRate: row.vatRate,
+      pickupEnabled: row.pickupEnabled,
+      pickupAddress: row.pickupAddress,
+      returnWindowDays: row.returnWindowDays,
     };
   } catch (error) {
     // Deliberately not rethrown. Every page needs this, so a throw here is a

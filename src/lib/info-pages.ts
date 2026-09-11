@@ -220,26 +220,40 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
   returns: {
     ka: {
       title: "დაბრუნების პოლიტიკა",
-      intro: "დემო პროექტს რეალური დაბრუნების პროცესი არ აქვს.",
+      intro: "მიწოდებიდან {returnWindow} დღის განმავლობაში შეკვეთის დაბრუნება შეგიძლია — მოთხოვნა შეკვეთის გვერდიდანვე იგზავნება.",
       sections: [
         {
-          heading: "როგორ იქნებოდა რეალურ მაღაზიაში",
+          heading: "როგორ მოვითხოვო",
           body: [
-            "რეალურ მაღაზიაში აქ ეწერებოდა დაბრუნების ვადა, პროდუქტის მდგომარეობის მოთხოვნები და თანხის დაბრუნების პროცედურა.",
-            "ვინაიდან აქ გადახდა არ ხდება, დასაბრუნებელიც არაფერია.",
+            "გახსენი შეკვეთა ანგარიშში, აირჩიე, რომელი პროდუქტების დაბრუნება გინდა და რატომ, და გააგზავნე მოთხოვნა. მაღაზიის პასუხი იმავე გვერდზე გამოჩნდება.",
+            "მოთხოვნა შესაძლებელია მხოლოდ მიწოდებული შეკვეთისთვის, მიღებიდან {returnWindow} დღის განმავლობაში.",
+          ],
+        },
+        {
+          heading: "რა ხდება შემდეგ",
+          body: [
+            "დამტკიცების შემდეგ პროდუქტი გამოგზავნე ან მოიტანე მაღაზიაში. როცა მაღაზია მიიღებს, თანხა დაბრუნდება იმავე გზით, რითაც გადაიხადე.",
+            "ეს დემო პროექტია — რეალური გადახდა არ ხდება, ამიტომ თანხის დაბრუნებაც პირობითია.",
           ],
         },
       ],
     },
     en: {
       title: "Return policy",
-      intro: "A demo project has no real returns process.",
+      intro: "An order can be returned within {returnWindow} days of delivery — the request is made from the order page itself.",
       sections: [
         {
-          heading: "What a real shop would put here",
+          heading: "How to ask",
           body: [
-            "A real store would state its return window, the condition requirements and how refunds are issued.",
-            "Since no payment is taken here, there is nothing to return.",
+            "Open the order in your account, choose which items you are sending back and why, and send the request. The shop's answer appears on the same page.",
+            "A request is only possible for a delivered order, within {returnWindow} days of receiving it.",
+          ],
+        },
+        {
+          heading: "What happens next",
+          body: [
+            "Once approved, send the item back or bring it to the shop. When the shop has received it, the money goes back the way it was paid.",
+            "This is a demo project — no real payment is taken, so the refund is notional too.",
           ],
         },
       ],

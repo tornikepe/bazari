@@ -7,9 +7,15 @@ import { getCurrentUser } from "@/lib/auth";
 import { readReceipts } from "@/lib/order-access";
 import { formatPrice } from "@/lib/format";
 import { Price } from "@/components/ui/Price";
-import { CheckIcon, TruckIcon } from "@/components/ui/icons";
+import { CheckIcon, MapPinIcon, TruckIcon } from "@/components/ui/icons";
+import { getSettings } from "@/lib/settings";
 import { InvoiceHead } from "@/components/order/InvoiceHead";
 import { PrintButton } from "@/components/order/PrintButton";
+import { TaxNote } from "@/components/ui/TaxNote";
+import { ReturnPanel } from "@/components/order/ReturnPanel";
+import { Parcel } from "@/components/order/Parcel";
+import { mayRequestReturn } from "@/lib/returns";
+import { formatDate } from "@/lib/format";
 
 export default async function OrderConfirmationPage({
   params,
@@ -21,20 +27,44 @@ export default async function OrderConfirmationPage({
 
   const order = await prisma.order.findUnique({
     where: { number: decodeURIComponent(number) },
-    include: { items: true, coupon: { select: { code: true } } },
+    include: {
+      items: true,
+      coupon: { select: { code: true } },
+      returns: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          items: {
+            include: {
+              orderItem: { select: { nameKa: true, nameEn: true, variantLabel: true } },
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!order) notFound();
 
   // The URL alone must not reveal a stranger's name, phone and address —
   // anyone else is sent to /track, which asks for the phone number.
-  const [user, receipts] = await Promise.all([getCurrentUser(), readReceipts()]);
+  const [user, receipts, settings] = await Promise.all([
+    getCurrentUser(),
+    readReceipts(),
+    getSettings(),
+  ]);
   const mayView =
     user?.role === "admin" ||
     (order.userId !== null && order.userId === user?.id) ||
     receipts.includes(order.number);
 
   if (!mayView) redirect(`/track?number=${encodeURIComponent(order.number)}`);
+
+  // Only the owner may ask for a return. An admin reading the page, or a
+  // browser holding the receipt cookie, sees what was asked and not the form.
+  const owner = user !== null && order.userId === user.id && user.role === "customer";
+  const returnAllowed = owner
+    ? mayRequestReturn(order, order.returns, settings.returnWindowDays)
+    : ({ ok: false, reason: "off" } as const);
 
   return (
     <div className="page">
@@ -52,9 +82,15 @@ export default async function OrderConfirmationPage({
         />
 
         <div className="card card-pad-notice flex flex-col items-center text-center">
-          <span className="grid h-16 w-16 place-items-center rounded-pill bg-success-soft text-success">
-            <CheckIcon size={32} strokeWidth={3} />
-          </span>
+          {/* The order as a thing, with the tick stuck on its corner like a
+              sticker: the parcel says what happened, the tick that it went
+              well. Both are decoration; the heading below is the statement. */}
+          <div className="relative -my-4">
+            <Parcel />
+            <span className="absolute top-8 right-6 grid h-9 w-9 place-items-center rounded-pill bg-success-soft text-success ring-4 ring-surface">
+              <CheckIcon size={18} strokeWidth={3} />
+            </span>
+          </div>
 
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-ink-900">
             {t.orderDone.title}
@@ -147,13 +183,74 @@ export default async function OrderConfirmationPage({
             </div>
           </dl>
 
-          <div className="mt-4 flex items-start gap-2 rounded-control bg-ink-50 p-3 text-xs leading-snug text-ink-600">
-            <TruckIcon size={15} className="mt-px shrink-0 text-brand-600" />
-            <span>
-              {order.customerName} · {order.phone} · {order.city}, {order.address}
-            </span>
-          </div>
+          {/* The figure and the rate as they were recorded, not today's. */}
+          <TaxNote
+            total={order.total}
+            rate={order.taxRate}
+            amount={order.tax}
+            locale={locale}
+            t={t}
+            className="mt-1.5"
+          />
+
+          {/* Where it is going, or where it is waiting. The zone is the
+              snapshotted name, so it reads the same however the shop's list
+              changes later. */}
+          {order.deliveryMethod === "pickup" ? (
+            <div className="mt-4 flex items-start gap-2 rounded-control bg-ink-50 p-3 text-xs leading-snug text-ink-600">
+              <MapPinIcon size={15} className="mt-px shrink-0 text-brand-600" />
+              <span>
+                <span className="block font-semibold text-ink-800">
+                  {t.checkout.deliveryPickup} · {t.checkout.deliveryPickupFrom}
+                </span>
+                {settings.pickupAddress || settings.contactAddress || settings.name}
+                <span className="mt-1 block">
+                  {order.customerName} · {order.phone}
+                </span>
+              </span>
+            </div>
+          ) : (
+            <div className="mt-4 flex items-start gap-2 rounded-control bg-ink-50 p-3 text-xs leading-snug text-ink-600">
+              <TruckIcon size={15} className="mt-px shrink-0 text-brand-600" />
+              <span>
+                {(order.deliveryZoneKa || order.deliveryZoneEn) && (
+                  <span className="block font-semibold text-ink-800">
+                    {t.checkout.deliveryCourier} ·{" "}
+                    {locale === "ka" ? order.deliveryZoneKa : order.deliveryZoneEn}
+                  </span>
+                )}
+                {order.customerName} · {order.phone} · {order.city}, {order.address}
+              </span>
+            </div>
+          )}
         </div>
+
+        <ReturnPanel
+          orderNumber={order.number}
+          windowDays={settings.returnWindowDays}
+          allowed={returnAllowed}
+          lines={order.items.map((item) => ({
+            orderItemId: item.id,
+            nameKa: item.nameKa,
+            nameEn: item.nameEn,
+            variantLabel: item.variantLabel,
+            quantity: item.quantity,
+          }))}
+          requests={order.returns.map((request) => ({
+            id: request.id,
+            status: request.status,
+            reason: request.reason,
+            note: request.note,
+            staffNote: request.staffNote,
+            createdAtLabel: formatDate(request.createdAt),
+            items: request.items.map((line) => ({
+              nameKa: line.orderItem.nameKa,
+              nameEn: line.orderItem.nameEn,
+              variantLabel: line.orderItem.variantLabel,
+              quantity: line.quantity,
+            })),
+          }))}
+        />
 
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           {/* First, because a receipt is the thing most people want off this

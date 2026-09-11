@@ -23,6 +23,8 @@ export type InfoValues = {
   freeShippingThreshold: string;
   shippingFee: string;
   shopName: string;
+  /** Days, as a number in words the page can put in a sentence. */
+  returnWindow: string;
 };
 
 /**
@@ -37,6 +39,7 @@ const PLACEHOLDERS: Record<string, keyof InfoValues> = {
   "{freeShipping}": "freeShippingThreshold",
   "{shippingFee}": "shippingFee",
   "{shopName}": "shopName",
+  "{returnWindow}": "returnWindow",
 };
 
 export function substitute(text: string, values: InfoValues): string {

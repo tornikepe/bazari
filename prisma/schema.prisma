@@ -80,6 +80,60 @@ enum OrderStatus {
   cancelled
 }
 
+/// How an order leaves the shop: with a courier, or collected by the shopper.
+enum DeliveryMethod {
+  courier
+  pickup
+}
+
+/// Where a return request is in its life.
+///
+/// `requested` is the shopper asking; everything after is the shop
+/// answering. `received` is the moment the goods are back on the shelf — it
+/// is the one transition that touches stock — and `refunded` is the shop
+/// saying the money has gone back, recorded here so the shopper can see it.
+enum ReturnStatus {
+  requested
+  approved
+  rejected
+  received
+  refunded
+}
+
+/// Why, in the shopper's own words but from a short list, so the dashboard
+/// can count them: a shop where every third return is `wrong_item` has a
+/// packing problem, and free text would never show it.
+enum ReturnReason {
+  damaged
+  wrong_item
+  not_as_described
+  changed_mind
+  other
+}
+
+/// Where a courier goes, and what it costs to send one there.
+///
+/// One fee for the whole country was the rule while the shop was a demo; a
+/// real courier charges Tbilisi and Svaneti differently. A zone is that
+/// difference given a name and a price. No zones at all means the shop-wide
+/// fee applies everywhere, exactly as before this table existed.
+model DeliveryZone {
+  id        String   @id @default(cuid())
+  nameKa    String
+  nameEn    String
+  /// Tetri.
+  fee       Int
+  /// Tetri. Null means the shop-wide free-delivery threshold applies here as
+  /// well; a figure of its own overrides it for this zone alone.
+  freeAbove Int?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  orders    Order[]
+  createdAt DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+}
+
 model Category {
   id        String    @id @default(cuid())
   slug      String    @unique
@@ -297,12 +351,29 @@ model Order {
   address      String
   note         String  @default("")
 
+  /// How it leaves the shop. For `pickup` the address columns above may be
+  /// empty — there is nowhere to send anything.
+  deliveryMethod DeliveryMethod @default(courier)
+  /// Which zone priced the delivery, while the zone still exists.
+  deliveryZoneId String?
+  deliveryZone   DeliveryZone?  @relation(fields: [deliveryZoneId], references: [id], onDelete: SetNull)
+  /// And what it was called, snapshotted like the prices beside it: a zone
+  /// renamed or removed next year must not blank out where this order went.
+  deliveryZoneKa String         @default("")
+  deliveryZoneEn String         @default("")
+
   /// Money is stored broken down, not just as a total, so an invoice can be
   /// reproduced exactly even after prices or shipping rules change.
   subtotal Int @default(0)
   shipping Int @default(0)
   discount Int @default(0)
   total    Int
+  /// The VAT contained in `total`, in tetri — Georgian retail prices carry the
+  /// tax inside them, so this is a share of the total and never added on top.
+  /// Snapshotted with the rate it was worked out at, because a rate change
+  /// next year must not rewrite what this order paid.
+  tax     Int @default(0)
+  taxRate Int @default(0)
 
   couponId String?
   coupon   Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
@@ -319,6 +390,7 @@ model Order {
   events    OrderEvent[]
   movements StockMovement[]
   payments  Payment[]
+  returns   ReturnRequest[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
@@ -365,8 +437,51 @@ model OrderItem {
   /// And what it was called, snapshotted like the name and the price beside
   /// it: a variant renamed or deleted next year must not rewrite an old order.
   variantLabel String          @default("")
+  returnItems  ReturnItem[]
 
   @@index([orderId])
+}
+
+/// A shopper asking to send something back.
+///
+/// A request, not a policy page: the page says what the rule is, and this is
+/// the rule being used. One row per ask, with the shop's answer written back
+/// into it, so the order page can show the shopper where things stand without
+/// a phone call.
+model ReturnRequest {
+  id      String       @id @default(cuid())
+  orderId String
+  order   Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reason  ReturnReason
+  /// The shopper's own words, if any.
+  note    String       @default("")
+  status  ReturnStatus @default(requested)
+  /// What the shop said back. Shown to the shopper, so it is written for them.
+  staffNote  String    @default("")
+  /// Email of the staff member who last moved it; empty while it is only asked.
+  actor      String    @default("")
+  items      ReturnItem[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  /// Set on the first move out of `requested`.
+  resolvedAt DateTime?
+
+  @@index([orderId])
+  @@index([status, createdAt])
+}
+
+/// Which lines, and how many of each. A shopper keeping one of two shirts
+/// returns one shirt, and the stock must come back by one and not by two.
+model ReturnItem {
+  id          String        @id @default(cuid())
+  requestId   String
+  request     ReturnRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  orderItemId String
+  orderItem   OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  quantity    Int
+
+  @@unique([requestId, orderItemId])
+  @@index([orderItemId])
 }
 
 /// Both customers and staff live here — `role` is what separates the customer
@@ -608,6 +723,16 @@ model ShopSettings {
   freeShippingThreshold Int     @default(20000)
   shippingFee           Int     @default(1500)
   codEnabled            Boolean @default(true)
+  /// Whole percent. Georgia's VAT is 18; zero means the shop is not
+  /// registered for it and no tax line is shown anywhere.
+  vatRate               Int     @default(18)
+  /// Whether a shopper may collect an order instead of having it sent.
+  pickupEnabled         Boolean @default(false)
+  /// Where they collect it. Empty means the contact address above.
+  pickupAddress         String  @default("")
+  /// Days after delivery in which a shopper may ask to return something.
+  /// Zero switches the request form off without touching the policy page.
+  returnWindowDays      Int     @default(14)
 
   updatedAt DateTime @updatedAt
 }

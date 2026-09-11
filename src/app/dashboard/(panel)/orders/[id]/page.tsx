@@ -10,12 +10,14 @@ import { PaymentPanel } from "@/components/admin/PaymentPanel";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { InvoiceHead } from "@/components/order/InvoiceHead";
 import { PrintButton } from "@/components/order/PrintButton";
+import { TaxNote } from "@/components/ui/TaxNote";
 import {
   ChevronLeftIcon,
   MailIcon,
   MapPinIcon,
   PhoneIcon,
   TagIcon,
+  TruckIcon,
   UserIcon,
 } from "@/components/ui/icons";
 
@@ -34,6 +36,7 @@ export default async function AdminOrderDetailPage({
       coupon: { select: { code: true } },
       events: { orderBy: { createdAt: "asc" } },
       payments: { orderBy: { createdAt: "desc" } },
+      returns: { orderBy: { createdAt: "desc" }, select: { id: true, status: true, reason: true, createdAt: true } },
     },
   });
 
@@ -55,11 +58,21 @@ export default async function AdminOrderDetailPage({
   const currentStatusAt =
     order.events.filter((event) => event.status === order.status).at(-1)?.createdAt ?? null;
 
+  const zoneName = locale === "ka" ? order.deliveryZoneKa : order.deliveryZoneEn;
   const contact = [
     { icon: UserIcon, value: order.customerName },
     { icon: PhoneIcon, value: order.phone },
     ...(order.email ? [{ icon: MailIcon, value: order.email }] : []),
-    { icon: MapPinIcon, value: `${order.city}, ${order.address}` },
+    // A collection has no address to show; a courier order shows its zone
+    // beside the street, from the name snapshotted when it was placed.
+    order.deliveryMethod === "pickup"
+      ? { icon: MapPinIcon, value: t.checkout.deliveryPickup }
+      : {
+          icon: TruckIcon,
+          value: zoneName
+            ? `${zoneName} · ${order.city}, ${order.address}`
+            : `${order.city}, ${order.address}`,
+        },
   ];
 
   const payment = [
@@ -154,49 +167,63 @@ export default async function AdminOrderDetailPage({
           {/* The totals come from the columns snapshotted when the order was
               placed, so the invoice stays reproducible even after prices or
               the shipping rules change. */}
-          <dl className="border-t border-line bg-ink-50 px-5 py-3.5 text-xs">
-            <div className="flex items-center justify-between">
-              <dt className="text-ink-500">{t.admin.orderSubtotal}</dt>
-              <dd className="font-semibold text-ink-800">
-                {formatPrice(order.subtotal, locale)}
-              </dd>
-            </div>
-
-            <div className="mt-1.5 flex items-center justify-between">
-              <dt className="text-ink-500">{t.cart.shipping}</dt>
-              <dd className="font-semibold text-ink-800">
-                {order.shipping <= 0 ? (
-                  <span className="text-success">{t.cart.freeShipping}</span>
-                ) : (
-                  formatPrice(order.shipping, locale)
-                )}
-              </dd>
-            </div>
-
-            {order.discount > 0 && (
-              <div className="mt-1.5 flex items-center justify-between gap-3">
-                <dt className="flex min-w-0 items-center gap-1.5 text-ink-500">
-                  {t.admin.orderDiscount}
-                  {order.coupon && (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-pill bg-accent-50 px-1.5 py-0.5 font-mono text-xs font-bold text-accent-800">
-                      <TagIcon size={11} />
-                      {order.coupon.code}
-                    </span>
-                  )}
-                </dt>
-                <dd className="shrink-0 font-semibold text-success">
-                  −{formatPrice(order.discount, locale)}
+          <div className="border-t border-line bg-ink-50 px-5 py-3.5 text-xs">
+            <dl>
+              <div className="flex items-center justify-between">
+                <dt className="text-ink-500">{t.admin.orderSubtotal}</dt>
+                <dd className="font-semibold text-ink-800">
+                  {formatPrice(order.subtotal, locale)}
                 </dd>
               </div>
-            )}
 
-            <div className="mt-2.5 flex items-center justify-between border-t border-line pt-2.5">
-              <dt className="text-sm font-bold text-ink-900">{t.cart.total}</dt>
-              <dd className="text-base font-extrabold text-ink-900">
-                {formatPrice(order.total, locale)}
-              </dd>
-            </div>
-          </dl>
+              <div className="mt-1.5 flex items-center justify-between">
+                <dt className="text-ink-500">{t.cart.shipping}</dt>
+                <dd className="font-semibold text-ink-800">
+                  {order.shipping <= 0 ? (
+                    <span className="text-success">{t.cart.freeShipping}</span>
+                  ) : (
+                    formatPrice(order.shipping, locale)
+                  )}
+                </dd>
+              </div>
+
+              {order.discount > 0 && (
+                <div className="mt-1.5 flex items-center justify-between gap-3">
+                  <dt className="flex min-w-0 items-center gap-1.5 text-ink-500">
+                    {t.admin.orderDiscount}
+                    {order.coupon && (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-pill bg-accent-50 px-1.5 py-0.5 font-mono text-xs font-bold text-accent-800">
+                        <TagIcon size={11} />
+                        {order.coupon.code}
+                      </span>
+                    )}
+                  </dt>
+                  <dd className="shrink-0 font-semibold text-success">
+                    −{formatPrice(order.discount, locale)}
+                  </dd>
+                </div>
+              )}
+
+              <div className="mt-2.5 flex items-center justify-between border-t border-line pt-2.5">
+                <dt className="text-sm font-bold text-ink-900">{t.cart.total}</dt>
+                <dd className="text-base font-extrabold text-ink-900">
+                  {formatPrice(order.total, locale)}
+                </dd>
+              </div>
+            </dl>
+
+            {/* Outside the list: a note about the total rather than a row
+                that adds up to it, and a `<p>` is not a thing a `<dl>` may
+                hold. The figure and the rate are the recorded ones. */}
+            <TaxNote
+              total={order.total}
+              rate={order.taxRate}
+              amount={order.tax}
+              locale={locale}
+              t={t}
+              className="mt-1.5"
+            />
+          </div>
         </section>
 
         <div className="flex flex-col gap-4">
@@ -247,6 +274,35 @@ export default async function AdminOrderDetailPage({
               failReason: p.failReason,
             }))}
           />
+
+          {/* ----------------------------- returns --------------------------- */}
+          {/* Only when there is one: most orders never come back, and an
+              empty card saying so on every order is noise. The work happens
+              on the returns page; this is the pointer to it. */}
+          {order.returns.length > 0 && (
+            <section className="card card-pad">
+              <h2 className="text-sm font-bold text-ink-900">{t.admin.returns}</h2>
+              <ul className="mt-3 flex flex-col gap-2">
+                {order.returns.map((request) => (
+                  <li key={request.id} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="min-w-0 text-ink-700">
+                      {t.returnReason[request.reason]}
+                      <span className="block text-ink-400">{formatDateTime(request.createdAt)}</span>
+                    </span>
+                    <span className="badge shrink-0 bg-ink-100 text-ink-600">
+                      {t.returnStatus[request.status]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/dashboard/returns?view=all"
+                className="mt-3 inline-block text-xs font-bold text-brand-600 underline underline-offset-4"
+              >
+                {t.admin.returns} →
+              </Link>
+            </section>
+          )}
 
           {/* ----------------------------- timeline -------------------------- */}
           <section className="card card-pad">

@@ -391,15 +391,16 @@ Covered by [`tests/e2e/oauth.spec.ts`](tests/e2e/oauth.spec.ts).
 
 ## What it demonstrates
 
-**Storefront** — home, catalogue, product pages, cart, checkout, order confirmation and
-tracking. Faceted filtering by category, price, brand and availability, all held in the URL so
+**Storefront** — home, catalogue, product pages, cart, checkout (courier by zone, or collection
+in person), order confirmation and tracking, and a returns request on the order itself. Faceted filtering by category, price, brand and availability, all held in the URL so
 any view can be linked, with brand options narrowing to match the other active filters. Wishlist,
 dark mode, and a bilingual interface that never shifts by a pixel when the language changes.
 
 **Staff dashboard** — revenue, profit and margin over a selectable 7/30/90-day window; product
 and category management with filtering, sorting and pagination; an order workflow that records
-who moved each status and when; a customer list with real lifetime totals; and an append-only
-stock ledger, so "why is this out of stock?" always has an answer.
+who moved each status and when; return requests answered in place, with the goods going back
+through the ledger; a customer list with real lifetime totals; and an append-only stock ledger,
+so "why is this out of stock?" always has an answer.
 
 **Two staff roles.** `admin`, and a read-only `viewer` enforced in the Server Actions rather
 than by hiding buttons.
@@ -561,17 +562,26 @@ read-only role, OAuth failure paths, layout stability across both languages, tha
 animate in both directions, that every control has an accessible name and a reachable target,
 and that the drawers hold the keyboard as well as the pointer.
 
-### Two engines
+### Three engines
 
-It runs in **Chromium** and **WebKit**. WebKit is not thoroughness for its own sake — it is the
-only engine iOS is allowed to render with, so it is the only way to see an iPhone problem without
-an iPhone. Running everything twice would double an eleven-minute run for no gain, so WebKit runs
-the specs tagged `@engine`: layout, sticky, overflow, focus and motion. A server action behaves
-the same in both.
+It runs in **Chromium**, **WebKit** and **Firefox**. WebKit is not thoroughness for its own sake
+— it is the only engine iOS is allowed to render with, so it is the only way to see an iPhone
+problem without an iPhone. Firefox is the one engine that shares no code with the other two.
+Running everything three times would triple an eleven-minute run for no gain, so both run the
+specs tagged `@engine`: layout, sticky, overflow, focus and motion. A server action behaves the
+same in all of them.
 
 ```bash
 npx playwright test --project=webkit
+npx playwright test --project=firefox
 ```
+
+Firefox's first run found two things Chromium had hidden. The chat launcher took focus on every
+page load — an effect meant to return focus to it *after the panel closed* also ran on mount, and
+in Chromium the next Tab happened to wrap round to the skip link, so the keyboard suite passed
+by accident. And at 320px the product page's "customers also bought" grid put two cards in a row
+where the catalogue puts one, and the Georgian "add to cart" no longer fit its button; Chromium's
+font metrics squeezed it in by a pixel and Firefox's did not.
 
 Its first run failed 24 of 34, and one cause explained nearly all of them. The CSP sent
 `upgrade-insecure-requests` on every response. Chromium exempts localhost from that directive;
@@ -581,10 +591,35 @@ and every form silently did nothing — which looked like two dozen unrelated la
 bugs. The directive is now sent only when the request is really over HTTPS, which is the only
 situation it means anything in.
 
-The three tests that press Tab are excluded from WebKit, and that is a fact rather than a
-workaround: **Safari does not put links or buttons in the tab order** unless the reader turns on
-"Use keyboard navigation to move focus between controls". Measured rather than assumed — in
-WebKit, Tab on the home page cycles between the body and one text input.
+The tests that press Tab are excluded from WebKit, and that is a fact rather than a workaround:
+**Safari does not put links or buttons in the tab order** unless the reader turns on "Use
+keyboard navigation to move focus between controls". Measured rather than assumed — in WebKit,
+Tab on the home page cycles between the body and one text input. Firefox on macOS follows the
+same system setting, but unlike Safari it can be told otherwise from the outside
+(`accessibility.tabfocus`), so the Tab tests do run there.
+
+### Every page, through axe
+
+`tests/e2e/a11y.spec.ts` runs [axe-core](https://github.com/dequelabs/axe-core) against every
+route — nineteen public pages, the account area and the whole dashboard — in both languages and
+both themes: 84 audits at WCAG 2.1 AA. It is what the structure spec is not: contrast, names,
+roles, and the ARIA that is wrong rather than missing. Its first run found the deals banner's
+white text dimmed to 80% over the brand red (3.5:1), the dashboard rail's sign-out button
+rendered past the rail's bottom edge on a short window, and a `<dl>` on the account page with
+its terms two `div`s deep. Under reduced motion, deliberately: otherwise it measures the entry
+fade, and a button at 60% opacity is pink.
+
+### A database that deletes itself
+
+The suite writes to whatever `DATABASE_URL` points at. For a run that must not touch a real
+one — a migration to rehearse, a branch with a schema change — make a throwaway:
+
+```bash
+npx create-db@latest create -t 24h -j    # a Prisma Postgres that deletes itself in a day
+```
+
+Put its connection string in `.env`, then `npx prisma migrate deploy && npm run db:seed`, and
+run the suite. Nothing about it is remembered afterwards.
 
 ### The look of it
 
@@ -636,9 +671,20 @@ Three things worth describing, because each hides a decision.
 The object beside the headline is the shop's own mark given depth — a cube whose every face is
 the 2×2 module grid with one cell in brand red, turning once every 28 seconds. It is CSS, not a
 canvas: `transform-style: preserve-3d` is a real perspective projection with six faces composited
-on the GPU, and it needs no library, no shader and **no JavaScript at all**, so it renders on the
+on the GPU, and it needs no library, no shader and **no JavaScript to turn**, so it renders on the
 server and is correct before hydration rather than after it. It stops for `prefers-reduced-motion`
 and it is `aria-hidden` — it says nothing the heading does not.
+
+The one thing script adds is a lean. On a device with a pointer, the cube tips up to ten degrees
+toward wherever the cursor is over the hero — written as two custom properties on a wrapper of
+its own, so the lean composes with the turn rather than fighting it for the same `transform`. It
+is off on touch screens, where there is nothing to lean toward, and under reduced motion.
+
+The same construction carries the order confirmation: a parcel, wider than tall, taped across
+the lid and down the front, the mark on it where a label would go, landing once and then sitting.
+It is drawn in kraft rather than in tokens because cardboard is not a theme colour. The one
+thing it must never do is fade in — an animated `opacity`, even one that has finished at 1,
+makes the engine flatten the element, and a flattened parcel is one face drawn six times.
 
 ### Suggestions in the search field
 
@@ -703,12 +749,26 @@ Everything that makes this shop *this* shop lives in the dashboard under
 | **Shop** | Name, browser-tab suffix per language, description, logo URL |
 | **Brand colour** | One colour; the whole palette is derived from it |
 | **Contact** | Email, phone, address, opening hours — each optional |
-| **Delivery** | Free-delivery threshold, delivery fee, cash-on-delivery toggle |
+| **Delivery** | Free-delivery threshold, delivery fee, cash-on-delivery toggle, collection in person and where from |
+| **Delivery zones** | Named zones, a courier fee each, and optionally a free-delivery threshold of their own |
+| **Returns** | The window, in days after delivery, in which a shopper may ask for a return; zero switches it off |
+| **Tax** | The VAT rate contained in every price; zero hides the line |
 
 The name appears in the header, the footer, the browser tab, the sign-in page
 and every email the shop sends. Delivery rules are applied in one place and
 reach the cart, the checkout total and the shipping page together, so the
 figure a shopper is shown cannot drift from the one they are charged.
+
+With no zones, one fee applies everywhere, as it always did. With zones, a
+courier order must name one at checkout and is priced by it; the order keeps
+the zone's name in its own columns, so renaming or deleting a zone later does
+not blank out where an old order went. Collection in person costs nothing and
+needs no address.
+
+VAT is the share of the total that is tax, never an amount added on top —
+Georgian retail prices carry it inside them. Every order records the figure
+and the rate it was worked out at, so a rate change next year does not rewrite
+what an old order paid.
 
 **Empty contact fields are not rendered at all.** A shop without a phone number
 yet shows nothing about phone numbers rather than a row with a dash in it —
@@ -951,6 +1011,9 @@ you own, and never in a fork.
   all degrade the same way: without `RESEND_API_KEY` the message is written to the *server* log and
   never to the browser. That is deliberate — it keeps local development workable without ever
   handing a one-time code to the caller.
+- **Returns are asked for and answered, but nobody is emailed about them.** The shopper asks
+  from the order page and reads the shop's reply there; a message when the reply arrives is
+  written into the same row and waits on a sending domain, like every other email here.
 - **An order prints, but no invoice is emailed.** Both order pages — the shop's and the
   shopper's — print as a document: the shop's name and contact details, the number, the date, who
   it is for, the lines, the totals. It is deliberately not a fiscal document and says so on its

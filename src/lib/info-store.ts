@@ -50,6 +50,7 @@ async function values(locale: Locale) {
     freeShippingThreshold: formatPrice(settings.freeShippingThreshold, locale),
     shippingFee: formatPrice(settings.shippingFee, locale),
     shopName: settings.name,
+    returnWindow: String(settings.returnWindowDays),
   };
 }
 

@@ -5,14 +5,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/providers/CartProvider";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import { TaxNote } from "@/components/ui/TaxNote";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Price } from "@/components/ui/Price";
-import { SpinnerIcon } from "@/components/ui/icons";
+import { MapPinIcon, SpinnerIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { formatPrice } from "@/lib/format";
+import { fill } from "@/lib/i18n";
+import { shippingFor, type DeliveryChoice } from "@/lib/cart-rules";
 import type { Dictionary } from "@/lib/i18n";
 import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/orders";
+import { lineKey } from "@/lib/cart-store";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
 
 /** Maps a rejection reason to the matching translated message. */
@@ -27,7 +32,9 @@ const COUPON_ERRORS: Record<
   "rate-limited": (t) => t.checkout.rateLimited,
 };
 
-type FieldErrors = Partial<Record<"customerName" | "phone" | "city" | "address", string>>;
+type FieldErrors = Partial<
+  Record<"customerName" | "phone" | "city" | "address" | "zone", string>
+>;
 
 export type CheckoutDefaults = {
   customerName: string;
@@ -50,21 +57,57 @@ export type CheckoutAddress = {
   isDefault: boolean;
 };
 
+/** A courier zone, as the picker shows it. */
+export type CheckoutZone = {
+  id: string;
+  nameKa: string;
+  nameEn: string;
+  fee: number;
+  freeAbove: number | null;
+};
+
 export function CheckoutForm({
   defaults,
   saved = [],
+  zones = [],
 }: {
   defaults: CheckoutDefaults;
   saved?: CheckoutAddress[];
+  zones?: CheckoutZone[];
 }) {
   const { locale, t } = useI18n();
-  const { items, hydrated, subtotal, shipping, total, clear } = useCart();
+  const { items, hydrated, subtotal, clear } = useCart();
+  const settings = useSettings();
   const router = useRouter();
+
+  /* How it leaves the shop. `pickup` is only offered when the settings say
+     so; a zone only when the shop has drawn some. With neither, this is the
+     one courier and the one fee the cart already showed. */
+  const [method, setMethod] = useState<"courier" | "pickup">("courier");
+  const [zoneId, setZoneId] = useState<string>(zones.length === 1 ? zones[0]!.id : "");
+  const zone = zones.find((candidate) => candidate.id === zoneId) ?? null;
+
+  const delivery: DeliveryChoice =
+    method === "pickup" && settings.pickupEnabled
+      ? { method: "pickup" }
+      : { method: "courier", zone };
+
+  /* Worked out here rather than taken from the cart: the cart quotes the
+     shop-wide fee because it does not yet know where the parcel is going.
+     This is the figure the action will charge, from the same function. */
+  const shipping = shippingFor(subtotal, items.length, settings, delivery);
+  const total = subtotal + shipping;
 
   // Prefilled from the account. Requiring people to sign in and then making
   // them retype the address they already gave us would be the worst of both.
   const [form, setForm] = useState({ ...defaults });
-  const [payment, setPayment] = useState<PaymentMethod>("cash_on_delivery");
+  // What the shop offers. Cash on delivery is a switch in the settings, and a
+  // switch nothing reads is a lie in the dashboard — the action refuses it
+  // too, so hiding it here is the courtesy and not the enforcement.
+  const methods = PAYMENT_METHODS.filter(
+    (method) => method !== "cash_on_delivery" || settings.codEnabled,
+  );
+  const [payment, setPayment] = useState<PaymentMethod>(methods[0] ?? "card");
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
@@ -110,8 +153,12 @@ export function CheckoutForm({
   function validate() {
     const next: FieldErrors = {};
     if (!form.customerName.trim()) next.customerName = t.checkout.required;
-    if (!form.city.trim()) next.city = t.checkout.required;
-    if (!form.address.trim()) next.address = t.checkout.required;
+    // A courier needs an address; somebody collecting does not.
+    if (delivery.method === "courier") {
+      if (!form.city.trim()) next.city = t.checkout.required;
+      if (!form.address.trim()) next.address = t.checkout.required;
+      if (zones.length > 0 && !zone) next.zone = t.checkout.deliveryZoneRequired;
+    }
 
     const digits = form.phone.replace(/\D/g, "");
     if (!form.phone.trim()) next.phone = t.checkout.required;
@@ -146,6 +193,8 @@ export function CheckoutForm({
         })),
         couponCode: coupon?.ok ? coupon.code : undefined,
         paymentMethod: payment,
+        deliveryMethod: delivery.method,
+        deliveryZoneId: delivery.method === "courier" ? (zone?.id ?? undefined) : undefined,
       });
 
       if (!result.ok) {
@@ -319,10 +368,90 @@ export function CheckoutForm({
           {/* ---------------------------- delivery -------------------------- */}
           <fieldset className="card card-pad">
             <legend className="px-1 text-sm font-bold text-ink-900">
-              {t.checkout.deliveryAddress}
+              {settings.pickupEnabled || zones.length > 0
+                ? t.checkout.delivery
+                : t.checkout.deliveryAddress}
             </legend>
 
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            {/* Courier or collection — only when there is a choice to make. */}
+            {settings.pickupEnabled && (
+              <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                {(["courier", "pickup"] as const).map((option) => (
+                  <label
+                    key={option}
+                    className={`flex cursor-pointer items-center gap-2.5 rounded-control border px-3.5 py-3 text-sm transition-colors ${
+                      method === option
+                        ? "border-brand-600 bg-brand-50 font-semibold text-brand-700"
+                        : "border-line text-ink-700 hover:border-ink-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="deliveryMethod"
+                      value={option}
+                      checked={method === option}
+                      onChange={() => setMethod(option)}
+                      className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
+                    />
+                    <span className="min-w-0 leading-snug">
+                      {option === "courier" ? t.checkout.deliveryCourier : t.checkout.deliveryPickup}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {delivery.method === "pickup" ? (
+              <div className="mt-4 flex items-start gap-2 rounded-control bg-ink-50 p-3 text-xs leading-snug text-ink-600">
+                <MapPinIcon size={15} className="mt-px shrink-0 text-brand-600" />
+                <span>
+                  <span className="block font-semibold text-ink-800">
+                    {t.checkout.deliveryPickupFrom}
+                  </span>
+                  {settings.pickupAddress || settings.contactAddress || settings.name}
+                  <span className="mt-1 block text-ink-500">{t.checkout.deliveryPickupHint}</span>
+                </span>
+              </div>
+            ) : null}
+
+            <div className={`mt-3 grid gap-4 sm:grid-cols-2 ${delivery.method === "pickup" ? "hidden" : ""}`}>
+              {/* Which zone the courier goes to; the fee follows from it. */}
+              {zones.length > 0 && (
+                <div className="sm:col-span-2">
+                  <label className="field-label" htmlFor="zone">
+                    {t.checkout.deliveryZone}
+                    <span className="ml-0.5 text-brand-600">*</span>
+                  </label>
+                  <select
+                    id="zone"
+                    value={zoneId}
+                    aria-invalid={Boolean(errors.zone)}
+                    aria-describedby={errors.zone ? "zone-error" : undefined}
+                    onChange={(event) => {
+                      setZoneId(event.target.value);
+                      setErrors((current) => ({ ...current, zone: undefined }));
+                    }}
+                    className={`field ${errors.zone ? "border-danger focus:border-danger" : ""}`}
+                  >
+                    <option value="">{t.checkout.deliveryZonePick}</option>
+                    {zones.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {locale === "ka" ? candidate.nameKa : candidate.nameEn} ·{" "}
+                        {formatPrice(candidate.fee, locale)}
+                        {candidate.freeAbove !== null
+                          ? ` (${fill(t.checkout.deliveryZoneFreeAbove, { amount: formatPrice(candidate.freeAbove, locale) })})`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.zone && (
+                    <p id="zone-error" className="mt-1 text-xs text-danger">
+                      {errors.zone}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <Field
                 label={t.checkout.city}
                 value={form.city}
@@ -339,19 +468,21 @@ export function CheckoutForm({
                 required
                 autoComplete="street-address"
               />
+            </div>
 
-              <div className="sm:col-span-2">
-                <label className="field-label" htmlFor="note">
-                  {t.checkout.noteOptional}
-                </label>
-                <textarea
-                  id="note"
-                  rows={3}
-                  value={form.note}
-                  onChange={(event) => update("note", event.target.value)}
-                  className="field"
-                />
-              </div>
+            {/* Outside the address grid: a note is as useful to somebody
+                collecting as to somebody waiting at home. */}
+            <div className="mt-4">
+              <label className="field-label" htmlFor="note">
+                {t.checkout.noteOptional}
+              </label>
+              <textarea
+                id="note"
+                rows={3}
+                value={form.note}
+                onChange={(event) => update("note", event.target.value)}
+                className="field"
+              />
             </div>
           </fieldset>
 
@@ -360,7 +491,7 @@ export function CheckoutForm({
             <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.payment}</legend>
 
             <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
-              {PAYMENT_METHODS.map((method) => (
+              {methods.map((method) => (
                 <label
                   key={method}
                   className={`flex cursor-pointer items-center gap-2.5 rounded-control border px-3.5 py-3 text-sm transition-colors ${
@@ -382,7 +513,9 @@ export function CheckoutForm({
               ))}
             </div>
 
-            <p className="mt-3 text-xs text-ink-500">{t.checkout.paymentNote}</p>
+            {settings.codEnabled && (
+              <p className="mt-3 text-xs text-ink-500">{t.checkout.paymentNote}</p>
+            )}
           </fieldset>
         </div>
 
@@ -390,9 +523,12 @@ export function CheckoutForm({
         <aside className="card sticky top-[var(--header-h)] card-pad">
           <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
 
+          {/* Keyed by the product *and* the combination: two sizes of one
+              shirt are two lines, and keying on the product alone made React
+              fold them onto one another. */}
           <ul className="mt-4 flex max-h-64 flex-col gap-3 overflow-y-auto">
             {items.map((item) => (
-              <li key={item.productId} className="flex items-center gap-3">
+              <li key={lineKey(item)} className="flex items-center gap-3">
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-ink-50">
                   <Image
                     src={item.image}
@@ -509,6 +645,8 @@ export function CheckoutForm({
               </dd>
             </div>
           </dl>
+
+          <TaxNote total={payable} rate={settings.vatRate} locale={locale} t={t} className="mt-1.5" />
 
           {failure && (
             <ErrorNote

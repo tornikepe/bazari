@@ -28,6 +28,14 @@ export type ShopSettings = {
   freeShippingThreshold: number;
   shippingFee: number;
   codEnabled: boolean;
+  /** Whole percent, contained in every price. Zero hides the tax line. */
+  vatRate: number;
+  /** Whether a shopper may collect an order rather than have it sent. */
+  pickupEnabled: boolean;
+  /** Where from. Empty means the contact address. */
+  pickupAddress: string;
+  /** Days after delivery in which a return may be asked for. Zero: never. */
+  returnWindowDays: number;
 };
 
 /**
@@ -54,4 +62,8 @@ export const DEFAULT_SETTINGS: ShopSettings = {
   freeShippingThreshold: 20_000,
   shippingFee: 1_500,
   codEnabled: true,
+  vatRate: 18,
+  pickupEnabled: false,
+  pickupAddress: "",
+  returnWindowDays: 14,
 };

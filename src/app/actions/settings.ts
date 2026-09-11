@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { SETTINGS_ID } from "@/lib/settings";
 import { checkBrandColor } from "@/lib/brand-theme";
+import { isVatRate } from "@/lib/tax";
 
 export type SettingsResult =
   | { ok: true }
@@ -62,6 +63,18 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     return { ok: false, error: "invalid" };
   }
 
+  // A whole percent, refused rather than rounded: "18.5" saved as 18 is a tax
+  // figure quietly wrong on every receipt from then on.
+  const vatRate = Number(text(formData, "vatRate", 3));
+  if (!isVatRate(vatRate)) return { ok: false, error: "invalid" };
+
+  // Whole days. Zero is a valid answer — "we do not take returns" — and a
+  // year is the sensible ceiling.
+  const returnWindowDays = Number(text(formData, "returnWindowDays", 3));
+  if (!Number.isInteger(returnWindowDays) || returnWindowDays < 0 || returnWindowDays > 365) {
+    return { ok: false, error: "invalid" };
+  }
+
   // Checked here rather than only in the browser: the colour input is a
   // convenience, and this action takes a POST from anywhere. A colour that fails
   // AA must not reach the stylesheet just because it skipped the form.
@@ -92,6 +105,10 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     freeShippingThreshold,
     shippingFee,
     codEnabled: formData.get("codEnabled") === "on",
+    vatRate,
+    pickupEnabled: formData.get("pickupEnabled") === "on",
+    pickupAddress: text(formData, "pickupAddress", 200),
+    returnWindowDays,
   };
 
   try {
