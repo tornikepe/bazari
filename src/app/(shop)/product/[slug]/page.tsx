@@ -7,6 +7,10 @@ import { countText, fill } from "@/lib/i18n";
 import { discountPercent } from "@/lib/format";
 import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
+// The same grid the home page uses — two columns only from 380px, because at
+// 320px two cards are 140px each and the Georgian "add to cart" no longer fits
+// its button. Chromium hid that by a pixel; Firefox did not.
+import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { StickyBuyBar } from "@/components/product/StickyBuyBar";
 import { Price } from "@/components/ui/Price";
@@ -372,7 +376,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {boughtTogether.length > 0 && (
         <section className="mt-12">
           <SectionHeading title={t.product.boughtTogether} />
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className={PRODUCT_GRID_WIDE}>
             {boughtTogether.map((item) => (
               <ProductCard key={item.id} product={item} />
             ))}
@@ -384,7 +388,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {related.length > 0 && (
         <section className="mt-12">
           <SectionHeading title={t.product.related} />
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className={PRODUCT_GRID_WIDE}>
             {related.map((item) => (
               <ProductCard key={item.id} product={item} />
             ))}

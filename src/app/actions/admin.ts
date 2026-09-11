@@ -561,7 +561,14 @@ async function applyOrderStatus(
       email: true,
       total: true,
       items: {
-        select: { productId: true, quantity: true, nameKa: true, nameEn: true, price: true },
+        select: {
+          productId: true,
+          variantId: true,
+          quantity: true,
+          nameKa: true,
+          nameEn: true,
+          price: true,
+        },
       },
     },
   });
@@ -597,6 +604,17 @@ async function applyOrderStatus(
       if (status === "cancelled" && order.status !== "cancelled") {
         for (const item of order.items) {
           if (!item.productId) continue;
+
+          /* The combination's own pile first, while it still exists. The sale
+             took one unit from the variant *and* one from the product's sum;
+             giving back only the sum left every cancelled medium-red shirt
+             sold out for ever while the product claimed to have plenty. */
+          if (item.variantId) {
+            await tx.productVariant.updateMany({
+              where: { id: item.variantId },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
 
           const updated = await tx.product.update({
             where: { id: item.productId },

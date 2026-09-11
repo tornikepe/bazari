@@ -50,6 +50,12 @@ for (const width of [320, 360, 390]) {
             // is still caught.
             if (style.overflowX !== "visible") continue;
 
+            // An inline box is its content and cannot overflow itself. Firefox
+            // reports a `scrollWidth` for one where Chromium reports zero, so
+            // without this every link in a sentence is a finding in one engine
+            // and nothing in the other.
+            if (style.display === "inline") continue;
+
             // Content wider than the box — this catches buttons and any other
             // element with children, which an earlier version wrongly skipped.
             const spills = el.scrollWidth > el.clientWidth + 1;

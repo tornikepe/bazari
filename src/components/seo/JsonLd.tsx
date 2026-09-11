@@ -18,6 +18,10 @@ export async function JsonLd({ data }: { data: Record<string, unknown> }) {
     <script
       type="application/ld+json"
       nonce={nonce}
+      // The browser blanks `nonce` once the CSP has consumed it, so React
+      // reads "" back where the server sent a value and reports a mismatch
+      // it cannot fix. Nothing is patched; only the warning is silenced.
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{
         __html: JSON.stringify(data).replace(/</g, "\\u003c"),
       }}

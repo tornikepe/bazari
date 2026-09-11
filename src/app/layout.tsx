@@ -101,7 +101,14 @@ export default async function RootLayout({
         {/* Runs before paint: falls back to the OS preference for a visitor
             who has never picked a theme. Once they have, the cookie decides
             and this is a no-op. */}
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script
+          nonce={nonce}
+          // Same reason as the palette below: the browser blanks `nonce` once
+          // the CSP has consumed it, so React reads "" where the server sent a
+          // value. Nothing is patched; only the warning is silenced.
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
 
         {/* The shop's brand ramp, redefining the same custom properties the
             stylesheet declares. It goes in `head` and not in a client effect

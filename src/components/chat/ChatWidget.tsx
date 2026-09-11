@@ -54,10 +54,19 @@ export function ChatWidget({ available }: { available: boolean }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
+  /* Whether the panel has ever been open, so the effect below can tell a
+     close from the first render. Without it, the "return focus to the
+     launcher" branch ran on mount — `open` is false then too — and every page
+     load quietly moved focus to a button at the bottom-right corner. In
+     Chromium the next Tab happened to wrap to the skip link, which hid it; in
+     Firefox the launcher kept focus and the keyboard suite could not leave it. */
+  const wasOpen = useRef(false);
+
   useEffect(() => {
     if (open) {
+      wasOpen.current = true;
       inputRef.current?.focus();
-    } else {
+    } else if (wasOpen.current) {
       // Returning focus to the launcher keeps keyboard users where they were,
       // rather than dropping them at the top of the document.
       launcherRef.current?.focus({ preventScroll: true });
