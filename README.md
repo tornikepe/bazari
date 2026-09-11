@@ -369,23 +369,34 @@ Covered by [`tests/e2e/oauth.spec.ts`](tests/e2e/oauth.spec.ts).
 
 ## Environment variables
 
-| Variable | Required | What it is |
-|---|---|---|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `AUTH_SECRET` | ✅ | Signs the session cookie. Any long random string. |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | ✅ to seed | Full-access staff account. Min 12 chars. |
-| `VIEWER_EMAIL` / `VIEWER_PASSWORD` | ✅ to seed | Read-only staff account. Min 12 chars. |
-| `CUSTOMER_EMAIL` / `CUSTOMER_PASSWORD` | ✅ to seed | Demo shopper. Min 8 chars. |
-| `SITE_URL` | recommended | Canonical URL — used in emails, the sitemap and OAuth redirects |
-| `RESEND_API_KEY` | optional | Transactional email. Without it, mail is logged to the console. |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | optional | Enables the Google button |
-| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | optional | Enables the Facebook button |
-| `GEMINI_API_KEY` | optional | The contact assistant. Gemini has a free tier. |
-| `ANTHROPIC_API_KEY` | optional | The assistant, on Claude instead |
-| `CHAT_PROVIDER` | optional | `gemini` or `anthropic` |
-| `DATABASE_POOL_MAX` | optional | Connections per instance. Defaults to 3 in production. |
+Every variable the code reads, what breaks without it, and whether it is required. Checked
+against the source (`grep process.env`), not against memory.
 
-`.env.example` carries the same list with fuller comments.
+| Variable | Required | What it is for — and what happens without it |
+|---|---|---|
+| `DATABASE_URL` | ✅ | The Postgres the app runs on. On a hosted provider, the **pooled** string. Without it nothing starts: the Prisma client throws at first use. |
+| `DIRECT_URL` | on hosted Postgres | The **direct** string, for migrations and the seed — a transaction-mode pooler cannot hold Prisma Migrate's advisory lock and the migration hangs. Falls back to `DATABASE_URL`, which is right for a local Postgres. |
+| `AUTH_SECRET` | ✅ | Signs the session cookie and keys the daily visitor hash. Empty → the seed refuses to run; a leaked one → session cookies can be forged. `npm run setup:credentials` writes 32 random bytes. |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | ✅ to seed | The full-access staff account. Password min 12 characters; the seed stops without one. |
+| `VIEWER_EMAIL` / `VIEWER_PASSWORD` | ✅ to seed | The read-only staff account. Min 12. |
+| `CUSTOMER_EMAIL` / `CUSTOMER_PASSWORD` | ✅ to seed | The demo shopper. Min 8. |
+| `NEXT_PUBLIC_SITE_URL` | in production | The canonical origin — Open Graph images, the sitemap, email links, the OAuth redirect URIs. Defaults to `http://localhost:3000`, so a deployment without it emails links to localhost. |
+| `RESEND_API_KEY` | optional | Transactional email: verification codes, resets, order and return notices, the low-stock alert. Without it every message goes to the server log and nothing reaches a browser. |
+| `MAIL_FROM` | with the key | The sender, on a domain verified with the provider. Ignored without the key. |
+| `GEMINI_API_KEY` | optional | The contact assistant, on Google's free tier. Without any assistant key the launcher is not rendered. |
+| `ANTHROPIC_API_KEY` | optional | The assistant on Claude instead. With both keys set, Gemini wins unless `CHAT_PROVIDER` says otherwise. |
+| `CHAT_PROVIDER` | optional | `gemini` or `anthropic`. Naming a provider whose key is missing switches the assistant **off** rather than falling back — a forgotten key is visible, not silently served by the free tier. |
+| `CHAT_MONTHLY_BUDGET_USD` | optional | Ceiling on the assistant's spend per calendar month, counted from each response's reported usage. Defaults to 5. |
+| `CHAT_MONTHLY_REQUEST_CAP` | optional | Ceiling on requests per month — the one that does the work on a free tier, where no number of requests adds up to a cost. Unset means unlimited. |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | optional | The Google button. Rendered only when both are set. |
+| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | optional | The Facebook button. Same rule. |
+| `DATABASE_POOL_MAX` | optional | Connections per instance. Defaults to 3 on Vercel, where many short-lived instances share one plan, and 10 elsewhere, where one process takes every request. |
+| `VERCEL` | set by Vercel | Read only to pick that default. |
+| `LOAD_URL`, `LOAD_CONNECTIONS`, `LOAD_SECONDS`, `LOAD_P99_MS` | `npm run load` only | Where to aim the load test, how hard, for how long, and the tail it may not exceed. |
+
+`.env.example` carries the same list with fuller comments and is what `npm run setup:credentials`
+copies from. Nothing is read from `.env.local` or `.env.production` that is not also read from
+`.env`.
 
 ---
 
@@ -453,6 +464,8 @@ place a division by 100 happens.
 | `npm test` | Unit tests (Vitest) |
 | `npm run test:e2e` | End-to-end tests (Playwright), screenshots included |
 | `npm run test:visual` | Just the thirty screenshots; `test:visual:update` accepts them |
+| `npm run test:e2e:scratch` | The suite against a Postgres it creates, migrates and seeds itself, gone in two hours; arguments after `--` go to Playwright |
+| `npm run load` | Twenty connections at the catalogue for ten seconds a scenario, against `LOAD_URL` (a production build on 3100 by default) |
 | `npm run setup:credentials` | Generate `AUTH_SECRET` and the three account passwords into `.env`. Never overwrites what is set; `-- --show` prints them, `-- --force` replaces them |
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:seed` | Seed catalogue, orders and the three accounts (idempotent) |
@@ -474,13 +487,15 @@ src/
 │   ├── dashboard/
 │   │   └── (panel)/     staff-only shell (customers are sent to /account)
 │   ├── api/auth/        OAuth start + callback routes
-│   ├── actions/         Server Actions (auth, orders, admin, payments, tracking)
+│   ├── api/hit/         the page-view beacon; api/orders/…/invoice, the PDF
+│   ├── actions/         Server Actions (auth, orders, admin, payments, returns, delivery, favorites…)
 │   ├── sitemap.ts       dynamic sitemap
 │   └── robots.ts
 ├── components/
 │   ├── catalog/         filter rail, mobile drawer, sort, chips, pagination
 │   ├── product/         product card, add-to-cart, purchase panel, sticky buy bar
-│   ├── admin/           dashboard-only UI (toolbar, forms, tables, chart)
+│   ├── admin/           dashboard-only UI (toolbar, forms, tables, chart, returns, zones)
+│   ├── order/           the printed invoice head, the parcel, the returns panel
 │   ├── checkout/        the checkout form
 │   ├── chat/            contact assistant widget
 │   ├── layout/          header, footer, info-page renderer
@@ -488,8 +503,14 @@ src/
 │   └── ui/              icons, price, badges, overlays, skeletons
 └── lib/
     ├── analytics.ts     dashboard metrics and the daily series
+    ├── audit.ts         the audit log; audit-diff.ts, its pure half
     ├── auth.ts          session cookie, roles, password hashing
     ├── auth-roles.ts    the role union, importable from the client
+    ├── cart-rules.ts    what delivery costs — one function, courier or pickup, by zone
+    ├── tax.ts           the VAT inside a total
+    ├── returns.ts       the return rules and the status line
+    ├── invoice-pdf.ts   the order as a PDF
+    ├── traffic.ts       page views without cookies
     ├── oauth.ts         Google and Facebook providers
     ├── catalog.ts       product queries and facet counts
     ├── filters.ts       filter parsing/serialising (shared client + server)
@@ -532,7 +553,7 @@ and everything is switched off under `prefers-reduced-motion`.
 
 ### Page templates
 
-Thirty-four routes, four templates. A new page starts by choosing one of them rather than by
+Thirty-eight routes, four templates. A new page starts by choosing one of them rather than by
 copying whichever page happened to be open — which is how the site ended up with four page
 paddings and four different ways to write a title in the first place.
 
@@ -548,8 +569,8 @@ sits on the right — on a narrow screen the action wraps below the title instea
 It has two named variants:
 
 - **`scale="panel"`** — the dashboard's smaller title. The dashboard is a denser place and had
-  already settled on this across all ten of its pages; the prop is there so one component makes
-  that decision instead of ten copies of the same class names.
+  already settled on this across all of its pages; the prop is there so one component makes
+  that decision instead of a dozen copies of the same class names.
 - **the account page** — [`AccountIdentity`](src/components/account/AccountIdentity.tsx) is the
   same eyebrow / title / sub-line / action shape inside a card with the customer's initials
   beside it. It is the one page whose header is about *who is reading it*.

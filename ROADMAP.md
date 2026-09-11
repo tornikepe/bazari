@@ -96,13 +96,17 @@ should not have been on this list.
 
 ## 5. Documentation, at the end
 
-- Re-verify every claim against the code, and run every command in the README
-- The three passwords and `AUTH_SECRET`: how they are made, where they live, how to rotate one
-- One route in, one route out — clone to running shop without reading anything twice
-- Screenshots that match what ships, in both languages and both themes
-- Every environment variable: what it is for, what breaks without it, whether it is required
-- The honest limits: what is deliberately not built, and what would have to change to take money
-- The three new settings — VAT rate, collection, return window — and the zones table
+- Screenshots that match what ships, in both languages and both themes — after **A5**, or
+  they are screenshots of one placeholder photo forty times
+- Read the README top to bottom once more after **A3** and **A4** land, since both change
+  what the "honest limits" say
+
+Done since the last cut: the environment-variable table rewritten from `grep process.env` —
+it named `SITE_URL` where the code reads `NEXT_PUBLIC_SITE_URL`, and was missing `DIRECT_URL`,
+`MAIL_FROM` and the two chat ceilings — with what breaks without each; the scripts table and
+the project structure brought up to date; every `npm run` command in the README run against
+the current schema (`db:verify` and `db:audit` pass); the new settings, the zones, the returns,
+the audit log, the traffic page and the PDF written up where they belong.
 
 ---
 
