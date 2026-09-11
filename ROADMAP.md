@@ -51,15 +51,20 @@ Done since the last cut:
 
 ## 3. Testing
 
-- A load test on the catalogue and checkout
-- A disposable test database, *wired in*. The recipe works today —
-  `npx create-db@latest create -t 24h -j` gives a Postgres that deletes itself, and the whole
-  suite ran against one for this cut — but it is a thing a person does, not a thing the
-  suite does. `global-setup.ts` could create one and `migrate deploy` + seed into it
+- Run `npm run load` once against the deployed site (`LOAD_URL=https://…`), gently — the
+  figures measured here go through a database on another continent and say more about the
+  round trip than about the pages
 
 Done since the last cut: `axe-core` on every page — nineteen public routes, the account and
 the dashboard — in both languages and both themes (`tests/e2e/a11y.spec.ts`, 84 audits);
-Firefox as a third engine on the engine-sensitive slice (`--project=firefox`).
+Firefox as a third engine on the engine-sensitive slice (`--project=firefox`);
+`npm run test:e2e:scratch`, which makes a throwaway Postgres, migrates and seeds it, and runs
+the suite against it, so nothing needs to touch a real database; `npm run load`, the
+catalogue under twenty connections with a p99 budget — its first run found the product page
+awaiting two queries in sequence that its own comment said ran together, and a production
+pool of three connections that is right for Vercel and a queue for `next start`; and
+`checkout-race.spec.ts`, six real browsers buying the last three units in the same instant,
+of which exactly three succeed.
 
 ---
 
@@ -70,9 +75,9 @@ Firefox as a third engine on the engine-sensitive slice (`--project=firefox`).
 - Backups: confirm retention, and restore once to prove it works
 - Analytics, privacy-friendly, no cookie banner
 - A custom domain
-- A staging database, so migrations are rehearsed before production. (Three migrations in
-  this cut were rehearsed on a throwaway database first — see §3 — which is the manual
-  version of this)
+- A staging database, so migrations are rehearsed before production. (`npm run
+  test:e2e:scratch` rehearses every migration on a throwaway database each time it runs,
+  which is most of what a staging database is for)
 
 Done since the last cut: **Dashboard → Audit log**. Every write a staff member can make —
 a product, a price typed over in the table, a stock figure, a category, an order's status, a
@@ -131,6 +136,5 @@ npm run setup:credentials -- --force   # locally; set the Vercel one by hand
 
 1. **A9** — the migrations, before anything else ships
 2. **§2** — what is left of the shop features, in the order they are weighted
-3. **§3** — the load test, and wiring the throwaway database into the suite
-4. **§4** and **§5**, last
-5. **§1** whenever a real phone is to hand
+3. **§4** and **§5**, last
+4. **§1** whenever a real phone is to hand

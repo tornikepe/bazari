@@ -612,15 +612,41 @@ fade, and a button at 60% opacity is pink.
 
 ### A database that deletes itself
 
-The suite writes to whatever `DATABASE_URL` points at. For a run that must not touch a real
-one — a migration to rehearse, a branch with a schema change — make a throwaway:
+The suite writes to whatever `DATABASE_URL` points at: it places orders, sells stock down,
+invites staff, changes the settings and puts them back. That is fine against a database made
+for it and alarming against the one the shop runs on. So:
 
 ```bash
-npx create-db@latest create -t 24h -j    # a Prisma Postgres that deletes itself in a day
+npm run test:e2e:scratch                                   # the whole suite
+npm run test:e2e:scratch -- --project=firefox tests/e2e/returns.spec.ts
 ```
 
-Put its connection string in `.env`, then `npx prisma migrate deploy && npm run db:seed`, and
-run the suite. Nothing about it is remembered afterwards.
+It asks Prisma's `create-db` for a temporary Postgres — no account, gone in two hours —
+applies every migration, seeds it from the same `.env` the app uses, and runs Playwright
+against it. Nothing about it is written anywhere. It is also, as a side effect, a rehearsal of
+every migration on a fresh database each time it runs.
+
+### The catalogue under a crowd
+
+```bash
+npm run build && npm start        # a production build, in one terminal
+npm run load                      # in another; LOAD_URL=… for a deployed site
+```
+
+Twenty connections for ten seconds each at the home page, the catalogue, a filtered catalogue,
+a handful of product pages and the search endpoint, with a p99 budget (`LOAD_P99_MS`, 2000 by
+default) the run fails past. Read paths only: a checkout under load is a different question —
+not "how many a second" but "what if they all arrive at once" — and
+`tests/e2e/checkout-race.spec.ts` answers that one with six real browsers buying the last
+three units in the same instant, of which exactly three may succeed.
+
+Its first run found two things. The product page awaited its "customers also bought" query
+and then its "related" query, one after the other, under a comment saying they ran together.
+And the production pool of three connections per instance — right for Vercel, where many
+short-lived instances share one small plan — is a queue for `next start` on a box of its own,
+where one process takes every request: two requests a second with twenty people waiting,
+fourteen once the pool could breathe. The default is now three on Vercel and ten elsewhere;
+`DATABASE_POOL_MAX` overrides either.
 
 ### The look of it
 

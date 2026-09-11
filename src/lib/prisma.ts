@@ -23,9 +23,14 @@ function poolMax(): number {
   const configured = Number(process.env.DATABASE_POOL_MAX);
   if (Number.isFinite(configured) && configured > 0) return Math.floor(configured);
 
-  // Dev is one process living for hours; production is many short-lived
-  // instances sharing one small allowance.
-  return process.env.NODE_ENV === "production" ? 3 : 5;
+  // Dev is one process living for hours; production on Vercel is many
+  // short-lived instances sharing one small allowance. Production anywhere
+  // else — `next start` on a box of its own — is one long-lived process
+  // taking every request, and three connections there is a queue: the load
+  // test measured the home page at two requests a second with twenty people
+  // waiting on them, and fourteen once the pool could breathe.
+  if (process.env.NODE_ENV !== "production") return 5;
+  return process.env.VERCEL ? 3 : 10;
 }
 
 function createPrismaClient() {

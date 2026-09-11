@@ -85,15 +85,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   /* What people actually bought alongside this, counted from real orders.
      Fetched with the related row rather than after it: they are drawn one
      above the other, and two round trips in sequence would delay the page by
-     the slower of them twice. */
-  const boughtTogether = await getBoughtTogether(product.id);
-
-  const related = await prisma.product.findMany({
-    where: { isActive: true, categoryId: product.categoryId, NOT: { id: product.id } },
-    select: productCardSelect,
-    orderBy: { createdAt: "desc" },
-    take: 4,
-  });
+     the slower of them twice. (The comment said so before the code did — the
+     load test found the second `await` waiting on the first.) */
+  const [boughtTogether, related] = await Promise.all([
+    getBoughtTogether(product.id),
+    prisma.product.findMany({
+      where: { isActive: true, categoryId: product.categoryId, NOT: { id: product.id } },
+      select: productCardSelect,
+      orderBy: { createdAt: "desc" },
+      take: 4,
+    }),
+  ]);
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const description = locale === "ka" ? product.descriptionKa : product.descriptionEn;
