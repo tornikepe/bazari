@@ -38,7 +38,8 @@ to the server log until **A3**.
 ## 4. Operations
 
 - Error tracking — Sentry with source maps. Blocked on **A8**
-- Uptime alerting to your phone
+- Uptime alerting to your phone — point the monitor at `/api/health`, which answers 503
+  when the database does not; the page itself would answer 200 with no products on it
 - Backups: confirm retention, and restore once to prove it works
 - A custom domain
 - A staging database, so migrations are rehearsed before production. (`npm run

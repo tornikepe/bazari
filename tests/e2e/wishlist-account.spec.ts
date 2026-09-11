@@ -34,12 +34,14 @@ test("a heart pressed in one browser is there in another, and a heart pressed be
   await page.getByRole("button", { name: /clear/i }).click();
   await expect(page.getByText(/wishlist is empty/i)).toBeVisible();
 
-  // The product's own heart, beside "add to cart" — not the chip on a
-  // related product's card further down.
+  // The product's own heart, beside "add to cart" — the first pressable
+  // heart on the page, which the purchase panel is before any related card.
+  // Found by its state rather than by its neighbour: the neighbour says
+  // "out of stock" once the checkout suite has sold the product down.
   await page.goto(slug);
-  const panel = page.locator("main").locator(":scope button:has-text('Add to cart')").first().locator("xpath=..");
-  await panel.getByRole("button", { name: /add to wishlist/i }).click();
-  await expect(panel.getByRole("button", { name: /remove from wishlist/i })).toBeVisible();
+  const heart = page.locator("main button[aria-pressed]").first();
+  await heart.click();
+  await expect(heart).toHaveAttribute("aria-pressed", "true");
   // Let the write land before leaving the page; a person does not navigate
   // in the same hundred milliseconds, and a write cut off by one would be
   // sent again on the next visit anyway.

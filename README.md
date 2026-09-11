@@ -1074,6 +1074,10 @@ you own, and never in a fork.
   snapshotted columns, so it comes out the same every time. It is deliberately not a fiscal
   document and says so on its face; issuing one means a tax number and a numbering scheme an
   accountant signs off.
+- **There is a health check and nothing watches it.** `/api/health` answers 200 when one query
+  comes back from the database and 503 when it does not — the failure this shop has actually
+  had is a database that would not answer while every page rendered its chrome. Point an
+  uptime monitor at it; it says nothing a stranger could use.
 - **The daily sweep needs a scheduler.** `/api/cron/daily` expires payment attempts nobody came
   back for and writes once to shoppers who left a cart for a day. `vercel.json` schedules it at
   06:00 UTC and Vercel sends `CRON_SECRET` as a bearer token; anywhere else, a crontab with

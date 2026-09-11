@@ -47,6 +47,14 @@ export async function submitSignIn(page: Page, email: string, password: string) 
  * session, which reads exactly like a permissions bug.
  */
 export async function signIn(page: Page, email: string, password: string) {
+  /* Every test starts with a clean throttle. The limits are real — ten orders
+     an hour from one address, so many sign-ins a minute — and the suite is
+     one address placing fourteen orders in twenty minutes. The run used to
+     pass because it placed nine; the tenth spec added tipped every checkout
+     after it into "too many attempts", a failure that moved to whichever
+     test happened to run eleventh. No spec asserts that a limit accumulates
+     across tests, so nothing is lost by resetting here. */
+  await clearRateLimits();
   await submitSignIn(page, email, password);
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 });
 }
