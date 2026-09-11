@@ -1,3 +1,5 @@
+import { CubeTilt } from "@/components/home/CubeTilt";
+
 /**
  * The mark, turned in three dimensions.
  *
@@ -36,17 +38,19 @@ export function BrandCube() {
 
   return (
     <div className="cube-stage" aria-hidden="true">
-      <div className="cube">
-        {faces.map((face) => (
-          <div key={face} className="cube-face" data-face={face}>
-            {/* The mark: four modules, the first of them red. */}
-            <span className="cube-module cube-module--brand" />
-            <span className="cube-module" />
-            <span className="cube-module" />
-            <span className="cube-module" />
-          </div>
-        ))}
-      </div>
+      <CubeTilt>
+        <div className="cube">
+          {faces.map((face) => (
+            <div key={face} className="cube-face" data-face={face}>
+              {/* The mark: four modules, the first of them red. */}
+              <span className="cube-module cube-module--brand" />
+              <span className="cube-module" />
+              <span className="cube-module" />
+              <span className="cube-module" />
+            </div>
+          ))}
+        </div>
+      </CubeTilt>
     </div>
   );
 }

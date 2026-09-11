@@ -259,6 +259,13 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Room under the sticky header when the browser scrolls something into
+       view on its own — a focused checkout field as the on-screen keyboard
+       opens, an anchor, a `scrollIntoView`. Without it the field lands at the
+       top edge of the viewport, exactly where the header is, and the shopper
+       types into something they cannot see. */
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+    scroll-padding-bottom: 1rem;
   }
 
   body {
@@ -1735,7 +1742,14 @@
      `aside`, which is also the cart's summary and the printed total. */
   .admin-rail,
   /* The launcher is a `button` and already hidden; the open panel is not. */
-  .chat-root {
+  .chat-root,
+  /* A three-dimensional box flattened by a printer is a brown smear at the
+     top of an invoice. */
+  .parcel-stage,
+  /* The returns panel is a conversation with the shop, not part of the
+     receipt: an invoice that says "a return can be requested" is inviting
+     one. */
+  .returns-panel {
     display: none !important;
   }
 
@@ -1785,6 +1799,17 @@
      square would leave a visible column of nothing beside the headline. */
   min-height: calc(var(--cube) * 1.6);
   perspective: 900px;
+}
+
+/* The lean toward the pointer, written by `CubeTilt` as two angles and
+   applied here, on a wrapper of its own, so it composes with the turn below
+   rather than competing for the same `transform`. The long ease is what makes
+   it read as weight: the object settles toward the cursor, it does not snap. */
+.cube-tilt {
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .cube {
@@ -1853,6 +1878,217 @@
   .cube {
     animation: none;
     transform: rotateX(-24deg) rotateY(-32deg);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* The mark, turned once                                               */
+/*                                                                     */
+/* Hovering the logo's link spins the mark a full turn about its       */
+/* vertical axis — the same object as the hero cube, given the same    */
+/* depth for a moment. A full turn rather than a half: the mark is not */
+/* symmetric, and a mirrored mark is a different mark.                 */
+/* ------------------------------------------------------------------ */
+
+.logo-mark {
+  transform: perspective(240px) rotateY(0deg);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  backface-visibility: visible;
+}
+
+a:hover > .logo-mark,
+a:focus-visible > .logo-mark {
+  transform: perspective(240px) rotateY(360deg);
+}
+
+/* ------------------------------------------------------------------ */
+/* The parcel                                                          */
+/*                                                                     */
+/* The order as an object, on the confirmation page. Built the way the  */
+/* hero cube is — six faces, `preserve-3d`, no script — but as a box    */
+/* wider than it is tall, taped, with the mark on the front.            */
+/* ------------------------------------------------------------------ */
+
+.parcel-stage {
+  /* The three edges. Everything else is derived, so the box scales by
+     changing these. */
+  --pw: 7.5rem;
+  --ph: 5rem;
+  --pd: 5.5rem;
+
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(var(--pw) * 1.6);
+  height: calc(var(--ph) * 2.4);
+  perspective: 900px;
+}
+
+.parcel {
+  position: relative;
+  width: var(--pw);
+  height: var(--ph);
+  transform-style: preserve-3d;
+  /* The angle that shows the lid, the front and one side — the one a box on
+     a table is seen from. `--drop` is what the landing animates. */
+  transform: translateY(var(--drop, 0)) rotateX(-22deg) rotateY(-34deg);
+  animation:
+    parcel-land 0.9s cubic-bezier(0.22, 1, 0.36, 1) both,
+    parcel-rest 6s ease-in-out 0.9s infinite;
+}
+
+.parcel-face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* Kraft, in two tones — the lit faces and the shaded ones — so the box
+     reads as lit from above and to the left. Literal colours rather than
+     tokens on purpose: cardboard is not a theme colour, and the box must look
+     the same in both. */
+  background: #d9b98c;
+  border: 1px solid rgb(0 0 0 / 0.08);
+  overflow: hidden;
+}
+
+.parcel-face[data-face="front"],
+.parcel-face[data-face="back"] {
+  width: var(--pw);
+  height: var(--ph);
+  margin-left: calc(var(--pw) / -2);
+  margin-top: calc(var(--ph) / -2);
+}
+.parcel-face[data-face="right"],
+.parcel-face[data-face="left"] {
+  width: var(--pd);
+  height: var(--ph);
+  margin-left: calc(var(--pd) / -2);
+  margin-top: calc(var(--ph) / -2);
+  background: #c4a273;
+}
+.parcel-face[data-face="top"],
+.parcel-face[data-face="bottom"] {
+  width: var(--pw);
+  height: var(--pd);
+  margin-left: calc(var(--pw) / -2);
+  margin-top: calc(var(--pd) / -2);
+  background: #e6c99f;
+}
+
+.parcel-face[data-face="front"] {
+  transform: translateZ(calc(var(--pd) / 2));
+}
+.parcel-face[data-face="back"] {
+  transform: rotateY(180deg) translateZ(calc(var(--pd) / 2));
+}
+.parcel-face[data-face="right"] {
+  transform: rotateY(90deg) translateZ(calc(var(--pw) / 2));
+}
+.parcel-face[data-face="left"] {
+  transform: rotateY(-90deg) translateZ(calc(var(--pw) / 2));
+}
+.parcel-face[data-face="top"] {
+  transform: rotateX(90deg) translateZ(calc(var(--ph) / 2));
+}
+.parcel-face[data-face="bottom"] {
+  transform: rotateX(-90deg) translateZ(calc(var(--ph) / 2));
+  background: #b08f63;
+}
+
+/* One strip of tape: across the lid, and continuing down the front. */
+.parcel-tape {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 18%;
+  margin-left: -9%;
+  background: rgb(255 255 255 / 0.55);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
+}
+
+/* The mark on the front, where a label would be. Off-centre, beside the
+   tape, the way a label is stuck on rather than printed. */
+.parcel-label {
+  position: absolute;
+  right: 10%;
+  bottom: 14%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6%;
+  width: 26%;
+  aspect-ratio: 1;
+  padding: 10%;
+  background: var(--color-panel);
+}
+
+.parcel-module {
+  background: var(--color-panel-fg);
+}
+
+.parcel-module--brand {
+  background: var(--color-brand-solid);
+}
+
+.parcel-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  width: calc(var(--pw) * 1.3);
+  height: calc(var(--pd) * 0.34);
+  margin-left: calc(var(--pw) * -0.65);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(22 26 35 / 0.28), transparent);
+  animation: parcel-shadow 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Position only, never opacity: an animated `opacity` — even one that has
+   finished at 1 — makes the engine flatten the element, and a flattened
+   parcel is one face drawn six times. The box falls in; the shadow's own
+   fade below is what reads as "arriving". */
+@keyframes parcel-land {
+  from {
+    --drop: -2.75rem;
+  }
+  to {
+    --drop: 0rem;
+  }
+}
+
+/* A slow breath once it has landed — the same reason the cube turns: alive,
+   not moving. */
+@keyframes parcel-rest {
+  0%,
+  100% {
+    transform: translateY(0) rotateX(-22deg) rotateY(-34deg);
+  }
+  50% {
+    transform: translateY(-0.25rem) rotateX(-22deg) rotateY(-34deg);
+  }
+}
+
+@keyframes parcel-shadow {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* `--drop` has to be a registered length for the landing to interpolate;
+   an unregistered custom property flips rather than moves. */
+@property --drop {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parcel,
+  .parcel-shadow {
+    animation: none;
   }
 }
 

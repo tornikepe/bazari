@@ -20,7 +20,7 @@ export function LogoMark({ size = 36, className = "" }: { size?: number; classNa
       viewBox="0 0 64 64"
       fill="none"
       aria-hidden="true"
-      className={`shrink-0 ${className}`}
+      className={`logo-mark shrink-0 ${className}`}
     >
       <rect width="64" height="64" fill="#101216" />
       <rect x="12" y="12" width="18" height="18" fill="#dc1f24" />
