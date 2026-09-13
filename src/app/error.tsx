@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { RefreshIcon } from "@/components/ui/icons";
 import { ErrorArt } from "@/components/ui/illustrations";
+import * as Sentry from "@sentry/nextjs";
+import { sentryEnabled } from "@/lib/sentry-config";
 
 /**
  * Route-level error boundary.
@@ -23,8 +25,9 @@ export default function Error({
   const { t } = useI18n();
 
   useEffect(() => {
-    // Until Sentry lands (C1), the server log is the only record.
-    console.error("route error", error);
+    // Reported when there is somewhere to report to; the console otherwise.
+    if (sentryEnabled()) Sentry.captureException(error);
+    else console.error("route error", error);
   }, [error]);
 
   return (

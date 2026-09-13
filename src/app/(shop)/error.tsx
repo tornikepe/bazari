@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+import { sentryEnabled } from "@/lib/sentry-config";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { RefreshIcon } from "@/components/ui/icons";
@@ -20,7 +22,8 @@ export default function ShopError({
   const { t } = useI18n();
 
   useEffect(() => {
-    console.error("Storefront error:", error);
+    if (sentryEnabled()) Sentry.captureException(error);
+    else console.error("Storefront error:", error);
   }, [error]);
 
   return (

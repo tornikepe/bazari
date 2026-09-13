@@ -36,7 +36,9 @@ to the server log until **A3**.
 
 ## 4. Operations
 
-- Error tracking — Sentry with source maps. Blocked on **A8**
+- Error tracking — wired on both sides and asleep: set `NEXT_PUBLIC_SENTRY_DSN` and it
+  reports; set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` and the build uploads source
+  maps. The account is **A8**
 - Uptime alerting to your phone — point the monitor at `/api/health`, which answers 503
   when the database does not; the page itself would answer 200 with no products on it
 - Backups: confirm retention, and restore once to prove it works

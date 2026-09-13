@@ -51,7 +51,9 @@ async function setStock(page: Page, name: string, value: number) {
 async function shopper(browser: Browser, slug: string): Promise<Page> {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await useEnglish(page);
+  // What `useEnglish` does, written out: the lint's hook rule reads that
+  // helper's name as a React hook and this function's as neither.
+  await context.addCookies([{ name: "cm_locale", value: "en", url: "http://127.0.0.1:3100" }]);
   await signIn(page, DEMO_CUSTOMER.email, DEMO_CUSTOMER.password);
   await page.goto(`/product/${slug}`);
   await page.getByRole("button", { name: /add to cart/i }).first().click();

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   /*
@@ -36,4 +37,26 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/*
+ * Source maps to Sentry, only when there is somewhere to send them.
+ *
+ * `withSentryConfig` wraps the config either way — that is what makes the
+ * instrumentation files part of the build — but the upload, which needs an
+ * auth token and would otherwise print a warning on every build, is only
+ * asked for when the token exists. The maps are still generated and hidden
+ * from the browser, so a stack trace in Sentry names a line in a source file
+ * rather than a column in a minified one.
+ */
+const uploading = Boolean(process.env.SENTRY_AUTH_TOKEN);
+
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !uploading,
+  sourcemaps: { disable: !uploading },
+  // The CSP allows script from 'self' only; the SDK's own tunnel keeps
+  // reports on this origin rather than needing sentry.io in connect-src.
+  tunnelRoute: "/monitoring",
+  widenClientFileUpload: uploading,
+});

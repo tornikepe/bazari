@@ -18,7 +18,12 @@ test.beforeEach(async ({ page }) => useEnglish(page));
  * in Postgres.
  */
 async function countProducts(page: import("@playwright/test").Page) {
-  const cards = page.locator("article");
+  /* Inside `main` only. While a page streams, React keeps the chunk it has
+     not yet placed in a hidden `<div id="S:n">` under `body`, and for a
+     moment the same card exists there and in the page — `article` alone
+     counted both, and the count came out at two for a query with one
+     result whenever the database took a beat longer to answer. */
+  const cards = page.locator("main article");
   await cards.first().waitFor({ state: "attached" });
 
   let previous = -1;

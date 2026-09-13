@@ -391,6 +391,8 @@ against the source (`grep process.env`), not against memory.
 | `CHAT_MONTHLY_REQUEST_CAP` | optional | Ceiling on requests per month — the one that does the work on a free tier, where no number of requests adds up to a cost. Unset means unlimited. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | optional | The Google button. Rendered only when both are set. |
 | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | optional | The Facebook button. Same rule. |
+| `NEXT_PUBLIC_SENTRY_DSN` | optional | Switches Sentry on — browser, server and edge — the moment it is set. Without it the SDK is in the bundle and asleep, and errors go to the server log as before. |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | optional | Source-map upload at build time, so a report names a line in a source file. Without them reports still arrive, minified. |
 | `PAYMENT_SANDBOX` | never in production | `1` sends card orders through the gateway that takes no money — see the limits below. Unset, a card order is recorded like cash. |
 | `CRON_SECRET` | for the daily sweep | The bearer token `/api/cron/daily` expects — Vercel sends it on the schedule in `vercel.json`. Unset, the route refuses every call, and no payment attempt expires and no cart reminder goes. |
 | `DATABASE_POOL_MAX` | optional | Connections per instance. Defaults to 3 on Vercel, where many short-lived instances share one plan, and 10 elsewhere, where one process takes every request. |
@@ -1088,6 +1090,11 @@ you own, and never in a fork.
   snapshotted columns, so it comes out the same every time. It is deliberately not a fiscal
   document and says so on its face; issuing one means a tax number and a numbering scheme an
   accountant signs off.
+- **Errors are tracked as soon as there is somewhere to send them.** Sentry is wired on the
+  browser, the server and the edge, and initialised only when `NEXT_PUBLIC_SENTRY_DSN` is set;
+  without it the SDK is asleep and the two error boundaries log to the console as before.
+  Reports go through `/monitoring` on this origin, so the CSP's `connect-src 'self'` holds.
+  Source maps upload when the three `SENTRY_*` build variables exist.
 - **There is a health check and nothing watches it.** `/api/health` answers 200 when one query
   comes back from the database and 503 when it does not — the failure this shop has actually
   had is a database that would not answer while every page rendered its chrome. Point an
