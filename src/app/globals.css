@@ -387,23 +387,41 @@
     }
   }
 
+  /* The side margins, or the notch, whichever is wider: in landscape on a
+     phone with a camera in the screen, `env(safe-area-inset-left)` is the
+     width of it, and text set at 1rem from the edge sits under it. */
   .page-container {
     width: 100%;
     max-width: var(--container-page);
     margin-inline: auto;
-    padding-inline: 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
 
   @media (min-width: 640px) {
     .page-container {
-      padding-inline: 1.5rem;
+      padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+      padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
     }
   }
 
   @media (min-width: 1024px) {
     .page-container {
-      padding-inline: 2rem;
+      padding-left: max(2rem, env(safe-area-inset-left, 0px));
+      padding-right: max(2rem, env(safe-area-inset-right, 0px));
     }
+  }
+
+  /* The sticky header runs under the status bar once the page covers the
+     viewport; its own top padding is what keeps the search field below it. */
+  .site-header {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* The footer is the last thing on the page and the home indicator lies
+     over it; the bottom sheet and the side drawers meet the same edges. */
+  .site-footer {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .btn {
@@ -1003,6 +1021,18 @@
   transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
 }
 
+/* A sheet from the bottom sits over the home indicator; a drawer from a
+   side sits under the camera in landscape. Each pads the edge it touches. */
+.overlay-panel[data-side="bottom"] {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.overlay-panel[data-side="left"] {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.overlay-panel[data-side="right"] {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
 .overlay-panel[data-state="closed"][data-side="left"] {
   transform: translate3d(-100%, 0, 0);
 }
@@ -1414,11 +1444,12 @@
 
 .chat-launcher {
   position: absolute;
-  right: 0.75rem;
+  right: calc(0.75rem + env(safe-area-inset-right, 0px));
   /* Steps over the sticky buy bar when there is one — two fixed elements in
      the same corner otherwise cover each other, and which one wins comes
-     down to stylesheet order rather than to intent. */
-  bottom: calc(0.75rem + var(--buy-bar-h, 0px));
+     down to stylesheet order rather than to intent. And over the home
+     indicator, which the buy bar already clears when it is there. */
+  bottom: calc(0.75rem + var(--buy-bar-h, 0px) + env(safe-area-inset-bottom, 0px));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1457,8 +1488,8 @@
 
 @media (min-width: 640px) {
   .chat-launcher {
-    right: 1.5rem;
-    bottom: calc(1.5rem + var(--buy-bar-h, 0px));
+    right: calc(1.5rem + env(safe-area-inset-right, 0px));
+    bottom: calc(1.5rem + var(--buy-bar-h, 0px) + env(safe-area-inset-bottom, 0px));
   }
 
   .chat-launcher-label {
@@ -1468,9 +1499,9 @@
 
 .chat-panel {
   position: absolute;
-  left: 0.75rem;
-  right: 0.75rem;
-  bottom: calc(4.5rem + var(--buy-bar-h, 0px));
+  left: calc(0.75rem + env(safe-area-inset-left, 0px));
+  right: calc(0.75rem + env(safe-area-inset-right, 0px));
+  bottom: calc(4.5rem + var(--buy-bar-h, 0px) + env(safe-area-inset-bottom, 0px));
   height: 32rem;
   /* `height` with a `max-height` rather than a `min()`: the panel wants to be
      32rem, but on a short screen it must stop before it reaches the header
@@ -1506,8 +1537,8 @@
 @media (min-width: 640px) {
   .chat-panel {
     left: auto;
-    right: 1.5rem;
-    bottom: calc(5.5rem + var(--buy-bar-h, 0px));
+    right: calc(1.5rem + env(safe-area-inset-right, 0px));
+    bottom: calc(5.5rem + var(--buy-bar-h, 0px) + env(safe-area-inset-bottom, 0px));
     width: 23.5rem;
     height: 34rem;
     /* Clears the whole sticky header: the top bar, `--header-h`, and the

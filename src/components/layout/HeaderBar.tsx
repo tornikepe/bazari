@@ -116,7 +116,7 @@ export function HeaderBar({
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]">
+    <header className="site-header sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]">
       {/* Main bar */}
       <div className="page-container flex h-16 items-center gap-2 sm:gap-3 lg:h-20 lg:gap-6">
         <button

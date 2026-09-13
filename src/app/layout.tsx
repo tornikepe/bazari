@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Georgian } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
@@ -31,6 +31,22 @@ const notoGeorgian = Noto_Sans_Georgian({
   subsets: ["georgian"],
   display: "swap",
 });
+
+/**
+ * The page may run under the notch and the home indicator.
+ *
+ * `viewport-fit=cover` is what makes `env(safe-area-inset-*)` non-zero on a
+ * phone with either; without it the insets the stylesheet already asks for
+ * are all zero and the browser letterboxes the page instead. Every fixed
+ * edge in `globals.css` — the header, the buy bar, the chat launcher, the
+ * sheets, the page's own margins — pads by the inset on its side, so nothing
+ * sits under the camera in landscape or under the bar at the bottom.
+ */
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  width: "device-width",
+  initialScale: 1,
+};
 
 /**
  * Read from the database rather than exported as a constant, because the shop's

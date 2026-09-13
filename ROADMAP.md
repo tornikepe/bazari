@@ -7,8 +7,10 @@ done, and why, is in the commit messages and the README; it is not repeated here
 
 ## 1. Responsive — needs a real phone
 
-- ⛔ `env(safe-area-inset-*)`: add `viewport-fit=cover` together with insets on every edge.
-  Cannot be verified without **A7**
+- Look at the site on a phone with a notch, in landscape too: `viewport-fit=cover` is on, and
+  every fixed edge pads by its inset — the header's top, the page's sides, the buy bar, the
+  chat launcher, the sheets, the footer. Correct by construction and unverifiable without the
+  device (**A7**, or your own phone on the deployed site)
 - Open the site at 200% zoom, in forced colours, and with reduced motion — on the device,
   not in an emulator
 
