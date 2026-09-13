@@ -47,6 +47,7 @@ const STAFF = [
   "/dashboard/categories",
   "/dashboard/orders",
   "/dashboard/returns",
+  "/dashboard/reviews",
   "/dashboard/coupons",
   "/dashboard/customers",
   "/dashboard/staff",

@@ -201,6 +201,14 @@ model Product {
   options       ProductOption[]
   variants      ProductVariant[]
   favorites     Favorite[]
+  reviews       Review[]
+  /// The published reviews, summed and counted, so the catalogue can print a
+  /// star without a query per card. Recomputed from the rows on every
+  /// review write — never edited by hand, and zero until somebody real has
+  /// written one. The columns this shop once dropped for being invented
+  /// numbers come back here because there are now real numbers to hold.
+  ratingSum     Int              @default(0)
+  ratingCount   Int              @default(0)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -392,6 +400,7 @@ model Order {
   movements StockMovement[]
   payments  Payment[]
   returns   ReturnRequest[]
+  reviews   Review[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
@@ -511,6 +520,7 @@ model User {
   addresses      Address[]
   favorites      Favorite[]
   cart           CartSnapshot?
+  reviews        Review[]
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   savedViews     SavedView[]
@@ -543,6 +553,37 @@ model SavedView {
   /// points at, which is what "save" means when the name is already on screen.
   @@unique([userId, page, name])
   @@index([userId, page])
+}
+
+/// What a customer thought of something they bought.
+///
+/// Only a customer whose order of the product was *delivered* may write one,
+/// which is what makes it a review rather than an opinion — the row points at
+/// that order. One per customer per product, and editable: a second thought
+/// replaces the first rather than sitting beside it.
+///
+/// The shop can hide a review and cannot edit it. A star the shop can move is
+/// not a star.
+model Review {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// The delivered order that earned the right to write this.
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  /// 1 to 5, held by a database constraint.
+  rating      Int
+  title       String   @default("")
+  body        String   @default("")
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId, isPublished, createdAt])
+  @@index([userId])
 }
 
 /// A product a customer has marked to come back to.

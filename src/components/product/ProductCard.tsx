@@ -7,6 +7,7 @@ import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
 import { Price } from "@/components/ui/Price";
 import { TruckIcon } from "@/components/ui/icons";
+import { Stars } from "@/components/product/Stars";
 import { discountPercent } from "@/lib/format";
 import { fill } from "@/lib/i18n";
 import type { ProductCardData } from "@/lib/catalog";
@@ -71,6 +72,13 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         </h3>
 
         <div className="mt-auto flex flex-col gap-2.5 pt-1">
+          {/* Absent until somebody real has written one: a row of empty
+              stars is a shop asking to be rated by people who have not
+              bought anything. Cards stay in line either way — the block
+              above grows, not this one. */}
+          {product.ratingCount > 0 && (
+            <Stars sum={product.ratingSum} count={product.ratingCount} t={t} />
+          )}
           <Price value={product.price} oldValue={product.oldPrice} size="lg" />
 
           <div className="flex items-center gap-1.5 text-xs text-ink-500">

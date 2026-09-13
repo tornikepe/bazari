@@ -27,6 +27,11 @@ import { RecordView } from "@/components/product/RecordView";
 import { WatchStock } from "@/components/product/WatchStock";
 import { VariantPicker } from "@/components/product/VariantPicker";
 import { parsePhotos, altOf } from "@/lib/product-photos";
+import { Stars } from "@/components/product/Stars";
+import { ReviewForm } from "@/components/product/ReviewForm";
+import { getCurrentUser } from "@/lib/auth";
+import { averageRating, mayReview } from "@/lib/review-rules";
+import { formatDate } from "@/lib/format";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -87,7 +92,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
      above the other, and two round trips in sequence would delay the page by
      the slower of them twice. (The comment said so before the code did — the
      load test found the second `await` waiting on the first.) */
-  const [boughtTogether, related] = await Promise.all([
+  const user = await getCurrentUser();
+  const [boughtTogether, related, reviews, ownOrders, ownReview] = await Promise.all([
     getBoughtTogether(product.id),
     prisma.product.findMany({
       where: { isActive: true, categoryId: product.categoryId, NOT: { id: product.id } },
@@ -95,7 +101,39 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       orderBy: { createdAt: "desc" },
       take: 4,
     }),
+    // What people wrote, newest first. Only the published ones; a hidden
+    // review is the shop's decision and not a thing to draw greyed out.
+    prisma.review.findMany({
+      where: { productId: product.id, isPublished: true },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        rating: true,
+        title: true,
+        body: true,
+        createdAt: true,
+        userId: true,
+        user: { select: { name: true } },
+      },
+    }),
+    // Whether this reader may write one: their orders of this product, any
+    // status — the rule wants to know the difference between "never bought"
+    // and "not here yet".
+    user?.role === "customer"
+      ? prisma.order.findMany({
+          where: { userId: user.id, items: { some: { productId: product.id } } },
+          select: { id: true, status: true },
+        })
+      : Promise.resolve([]),
+    user?.role === "customer"
+      ? prisma.review.findUnique({
+          where: { productId_userId: { productId: product.id, userId: user.id } },
+          select: { rating: true, title: true, body: true, isPublished: true },
+        })
+      : Promise.resolve(null),
   ]);
+  const reviewAllowed = mayReview(user?.role === "customer", ownOrders);
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const description = locale === "ka" ? product.descriptionKa : product.descriptionEn;
@@ -177,6 +215,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     image: photos.map((photo) => `${SITE_URL}${photo.url}`),
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
     category: categoryName,
+    /* Real, or absent. The counts come from reviews written by customers the
+       product was delivered to, and there is no field here until there is
+       at least one of them. */
+    ...(product.ratingCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: averageRating(product.ratingSum, product.ratingCount),
+            reviewCount: product.ratingCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
     offers: {
       "@type": "Offer",
       url: `${SITE_URL}/product/${product.slug}`,
@@ -274,6 +326,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {name}
           </h1>
 
+          {/* Nothing here until somebody real has written something. */}
+          {product.ratingCount > 0 && (
+            <div className="mt-2">
+              <Stars sum={product.ratingSum} count={product.ratingCount} t={t} size="md" href="#reviews" />
+            </div>
+          )}
+
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Price value={product.price} oldValue={product.oldPrice} size="xl" />
           </div>
@@ -368,6 +427,94 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </div>
+
+      {/* ------------------------------ reviews ------------------------------ */}
+      {/* Above the recommendations, because it is about *this* product and
+          they are about others. Drawn even when empty — the empty state is
+          where the rule is stated, and the rule is the point. */}
+      <section id="reviews" className="mt-12 scroll-mt-[calc(var(--header-h)+1rem)]">
+        <SectionHeading
+          title={t.product.reviews}
+          hint={
+            product.ratingCount > 0
+              ? `${t.product.reviewAverage} ${averageRating(product.ratingSum, product.ratingCount)} · ${countText(
+                  t.product.reviewsCountOne,
+                  t.product.reviewsCount,
+                  product.ratingCount,
+                )}`
+              : undefined
+          }
+        />
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
+          <div>
+            {reviews.length === 0 ? (
+              <div className="card card-pad">
+                <p className="text-sm font-bold text-ink-900">{t.product.reviewsNone}</p>
+                <p className="mt-1 text-sm text-ink-500">{t.product.reviewsNoneHint}</p>
+              </div>
+            ) : (
+              <ol className="card divide-y divide-line">
+                {reviews.map((review) => (
+                  <li key={review.id} className="card-pad-tight">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Stars sum={review.rating} count={1} t={t} />
+                      <span className="text-xs text-ink-400">{formatDate(review.createdAt)}</span>
+                    </div>
+                    {review.title && (
+                      <p className="mt-2 text-sm font-bold text-ink-900">{review.title}</p>
+                    )}
+                    {review.body && (
+                      <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-ink-700">
+                        {review.body}
+                      </p>
+                    )}
+                    <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+                      <span className="font-semibold text-ink-700">
+                        {review.user.name || t.product.reviewVerified}
+                      </span>
+                      {/* Every review here is one, which is why the badge is
+                          not a filter but a statement. */}
+                      <span className="badge bg-success-soft text-success">
+                        {t.product.reviewVerified}
+                      </span>
+                      {user && review.userId === user.id && (
+                        <span className="text-ink-400">· {t.product.reviewYours}</span>
+                      )}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
+          <aside className="flex flex-col gap-3">
+            {reviewAllowed.ok ? (
+              <>
+                {ownReview && !ownReview.isPublished && (
+                  <p className="text-xs text-ink-500">{t.product.reviewHidden}</p>
+                )}
+                <ReviewForm
+                  slug={product.slug}
+                  existing={
+                    ownReview
+                      ? { rating: ownReview.rating, title: ownReview.title, body: ownReview.body }
+                      : null
+                  }
+                />
+              </>
+            ) : (
+              <p className="text-sm text-ink-500">
+                {reviewAllowed.reason === "sign-in"
+                  ? t.product.reviewSignIn
+                  : reviewAllowed.reason === "not-delivered"
+                    ? t.product.reviewNotDelivered
+                    : t.product.reviewNotBought}
+              </p>
+            )}
+          </aside>
+        </div>
+      </section>
 
       {/* -------------------------- bought together -------------------------- */}
       {/* Above "related", because it is the stronger claim: this row is

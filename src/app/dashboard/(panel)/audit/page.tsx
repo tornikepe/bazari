@@ -24,6 +24,7 @@ const ENTITIES = [
   "page",
   "staff",
   "customer",
+  "review",
 ] as const;
 
 /** Columns that hold tetri, so the log shows lari like everything else. */
@@ -68,6 +69,8 @@ function hrefFor(entity: string, id: string): string | null {
       return "/dashboard/staff";
     case "category":
       return "/dashboard/categories";
+    case "review":
+      return "/dashboard/reviews?view=all";
     default:
       return null;
   }

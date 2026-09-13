@@ -63,6 +63,9 @@ export const productCardSelect = {
   image: true,
   brand: true,
   shippingDays: true,
+  // Two integers, so a card can print a star without a query of its own.
+  ratingSum: true,
+  ratingCount: true,
 } satisfies Prisma.ProductSelect;
 
 export type ProductCardData = Prisma.ProductGetPayload<{ select: typeof productCardSelect }>;

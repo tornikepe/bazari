@@ -22,7 +22,8 @@
 > - **Every product shares one bundled photo** until a real image URL is set in the dashboard.
 >
 > There are no invented review scores, supplier claims, phone numbers or addresses anywhere in
-> the interface. If a number is on screen, it was counted from the database.
+> the interface. If a number is on screen, it was counted from the database — a star included:
+> only a customer whose order of the product was delivered can write a review.
 
 ---
 
@@ -413,6 +414,12 @@ and category management with filtering, sorting and pagination; an order workflo
 who moved each status and when; return requests answered in place, with the goods going back
 through the ledger; a customer list with real lifetime totals; and an append-only stock ledger,
 so "why is this out of stock?" always has an answer.
+
+**Reviews, from people who bought the thing.** Only a customer whose order of the product
+reached *delivered* can write one; the row points at that order, one per customer per product,
+and a second thought replaces the first. The shop can hide a review and cannot edit it. The
+star on a card and the `aggregateRating` in the structured data exist only once somebody real
+has written something.
 
 **Traffic, without a cookie banner.** Page views are counted per day and path from a beacon
 the page sends; nothing about who. A day's visitors are told apart by a keyed hash under a key

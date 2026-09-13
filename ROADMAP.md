@@ -19,7 +19,6 @@ done, and why, is in the commit messages and the README; it is not repeated here
 | | Item | What it needs |
 |---|---|---|
 | 🔴 | Payment | An implementation behind the adapter interface. Blocked on **A4** |
-| 🟢 | Reviews | Only if they are real |
 
 Everything that emails a shopper — the confirmation with its PDF, the shipping notice, the
 return answer, the abandoned-cart reminder, the back-in-stock message — is written and goes
