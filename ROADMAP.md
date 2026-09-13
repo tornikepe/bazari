@@ -41,7 +41,10 @@ to the server log until **A3**.
   maps. The account is **A8**
 - Uptime alerting to your phone — point the monitor at `/api/health`, which answers 503
   when the database does not; the page itself would answer 200 with no products on it
-- Backups: confirm retention, and restore once to prove it works
+- Backups: confirm the provider's point-in-time retention on the Neon dashboard — it is the
+  only thing that catches the hour between two of ours. Ours exist and restore: `npm run
+  db:backup` writes every table to one file, `npm run db:restore` puts it into a fresh database,
+  and the restore was done once, checked table by table
 - A custom domain
 - A staging database, so migrations are rehearsed before production. (`npm run
   test:e2e:scratch` rehearses every migration on a throwaway database each time it runs,

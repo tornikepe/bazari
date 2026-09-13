@@ -485,6 +485,8 @@ place a division by 100 happens.
 | `npm run db:audit` | Is any of it wrong: orphans, order arithmetic, whole-tetri prices, Georgian encoding |
 | `npm run db:studio` | Prisma Studio |
 | `npm run db:reset` | Drop, re-migrate and re-seed |
+| `npm run db:backup` | Every row of every table into `backups/bazari-<time>.json`, with the migrations it was taken on; `-- --out <file>` to say where |
+| `npm run db:restore -- <file>` | Puts a backup into a migrated, empty database; refuses a different schema, and refuses a database that already holds a shop unless `--replace` |
 
 ---
 
@@ -892,6 +894,29 @@ Nothing in the application is tied to a particular host. `src/lib/prisma.ts`
 takes a plain connection string through the standard `pg` driver, so Neon,
 Supabase, Vercel Postgres, Railway or a server in a cupboard are all the same
 to it.
+
+### A backup, and the one restore that proves it
+
+```bash
+npm run db:backup                                   # backups/bazari-2026-09-13T19-09.json
+npx prisma migrate deploy                           # against the new, empty database
+npm run db:restore -- backups/bazari-2026-09-13T19-09.json
+npm run db:verify
+```
+
+Written with a query per table rather than `pg_dump`, because the machine this runs on may
+have no Postgres installed at all, and because a file that is JSON can be read, diffed and
+restored without matching server versions. Uploaded photos go in as base64; JSON columns as
+JSON; the file records which migrations the source had applied, and a restore into a database
+on any other schema refuses. Tables load parents first, in an order worked out from the
+foreign keys, inside one transaction.
+
+It was done once: 1,684 rows across 32 tables out of one throwaway database and into another,
+every table's count matching the file, a photo's bytes and a review's JSON intact, and
+`db:verify` green on the result. A backup that has never been restored is a hope.
+
+It is a logical copy taken at a moment. The provider's point-in-time recovery — Neon's, here —
+is what catches the hour between two of these; confirm its retention on the dashboard.
 
 ### The move
 

@@ -52,6 +52,9 @@ skills-lock.json
 
 /src/generated/prisma
 
+# database backups — a copy of the shop, never in the repository
+/backups/
+
 # Playwright
 /test-results/
 /playwright-report/
