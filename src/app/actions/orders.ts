@@ -10,7 +10,9 @@ import { checkCoupon } from "@/lib/coupons";
 import { isPaymentMethod } from "@/lib/payment";
 import { rememberReceipt } from "@/lib/order-access";
 import { clientIp, consume } from "@/lib/rate-limit";
-import { toMinor, PAYMENT_WINDOW_MINUTES } from "@/lib/payments";
+import { toMinor, PAYMENT_WINDOW_MINUTES, cardGateway } from "@/lib/payments";
+import { startPayment } from "@/lib/payments/service";
+import { requestOrigin } from "@/lib/request-origin";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
 import { sendLowStockEmail, type LowStockItem } from "@/lib/stock-emails";
 import { crossedLowStock } from "@/lib/stock";
@@ -38,7 +40,12 @@ export type PlaceOrderInput = {
 };
 
 export type PlaceOrderResult =
-  | { ok: true; number: string }
+  /**
+   * `redirect` is set when the order is placed and the shopper now has to
+   * pay for it somewhere else — a card order, with a gateway configured. The
+   * checkout sends the browser there; the gateway sends it back to the order.
+   */
+  | { ok: true; number: string; redirect?: string }
   | {
       ok: false;
       error: "empty" | "invalid" | "unavailable" | "failed" | "rate-limited" | "sign-in-required";
@@ -219,6 +226,14 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     return { ok: false, error: "invalid" };
   }
 
+  /* Where a card is charged. With a gateway configured the order opens no
+     payment row of its own — `startPayment` opens one against the gateway
+     after the commit and the shopper is sent there. Without one, a card
+     order is recorded the way cash is: a manual row that waits for a human,
+     which is what this shop has always done and every deployment without a
+     provider still does. */
+  const gateway = paymentMethod === "card" ? cardGateway() : null;
+
   const total = subtotal + shipping - discount;
   // The VAT inside that total, at today's rate. Both are written to the order:
   // the figure so the receipt can show it, the rate so a change next year
@@ -286,15 +301,19 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             // has one answer regardless of how the money arrives. Card orders
             // will hand this to a gateway; cash stays `pending` until an admin
             // marks it received.
-            payments: {
-              create: [
-                {
-                  provider: "manual",
-                  amount: toMinor(total),
-                  expiresAt: new Date(Date.now() + PAYMENT_WINDOW_MINUTES * 60_000),
-                },
-              ],
-            },
+            ...(gateway
+              ? {}
+              : {
+                  payments: {
+                    create: [
+                      {
+                        provider: "manual",
+                        amount: toMinor(total),
+                        expiresAt: new Date(Date.now() + PAYMENT_WINDOW_MINUTES * 60_000),
+                      },
+                    ],
+                  },
+                }),
           },
         });
 
@@ -445,6 +464,23 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       await sendLowStockEmail(crossed).catch((error) =>
         console.error("sendLowStockEmail failed", error),
       );
+
+      /* The gateway, after everything else: the order is committed, the
+         stock is taken, the confirmation is on its way. If the gateway cannot
+         be reached the order still exists, unpaid, and the order page offers
+         "pay now" — a failed redirect must not be a lost sale. */
+      if (gateway) {
+        const started = await startPayment(
+          order.number,
+          gateway,
+          await requestOrigin(),
+          await getLocale(),
+        );
+        if (started.ok && started.kind === "redirect") {
+          return { ok: true, number: order.number, redirect: started.url };
+        }
+        if (!started.ok) console.error("startPayment failed", started.reason);
+      }
 
       return { ok: true, number: order.number };
     } catch (error) {

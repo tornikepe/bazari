@@ -1,6 +1,7 @@
 import "server-only";
 
 import { manualAdapter } from "@/lib/payments/manual";
+import { sandboxAdapter } from "@/lib/payments/sandbox";
 import type { Adapter, Minor, PaymentProvider } from "@/lib/payments/types";
 
 export type * from "@/lib/payments/types";
@@ -14,7 +15,17 @@ export type * from "@/lib/payments/types";
  */
 const ADAPTERS: Record<PaymentProvider, Adapter> = {
   manual: manualAdapter,
+  sandbox: sandboxAdapter,
 };
+
+/**
+ * The gateway a card is sent to, if any is configured. `null` means a card
+ * order is recorded the way cash is — a payment row that waits for a human —
+ * which is what every deployment without a provider gets.
+ */
+export function cardGateway(): PaymentProvider | null {
+  return availableProviders().find((id) => id !== "manual") ?? null;
+}
 
 export function getAdapter(provider: PaymentProvider): Adapter {
   return ADAPTERS[provider];

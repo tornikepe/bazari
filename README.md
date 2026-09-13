@@ -391,6 +391,7 @@ against the source (`grep process.env`), not against memory.
 | `CHAT_MONTHLY_REQUEST_CAP` | optional | Ceiling on requests per month — the one that does the work on a free tier, where no number of requests adds up to a cost. Unset means unlimited. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | optional | The Google button. Rendered only when both are set. |
 | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | optional | The Facebook button. Same rule. |
+| `PAYMENT_SANDBOX` | never in production | `1` sends card orders through the gateway that takes no money — see the limits below. Unset, a card order is recorded like cash. |
 | `CRON_SECRET` | for the daily sweep | The bearer token `/api/cron/daily` expects — Vercel sends it on the schedule in `vercel.json`. Unset, the route refuses every call, and no payment attempt expires and no cart reminder goes. |
 | `DATABASE_POOL_MAX` | optional | Connections per instance. Defaults to 3 on Vercel, where many short-lived instances share one plan, and 10 elsewhere, where one process takes every request. |
 | `VERCEL` | set by Vercel | Read only to pick that default. |
@@ -1056,8 +1057,14 @@ you own, and never in a fork.
   image URL per product in the dashboard. The placeholder is deliberately transparent so it takes
   the card's own background and works in both themes; a real photograph on a white studio ground
   will look like a white square in dark mode, which is a fact about photographs rather than a bug.
-- **Payments are not real.** Orders are recorded as cash-on-delivery. `PaymentProvider` is an
-  enum with a single `manual` member, ready for a real adapter.
+- **Payments are not real, and the card path is.** By default every order is recorded the way
+  cash is: a payment row that waits for a human. With `PAYMENT_SANDBOX=1`, "card" at the
+  checkout goes through a gateway that takes no money — a hosted page of this app with "pay" and
+  "decline" on it, which calls the shop's webhook back with a signed body the way a real bank
+  does — so the redirect, the return, the callback's signature and idempotency, the amount
+  check, the capture, the refund and "pay now" after a decline all run end to end. A real
+  adapter implements the same three methods against a bank's API and is swapped in by
+  configuration. Never enable the sandbox on a shop that sells.
 - **Order tracking requires the phone number**, not just the order number, so order numbers
   cannot be enumerated to read customers' details.
 - **Both languages are served from the same URL** via a cookie, so there is deliberately no

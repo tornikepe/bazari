@@ -13,6 +13,8 @@ import { InvoiceHead } from "@/components/order/InvoiceHead";
 import { PrintButton } from "@/components/order/PrintButton";
 import { TaxNote } from "@/components/ui/TaxNote";
 import { ReturnPanel } from "@/components/order/ReturnPanel";
+import { PayNowButton } from "@/components/order/PayNowButton";
+import { cardGateway } from "@/lib/payments";
 import { Parcel } from "@/components/order/Parcel";
 import { mayRequestReturn } from "@/lib/returns";
 import { formatDate } from "@/lib/format";
@@ -62,6 +64,17 @@ export default async function OrderConfirmationPage({
   // Only the owner may ask for a return. An admin reading the page, or a
   // browser holding the receipt cookie, sees what was asked and not the form.
   const owner = user !== null && order.userId === user.id && user.role === "customer";
+
+  /* A card order that is not paid, with somewhere to pay it: the attempt was
+     declined, or the tab closed, or the gateway blinked. The order exists
+     either way, and this is the way back to paying for it. Only the owner
+     is offered it; only when a gateway is configured. */
+  const awaitingCard =
+    owner &&
+    order.paymentMethod === "card" &&
+    order.paymentStatus === "unpaid" &&
+    order.status !== "cancelled" &&
+    cardGateway() !== null;
   const returnAllowed = owner
     ? mayRequestReturn(order, order.returns, settings.returnWindowDays)
     : ({ ok: false, reason: "off" } as const);
@@ -96,6 +109,18 @@ export default async function OrderConfirmationPage({
             {t.orderDone.title}
           </h1>
           <p className="mt-2 max-w-md text-sm text-ink-500">{t.orderDone.subtitle}</p>
+
+          {awaitingCard ? (
+            <div className="mt-6 w-full max-w-sm border border-warning/40 bg-warning-soft p-4 text-center">
+              <p className="text-sm font-bold text-warning">{t.orderDone.unpaidCard}</p>
+              <p className="mt-1 text-xs text-ink-600">{t.orderDone.unpaidCardHint}</p>
+              <div className="mt-3">
+                <PayNowButton orderNumber={order.number} />
+              </div>
+            </div>
+          ) : order.paymentStatus === "paid" ? (
+            <span className="badge mt-4 bg-success-soft text-success">{t.orderDone.paidBadge}</span>
+          ) : null}
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <div className="rounded-control border border-line bg-ink-50 px-4 py-2.5">

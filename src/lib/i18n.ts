@@ -253,6 +253,21 @@ const ka = {
     issued: "გაცემულია",
     invoiceNote: "დემო პროექტი — ეს არ არის ფისკალური დოკუმენტი.",
     downloadPdf: "PDF-ის ჩამოტვირთვა",
+    unpaidCard: "შეკვეთა ჯერ გადახდილი არ არის",
+    unpaidCardHint: "ბარათით გადახდა არ დასრულებულა. სცადე ისევ — შეკვეთა შენარჩუნებულია.",
+    payNow: "გადახდა ახლა",
+    payNowFailed: "გადახდის დაწყება ვერ მოხერხდა",
+    payNowFailedHint: "სცადე ცოტა ხანში. შეკვეთა ადგილზეა.",
+    paidBadge: "გადახდილია",
+  },
+
+  sandbox: {
+    badge: "სატესტო გადახდა",
+    title: "ეს არ არის ბანკი",
+    text: "სატესტო რეჟიმია: ბარათი არ ითხოვება და ფული არ ჩამოიჭრება. აირჩიე, როგორ დასრულდეს გადახდა.",
+    pay: "გადახდა",
+    decline: "უარყოფა",
+    note: "ღილაკი მაღაზიის webhook-ს ისევე უკავშირდება, როგორც რეალური ბანკი — ხელმოწერით, ერთხელ. მაღაზიას PAYMENT_SANDBOX ჩართული აქვს.",
   },
 
   theme: {
@@ -1311,6 +1326,21 @@ const en: Dictionary = {
     issued: "Issued",
     invoiceNote: "Demo project — this is not a fiscal document.",
     downloadPdf: "Download PDF",
+    unpaidCard: "This order is not paid yet",
+    unpaidCardHint: "The card payment did not complete. Try again — the order is kept for you.",
+    payNow: "Pay now",
+    payNowFailed: "The payment could not be started",
+    payNowFailedHint: "Try again in a moment. The order is still here.",
+    paidBadge: "Paid",
+  },
+
+  sandbox: {
+    badge: "Test payment",
+    title: "This is not a bank",
+    text: "Sandbox mode: no card is asked for and no money moves. Choose how the payment should end.",
+    pay: "Pay",
+    decline: "Decline",
+    note: "The button calls the shop's webhook the way a real bank does — signed, once. This shop has PAYMENT_SANDBOX switched on.",
   },
 
   theme: {

@@ -40,6 +40,12 @@ enum PaymentMethod {
 /// here as they are integrated.
 enum PaymentProvider {
   manual
+  /// A gateway that takes no money: the hosted page is a page of this app
+  /// with "pay" and "decline" on it, and it calls the webhook back the way a
+  /// real one does. Off unless `PAYMENT_SANDBOX=1`. It exists so the whole
+  /// card path — redirect, return, callback, capture, refund — runs end to
+  /// end before a real adapter is written against the same interface.
+  sandbox
 }
 
 /// Lifecycle of one payment attempt. An order can have several — a failed card

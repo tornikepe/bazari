@@ -163,6 +163,10 @@ export default defineConfig({
       // the suite that calls it has to hold one. Nothing outside the suite
       // ever sees this value.
       CRON_SECRET: "e2e-cron-secret",
+
+      // The gateway that takes no money, so the card path — redirect,
+      // hosted page, signed callback, capture — is exercised by the suite.
+      PAYMENT_SANDBOX: "1",
     },
   },
 });

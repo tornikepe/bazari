@@ -229,6 +229,12 @@ export function CheckoutForm({
 
       // Clear only after the order is safely persisted.
       clear();
+      // A card order with a gateway goes there to be paid; the gateway sends
+      // the browser back to the order. Everything else goes to the order now.
+      if (result.redirect) {
+        window.location.assign(result.redirect);
+        return;
+      }
       router.push(`/order/${result.number}`);
     } catch {
       setFailure({ title: t.checkout.failed, hint: t.checkout.failedHint });
