@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/opengraph-image": ["./assets/**/*"],
     "/product/[slug]/opengraph-image": ["./assets/**/*"],
+    // The invoice PDF reads the same fonts the same way — from the download
+    // route, and from `placeOrder`, which draws one for the confirmation email
+    // and is bundled with the page that renders the checkout form.
+    "/api/orders/[number]/invoice": ["./assets/**/*", "./node_modules/pdfkit/js/data/**/*"],
+    "/checkout": ["./assets/**/*", "./node_modules/pdfkit/js/data/**/*"],
   },
 
   images: {
