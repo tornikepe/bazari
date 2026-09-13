@@ -75,7 +75,7 @@ to the server log until **A3**.
 | **A6** | Real business details — address, phone, hours, tax ID | They are facts about a business |
 | **A7** | A full Xcode install, then `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` | It needs your password |
 | **A8** | A Sentry account | An account and a billing decision |
-| **A9** | Run the new migrations against production: `npm run db:migrate` (or `prisma migrate deploy`) after merging — seven of them, all additive | They were rehearsed on a throwaway database, not on yours |
+| **A9** | Run the new migrations against production — nine of them, all additive — *before* deploying: `npm run db:backup && npm run db:migrate` from the main checkout | They were rehearsed on throwaway databases, not on yours, and the deployed code needs them first |
 | **A10** | Set `CRON_SECRET` in the Vercel project (any long random string) | Without it the daily sweep refuses every call, and no cart reminder or payment expiry ever runs |
 | **A11** | Refresh the visual baselines on your machine: `npm run test:visual:update`, then take the Linux pair from CI | The baselines are pictures of your database's newest products; the deals banner and the product page changed on purpose |
 
@@ -97,7 +97,10 @@ npm run setup:credentials -- --force   # locally; set the Vercel one by hand
 
 ## 7. Order of work
 
-1. **A9** and **A10** — the migrations and the cron secret, before anything else ships
-2. **A3** — it switches on six emails that are already written
-3. **§4** and **§5**, last
-4. **§1** whenever a real phone is to hand
+1. **A9** — apply the migrations to production *before* the new code is deployed: the code
+   reads columns the old database does not have, and deploying first is a broken shop until
+   the migration lands. `npm run db:backup` first, then `npm run db:migrate`, then push
+2. **A10** — `CRON_SECRET` on Vercel, so the daily sweep runs from the first day
+3. **A3** — it switches on six emails that are already written
+4. **§4** and **§5**, last
+5. **§1** whenever a real phone is to hand
