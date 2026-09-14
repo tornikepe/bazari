@@ -97,6 +97,10 @@ test("an unknown coupon is rejected without changing the total", async ({ page }
   await page.goto("/checkout");
 
   const total = page.locator("aside dl").last();
+  // The cart hydrates from localStorage after the first paint; read the
+  // figure once it is a figure, or "before" is the zero the server drew.
+  await expect(total).not.toContainText(/0[.,]00\s*₾?\s*$/);
+  await expect(page.locator("aside li").first()).toBeVisible();
   const before = await total.innerText();
 
   await page.getByPlaceholder(/enter code/i).fill("NOTAREALCODE");

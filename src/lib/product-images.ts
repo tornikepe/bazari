@@ -46,11 +46,15 @@ export async function forgetUnusedImages(urls: string[]): Promise<number> {
       },
     });
     if (stillUsed === 0) unused.push(id);
+    // Said out loud either way. An image kept because a product still points
+    // at it is the correct outcome and the one a reader wants explained.
+    else console.info(`[images] kept ${id}: still used by ${stillUsed} product(s)`);
   }
 
   if (unused.length === 0) return 0;
 
   const { count } = await prisma.productImage.deleteMany({ where: { id: { in: unused } } });
+  console.info(`[images] forgot ${count} of ${unused.length}: ${unused.join(", ")}`);
   return count;
 }
 

@@ -39,14 +39,12 @@ test("a page opened by a stranger is counted, and nothing about the stranger is 
   await useEnglish(page);
   const before = await totals();
 
-  let beacons = 0;
-  page.on("request", (request) => {
-    if (request.url().endsWith("/api/hit")) beacons += 1;
-  });
-
+  /* Two pages, and the database as the witness. Not `page.on("request")`:
+     a beacon is handed to the browser's network stack and sent around the
+     navigation that follows, and Playwright does not always see it go —
+     on CI it reported one of two, while both had been counted. */
   await page.goto("/catalog");
   await page.goto("/about");
-  await expect.poll(() => beacons).toBeGreaterThanOrEqual(2);
 
   // Two views; and one visitor at most, because it is one browser — the
   // second page must not mint a second person.
