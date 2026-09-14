@@ -95,8 +95,12 @@ test("a product with more than one photo gets a gallery @engine", async ({ page 
     // --- the storefront ---------------------------------------------------
     await page.goto(`/product/${slug}`);
 
+    /* Two more than there were. A seeded product has no photo rows at all —
+       its placeholder is the `image` column, not a row — and one that has
+       been saved through the form since has one, so "three" was true only
+       after some other spec had saved it. */
     const tabs = page.getByRole("tab");
-    await expect(tabs, "three photos should give three thumbnails").toHaveCount(3);
+    await expect(tabs, "two more photos should give two more thumbnails").toHaveCount(before + 2);
     await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
 
     const shown = () => page.locator('[role="tabpanel"] img').getAttribute("src");
@@ -117,17 +121,34 @@ test("a product with more than one photo gets a gallery @engine", async ({ page 
     // which end they are at.
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowLeft");
-    await expect(tabs.nth(2), "the strip should wrap around").toBeFocused();
+    await expect(tabs.last(), "the strip should wrap around").toBeFocused();
   } finally {
     // --- and take them away again ------------------------------------------
     await openFirstProductInAdmin(page);
-    /* Backwards, because removing the second renumbers the third — the labels
-       are positions and the positions move. */
-    for (const index of [3, 2]) {
-      const button = page.getByRole("button", { name: new RegExp(`Remove photo ${index}$`) });
-      if (await button.count()) await button.click();
+    /* By URL, not by position. "Remove photo 3" then "Remove photo 2" was a
+       pair of clicks against a list that re-renders between them, and on CI
+       the second was lost often enough to leave one photo behind — which the
+       bytes check then reported as the wrong fault. Each row is found by the
+       hidden input that carries its URL, and the row has to be gone before
+       the next one is touched. */
+    for (const url of uploaded) {
+      const row = page.locator("li", { has: page.locator(`input[name="photoUrl"][value="${url}"]`) });
+      if ((await row.count()) === 0) continue;
+      await row.getByRole("button", { name: /^Remove photo \d+$/ }).click();
+      await expect(page.locator(`input[name="photoUrl"][value="${url}"]`)).toHaveCount(0);
     }
     await save(page);
+
+    // The product first, then the bytes: a photo still on the product is a
+    // different fault from a photo whose bytes were kept, and the first is
+    // what a lost click looks like.
+    await openFirstProductInAdmin(page);
+    for (const url of uploaded) {
+      await expect(
+        page.locator(`input[name="photoUrl"][value="${url}"]`),
+        `${url} is still on the product`,
+      ).toHaveCount(0);
+    }
 
     await page.goto(`/product/${slug}`);
     await expect(page.getByRole("tab"), "the test left photos behind").toHaveCount(0);
