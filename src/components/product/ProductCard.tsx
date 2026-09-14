@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { useCart } from "@/components/providers/CartProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
+import { QuantitySelect } from "@/components/product/QuantitySelect";
 import { Price } from "@/components/ui/Price";
 import { TruckIcon } from "@/components/ui/icons";
 import { Stars } from "@/components/product/Stars";
@@ -16,6 +19,14 @@ const LOW_STOCK_THRESHOLD = 10;
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const { locale, t } = useI18n();
+  const { items, hydrated, setQuantity: setLineQuantity } = useCart();
+  const [pending, setPending] = useState(1);
+
+  /* The quantity beside the button is the cart's own once the product is
+     in the cart — the button is a toggle, so this is the only way to buy
+     two of something from the card — and the number to add until then. */
+  const line = hydrated ? items.find((entry) => entry.productId === product.id && !entry.variantId) : undefined;
+  const quantity = line ? line.quantity : pending;
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const discount = discountPercent(product.price, product.oldPrice);
@@ -92,25 +103,40 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             </span>
           )}
 
-          <AddToCartButton
-            product={{
-              productId: product.id,
-              slug: product.slug,
-              nameKa: product.nameKa,
-              nameEn: product.nameEn,
-              image: product.image,
-              price: product.price,
-              stock: product.stock,
-            }}
-            fullWidth
-            /* Outlined on the card, filled on the product page. Twelve solid
-               red buttons on a catalogue page were twelve claims on the eye,
-               and the deals banner was meant to be the one place the red
-               fills a region. The card you are over fills its button — see
-               `.hover-lift:hover .btn-outline` — so the offer is still made,
-               one at a time. */
-            variant="outline"
-          />
+          {/* Side by side from `sm`; stacked on a phone, where a two-column
+              grid leaves a card too narrow for both and the label was
+              clipped mid-word. */}
+          <div className="flex flex-col gap-1.5 sm:flex-row">
+            {/* The select stays put when the product is sold out rather than
+                disappearing, so the button beside it does not change width
+                between one card and the next. */}
+            <QuantitySelect
+              value={quantity}
+              stock={product.stock}
+              disabled={soldOut}
+              onChange={(next) => (line ? setLineQuantity(product.id, next) : setPending(next))}
+            />
+            <AddToCartButton
+              product={{
+                productId: product.id,
+                slug: product.slug,
+                nameKa: product.nameKa,
+                nameEn: product.nameEn,
+                image: product.image,
+                price: product.price,
+                stock: product.stock,
+              }}
+              quantity={quantity}
+              fullWidth
+              /* Outlined on the card, filled on the product page. Twelve solid
+                 red buttons on a catalogue page were twelve claims on the eye,
+                 and the deals banner was meant to be the one place the red
+                 fills a region. The card you are over fills its button — see
+                 `.hover-lift:hover .btn-outline` — so the offer is still made,
+                 one at a time. */
+              variant="outline"
+            />
+          </div>
         </div>
       </div>
     </article>

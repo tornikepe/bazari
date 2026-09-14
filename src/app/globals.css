@@ -703,6 +703,64 @@
       box-shadow 0.15s ease;
   }
 
+  /* A quantity select shaped like a small outline button, so it can sit
+     flush beside one. The chevron is drawn here because a native select's
+     arrow cannot be styled and differs between platforms. */
+  .quantity-select {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .quantity-select select {
+    appearance: none;
+    width: 100%;
+    height: 100%;
+    min-height: 2.25rem;
+    padding-inline: 0.625rem 1.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius-control);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-900);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .quantity-select-md select {
+    min-height: 2.75rem;
+    padding-inline: 0.75rem 1.75rem;
+  }
+
+  .quantity-select-lg select {
+    min-height: 3.25rem;
+    padding-inline: 0.875rem 1.875rem;
+    font-size: var(--text-base);
+  }
+
+  .quantity-select select:focus {
+    outline: none;
+    border-color: var(--color-brand-400);
+    box-shadow: 0 0 0 3px var(--color-brand-100);
+  }
+
+  .quantity-select select:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .quantity-select-chevron {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--color-ink-500);
+  }
+
   .field::placeholder {
     color: var(--color-ink-400);
   }
