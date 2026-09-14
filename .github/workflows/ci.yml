@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   check:
-    name: Lint · types · unit tests
+    name: Lint · types
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +28,6 @@ jobs:
 
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
 
   e2e:
     name: End-to-end

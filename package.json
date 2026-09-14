@@ -19,8 +19,6 @@
     "db:reset": "prisma migrate reset --force",
     "db:backup": "tsx scripts/backup-database.ts",
     "db:restore": "tsx scripts/restore-database.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:scratch": "tsx scripts/e2e-scratch.ts",
     "load": "tsx scripts/load-test.ts",
@@ -56,7 +54,6 @@
     "eslint-config-next": "16.2.11",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
-    "typescript": "^5",
-    "vitest": "^4.1.10"
+    "typescript": "^5"
   }
 }

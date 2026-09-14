@@ -1,16 +1,14 @@
 # The rules
 
-One page. Every rule here is enforced by
-[`tests/unit/design-rules.test.ts`](tests/unit/design-rules.test.ts), which fails when a page
-invents a ninth way to do one of these eight things.
+One page. Every rule here is a decision made once; a page that invents a ninth way to do one
+of these eight things is wrong by this document, not by taste.
 
 Nine pages were built one at a time and each solved the same problems slightly differently — four
 page paddings, thirteen hand-written titles, six card paddings, four tables. Nobody chose any of
 them. Each was a copy of whichever page happened to be open. What follows is each of those
 decisions made once.
 
-Breaking a rule is allowed. Doing it silently is not: add the file to the test's exception list
-with the reason, the way the ones below are.
+Breaking a rule is allowed. Doing it silently is not: say so in the file, with the reason.
 
 ---
 

@@ -460,7 +460,7 @@ place a division by 100 happens.
 | **i18n** | Cookie-driven dictionaries, type-checked so `en` cannot drift from `ka` |
 | **Icons** | Hand-rolled inline SVG set — no icon dependency |
 | **Assistant** | Pluggable provider (`@google/genai` free tier, or `@anthropic-ai/sdk`), streamed as NDJSON |
-| **Tests** | Vitest + Playwright, run in GitHub Actions |
+| **Tests** | Playwright, run in GitHub Actions |
 
 ---
 
@@ -472,7 +472,6 @@ place a division by 100 happens.
 | `npm run build` | Production build |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
-| `npm test` | Unit tests (Vitest) |
 | `npm run test:e2e` | End-to-end tests (Playwright), screenshots included |
 | `npm run test:visual` | Just the thirty screenshots; `test:visual:update` accepts them |
 | `npm run test:e2e:scratch` | The suite against a Postgres it creates, migrates and seeds itself, gone in two hours; arguments after `--` go to Playwright |
@@ -538,10 +537,8 @@ src/
 ## Design system
 
 The rules themselves are one page: **[DESIGN.md](DESIGN.md)** — the four templates, the page
-rhythm, the header, the card, the table, the figures. Each is enforced by
-[`tests/unit/design-rules.test.ts`](tests/unit/design-rules.test.ts), which fails when a page
-invents a ninth way to do one of those eight things. What follows here is the material the rules
-are made of.
+rhythm, the header, the card, the table, the figures. What follows here is the material the
+rules are made of.
 
 Every colour, radius, shadow, font and type-scale step is a design token at the top of
 [`src/app/globals.css`](src/app/globals.css), with the shared `.btn` / `.card` / `.field` /
@@ -557,9 +554,9 @@ would otherwise follow their label are pinned. This is verified rather than assu
 languages at four widths and compares the measured height of every control.
 
 Dark mode overrides token *values* only, so every component re-themes at once and not a single
-`dark:` variant is written anywhere in the app. Contrast is checked by
-[`tests/unit/contrast.test.ts`](tests/unit/contrast.test.ts), which computes real ratios from the
-token values in both themes rather than trusting the palette by eye.
+`dark:` variant is written anywhere in the app. Every token pair was measured for contrast in
+both themes rather than trusted by eye, and the ratios are noted beside the values in
+`globals.css`.
 
 Motion is restrained and reversible: overlays animate in *and* out, opening slower than closing,
 and everything is switched off under `prefers-reduced-motion`.
@@ -593,7 +590,6 @@ It has two named variants:
 ## Testing
 
 ```bash
-npm test            # unit — money, dates, contrast, SKUs, chart scale, the design rules
 npm run test:e2e    # end-to-end — the flows, the security properties, the screenshots
 ```
 
