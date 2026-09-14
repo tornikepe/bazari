@@ -43,8 +43,13 @@ test("a page opened by a stranger is counted, and nothing about the stranger is 
      a beacon is handed to the browser's network stack and sent around the
      navigation that follows, and Playwright does not always see it go —
      on CI it reported one of two, while both had been counted. */
+  // Each page is left only once its beacon has gone: `goto` resolves on
+  // load, and a navigation issued in the same instant can outrun a beacon
+  // the previous page was still handing to the network.
   await page.goto("/catalog");
+  await page.waitForLoadState("networkidle");
   await page.goto("/about");
+  await page.waitForLoadState("networkidle");
 
   // Two views; and one visitor at most, because it is one browser — the
   // second page must not mint a second person.
