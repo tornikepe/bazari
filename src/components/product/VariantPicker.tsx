@@ -65,12 +65,16 @@ export function VariantPicker({
     <div className="flex flex-col gap-4">
       {/* The price, restated where the choice is made — it is the thing the
           choice changes, and the figure beside the title is now a starting
-          point rather than an answer. */}
-      {complete && variant && price !== product.price && (
-        <div>
-          <Price value={price} size="lg" />
-        </div>
-      )}
+          point rather than an answer. The row is always laid out and only
+          shown when the price differs: appearing on demand, it pushed the
+          option buttons down by its own height the moment a size was
+          chosen, under the finger that chose it. */}
+      <div
+        className={complete && variant && price !== product.price ? "" : "invisible"}
+        aria-hidden={!(complete && variant && price !== product.price)}
+      >
+        <Price value={price} size="lg" />
+      </div>
 
       {options.map((option) => (
         <fieldset key={option.id}>
@@ -113,7 +117,10 @@ export function VariantPicker({
           from a disabled button. */}
       <p
         role="status"
-        className={`text-sm font-semibold ${
+        /* A flex row of one fixed height: as a plain paragraph it was two
+           pixels taller once the icon sat in it, and the panel below moved
+           by two pixels on the first choice. */
+        className={`flex min-h-5 items-center text-sm font-semibold ${
           !complete ? "text-ink-500" : stock > 0 ? "text-success" : "text-danger"
         }`}
       >
@@ -133,6 +140,9 @@ export function VariantPicker({
       </p>
 
       <ProductPurchasePanel
+        /* A sold-out size must not fold the stepper and "buy now" away:
+           the panel would change shape with every choice. */
+        keepShape
         product={{
           ...product,
           price,

@@ -21,8 +21,18 @@ import { MinusIcon, PlusIcon } from "@/components/ui/icons";
  */
 export function ProductPurchasePanel({
   product,
+  keepShape = false,
 }: {
   product: Omit<CartItem, "quantity">;
+  /**
+   * Keep the stepper and "buy now" in place, disabled, when the product is
+   * sold out. A product sold in one form that is out of stock simply has
+   * less to offer and the panel says so; a product sold in sizes changes
+   * `product` with every choice, and a panel that folded two controls away
+   * for a sold-out size and unfolded them for the next moved everything
+   * under it each time.
+   */
+  keepShape?: boolean;
 }) {
   const { t } = useI18n();
   const { items, hydrated, add, setQuantity: setLineQuantity } = useCart();
@@ -56,7 +66,7 @@ export function ProductPurchasePanel({
 
   return (
     <div className="flex flex-col gap-3">
-      {!soldOut && (
+      {(!soldOut || keepShape) && (
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-ink-700">
             {t.product.quantity}
@@ -66,7 +76,7 @@ export function ProductPurchasePanel({
             <button
               type="button"
               onClick={() => setQuantity(quantity - 1)}
-              disabled={quantity <= 1}
+              disabled={soldOut || quantity <= 1}
               aria-label="-"
               className="btn btn-ghost h-10 w-10 rounded-none rounded-l-control p-0"
             >
@@ -78,6 +88,7 @@ export function ProductPurchasePanel({
               value={quantity}
               min={1}
               max={max}
+              disabled={soldOut}
               onChange={(event) => setQuantity(Number(event.target.value) || 1)}
               aria-label={t.product.quantity}
               className="h-10 w-14 border-x border-line bg-transparent text-center text-sm font-semibold outline-none"
@@ -86,7 +97,7 @@ export function ProductPurchasePanel({
             <button
               type="button"
               onClick={() => setQuantity(quantity + 1)}
-              disabled={quantity >= max}
+              disabled={soldOut || quantity >= max}
               aria-label="+"
               className="btn btn-ghost h-10 w-10 rounded-none rounded-r-control p-0"
             >
@@ -104,10 +115,11 @@ export function ProductPurchasePanel({
           fullWidth
         />
 
-        {!soldOut && (
+        {(!soldOut || keepShape) && (
           <button
             type="button"
             onClick={buyNow}
+            disabled={soldOut}
             className="btn btn-secondary btn-lg w-full"
           >
             {t.product.buyNow}
