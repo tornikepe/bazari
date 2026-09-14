@@ -264,7 +264,7 @@ export default async function AdminCustomersPage({
             })}
           </ul>
 
-          <div className="card mt-3 hidden overflow-hidden lg:block">
+          <div className="card mt-3 hidden overflow-x-auto lg:block">
             <table className="table">
               <thead>
                 <tr>

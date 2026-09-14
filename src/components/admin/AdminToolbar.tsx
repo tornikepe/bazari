@@ -22,12 +22,18 @@ export function AdminToolbar({
   searchPlaceholder,
   filters,
   hasActive,
+  keep = {},
 }: {
   basePath: string;
   search: string;
   searchPlaceholder?: string;
   filters: SelectFilter[];
   hasActive: boolean;
+  /**
+   * Query parameters the toolbar does not own but must not drop — a day
+   * chosen on the chart, say — carried into every URL it builds.
+   */
+  keep?: Record<string, string>;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -44,6 +50,9 @@ export function AdminToolbar({
   /** Builds the next URL from the current filters plus one override. */
   function urlWith(overrides: Record<string, string>) {
     const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(keep)) {
+      if (value) params.set(key, value);
+    }
     for (const filter of filters) {
       if (filter.value) params.set(filter.name, filter.value);
     }

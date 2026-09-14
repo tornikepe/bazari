@@ -1295,16 +1295,6 @@
   }
 }
 
-/* The bar across the top of the window that fills as the page is read. */
-@keyframes progress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
 @supports (animation-timeline: view()) {
   .reveal-view {
     animation: view-in var(--ease-out) both;
@@ -1339,12 +1329,12 @@
     animation-range: 0 32rem;
   }
 
-  .scroll-progress {
-    animation: progress linear both;
-    animation-timeline: scroll(root);
-  }
 }
 
+/* The bar across the top of the window that fills as the page is read.
+   `ScrollProgress` writes `--progress` (0 to 1) as the page scrolls; the
+   bar is the full width scaled down from its left edge, so at 1 it is a
+   rectangle from one side of the window to the other. */
 .scroll-progress {
   position: fixed;
   top: 0;

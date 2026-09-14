@@ -175,6 +175,14 @@ export function AdminSidebar({
           <MenuIcon size={20} />
         </button>
         <span className="text-sm font-bold text-ink-900">{t.admin.dashboard}</span>
+
+        {/* The way back to the shop, on the bar itself. It was only in the
+            drawer, which on a phone is the one place nobody looks for a way
+            out — the rail on a wide screen shows it without asking. */}
+        <Link href="/" className="btn btn-ghost btn-sm ml-auto -mr-2 gap-1.5 text-xs">
+          <BagIcon size={15} />
+          {t.admin.backToShop}
+        </Link>
       </div>
 
       {/* Desktop rail */}

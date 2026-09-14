@@ -11,21 +11,6 @@ CI ორ რამეს ამოწმებს, ორივე რამდ
 
 ---
 
-## რატომ ვერ ვაკეთებ დარჩენილს მე
-
-ყველაფერი, რაც კოდით კეთდებოდა, გაკეთებულია. დარჩენილი ორი სახისაა:
-
-1. **ანგარიშები და საიდუმლოებები** — Google-ის, Resend-ის, Sentry-ის, ბანკის. ისინი შენს
-   სახელზე იხსნება და გასაღებები შენს ხელში უნდა იყოს. კოდი მზადაა და მხოლოდ ცვლადის შეყვანას
-   ელოდება.
-2. **ფაქტები ბიზნესის შესახებ** — ფოტოები, მისამართი, ტელეფონი, საგადასახადო ნომერი. არავის
-   შეუძლია გამოიგონოს ფოტო პროდუქტისა, რომელიც არსებობს.
-
-ორივე შემთხვევაში შენი ნაწილი წუთებია; მერე რაც კოდში დასაწერი დარჩება (ბანკის ადაპტერი,
-ინვოისის ფისკალური ველები) — მე გავაკეთებ.
-
----
-
 ## 1. ახლავე, 10 წუთში — Vercel-ის პარამეტრებში
 
 Vercel → პროექტი `bazari` → Settings → Environment Variables. ცვლილების შემდეგ **Redeploy**.
@@ -39,44 +24,69 @@ Vercel → პროექტი `bazari` → Settings → Environment Variables
 
 ---
 
-## 2. რაც ანგარიშის გახსნას ითხოვს
+## 2. ანგარიშები და გასაღებები
 
-### A3 — ელფოსტა (Resend) — ყველაზე მნიშვნელოვანი
+ყველა გასაღები ერთ ადგილას იწერება: **Vercel → პროექტი `bazari` → Settings → Environment
+Variables → Add** (Key / Value, Environment: Production) → **Save**. ბოლოს **Deployments →
+ბოლო deploy → ⋯ → Redeploy**, თორემ ახალი ცვლადი არ ამოქმედდება.
 
-ექვსი წერილი დაწერილია და ახლა სერვერის ლოგში იწერება, სანამ გამგზავნი დომენი არ არსებობს:
-შეკვეთის დადასტურება (PDF ინვოისით), გაგზავნის შეტყობინება, დაბრუნების პასუხი, მიტოვებული
-კალათა, „პროდუქტი დაბრუნდა", ვერიფიკაციის კოდი / პაროლის აღდგენა.
+### A3 — Resend (ელფოსტა) — პირველ რიგში
 
-1. [resend.com](https://resend.com) → ანგარიში → Domains → დაამატე შენი დომენი და ჩაწერე
-   DNS-ში ის ჩანაწერები, რასაც გაჩვენებს (SPF, DKIM). ვერიფიკაციას წუთებიდან რამდენიმე
-   საათამდე სჭირდება.
-2. API Keys → შექმენი გასაღები.
-3. Vercel-ზე: `RESEND_API_KEY=…` და `MAIL_FROM="Bazari <noreply@შენი-დომენი.ge>"`.
+რას აძლევს: შეკვეთის დადასტურება PDF ინვოისით, გაგზავნის შეტყობინება, დაბრუნების პასუხი,
+მიტოვებული კალათა, „პროდუქტი დაბრუნდა", ვერიფიკაციის კოდი. ახლა ეს წერილები ლოგში იწერება.
 
-დომენის გარეშე (მხოლოდ გასაღებით) Resend არაფერს გზავნის — დომენი აუცილებელია.
+1. [resend.com](https://resend.com) → **Sign up** (GitHub-ით ან ელფოსტით).
+2. მარცხენა მენიუ **Domains → Add Domain** → ჩაწერე შენი დომენი (მაგ. `bazari.ge`) → **Add**.
+   გამოჩნდება 3 DNS ჩანაწერი (TXT და MX). გახსენი შენი დომენის რეგისტრატორის DNS გვერდი
+   და ზუსტად ისე დაამატე თითოეული (Name და Value სვეტები) → Resend-ზე **Verify DNS
+   Records**. სტატუსი „Verified" წუთებიდან რამდენიმე საათამდე გახდება.
+3. **API Keys → Create API Key** → სახელი `bazari`, Permission: **Full access** → **Add** →
+   დააკოპირე გასაღები (`re_…`) — **მხოლოდ ერთხელ ჩანს**.
+4. Vercel-ზე ორი ცვლადი:
+   - `RESEND_API_KEY` = `re_…`
+   - `MAIL_FROM` = `Bazari <noreply@bazari.ge>` (დომენი — ის, რაც მე-2 ნაბიჯში დაადასტურე)
 
-### A8 — შეცდომების თვალყური (Sentry)
+### A8 — Sentry (შეცდომების თვალყური)
 
-კოდი ბრაუზერშიც, სერვერზეც და edge-ზეც ჩართულია და მხოლოდ DSN-ს ელოდება.
-
-1. [sentry.io](https://sentry.io) → ახალი პროექტი (Next.js).
-2. Settings → Projects → Client Keys (DSN) → Vercel-ზე `NEXT_PUBLIC_SENTRY_DSN=…`.
-3. სურვილისამებრ, რომ შეცდომა ფაილის ხაზზე მიუთითებდეს და არა minified სვეტზე:
-   `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` (პროექტის URL-დან).
+1. [sentry.io](https://sentry.io) → **Sign up** → **Create Project** → პლატფორმა **Next.js** →
+   Project name `bazari` → **Create Project**.
+2. **Settings → Projects → bazari → Client Keys (DSN)** → დააკოპირე **DSN**
+   (`https://…@…ingest.sentry.io/…`).
+3. Vercel-ზე: `NEXT_PUBLIC_SENTRY_DSN` = DSN.
+4. სურვილისამებრ — რომ შეცდომა ფაილის ხაზზე მიუთითებდეს და არა minified კოდზე:
+   - **Settings → Auth Tokens → Create New Token** → Scopes: `project:releases`, `org:read`
+     → **Create** → დააკოპირე → Vercel: `SENTRY_AUTH_TOKEN`.
+   - `SENTRY_ORG` = ორგანიზაციის slug (ბრაუზერის მისამართიდან:
+     `sentry.io/organizations/`**`ეს-ნაწილი`**`/`).
+   - `SENTRY_PROJECT` = `bazari`.
 
 ### A1 — Google-ით შესვლა
 
-1. [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials)
-   → Create Credentials → OAuth client ID → Web application.
-2. Authorized redirect URIs — **სიმბოლო-სიმბოლო**:
-   - `http://localhost:3000/api/auth/google/callback`
+1. [console.cloud.google.com](https://console.cloud.google.com) → ზედა ზოლში პროექტი →
+   **New Project** → სახელი `Bazari` → **Create** → აირჩიე.
+2. **APIs & Services → OAuth consent screen** → **External** → App name `Bazari`, User support
+   email და Developer contact email — შენი → **Save and Continue** ბოლომდე → **Publish App**.
+3. **APIs & Services → Credentials → Create Credentials → OAuth client ID** →
+   Application type **Web application** → Name `Bazari` → **Authorized redirect URIs → Add URI**
+   — ორივე, სიმბოლო-სიმბოლო:
    - `https://bazari-git-main-tornikepes-projects.vercel.app/api/auth/google/callback`
-   - და შენი დომენისა, როცა გექნება.
-3. Vercel-ზე: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. ღილაკი მხოლოდ ორივეს არსებობისას
-   ჩნდება.
+   - `http://localhost:3000/api/auth/google/callback`
+   (როცა დომენი გექნება — `https://შენი-დომენი/api/auth/google/callback`-იც)
+   → **Create**.
+4. ფანჯარაში გამოჩნდება **Client ID** (`…apps.googleusercontent.com`) და **Client secret** →
+   Vercel: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. ღილაკი საიტზე მაშინვე გამოჩნდება.
 
-Facebook — იგივე [developers.facebook.com](https://developers.facebook.com)-ზე, `email`
-უფლებით; `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET`.
+### A1 — Facebook-ით შესვლა (სურვილისამებრ)
+
+1. [developers.facebook.com](https://developers.facebook.com) → **My Apps → Create App** →
+   Use case **Authenticate and request data from users with Facebook Login** → სახელი
+   `Bazari` → **Create App**.
+2. **Use cases → Facebook Login → Customize → Settings** → **Valid OAuth Redirect URIs**:
+   `https://bazari-git-main-tornikepes-projects.vercel.app/api/auth/facebook/callback` →
+   **Save changes**. იმავე გვერდზე დარწმუნდი, რომ `email` permission დამატებულია.
+3. **App settings → Basic** → **App ID** და **App secret** (Show) → Vercel:
+   `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET`.
+4. ზედა ზოლში **App Mode: Development → Live**, თორემ მხოლოდ შენ შეძლებ შესვლას.
 
 ### A4 — ნამდვილი გადახდა (ბანკი)
 
@@ -85,8 +95,9 @@ Facebook — იგივე [developers.facebook.com](https://developers.facebo
 პროვაიდერისთვის დასაწერია ერთი ფაილი — `src/lib/payments/<ბანკი>.ts` — სამი მეთოდით
 (`start`, `parseWebhook`, `refund`), იმავე ინტერფეისზე, რაზეც `sandbox.ts`-ია.
 
-შენი ნაწილი: განაცხადი ბანკში (TBC Pay, BOG iPay ან სხვა). ეს ბიზნეს-ურთიერთობაა და
-კვირები სჭირდება. როცა მერჩანტის ID და გასაღები გექნება, ადაპტერს ერთ დღეში დავწერ.
+შენი ნაწილი: განაცხადი ბანკში (TBC Pay: tbcpayments.ge → „ონლაინ გადახდები"; BOG iPay:
+ipay.ge → „მერჩანტისთვის"). ეს ბიზნეს-ურთიერთობაა და კვირები სჭირდება. როცა მერჩანტის
+ID-ს და გასაღებს მოგცემენ — მომწერე, ადაპტერს ერთ დღეში დავწერ.
 
 ---
 

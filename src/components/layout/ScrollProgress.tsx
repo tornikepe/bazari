@@ -3,14 +3,17 @@
 import { useEffect, useRef } from "react";
 
 /**
- * The thin bar along the top of the window that fills as the page is read.
+ * The thin bar along the top of the window that fills as the page is read:
+ * nothing at the top, the whole width at the bottom.
  *
- * Where the browser has scroll-driven animations the bar is pure CSS
- * (`.scroll-progress` in globals.css) and this component only renders it.
- * Elsewhere it does the same sum on a scroll listener — one `requestAnimationFrame`
- * per scroll event, writing one custom property — so the bar moves in
- * every browser and the page's JavaScript is not on the hook where it
- * need not be.
+ * Measured by script on every device rather than by a CSS scroll timeline.
+ * The timeline was the lighter way, but "the bottom" is not the same thing
+ * to every engine — a phone browser's collapsing toolbar changes the
+ * viewport as it scrolls, and the timeline's end would stop a few pixels
+ * short of full — so the sum is done here with the numbers the page really
+ * has: how far it has scrolled, over how far it can. One frame per scroll
+ * event, one custom property written, and the width is a transform, which
+ * costs no layout.
  */
 export function ScrollProgress() {
   const ref = useRef<HTMLDivElement>(null);
@@ -18,25 +21,40 @@ export function ScrollProgress() {
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
-    if (typeof CSS !== "undefined" && CSS.supports("animation-timeline: scroll()")) return;
 
     let frame = 0;
     const update = () => {
       frame = 0;
       const root = document.documentElement;
-      const travel = root.scrollHeight - root.clientHeight;
-      node.style.setProperty("--progress", travel > 0 ? String(root.scrollTop / travel) : "0");
+      const travel = root.scrollHeight - window.innerHeight;
+      const progress =
+        travel > 0 ? Math.min(1, Math.max(0, window.scrollY / travel)) : 0;
+      // Within a pixel of the end is the end: a bar 99.7% full reads as a
+      // bar that did not make it.
+      node.style.setProperty(
+        "--progress",
+        String(travel - window.scrollY < 1 ? 1 : progress),
+      );
     };
-    const onScroll = () => {
+    const schedule = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
 
     update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    // The page grows after load — images, streamed sections, a chat panel
+    // — and every change to its height changes what "the bottom" is.
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(schedule)
+        : null;
+    observer?.observe(document.body);
+
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      observer?.disconnect();
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);

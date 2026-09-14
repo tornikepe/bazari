@@ -31,12 +31,17 @@ export default async function DashboardHomeLoading() {
       </div>
 
       {/* The chart, which is the slow part: it reads every order in the range. */}
+      {/* The same height as the chart it stands in for, so nothing under it
+          moves when the real one arrives. */}
       <div className="card mt-4 card-pad">
-        <div className="flex items-center justify-between">
-          <Block className="h-4 w-32" />
+        <div className="flex min-h-11 items-start justify-between">
+          <div>
+            <Block className="h-4 w-32" />
+            <Block className="mt-1.5 h-3 w-24" />
+          </div>
           <Block className="h-8 w-44" />
         </div>
-        <Block className="mt-4 h-56 w-full" />
+        <Block className="mt-4 h-[20.1rem] w-full" />
       </div>
 
       <div className="mt-4">

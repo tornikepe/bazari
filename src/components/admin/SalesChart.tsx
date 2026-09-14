@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatDate, formatPrice, shopDayKey } from "@/lib/format";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { Figures } from "@/components/ui/Figures";
@@ -90,27 +91,39 @@ export function SalesChart({
   locale,
   t,
   voice,
+  hrefFor,
 }: {
   data: { date: string; total: number }[];
   locale: Locale;
   t: Dictionary;
   voice?: ChartVoice;
+  /**
+   * Where a day leads when pressed — the list of that day's orders, on the
+   * overview. Without it a bar is a reading and not a control.
+   */
+  hrefFor?: (dayKey: string) => string;
 }) {
   const say: ChartVoice = voice ?? {
     format: (value) => formatPrice(value, locale),
     nothing: t.admin.chartNoRevenue,
     empty: t.admin.noSales,
-    labels: { total: t.admin.chartTotal, average: t.admin.chartAverage, peak: t.admin.chartPeak },
+    labels: {
+      total: t.admin.chartTotal,
+      average: t.admin.chartAverage,
+      peak: t.admin.chartPeak,
+    },
   };
 
   const peak = Math.max(...data.map((day) => day.total), 0);
   const total = data.reduce((sum, day) => sum + day.total, 0);
   const average = data.length > 0 ? Math.round(total / data.length) : 0;
 
-  if (peak === 0) {
-    return <p className="py-12 text-center text-sm text-ink-400">{say.empty}</p>;
-  }
-
+  /* An empty window draws the same chart — scale, gridlines, axis, the three
+     figures — with the message laid over the plot. It used to return a
+     one-line paragraph instead, so switching from a month with sales to a
+     week without shrank the card by two hundred pixels and everything
+     under it jumped up. The chart is one size in every state. */
+  const empty = peak === 0;
   const ceiling = niceCeiling(peak);
   // Today in shop time, so the highlighted bar is the one the shop is
   // actually living in — `toISOString()` would move the highlight to
@@ -139,10 +152,13 @@ export function SalesChart({
    */
   const ticksFor = (target: number) => {
     const step = Math.max(1, Math.round(data.length / target));
-    const indexes = data.flatMap((_, index) => (index % step === 0 ? [index] : []));
+    const indexes = data.flatMap((_, index) =>
+      index % step === 0 ? [index] : [],
+    );
     // The last bar earns a label of its own, but only when it is far enough
     // from the previous tick to not collide with it.
-    if (lastIndex - (indexes.at(-1) ?? 0) >= Math.max(2, step / 2)) indexes.push(lastIndex);
+    if (lastIndex - (indexes.at(-1) ?? 0) >= Math.max(2, step / 2))
+      indexes.push(lastIndex);
     return indexes;
   };
 
@@ -159,6 +175,10 @@ export function SalesChart({
 
   return (
     <figure className="mt-4">
+      {hrefFor && (
+        <p className="mb-2 text-xs text-ink-400">{t.admin.chartOpenDay}</p>
+      )}
+
       {/* The top gridline's label is centred on the line, so half of it sits
           above the plot. This padding is what stops it being clipped. */}
       <div className="flex gap-3 pt-2.5">
@@ -189,28 +209,67 @@ export function SalesChart({
                 another reading. */}
             <span className="absolute inset-x-0 bottom-0 h-px bg-ink-300" />
 
+            {empty && (
+              <p className="absolute inset-0 grid place-items-center text-sm text-ink-400">
+                {say.empty}
+              </p>
+            )}
+
             <div className="absolute inset-0 flex items-end gap-px">
-              {data.map((day) => {
+              {data.map((day, index) => {
                 // A floor keeps a zero-revenue day as a visible baseline tick
                 // rather than a gap, which would read as missing data.
-                const height = day.total === 0 ? 2 : Math.max((day.total / ceiling) * 100, 3);
+                const height =
+                  day.total === 0
+                    ? 2
+                    : Math.max((day.total / ceiling) * 100, 3);
+                const reading = `${formatDate(day.date)} · ${
+                  day.total === 0 ? say.nothing : say.format(day.total)
+                }`;
+                // The readout hangs off whichever side keeps it on the plot.
+                const side =
+                  index < data.length / 4
+                    ? "left-0"
+                    : index > (data.length * 3) / 4
+                      ? "right-0"
+                      : "left-1/2 -translate-x-1/2";
 
-                return (
-                  <span
-                    key={day.date}
-                    className="group relative flex h-full flex-1 items-end"
-                    title={`${formatDate(day.date)} · ${
-                      day.total === 0 ? say.nothing : say.format(day.total)
-                    }`}
-                  >
+                const bar = (
+                  <>
                     <span
                       style={{ height: `${height}%` }}
-                      className={`w-full transition-colors ${
+                      className={`w-full rounded-t-sm transition-colors ${
                         day.date === today
                           ? "bg-brand-solid-hover"
-                          : "bg-brand-solid group-hover:bg-brand-solid-hover"
+                          : "bg-brand-solid group-hover:bg-brand-solid-hover group-focus-visible:bg-brand-solid-hover"
                       }`}
                     />
+                    {/* The reading, shown while the day is under the pointer
+                        or has the focus: the one number a chart is for,
+                        without leaving the chart to get it. */}
+                    <span
+                      role="tooltip"
+                      className={`pointer-events-none absolute bottom-full z-10 mb-1.5 hidden rounded-control bg-panel px-2 py-1 text-xs font-semibold whitespace-nowrap text-panel-fg shadow-pop group-hover:block group-focus-visible:block ${side}`}
+                    >
+                      {reading}
+                    </span>
+                  </>
+                );
+
+                const className = "group relative flex h-full flex-1 items-end";
+
+                return hrefFor ? (
+                  <Link
+                    key={day.date}
+                    href={hrefFor(day.date)}
+                    aria-label={reading}
+                    className={`${className} rounded-t-sm outline-offset-2`}
+                  >
+                    {bar}
+                  </Link>
+                ) : (
+                  <span key={day.date} className={className} title={reading}>
+                    {bar}
                   </span>
                 );
               })}
@@ -221,29 +280,36 @@ export function SalesChart({
               per bar: a 30-column flex row is ~20px wide per cell, and "07-05"
               wrapped onto two lines in every one of them. */}
           {tickSets.map((set) => (
-          <div key={set.className} className={`relative mt-2 h-4 ${set.className}`}>
-            {set.indexes.map((index) => {
-              const centre = ((index + 0.5) / data.length) * 100;
+            <div
+              key={set.className}
+              className={`relative mt-2 h-4 ${set.className}`}
+            >
+              {set.indexes.map((index) => {
+                const centre = ((index + 0.5) / data.length) * 100;
 
-              // Clamped by position, not by index. The final tick is often not
-              // the final bar — it is whichever multiple of seven came last —
-              // and centring a five-character date over a bar at 95% pushes
-              // half the label off the plot. This was clipped to "08-0" on a
-              // 390px screen.
-              const anchor =
-                centre > 88 ? "translateX(-100%)" : centre < 12 ? "translateX(0)" : "translateX(-50%)";
+                // Clamped by position, not by index. The final tick is often not
+                // the final bar — it is whichever multiple of seven came last —
+                // and centring a five-character date over a bar at 95% pushes
+                // half the label off the plot. This was clipped to "08-0" on a
+                // 390px screen.
+                const anchor =
+                  centre > 88
+                    ? "translateX(-100%)"
+                    : centre < 12
+                      ? "translateX(0)"
+                      : "translateX(-50%)";
 
-              return (
-                <span
-                  key={data[index].date}
-                  style={{ left: `${centre}%`, transform: anchor }}
-                  className="absolute top-0 text-xs whitespace-nowrap text-ink-400 tabular-nums"
-                >
-                  {axisLabel(data[index].date)}
-                </span>
-              );
-            })}
-          </div>
+                return (
+                  <span
+                    key={data[index].date}
+                    style={{ left: `${centre}%`, transform: anchor }}
+                    className="absolute top-0 text-xs whitespace-nowrap text-ink-400 tabular-nums"
+                  >
+                    {axisLabel(data[index].date)}
+                  </span>
+                );
+              })}
+            </div>
           ))}
         </div>
       </div>

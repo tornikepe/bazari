@@ -284,9 +284,15 @@ export default async function HomePage() {
           <div className="mt-6 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {perks.map((perk) => (
               <div key={perk.title} className="reveal-view bg-surface p-5 lg:p-6">
-                <perk.icon size={20} className="text-brand-600" />
-                <h3 className="mt-4 text-sm font-bold text-ink-900">{perk.title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-ink-500">{perk.text}</p>
+                {/* The icon sits on the title's line, in a tinted chip, rather
+                    than floating above it: one row reads as one claim. */}
+                <h3 className="flex items-center gap-2.5 text-sm font-bold text-ink-900">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600">
+                    <perk.icon size={17} />
+                  </span>
+                  {perk.title}
+                </h3>
+                <p className="mt-2 text-xs leading-relaxed text-ink-500">{perk.text}</p>
               </div>
             ))}
           </div>

@@ -557,7 +557,7 @@ const ka = {
     grossProfit: "მოგება ({count} დღე)",
     unitsSold: "გაყიდული ერთეული",
     avgOrder: "საშუალო შეკვეთა",
-    salesChart: "გაყიდვები ბოლო 30 დღეში",
+    salesChart: "გაყიდვები ბოლო {count} დღეში",
     topProducts: "ტოპ პროდუქტები",
     topProductsHint: "გაყიდვების მიხედვით",
     soldUnits: "ცალი",
@@ -760,6 +760,11 @@ const ka = {
     chartNoRevenue: "ამ დღეს შემოსავალი არ ყოფილა",
     chartRange: "პერიოდი",
     chartDays: "{count} დღე",
+    chartOpenDay: "დააჭირე დღეს — გაიხსნება იმ დღის შეკვეთები",
+    chartDayOrders: "შეკვეთები · {date}",
+    dayFilter: "დღე: {date}",
+    dayFilterSummary: "{count} შეკვეთა · ჯამი {total}",
+    dayFilterClear: "დღის მოხსნა",
 
     // sku
     skuHint: "ცარიელი დატოვე — თავად შეიქმნება",
@@ -1638,7 +1643,7 @@ const en: Dictionary = {
     grossProfit: "Gross profit ({count} days)",
     unitsSold: "Units sold",
     avgOrder: "Average order",
-    salesChart: "Sales, last 30 days",
+    salesChart: "Sales, last {count} days",
     topProducts: "Top products",
     topProductsHint: "By units sold",
     soldUnits: "units",
@@ -1841,6 +1846,11 @@ const en: Dictionary = {
     chartNoRevenue: "No revenue on this day",
     chartRange: "Period",
     chartDays: "{count} days",
+    chartOpenDay: "Click a day to open its orders",
+    chartDayOrders: "Orders · {date}",
+    dayFilter: "Day: {date}",
+    dayFilterSummary: "{count} orders · total {total}",
+    dayFilterClear: "Clear the day",
 
     // sku
     skuHint: "Leave blank — one is generated for you",

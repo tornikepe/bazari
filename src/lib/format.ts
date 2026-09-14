@@ -114,6 +114,22 @@ export function shopDayStart(value: Date | string): Date {
   return new Date(Date.UTC(+year, +month - 1, +day) - offset);
 }
 
+/**
+ * The instants a shop day begins and ends, from its `YYYY-MM-DD` key — the
+ * inverse of `shopDayKey`, for a query that wants exactly the rows one bar
+ * of the chart was drawn from. `null` for anything that is not a date.
+ */
+export function shopDayRange(key: string): { start: Date; end: Date } | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return null;
+  // Noon UTC on that date is mid-afternoon in Tbilisi on the same date, so
+  // the day it starts is the one the key names, whatever the offset does.
+  const noon = new Date(`${key}T12:00:00Z`);
+  if (Number.isNaN(noon.getTime()) || shopDayKey(noon) !== key) return null;
+  const start = shopDayStart(noon);
+  const end = shopDayStart(new Date(start.getTime() + 36 * 60 * 60 * 1000));
+  return { start, end };
+}
+
 /** `YYYY-MM-DD` in shop time — for grouping rows into days, not for display. */
 export function shopDayKey(value: Date | string) {
   const { day, month, year } = shopParts(value);

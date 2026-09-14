@@ -159,14 +159,21 @@ export default async function DashboardPage({
       <section className="card mt-4 card-pad">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold text-ink-900">{t.admin.salesChart}</h2>
+            <h2 className="text-sm font-bold text-ink-900">
+              {fill(t.admin.salesChart, { count: range })}
+            </h2>
             <p className="mt-0.5 text-xs text-ink-500">{t.admin.chartHint}</p>
           </div>
 
           <ChartRangeTabs active={range} t={t} />
         </div>
 
-        <SalesChart data={daily} locale={locale} t={t} />
+        <SalesChart
+          data={daily}
+          locale={locale}
+          t={t}
+          hrefFor={(day) => `/dashboard/orders?day=${day}`}
+        />
       </section>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
