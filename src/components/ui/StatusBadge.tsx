@@ -17,7 +17,7 @@ export function StatusBadge({ status, t }: { status: string; t: Dictionary }) {
      it for anyone who has asked for that. */
   return (
     <span
-      className={`badge transition-colors duration-200 ${
+      className={`badge whitespace-nowrap transition-colors duration-200 ${
         STYLES[status] ?? "bg-ink-100 text-ink-500"
       }`}
     >

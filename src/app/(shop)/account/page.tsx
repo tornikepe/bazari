@@ -119,7 +119,7 @@ export default async function AccountPage({
           between a group's `div` and its terms, and the wrapper that used to
           hold them read as a list with no items. The icon lives inside the
           term instead, where decoration beside a label belongs. */}
-      <dl className="mt-4 grid grid-cols-2 gap-px border border-line bg-line lg:grid-cols-4">
+      <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line lg:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.label} className="bg-surface p-4">
             <dt className="flex items-center gap-3 text-xs text-ink-500">
@@ -222,7 +222,7 @@ export default async function AccountPage({
                       which is the only thing this list is for. */}
                   <Link
                     href={`/order/${order.number}`}
-                    className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-ink-50 sm:grid-cols-[1fr_6.5rem_7.5rem_1rem]"
+                    className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-ink-50 sm:grid-cols-[1fr_6.5rem_auto_1rem]"
                   >
                     <div className="min-w-0">
                       <p className="truncate font-mono text-sm font-bold text-ink-900">
@@ -243,7 +243,9 @@ export default async function AccountPage({
                     </p>
 
                     {/* Its own column from `sm` up so the badges form a line
-                        rather than starting wherever the price happened to end. */}
+                        rather than starting wherever the price happened to end.
+                        Sized by its widest badge: at a fixed 7.5rem the Georgian
+                        "confirmed" overran the column and covered the price. */}
                     <span className="col-span-2 justify-self-start sm:col-span-1 sm:justify-self-end">
                       <StatusBadge status={order.status} t={t} />
                     </span>

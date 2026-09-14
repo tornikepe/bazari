@@ -53,7 +53,7 @@ export function ProductGridSkeleton({
   return (
     <div className={className}>
       {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="overflow-hidden border border-line bg-surface">
+        <div key={index} className="card overflow-hidden">
           <div className="skeleton aspect-square" />
           <div className="flex flex-col gap-2.5 p-3.5">
             <div className="h-3 w-1/3 animate-pulse bg-ink-100" />

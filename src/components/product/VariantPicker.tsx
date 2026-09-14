@@ -143,6 +143,7 @@ export function VariantPicker({
         /* A sold-out size must not fold the stepper and "buy now" away:
            the panel would change shape with every choice. */
         keepShape
+        prompt={complete ? undefined : t.product.variantChoose}
         product={{
           ...product,
           price,

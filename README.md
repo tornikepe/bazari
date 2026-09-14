@@ -545,7 +545,16 @@ both themes rather than trusted by eye, and the ratios are noted beside the valu
 `globals.css`.
 
 Motion is restrained and reversible: overlays animate in *and* out, opening slower than closing,
-and everything is switched off under `prefers-reduced-motion`.
+and everything is switched off under `prefers-reduced-motion`. What moves with the page is
+driven by the scroll itself rather than by timers — a card's entrance, the hero's drift, the
+progress bar along the top — through CSS scroll-driven animations (`animation-timeline`),
+so scrolling back plays it back and a browser without them shows the finished state. The
+header turns to frosted glass once the page has moved under it, and the page's content rises in
+once on every navigation.
+
+Depth is two shadows, both tinted with the ink rather than black: a hair under every card, and
+the lift a card takes under the pointer. Radii come in two sizes that nest — 16px for a card,
+12px for a control inside it — and pills for what is round.
 
 ### Page templates
 

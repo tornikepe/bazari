@@ -101,10 +101,13 @@ export default async function HomePage() {
         effects doing the work that structure should do. What carries this one
         is the rule set behind it, the alignment, and one line of red.
       */}
-      <section className="grid-field border-b border-line bg-surface">
+      <section className="grid-field relative overflow-hidden border-b border-line bg-surface">
+        {/* A wash of the brand colour behind the object, so the hero has a
+            light source and the cube something to sit in. */}
+        <div aria-hidden className="hero-glow parallax-back" />
         <div className="page-container relative py-14 lg:py-24">
           <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
-            <div className="lg:col-span-7">
+            <div className="parallax-fore lg:col-span-7">
               <p className="label">{t.home.heroBadge}</p>
 
               <h1 className="display mt-5 max-w-2xl text-ink-900">{t.home.heroTitle}</h1>
@@ -134,7 +137,9 @@ export default async function HomePage() {
                 above the figures rather than beside the headline — the words
                 keep the reading position and this keeps the space that was
                 doing nothing. */}
-            <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-start">
+            {/* Drifts up more slowly than the page as it scrolls — the one
+                thing in the hero that is behind the page rather than on it. */}
+            <div className="parallax-back lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-start">
               <BrandCube />
             </div>
 
@@ -182,7 +187,7 @@ export default async function HomePage() {
             <Link
               key={category.slug}
               href={`/catalog?category=${category.slug}`}
-              className="index-row"
+              className="index-row reveal-view"
             >
               <span className="index-num">{String(index + 1).padStart(2, "0")}</span>
               <span className="index-name">{name(category)}</span>
@@ -216,12 +221,12 @@ export default async function HomePage() {
 
       {/* ---------------------------- deals banner ------------------------- */}
       {/*
-        The one place the red is allowed to fill a whole region. Flat, square
-        and left-aligned — the gradient wash that used to sit on top of it was
-        decoration standing in for hierarchy.
+        The one place the red is allowed to fill a whole region. A quiet
+        gradient across it and a ring of light in the corner give it depth;
+        hierarchy inside it is still size and weight.
       */}
       <section className="page-container pb-12 lg:pb-16">
-        <div className="flex flex-col justify-between gap-6 bg-brand-solid px-6 py-10 text-brand-on-solid sm:flex-row sm:items-end sm:px-10">
+        <div className="deals-band reveal-view flex flex-col justify-between gap-6 px-6 py-10 text-brand-on-solid sm:flex-row sm:items-end sm:px-10">
           {/* Full opacity throughout. White on the brand red clears AA by a
               hair (4.6:1), and dimming a line to 80% put it under. Hierarchy
               here is size and weight, not transparency — the same rule the
@@ -276,9 +281,9 @@ export default async function HomePage() {
         <div className="page-container py-12 lg:py-16">
           <h2 className="label">{t.home.whyTitle}</h2>
 
-          <div className="mt-6 grid gap-px bg-line sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {perks.map((perk) => (
-              <div key={perk.title} className="bg-surface p-5 lg:p-6">
+              <div key={perk.title} className="reveal-view bg-surface p-5 lg:p-6">
                 <perk.icon size={20} className="text-brand-600" />
                 <h3 className="mt-4 text-sm font-bold text-ink-900">{perk.title}</h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-ink-500">{perk.text}</p>

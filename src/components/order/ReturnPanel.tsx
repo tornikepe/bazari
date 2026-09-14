@@ -129,7 +129,7 @@ export function ReturnPanel({
       {requests.length > 0 && (
         <ol className="mt-3 flex flex-col gap-3">
           {requests.map((request) => (
-            <li key={request.id} className="border border-line p-3 text-sm">
+            <li key={request.id} className="rounded-control border border-line p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className={`badge ${STATUS_STYLES[request.status]}`}>
                   {t.returnStatus[request.status]}

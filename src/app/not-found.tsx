@@ -72,7 +72,7 @@ export default async function NotFound() {
                   {t.nav.categories}
                 </h2>
 
-                <ul className="mt-3 grid gap-px border border-line bg-line sm:grid-cols-2">
+                <ul className="mt-3 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2">
                   {categories.map((category) => (
                     <li key={category.slug}>
                       <Link

@@ -73,15 +73,24 @@ Not the dashboard's four tiles at the top of the overview: those are links with 
 you can click is not a figure. Not the home page's hero counts either — those are display-scale
 type on a landing page.
 
-## 7. Colour, type and motion
+## 7. Colour, type, depth and motion
 
-Every colour, radius, font and type-scale step is a token at the top of
+Every colour, radius, shadow, font, easing and type-scale step is a token at the top of
 [`globals.css`](src/app/globals.css). Components reference tokens and never literal values.
 
 The type scale is fixed: no font-size changes at any breakpoint, and a 13px floor. Dark mode
 overrides token *values* only — there is not one `dark:` variant in the application.
 
-Motion is restrained and reversible, and switched off under `prefers-reduced-motion`.
+Two radii, and they nest: `card` (16px) for a region, `control` (12px) for what sits inside it,
+`pill` for what is round. Two shadows: `card`, a hair of depth under every card, and `lift`, the
+same card under the pointer. Nothing else casts one, except what genuinely floats — a popover,
+the buy bar, the chat panel — which uses `pop`.
+
+Motion uses one easing for things arriving and one for things leaving, from the tokens, and is
+switched off under `prefers-reduced-motion`. What moves *with* the page is driven by the scroll
+position — `.reveal-view`, `.parallax-back`, `.scroll-progress` — never by a timer that fires
+when something comes into view: a third of the way in is a third of the way through, and
+scrolling back plays it back. A control that changes state never changes size (`Swap`).
 
 ## 8. Nothing moves when the language changes
 

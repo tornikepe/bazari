@@ -25,22 +25,24 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   /* The quantity beside the button is the cart's own once the product is
      in the cart — the button is a toggle, so this is the only way to buy
      two of something from the card — and the number to add until then. */
-  const line = hydrated ? items.find((entry) => entry.productId === product.id && !entry.variantId) : undefined;
+  const line = hydrated
+    ? items.find((entry) => entry.productId === product.id && !entry.variantId)
+    : undefined;
   const quantity = line ? line.quantity : pending;
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const discount = discountPercent(product.price, product.oldPrice);
   const soldOut = product.stock <= 0;
+  const needsChoice = product._count.options > 0;
   const lowStock = !soldOut && product.stock <= LOW_STOCK_THRESHOLD;
 
   return (
-    // The card draws its own edge now that the grid no longer supplies one
-    // through a shared hairline gap. `hover-lift` darkens that edge on hover,
-    // which is what the rest of the site does in place of a shadow.
-    <article className="group hover-lift relative flex flex-col overflow-hidden border border-line bg-surface">
+    // `reveal-view`: the card rises into place as it scrolls into view.
+    // `hover-lift`: under the pointer it lifts and its picture leans in.
+    <article className="group hover-lift reveal-view card relative flex flex-col overflow-hidden">
       <Link
         href={`/product/${product.slug}`}
-        className="relative block aspect-square overflow-hidden bg-ink-50"
+        className="card-media relative block aspect-square overflow-hidden bg-ink-50"
       >
         <Image
           src={product.image}
@@ -50,7 +52,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           className="object-cover"
         />
 
-        <FavoriteButton productId={product.id} className="absolute top-2.5 right-2.5 z-10" />
+        <FavoriteButton
+          productId={product.id}
+          className="absolute top-2.5 right-2.5 z-10"
+        />
 
         <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1.5">
           {discount > 0 && (
@@ -94,7 +99,9 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
           <div className="flex items-center gap-1.5 text-xs text-ink-500">
             <TruckIcon size={13} className="shrink-0" />
-            <span>{fill(t.product.shippingDays, { count: product.shippingDays })}</span>
+            <span>
+              {fill(t.product.shippingDays, { count: product.shippingDays })}
+            </span>
           </div>
 
           {lowStock && (
@@ -103,40 +110,54 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             </span>
           )}
 
-          {/* Side by side from `sm`; stacked on a phone, where a two-column
-              grid leaves a card too narrow for both and the label was
-              clipped mid-word. */}
-          <div className="flex flex-col gap-1.5 sm:flex-row">
-            {/* The select stays put when the product is sold out rather than
+          {needsChoice ? (
+            /* Sold in sizes or colours: the card cannot pick one, so its
+               button is the way to the page that can. */
+            <Link
+              href={`/product/${product.slug}`}
+              className="btn btn-outline btn-sm w-full"
+            >
+              {t.product.variantChoose}
+            </Link>
+          ) : (
+            /* Side by side from `sm`; stacked on a phone, where a two-column
+             grid leaves a card too narrow for both and the label was
+             clipped mid-word. */
+            <div className="flex flex-col gap-1.5 sm:flex-row">
+              {/* The select stays put when the product is sold out rather than
                 disappearing, so the button beside it does not change width
                 between one card and the next. */}
-            <QuantitySelect
-              value={quantity}
-              stock={product.stock}
-              disabled={soldOut}
-              onChange={(next) => (line ? setLineQuantity(product.id, next) : setPending(next))}
-            />
-            <AddToCartButton
-              product={{
-                productId: product.id,
-                slug: product.slug,
-                nameKa: product.nameKa,
-                nameEn: product.nameEn,
-                image: product.image,
-                price: product.price,
-                stock: product.stock,
-              }}
-              quantity={quantity}
-              fullWidth
-              /* Outlined on the card, filled on the product page. Twelve solid
+              <QuantitySelect
+                value={quantity}
+                stock={product.stock}
+                disabled={soldOut}
+                onChange={(next) =>
+                  line ? setLineQuantity(product.id, next) : setPending(next)
+                }
+              />
+              <AddToCartButton
+                product={{
+                  productId: product.id,
+                  slug: product.slug,
+                  nameKa: product.nameKa,
+                  nameEn: product.nameEn,
+                  image: product.image,
+                  price: product.price,
+                  stock: product.stock,
+                }}
+                quantity={quantity}
+                short
+                fullWidth
+                /* Outlined on the card, filled on the product page. Twelve solid
                  red buttons on a catalogue page were twelve claims on the eye,
                  and the deals banner was meant to be the one place the red
                  fills a region. The card you are over fills its button — see
                  `.hover-lift:hover .btn-outline` — so the offer is still made,
                  one at a time. */
-              variant="outline"
-            />
-          </div>
+                variant="outline"
+              />
+            </div>
+          )}
         </div>
       </div>
     </article>

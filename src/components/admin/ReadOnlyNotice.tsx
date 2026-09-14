@@ -19,7 +19,7 @@ export function ReadOnlyNotice() {
   if (canWrite) return null;
 
   return (
-    <div className="mb-5 flex items-start gap-3 border border-line bg-surface p-4">
+    <div className="card mb-5 flex items-start gap-3 p-4">
       <EyeIcon size={18} className="mt-0.5 shrink-0 text-info" />
       <div className="min-w-0">
         <p className="text-sm font-bold text-ink-900">{t.admin.readOnlyTitle}</p>

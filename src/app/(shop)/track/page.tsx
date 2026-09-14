@@ -74,7 +74,7 @@ function TrackOrderForm() {
               <ul className="mt-3 divide-y divide-line">
                 {found.items.map((item, index) => (
                   <li key={index} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                    <span className="relative h-11 w-11 shrink-0 overflow-hidden border border-line bg-ink-50">
+                    <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-control border border-line bg-ink-50">
                       <Image src={item.image} alt="" fill sizes="44px" className="object-cover" />
                     </span>
                     <span className="min-w-0 flex-1 text-sm text-ink-800">{item.name}</span>

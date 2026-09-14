@@ -72,13 +72,14 @@
   --color-info-soft: #dbeafe;
 
   --color-surface: #ffffff;
-  /* A shade cooler and closer to the surface than before: with the shadows
-     gone the page is read as one sheet with rules drawn on it, not as a
-     tray holding cards. */
-  --color-canvas: #f4f5f7;
-  /* Lines now carry the structure that shadows used to, so they have to be
-     seen. The old #e6e9ef was a suggestion of an edge. */
-  --color-line: #d7dbe2;
+  /* A shade cooler than the surface, so a white card reads as a card on
+     it and a page with no cards still has a ground. */
+  --color-canvas: #f4f5f8;
+  /* Soft enough that a card's edge is felt more than seen — the shadow
+     under it does the rest — and still 1.3:1 against the surface, which is
+     all a decorative rule needs. Form fields draw a darker edge of their
+     own (`field-border`), because theirs is not decorative. */
+  --color-line: #e3e6ec;
 
   /* A form field's border is the only thing saying "you can type here", so
      it is held to the 3:1 that WCAG asks of a UI component's boundary —
@@ -106,27 +107,38 @@
 
   /* Radii.
      --------------------------------------------------------------------
-     Square. The structure is carried by rules and alignment, not by
-     rounded, floating objects — a hairline that meets another hairline at a
-     right angle reads as a grid, and the same corner rounded reads as a
-     sticker. `pill` survives for the two things that are genuinely round:
-     a count badge and the chat launcher. */
-  --radius-card: 0;
-  --radius-control: 0;
+     Soft, and in two sizes that nest: a control inside a card has the
+     smaller radius, so the two curves read as one family rather than as a
+     box in a box. The site was square for a while — structure carried by
+     hairlines — and it read as constructed but cold; a shop is a place
+     people are meant to pick things up in. `pill` is for the things that
+     are genuinely round: badges, the count on the cart, the chat launcher. */
+  --radius-card: 1rem;
+  --radius-control: 0.75rem;
   --radius-pill: 999px;
 
   /* Shadows.
      --------------------------------------------------------------------
-     Gone from anything that sits *in* the page. A card is a region marked
-     out by rules, not an object hovering above the paper, and a soft blur
-     under every panel is what made the old design read as generic.
+     Quiet. `card` is a hair of depth — enough to lift a card off the canvas,
+     not enough to be seen as a shadow — and `lift` is the same card under
+     the pointer, which is where the depth is allowed to show. Both are
+     tinted with the ink rather than black, so they sit in the page's own
+     colour. `pop` is for what genuinely floats over the content: the chat
+     panel, the buy bar, a popover. */
+  --shadow-card: 0 1px 2px rgb(22 26 35 / 0.04), 0 2px 8px -2px rgb(22 26 35 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(22 26 35 / 0.05), 0 16px 32px -12px rgb(22 26 35 / 0.18);
+  --shadow-pop: 0 1px 2px rgb(22 26 35 / 0.12), 0 12px 32px -8px rgb(22 26 35 / 0.22);
 
-     `pop` survives because a chat panel and a sticky bar genuinely float
-     over the content and need to be told apart from it — and even there it
-     is tighter and darker than a diffuse glow. */
-  --shadow-card: none;
-  --shadow-lift: none;
-  --shadow-pop: 0 1px 2px rgb(22 26 35 / 0.16), 0 10px 24px rgb(22 26 35 / 0.14);
+  /* Motion.
+     --------------------------------------------------------------------
+     One easing for things that arrive (a spring-like ease-out) and one for
+     things that leave, and three durations. Everything that moves uses
+     these, which is what makes the site feel like one thing moving. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --dur-fast: 0.16s;
+  --dur-base: 0.28s;
+  --dur-slow: 0.6s;
 
   /* Typography — Geist has no Georgian glyphs, so Noto Sans Georgian picks
      up those characters per-glyph through the fallback chain. */
@@ -189,7 +201,7 @@
 [data-theme="dark"] {
   --color-surface: #14171d;
   --color-canvas: #0d0f13;
-  --color-line: #2f3644;
+  --color-line: #262c38;
 
   --color-ink-50: #1c212a;
   --color-ink-100: #232936;
@@ -238,9 +250,9 @@
   --color-info: #60a5fa;
   --color-info-soft: #14243d;
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
-  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.45);
-  --shadow-pop: 0 8px 32px rgb(0 0 0 / 0.6);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 2px 8px -2px rgb(0 0 0 / 0.3);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.35), 0 16px 32px -12px rgb(0 0 0 / 0.55);
+  --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.6);
 
   color-scheme: dark;
 }
@@ -447,15 +459,20 @@
     min-width: 0;
     cursor: pointer;
     transition:
-      background-color 0.15s ease,
-      border-color 0.15s ease,
-      color 0.15s ease,
-      box-shadow 0.15s ease,
-      transform 0.1s ease;
+      background-color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease,
+      color var(--dur-fast) ease,
+      box-shadow var(--dur-fast) ease,
+      translate var(--dur-fast) var(--ease-out),
+      scale var(--dur-fast) var(--ease-out);
   }
 
+  /* The press: a hair smaller and a hair lower, the way a real key goes.
+     `scale` and `translate` rather than `transform`, so a button that is
+     also being moved by an animation on `transform` still presses. */
   .btn:active:not(:disabled) {
-    transform: translateY(1px);
+    scale: 0.985;
+    translate: 0 1px;
   }
 
   .btn:disabled {
@@ -490,13 +507,31 @@
   .btn-primary {
     /* Not `brand-600`: in dark mode that shade is tuned to be readable *as*
        text on a dark surface, which leaves white text on top of it at
-       3.61:1. `brand-solid` is the same red where white actually passes. */
-    background: var(--color-brand-solid);
+       3.61:1. `brand-solid` is the same red where white actually passes.
+       The gradient is a few percent of light across the top — the sheen of
+       a surface with a curve to it, not a stripe — and the inset line is
+       the highlight along its upper edge. */
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-brand-solid) 90%, white) 0%,
+      var(--color-brand-solid) 55%
+    );
     color: var(--color-brand-on-solid);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 1px 2px rgb(22 26 35 / 0.12);
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--color-brand-solid-hover);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-brand-solid-hover) 88%, white) 0%,
+      var(--color-brand-solid-hover) 55%
+    );
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 4px 12px -2px color-mix(in oklab, var(--color-brand-solid) 45%, transparent);
+    translate: 0 -1px;
   }
 
   .btn-secondary {
@@ -506,6 +541,8 @@
 
   .btn-secondary:hover:not(:disabled) {
     background: color-mix(in oklab, var(--color-panel) 85%, white);
+    box-shadow: 0 4px 12px -2px rgb(22 26 35 / 0.25);
+    translate: 0 -1px;
   }
 
   .btn-outline {
@@ -555,6 +592,27 @@
     background: var(--color-surface);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* A fieldset drawn as a card keeps its legend inside the card, as a
+     heading, rather than notched into the top edge the way a browser sets a
+     legend by default — on a rounded card the notch reads as a tear. Floated
+     to full width, which is the one way to take a legend out of the border
+     and into the flow. */
+  fieldset.card {
+    min-width: 0;
+  }
+
+  fieldset.card > legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 1rem;
+  }
+
+  fieldset.card > legend + * {
+    clear: both;
   }
 
   /*
@@ -790,8 +848,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3125rem;
-    border-radius: var(--radius-card);
-    padding: 0.1875rem 0.5rem;
+    border-radius: var(--radius-pill);
+    padding: 0.1875rem 0.625rem;
     font-size: var(--text-xs);
     font-weight: 700;
     line-height: 1.25;
@@ -1097,6 +1155,10 @@
 /* A sheet from the bottom sits over the home indicator; a drawer from a
    side sits under the camera in landscape. Each pads the edge it touches. */
 .overlay-panel[data-side="bottom"] {
+  /* A sheet rising from the bottom edge takes the card's radius on the two
+     corners that are not against the edge. */
+  border-start-start-radius: var(--radius-card);
+  border-start-end-radius: var(--radius-card);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .overlay-panel[data-side="left"] {
@@ -1192,6 +1254,148 @@
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Scroll-linked motion                                                */
+/*                                                                     */
+/* Driven by the scroll position itself, not by a timer that starts    */
+/* when something comes into view: a card that is a third of the way   */
+/* in is a third of the way through its entrance, and scrolling back   */
+/* takes it back. That is what makes the page feel attached to the     */
+/* finger rather than reacting to it. Browsers without scroll-driven   */
+/* animations (`@supports`) get the finished state and nothing moves,  */
+/* which is also what `prefers-reduced-motion` gets.                   */
+/* ------------------------------------------------------------------ */
+
+/* Something entering the page from below: a card, a row, a section. Its
+   entrance runs over the first 30% of its travel into the viewport, so it
+   is settled well before the eye reaches it. */
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The hero's object drifts up at a fraction of the scroll speed, which is
+   what makes it read as sitting behind the page rather than on it. */
+@keyframes drift-back {
+  to {
+    transform: translateY(-3.5rem);
+  }
+}
+
+@keyframes drift-fore {
+  to {
+    transform: translateY(1.5rem);
+    opacity: 0.35;
+  }
+}
+
+/* The bar across the top of the window that fills as the page is read. */
+@keyframes progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .reveal-view {
+    animation: view-in var(--ease-out) both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+
+  /* A grid's cards arrive one after another rather than as a block: each
+     starts a little later along its own travel, and since all of them
+     travel together that reads as a stagger. */
+  .reveal-view:nth-child(4n + 2) {
+    animation-range: entry 8% entry 43%;
+  }
+
+  .reveal-view:nth-child(4n + 3) {
+    animation-range: entry 16% entry 51%;
+  }
+
+  .reveal-view:nth-child(4n + 4) {
+    animation-range: entry 24% entry 59%;
+  }
+
+  .parallax-back {
+    animation: drift-back linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 40rem;
+  }
+
+  .parallax-fore {
+    animation: drift-fore linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 32rem;
+  }
+
+  .scroll-progress {
+    animation: progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: 100%;
+  height: 3px;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--progress, 0));
+  background: linear-gradient(90deg, var(--color-brand-500), var(--color-accent-400));
+  pointer-events: none;
+}
+
+/* The header stays where it is and changes what it is made of: at the top
+   of the page it is the page's own surface, and once the page has moved
+   under it, it turns to frosted glass with an edge, so the content sliding
+   beneath is seen through it rather than cut off by it. */
+.site-header {
+  transition:
+    background-color var(--dur-base) ease,
+    box-shadow var(--dur-base) ease,
+    backdrop-filter var(--dur-base) ease;
+}
+
+.site-header[data-scrolled="true"] {
+  background-color: color-mix(in oklab, var(--color-surface) 78%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  box-shadow:
+    0 1px 0 var(--color-line),
+    0 8px 24px -16px rgb(22 26 35 / 0.25);
+}
+
+/* The page's content arrives — a short rise, once, on every navigation.
+   Keyed on the route by `PageTransition`, so it replays as the page
+   changes and not as the page re-renders. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-enter {
+  animation: page-in 0.5s var(--ease-out) both;
+}
+
 /* Revealed by an IntersectionObserver as the section scrolls into view. */
 .reveal {
   opacity: 0;
@@ -1206,17 +1410,35 @@
   transform: none;
 }
 
-/* Interactive lift, shared by product and category cards. */
+/* Interactive lift, shared by product and category cards.
+   `translate` rather than `transform`: the card's entrance on scroll is an
+   animation on `transform`, and an animation wins over a transition on the
+   same property — the lift would never have happened. The two properties
+   compose instead. */
 .hover-lift {
-  /* Was a translate plus a growing shadow. In a design held together by
-     alignment, a card that lifts off the grid on hover breaks the one thing
-     doing the work — so the response is the edge darkening instead. */
-  transition: border-color 0.18s ease;
+  transition:
+    border-color var(--dur-base) ease,
+    box-shadow var(--dur-base) var(--ease-out),
+    translate var(--dur-base) var(--ease-out);
 }
 
 @media (hover: hover) {
   .hover-lift:hover {
-    border-color: var(--color-ink-400);
+    border-color: var(--color-ink-300);
+    box-shadow: var(--shadow-lift);
+    translate: 0 -3px;
+  }
+}
+
+/* The picture in a card leans in under the pointer. `scale` for the same
+   reason as above, and slow, so it reads as a lean rather than a jump. */
+.card-media img {
+  transition: scale var(--dur-slow) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .hover-lift:hover .card-media img {
+    scale: 1.05;
   }
 }
 
@@ -1282,6 +1504,17 @@
   .reveal {
     opacity: 1;
     transform: none;
+  }
+
+  .reveal-view,
+  .parallax-back,
+  .parallax-fore,
+  .page-enter {
+    animation: none;
+  }
+
+  .site-header {
+    transition: none;
   }
 
   .skeleton::after {
@@ -1456,6 +1689,70 @@
   color: var(--color-ink-500);
 }
 
+
+/* The light behind the hero's object: a soft disc of the brand colour,
+   off to the right where the cube sits, faint enough to be felt as warmth
+   rather than seen as a shape. */
+.hero-glow {
+  position: absolute;
+  top: -6rem;
+  right: -10rem;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--color-brand-500) 18%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Wider than a phone it can be a proper disc off to the side; on a phone
+   the same disc covered the whole hero in pink. */
+@media (min-width: 1024px) {
+  .hero-glow {
+    top: -10rem;
+    right: -8rem;
+    width: 44rem;
+    height: 44rem;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--color-brand-500) 22%, transparent),
+      transparent
+    );
+  }
+}
+
+[data-theme="dark"] .hero-glow {
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--color-brand-500) 16%, transparent),
+    transparent
+  );
+}
+
+/* The deals band: the brand red across a whole region, with a slow
+   diagonal towards the deeper shade and a ring of light in one corner so
+   the surface has a curve to it. */
+.deals-band {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(
+      42rem 24rem at 100% 0%,
+      color-mix(in oklab, var(--color-brand-solid) 70%, white) 0%,
+      transparent 60%
+    ),
+    linear-gradient(135deg, var(--color-brand-solid) 0%, var(--color-brand-700) 100%);
+  box-shadow: var(--shadow-card);
+}
+
+/* Index rows round their hover tint so it reads as a selection, not a stripe. */
+.index-row {
+  border-radius: var(--radius-control);
+}
 
 /* ------------------------------------------------------------------ */
 /* Sticky buy bar                                                      */

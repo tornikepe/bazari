@@ -38,7 +38,7 @@ export function Figures({
   className?: string;
 }) {
   return (
-    <dl className={`grid gap-px border border-line bg-line ${COLUMNS[columns]} ${className}`}>
+    <dl className={`grid gap-px overflow-hidden rounded-card border border-line bg-line ${COLUMNS[columns]} ${className}`}>
       {items.map((item) => (
         <div key={item.label} className="bg-surface px-4 py-3.5">
           <dt className="label text-ink-500">{item.label}</dt>

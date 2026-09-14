@@ -83,7 +83,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
         {/* ------------------------------- items ----------------------------- */}
         {/* `min-w-0`: grid children default to `min-width: auto`, which stops
             the rows below from shrinking and overflows narrow phones. */}
-        <div className="flex min-w-0 flex-col border border-line bg-surface">
+        <div className="card flex min-w-0 flex-col overflow-hidden">
           {items.map((item) => {
             const name = locale === "ka" ? item.nameKa : item.nameEn;
             const max = Math.max(1, item.stock);

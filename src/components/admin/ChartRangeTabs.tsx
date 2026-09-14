@@ -27,7 +27,7 @@ export function ChartRangeTabs({
   basePath?: string;
 }) {
   return (
-    <div role="group" aria-label={t.admin.chartRange} className="flex items-center border border-line">
+    <div role="group" aria-label={t.admin.chartRange} className="flex items-center overflow-hidden rounded-control border border-line">
       {RANGE_DAYS.map((days) => {
         const current = days === active;
         return (

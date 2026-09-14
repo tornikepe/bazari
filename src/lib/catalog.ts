@@ -66,6 +66,10 @@ export const productCardSelect = {
   // Two integers, so a card can print a star without a query of its own.
   ratingSum: true,
   ratingCount: true,
+  // Whether the product is sold in more than one form. A card cannot add
+  // such a product — there is no "this product" in a cart, only a size —
+  // so it sends the shopper to the page where the choice is made.
+  _count: { select: { options: true } },
 } satisfies Prisma.ProductSelect;
 
 export type ProductCardData = Prisma.ProductGetPayload<{ select: typeof productCardSelect }>;

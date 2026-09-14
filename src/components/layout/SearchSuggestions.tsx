@@ -201,7 +201,7 @@ export function SearchSuggestions({
         id={listId}
         role="listbox"
         aria-label={t.nav.search}
-        className="absolute top-[calc(100%+0.375rem)] right-0 left-0 z-50 max-h-[22rem] overflow-y-auto border border-line bg-surface shadow-pop"
+        className="absolute top-[calc(100%+0.375rem)] right-0 left-0 z-50 max-h-[22rem] overflow-y-auto rounded-card border border-line bg-surface shadow-pop"
       >
         {items.map((item, index) => (
           <li key={item.slug} id={`${listId}-${index}`} role="option" aria-selected={index === active}>

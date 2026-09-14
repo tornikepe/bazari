@@ -246,7 +246,7 @@ export function ProductForm({
             {specs.length > 0 && (
               <ul className="mt-4 flex flex-col gap-3">
                 {specs.map(({ key, spec }, index) => (
-                  <li key={key} className="border border-line p-3">
+                  <li key={key} className="rounded-control border border-line p-3">
                     <div className="grid gap-2 sm:grid-cols-2">
                       {(
                         [
@@ -387,7 +387,7 @@ export function ProductForm({
             <ul className="mt-3 flex flex-col gap-3">
               {photos.map((photo, index) => (
                 <li key={photo.url} className="flex gap-3 border-t border-line pt-3 first:border-t-0 first:pt-0">
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-line bg-ink-50">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-control border border-line bg-ink-50">
                     <Image src={photo.url} alt="" fill sizes="80px" className="object-cover" />
                     {index === 0 && (
                       <span className="absolute inset-x-0 bottom-0 bg-ink-900/80 py-0.5 text-center text-[0.625rem] font-bold text-white">

@@ -178,7 +178,7 @@ function ThemePreview({ theme, ramp, label }: { theme: Theme; ramp: BrandRamp; l
   const text = theme === "light" ? "#161a23" : "#f4f6fa";
 
   return (
-    <div className="border border-line">
+    <div className="overflow-hidden rounded-control border border-line">
       <p className="border-b border-line px-3 py-1.5 text-[0.6875rem] font-bold uppercase tracking-wider text-ink-400">
         {label}
       </p>

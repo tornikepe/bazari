@@ -22,6 +22,7 @@ import { MinusIcon, PlusIcon } from "@/components/ui/icons";
 export function ProductPurchasePanel({
   product,
   keepShape = false,
+  prompt,
 }: {
   product: Omit<CartItem, "quantity">;
   /**
@@ -33,6 +34,8 @@ export function ProductPurchasePanel({
    * under it each time.
    */
   keepShape?: boolean;
+  /** Passed through to the add button: what it says while there is no choice yet. */
+  prompt?: string;
 }) {
   const { t } = useI18n();
   const { items, hydrated, add, setQuantity: setLineQuantity } = useCart();
@@ -40,9 +43,8 @@ export function ProductPurchasePanel({
   const [pending, setPending] = useState(1);
 
   const key = lineKey(product);
-  const line = hydrated
-    ? items.find((entry) => lineKey(entry) === key)
-    : undefined;
+  const line =
+    hydrated && !prompt ? items.find((entry) => lineKey(entry) === key) : undefined;
   const quantity = line ? line.quantity : pending;
 
   const soldOut = product.stock <= 0;
@@ -113,6 +115,7 @@ export function ProductPurchasePanel({
           quantity={quantity}
           size="lg"
           fullWidth
+          prompt={prompt}
         />
 
         {(!soldOut || keepShape) && (

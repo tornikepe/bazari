@@ -28,6 +28,7 @@ import {
   UserIcon,
 } from "@/components/ui/icons";
 import { useChangeKey } from "@/components/ui/useChangeKey";
+import { useScrolled } from "@/components/layout/useScrolled";
 
 export type HeaderCategory = {
   slug: string;
@@ -57,6 +58,7 @@ export function HeaderBar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const scrolled = useScrolled();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -116,7 +118,10 @@ export function HeaderBar({
   ];
 
   return (
-    <header className="site-header sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]">
+    <header
+      data-scrolled={scrolled}
+      className="site-header sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]"
+    >
       {/* Main bar */}
       <div className="page-container flex h-16 items-center gap-2 sm:gap-3 lg:h-20 lg:gap-6">
         <button

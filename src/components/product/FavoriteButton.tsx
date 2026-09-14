@@ -53,7 +53,7 @@ export function FavoriteButton({
       // on top of the card's own link, and at 44 it starts covering the product
       // photo it is meant to sit quietly on top of.
       className={`grid place-items-center transition-colors ${
-        size === "chip" ? "h-10 w-10" : "min-h-[3.25rem] w-full border border-line sm:w-[3.25rem] sm:shrink-0"
+        size === "chip" ? "h-10 w-10 rounded-control" : "min-h-[3.25rem] w-full rounded-control border border-line sm:w-[3.25rem] sm:shrink-0"
       } ${
         isFavorite
           ? "bg-brand-solid text-brand-on-solid"

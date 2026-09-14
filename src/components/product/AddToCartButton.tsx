@@ -32,6 +32,8 @@ export function AddToCartButton({
   fullWidth = false,
   showIcon = true,
   disabled = false,
+  short = false,
+  prompt,
 }: {
   product: Omit<CartItem, "quantity">;
   quantity?: number;
@@ -41,12 +43,24 @@ export function AddToCartButton({
   showIcon?: boolean;
   /** Separate from sold-out: used to take a hidden copy out of the tab order. */
   disabled?: boolean;
+  /**
+   * The one-word label, for a card: beside a quantity select there is no
+   * room for "add to the cart" in Georgian, and the select already says
+   * what is being added.
+   */
+  short?: boolean;
+  /**
+   * What to say instead of "add" while there is nothing to add yet — a
+   * product sold in sizes before a size is chosen. Shown disabled; the
+   * button used to say "out of stock" for that, which was not the reason.
+   */
+  prompt?: string;
 }) {
   const { items, hydrated, add, remove } = useCart();
   const { t } = useI18n();
 
   const key = lineKey(product);
-  const inCart = hydrated && items.some((entry) => lineKey(entry) === key);
+  const inCart = !prompt && hydrated && items.some((entry) => lineKey(entry) === key);
   const soldOut = product.stock <= 0;
 
   function handleClick() {
@@ -55,17 +69,20 @@ export function AddToCartButton({
     else add(product, quantity);
   }
 
-  const label = soldOut
-    ? t.product.outOfStock
-    : inCart
-      ? t.product.inCart
-      : t.product.addToCart;
+  const addLabel = short ? t.product.addToCartShort : t.product.addToCart;
+  const label = prompt
+    ? prompt
+    : soldOut
+      ? t.product.outOfStock
+      : inCart
+        ? t.product.inCart
+        : addLabel;
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={soldOut || disabled}
+      disabled={Boolean(prompt) || soldOut || disabled}
       // No `aria-live` here on purpose. It used to be, and a live region on the
       // control whose own label is changing announces the label rather than the
       // event — and only while that button is on screen, so removing an item
@@ -89,7 +106,7 @@ export function AddToCartButton({
           icon={showIcon && <CartIcon size={16} className="shrink-0" />}
           hidden
         >
-          {t.product.addToCart}
+          {addLabel}
         </Layer>
         <Layer
           icon={showIcon && <CheckIcon size={16} className="shrink-0" />}
@@ -97,6 +114,11 @@ export function AddToCartButton({
         >
           {t.product.inCart}
         </Layer>
+        {prompt && (
+          <Layer icon={null} hidden>
+            {prompt}
+          </Layer>
+        )}
         <Layer
           icon={
             showIcon &&
