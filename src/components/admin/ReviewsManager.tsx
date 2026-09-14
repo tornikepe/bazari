@@ -8,6 +8,7 @@ import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { SpinnerIcon, StarIcon } from "@/components/ui/icons";
 import { setReviewPublished } from "@/app/actions/reviews";
+import { Swap } from "@/components/ui/Swap";
 
 export type ReviewRow = {
   id: string;
@@ -107,8 +108,20 @@ export function ReviewsManager({ reviews }: { reviews: ReviewRow[] }) {
                 onClick={() => toggle(review)}
                 className="btn btn-outline btn-sm"
               >
-                {isPending && busy === review.id && <SpinnerIcon size={14} />}
-                {review.isPublished ? t.admin.reviewHide : t.admin.reviewShow}
+                {/* The spinner stands in for the label rather than beside it,
+                    so the button is the same width busy or idle. */}
+                <Swap
+                  show={
+                    isPending && busy === review.id ? (
+                      <SpinnerIcon size={14} className="mx-auto" />
+                    ) : review.isPublished ? (
+                      t.admin.reviewHide
+                    ) : (
+                      t.admin.reviewShow
+                    )
+                  }
+                  of={[t.admin.reviewHide, t.admin.reviewShow]}
+                />
               </button>
             </div>
           )}

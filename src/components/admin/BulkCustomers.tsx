@@ -62,7 +62,9 @@ export function BulkCustomers({
     const chosen = [...selected];
 
     if (disabled) {
-      const sure = window.confirm(fill(t.admin.customerConfirmDisable, { count: chosen.length }));
+      const sure = window.confirm(
+        fill(t.admin.customerConfirmDisable, { count: chosen.length }),
+      );
       if (!sure) return;
     }
 
@@ -98,54 +100,71 @@ export function BulkCustomers({
           return next;
         });
       }}
+      /* Room under the list for the bar, so its last rows can still be reached
+         with the bar over them. Added only while the bar is up: the page grows
+         off the bottom of the window and nothing in view moves. */
+      className={selected.size > 0 ? "pb-24" : undefined}
     >
       {selected.size > 0 && (
-        <div className="card card-pad-tight sticky top-[calc(var(--header-h)+0.5rem)] z-20 mt-3 flex flex-wrap items-center gap-2">
-          <p aria-live="polite" className="mr-auto text-sm font-bold text-ink-900">
-            {fill(t.admin.bulkSelected, { count: selected.size })}
-          </p>
+        <div className="bulk-bar">
+          <div className="card card-pad-tight mx-auto flex max-w-3xl flex-wrap items-center gap-2">
+            <p
+              aria-live="polite"
+              className="mr-auto text-sm font-bold text-ink-900"
+            >
+              {fill(t.admin.bulkSelected, { count: selected.size })}
+            </p>
 
-          <button
-            type="button"
-            onClick={() => run(false)}
-            disabled={isPending}
-            className="btn btn-outline btn-sm"
-          >
-            {isPending ? <SpinnerIcon size={14} /> : <CheckIcon size={14} />}
-            {t.admin.staffEnable}
-          </button>
+            <button
+              type="button"
+              onClick={() => run(false)}
+              disabled={isPending}
+              className="btn btn-outline btn-sm"
+            >
+              {isPending ? <SpinnerIcon size={14} /> : <CheckIcon size={14} />}
+              {t.admin.staffEnable}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => run(true)}
-            disabled={isPending}
-            className="btn btn-outline btn-sm text-danger hover:bg-danger-soft"
-          >
-            {t.admin.staffDisable}
-          </button>
+            <button
+              type="button"
+              onClick={() => run(true)}
+              disabled={isPending}
+              className="btn btn-outline btn-sm text-danger hover:bg-danger-soft"
+            >
+              {t.admin.staffDisable}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setSelected(new Set());
-              syncBoxes(false);
-            }}
-            aria-label={t.admin.bulkClear}
-            className="btn btn-ghost h-9 w-9 rounded-control p-0"
-          >
-            <CloseIcon size={16} />
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelected(new Set());
+                syncBoxes(false);
+              }}
+              aria-label={t.admin.bulkClear}
+              className="btn btn-ghost h-9 w-9 rounded-control p-0"
+            >
+              <CloseIcon size={16} />
+            </button>
+          </div>
         </div>
       )}
 
-      {failed && <ErrorNote className="mt-3" title={t.common.error} hint={t.common.errorHint} />}
+      {failed && (
+        <ErrorNote
+          className="mt-3"
+          title={t.common.error}
+          hint={t.common.errorHint}
+        />
+      )}
 
       {done !== null && (
         <p
           role="status"
           className={`mt-3 text-sm font-semibold ${done > 0 ? "text-success" : "text-ink-500"}`}
         >
-          {done > 0 ? fill(t.admin.bulkCustomersDone, { count: done }) : t.admin.bulkCustomersNone}
+          {done > 0
+            ? fill(t.admin.bulkCustomersDone, { count: done })
+            : t.admin.bulkCustomersNone}
         </p>
       )}
 

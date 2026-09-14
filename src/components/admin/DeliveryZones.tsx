@@ -82,7 +82,9 @@ export function DeliveryZones({ zones }: { zones: DeliveryZoneItem[] }) {
               key={zone.id}
               className="card flex flex-wrap items-center gap-x-4 gap-y-2 card-pad-tight"
             >
-              <div className="min-w-0 flex-1">
+              {/* `min-w-56`, as in the coupon list: the text wraps the buttons
+                  to the next line on a phone instead of shrinking beside them. */}
+              <div className="min-w-56 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-bold text-ink-900">
                     {locale === "ka" ? zone.nameKa : zone.nameEn}

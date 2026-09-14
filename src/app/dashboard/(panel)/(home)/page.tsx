@@ -194,7 +194,9 @@ export default async function DashboardPage({
                     className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-ink-50"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-mono text-xs font-bold text-ink-900">{order.number}</p>
+                      <p className="font-mono text-xs font-bold whitespace-nowrap text-ink-900">
+                        {order.number}
+                      </p>
                       <p className="mt-0.5 truncate text-xs text-ink-500">
                         {order.customerName} · {order.city}
                       </p>
@@ -207,11 +209,16 @@ export default async function DashboardPage({
                       </p>
                     </div>
 
-                    <p className="w-20 shrink-0 text-right text-sm font-bold text-ink-900">
-                      {formatPrice(order.total, locale)}
-                    </p>
-
-                    <StatusBadge status={order.status} t={t} />
+                    {/* On a phone the total sits over the status rather than
+                        beside it: a number, a Georgian status and a Georgian
+                        name do not share 340 pixels, and the order number was
+                        breaking into three lines to make room. */}
+                    <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                      <p className="text-sm font-bold whitespace-nowrap text-ink-900 sm:w-20 sm:text-right">
+                        {formatPrice(order.total, locale)}
+                      </p>
+                      <StatusBadge status={order.status} t={t} />
+                    </div>
                   </Link>
                 </li>
               ))}

@@ -145,17 +145,22 @@ export default async function AdminCustomerPage({
                     className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-ink-50"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-mono text-xs font-bold text-ink-900">{order.number}</p>
+                      <p className="font-mono text-xs font-bold whitespace-nowrap text-ink-900">
+                        {order.number}
+                      </p>
                       <p className="mt-0.5 text-xs text-ink-400">
                         {formatDateTime(order.createdAt)} · {countText(t.admin.productCountOne, t.admin.productCount, order._count.items)}
                       </p>
                     </div>
 
-                    <p className="shrink-0 text-sm font-bold text-ink-900">
-                      {formatPrice(order.total, locale)}
-                    </p>
-
-                    <StatusBadge status={order.status} t={t} />
+                    {/* Total over status on a phone, beside it from `sm` —
+                        the same row as the overview's recent orders. */}
+                    <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                      <p className="text-sm font-bold whitespace-nowrap text-ink-900">
+                        {formatPrice(order.total, locale)}
+                      </p>
+                      <StatusBadge status={order.status} t={t} />
+                    </div>
                   </Link>
                 </li>
               ))}

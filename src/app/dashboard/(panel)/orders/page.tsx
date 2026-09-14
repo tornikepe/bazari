@@ -234,7 +234,7 @@ export default async function AdminOrdersPage({
                   <div className="min-w-0">
                     <Link
                       href={`/dashboard/orders/${order.id}`}
-                      className="font-mono text-sm font-bold text-ink-900"
+                      className="font-mono text-sm font-bold whitespace-nowrap text-ink-900"
                     >
                       {order.number}
                     </Link>

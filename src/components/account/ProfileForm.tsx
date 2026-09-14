@@ -3,8 +3,9 @@
 import { useActionState } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { updateProfile, type AuthState } from "@/app/actions/auth";
-import { CheckIcon, SpinnerIcon } from "@/components/ui/icons";
+import { CheckIcon } from "@/components/ui/icons";
 import type { SessionUser } from "@/lib/auth";
+import { Busy, Swap } from "@/components/ui/Swap";
 
 export function ProfileForm({
   user,
@@ -78,8 +79,10 @@ export function ProfileForm({
 
         <div className="flex items-center gap-3">
           <button type="submit" disabled={pending} className="btn btn-primary btn-md">
-            {pending && <SpinnerIcon size={16} />}
-            {pending ? t.account.saving : t.account.saveProfile}
+            <Swap
+              show={pending ? <Busy label={t.account.saving} /> : t.account.saveProfile}
+              of={[t.account.saveProfile]}
+            />
           </button>
 
           {justSaved && !pending && (

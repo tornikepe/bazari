@@ -4,10 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
-import { RefreshIcon, SpinnerIcon } from "@/components/ui/icons";
+import { RefreshIcon } from "@/components/ui/icons";
 import { fill } from "@/lib/i18n";
 import { requestReturn } from "@/app/actions/returns";
 import { RETURN_REASONS, type ReturnReason, type ReturnStatus } from "@/lib/returns";
+import { Busy, Swap } from "@/components/ui/Swap";
 
 export type ReturnLine = {
   orderItemId: string;
@@ -266,8 +267,10 @@ export function ReturnPanel({
 
             <div className="flex flex-wrap gap-2">
               <button type="submit" disabled={isPending} className="btn btn-primary btn-md">
-                {isPending && <SpinnerIcon size={15} />}
-                {isPending ? t.returns.submitting : t.returns.submit}
+                <Swap
+                  show={isPending ? <Busy label={t.returns.submitting} /> : t.returns.submit}
+                  of={[t.returns.submit]}
+                />
               </button>
               <button type="button" onClick={() => setOpen(false)} className="btn btn-outline btn-md">
                 {t.admin.cancel}

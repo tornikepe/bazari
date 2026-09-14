@@ -9,6 +9,7 @@ import { CheckIcon, PlusIcon, SpinnerIcon } from "@/components/ui/icons";
 import { inviteStaff, setStaffDisabled, setStaffRole } from "@/app/actions/staff";
 import { INVITE_HOURS } from "@/lib/staff";
 import { fill } from "@/lib/i18n";
+import { Swap } from "@/components/ui/Swap";
 
 export type StaffRow = {
   id: string;
@@ -96,8 +97,25 @@ export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
               }}
               className="btn btn-outline btn-sm"
             >
-              {copied ? <CheckIcon size={14} /> : null}
-              {copied ? t.admin.staffLinkCopied : t.admin.staffLinkCopy}
+              <Swap
+                show={
+                  copied ? (
+                    <span className="inline-flex items-center gap-2">
+                      <CheckIcon size={14} />
+                      {t.admin.staffLinkCopied}
+                    </span>
+                  ) : (
+                    t.admin.staffLinkCopy
+                  )
+                }
+                of={[
+                  <span key="copied" className="inline-flex items-center gap-2">
+                    <CheckIcon size={14} />
+                    {t.admin.staffLinkCopied}
+                  </span>,
+                  t.admin.staffLinkCopy,
+                ]}
+              />
             </button>
           </div>
         </div>
@@ -112,7 +130,10 @@ export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
 
             return (
               <li key={person.id} className="card flex flex-wrap items-center gap-x-4 gap-y-3 card-pad-tight">
-                <div className="min-w-0 flex-1">
+                {/* `min-w-56`, as in the coupon list: the name wraps the
+                    controls to the next line on a phone instead of shrinking
+                    beside them. */}
+                <div className="min-w-56 flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink-900">
                     {person.name || person.email}
                     {isMe && <span className="badge bg-ink-100 text-ink-600">{t.admin.staffYou}</span>}
@@ -148,7 +169,10 @@ export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
                       onClick={() => act(() => setStaffDisabled(person.id, !person.disabled))}
                       className="btn btn-outline btn-sm"
                     >
-                      {person.disabled ? t.admin.staffEnable : t.admin.staffDisable}
+                      <Swap
+                        show={person.disabled ? t.admin.staffEnable : t.admin.staffDisable}
+                        of={[t.admin.staffEnable, t.admin.staffDisable]}
+                      />
                     </button>
                   </div>
                 ) : (

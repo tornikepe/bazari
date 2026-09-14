@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
-import { CheckIcon, CloseIcon, EyeIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
+import {
+  CheckIcon,
+  CloseIcon,
+  EyeIcon,
+  SpinnerIcon,
+  TrashIcon,
+} from "@/components/ui/icons";
 import { bulkProducts, type BulkAction } from "@/app/actions/admin";
 import { fill } from "@/lib/i18n";
 
@@ -80,7 +86,9 @@ export function BulkProducts({
       // The one destructive action, and the only one that asks. `confirm` is
       // the browser's, which means it cannot be missed, cannot be styled into
       // something that looks like a hint, and works before hydration finishes.
-      const sure = window.confirm(fill(t.admin.bulkConfirmDelete, { count: chosen.length }));
+      const sure = window.confirm(
+        fill(t.admin.bulkConfirmDelete, { count: chosen.length }),
+      );
       if (!sure) return;
     }
 
@@ -110,61 +118,78 @@ export function BulkProducts({
         const target = event.target as HTMLInputElement;
         if (target.name === "product-id") toggle(target.value, target.checked);
       }}
+      /* Room under the list for the bar, so its last rows can still be reached
+         with the bar over them. Added only while the bar is up: the page grows
+         off the bottom of the window and nothing in view moves. */
+      className={selected.size > 0 ? "pb-24" : undefined}
     >
-      {/* The bar sits above the table and takes no room until it has something
-          to say — a permanently visible toolbar of disabled buttons is noise on
-          every visit for a feature used occasionally. */}
+      {/* The bar appears only once there is a selection — a permanently
+          visible toolbar of disabled buttons is noise on every visit for a
+          feature used occasionally — and it is fixed to the bottom of the
+          window (`.bulk-bar`), so ticking the first box does not push the
+          list down by the bar's height under the reader's thumb. */}
       {selected.size > 0 && (
-        <div className="card sticky top-[calc(var(--header-h)+0.5rem)] z-20 mt-3 flex flex-wrap items-center gap-2 card-pad-tight">
-          <p aria-live="polite" className="mr-auto text-sm font-bold text-ink-900">
-            {fill(t.admin.bulkSelected, { count: selected.size })}
-          </p>
+        <div className="bulk-bar">
+          <div className="card card-pad-tight mx-auto flex max-w-3xl flex-wrap items-center gap-2">
+            <p
+              aria-live="polite"
+              className="mr-auto text-sm font-bold text-ink-900"
+            >
+              {fill(t.admin.bulkSelected, { count: selected.size })}
+            </p>
 
-          <button
-            type="button"
-            onClick={() => run("publish")}
-            disabled={isPending}
-            className="btn btn-outline btn-sm"
-          >
-            {isPending ? <SpinnerIcon size={14} /> : <CheckIcon size={14} />}
-            {t.admin.bulkPublish}
-          </button>
+            <button
+              type="button"
+              onClick={() => run("publish")}
+              disabled={isPending}
+              className="btn btn-outline btn-sm"
+            >
+              {isPending ? <SpinnerIcon size={14} /> : <CheckIcon size={14} />}
+              {t.admin.bulkPublish}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => run("unpublish")}
-            disabled={isPending}
-            className="btn btn-outline btn-sm"
-          >
-            <EyeIcon size={14} />
-            {t.admin.bulkUnpublish}
-          </button>
+            <button
+              type="button"
+              onClick={() => run("unpublish")}
+              disabled={isPending}
+              className="btn btn-outline btn-sm"
+            >
+              <EyeIcon size={14} />
+              {t.admin.bulkUnpublish}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => run("delete")}
-            disabled={isPending}
-            className="btn btn-outline btn-sm text-danger hover:bg-danger-soft"
-          >
-            <TrashIcon size={14} />
-            {t.admin.bulkDelete}
-          </button>
+            <button
+              type="button"
+              onClick={() => run("delete")}
+              disabled={isPending}
+              className="btn btn-outline btn-sm text-danger hover:bg-danger-soft"
+            >
+              <TrashIcon size={14} />
+              {t.admin.bulkDelete}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setSelected(new Set());
-              syncBoxes(false);
-            }}
-            aria-label={t.admin.bulkClear}
-            className="btn btn-ghost h-9 w-9 rounded-control p-0"
-          >
-            <CloseIcon size={16} />
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelected(new Set());
+                syncBoxes(false);
+              }}
+              aria-label={t.admin.bulkClear}
+              className="btn btn-ghost h-9 w-9 rounded-control p-0"
+            >
+              <CloseIcon size={16} />
+            </button>
+          </div>
         </div>
       )}
 
-      {failed && <ErrorNote className="mt-3" title={t.common.error} hint={t.common.errorHint} />}
+      {failed && (
+        <ErrorNote
+          className="mt-3"
+          title={t.common.error}
+          hint={t.common.errorHint}
+        />
+      )}
 
       {/* What happened, once. `status` rather than `alert`: it confirms
           something the reader asked for and must not interrupt them. */}

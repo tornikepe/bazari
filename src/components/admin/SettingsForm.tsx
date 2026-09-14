@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { saveSettings } from "@/app/actions/settings";
-import { AlertIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
+import { AlertIcon, CheckIcon } from "@/components/ui/icons";
 import type { ShopSettings } from "@/lib/settings-defaults";
 import { BrandColorField } from "@/components/admin/BrandColorField";
+import { Busy, Swap } from "@/components/ui/Swap";
 
 /**
  * The shop's own settings.
@@ -229,8 +230,7 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
       {canWrite && (
         <div className="flex flex-wrap items-center gap-3">
           <button type="submit" disabled={isPending} className="btn btn-primary btn-md">
-            {isPending && <SpinnerIcon size={16} />}
-            {isPending ? t.admin.saving : t.admin.save}
+            <Swap show={isPending ? <Busy label={t.admin.saving} /> : t.admin.save} of={[t.admin.save]} />
           </button>
 
           {status === "saved" && !isPending && (

@@ -21,6 +21,7 @@ import {
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { movePhoto, parsePhotos, MAX_PHOTOS, type Photo } from "@/lib/product-photos";
+import { Busy, Swap } from "@/components/ui/Swap";
 
 
 export type ProductFormValues = {
@@ -163,8 +164,18 @@ export function ProductForm({
               {t.admin.cancel}
             </Link>
             <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
-              {isPending && <SpinnerIcon size={15} />}
-              {isPending ? t.admin.saving : product ? t.admin.save : t.admin.create}
+              <Swap
+                show={
+                  isPending ? (
+                    <Busy label={t.admin.saving} />
+                  ) : product ? (
+                    t.admin.save
+                  ) : (
+                    t.admin.create
+                  )
+                }
+                of={[product ? t.admin.save : t.admin.create]}
+              />
             </button>
           </div>
         }

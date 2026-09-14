@@ -55,7 +55,9 @@ export async function StockLedger({ productId }: { productId: string }) {
                     {movement.note && (
                       <p className="mt-0.5 text-ink-600">{movement.note}</p>
                     )}
-                    <p className="mt-0.5 text-ink-400">{formatDateTime(movement.createdAt)}</p>
+                    <p className="mt-0.5 whitespace-nowrap text-ink-400">
+                      {formatDateTime(movement.createdAt)}
+                    </p>
                   </td>
 
                   <td
@@ -70,7 +72,7 @@ export async function StockLedger({ productId }: { productId: string }) {
                     {movement.balance}
                   </td>
 
-                  <td className="figures">
+                  <td className="figures whitespace-nowrap">
                     {movement.order ? (
                       <Link
                         href={`/dashboard/orders/${movement.order.id}`}

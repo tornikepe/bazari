@@ -77,7 +77,11 @@ export function PageHeader({
           {lead && <p className="mt-1 max-w-prose text-sm text-ink-500">{lead}</p>}
         </div>
 
-        {action && <div className="shrink-0">{action}</div>}
+        {/* `max-w-full` with the `shrink-0`: the action is never squeezed
+            beside the title, but on a phone a row of several controls is
+            wider than the screen, and without the cap it ran off the right
+            edge instead of wrapping inside its own width. */}
+        {action && <div className="max-w-full shrink-0">{action}</div>}
       </div>
     </header>
   );

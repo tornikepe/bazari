@@ -6,14 +6,34 @@ import { useCart, type CartItem } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
+import { lineKey } from "@/lib/cart-store";
 import { MinusIcon, PlusIcon } from "@/components/ui/icons";
 
-/** Quantity stepper plus the two purchase buttons. */
-export function ProductPurchasePanel({ product }: { product: Omit<CartItem, "quantity"> }) {
+/**
+ * Quantity stepper plus the two purchase buttons.
+ *
+ * The stepper is the cart's own quantity once the product is in the cart,
+ * and the quantity to add until then. The add button is a toggle now — in
+ * the cart, a press takes the product out — so the only other way to buy
+ * three instead of one from this page is for the stepper to edit the line
+ * itself, which is what a shopper pressing "+" beside a button that says
+ * "in the cart" expects it to do.
+ */
+export function ProductPurchasePanel({
+  product,
+}: {
+  product: Omit<CartItem, "quantity">;
+}) {
   const { t } = useI18n();
-  const { add } = useCart();
+  const { items, hydrated, add, setQuantity: setLineQuantity } = useCart();
   const router = useRouter();
-  const [quantity, setQuantity] = useState(1);
+  const [pending, setPending] = useState(1);
+
+  const key = lineKey(product);
+  const line = hydrated
+    ? items.find((entry) => lineKey(entry) === key)
+    : undefined;
+  const quantity = line ? line.quantity : pending;
 
   const soldOut = product.stock <= 0;
   const max = Math.max(1, product.stock);
@@ -22,9 +42,15 @@ export function ProductPurchasePanel({ product }: { product: Omit<CartItem, "qua
     return Math.min(Math.max(1, next), max);
   }
 
+  function setQuantity(next: number) {
+    const value = clamp(next);
+    if (line) setLineQuantity(key, value);
+    else setPending(value);
+  }
+
   function buyNow() {
     if (soldOut) return;
-    add(product, quantity);
+    if (!line) add(product, quantity);
     router.push("/checkout");
   }
 
@@ -32,12 +58,14 @@ export function ProductPurchasePanel({ product }: { product: Omit<CartItem, "qua
     <div className="flex flex-col gap-3">
       {!soldOut && (
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-ink-700">{t.product.quantity}</span>
+          <span className="text-sm font-semibold text-ink-700">
+            {t.product.quantity}
+          </span>
 
           <div className="flex items-center rounded-control border border-line bg-surface">
             <button
               type="button"
-              onClick={() => setQuantity((current) => clamp(current - 1))}
+              onClick={() => setQuantity(quantity - 1)}
               disabled={quantity <= 1}
               aria-label="-"
               className="btn btn-ghost h-10 w-10 rounded-none rounded-l-control p-0"
@@ -50,14 +78,14 @@ export function ProductPurchasePanel({ product }: { product: Omit<CartItem, "qua
               value={quantity}
               min={1}
               max={max}
-              onChange={(event) => setQuantity(clamp(Number(event.target.value) || 1))}
+              onChange={(event) => setQuantity(Number(event.target.value) || 1)}
               aria-label={t.product.quantity}
               className="h-10 w-14 border-x border-line bg-transparent text-center text-sm font-semibold outline-none"
             />
 
             <button
               type="button"
-              onClick={() => setQuantity((current) => clamp(current + 1))}
+              onClick={() => setQuantity(quantity + 1)}
               disabled={quantity >= max}
               aria-label="+"
               className="btn btn-ghost h-10 w-10 rounded-none rounded-r-control p-0"
@@ -69,10 +97,19 @@ export function ProductPurchasePanel({ product }: { product: Omit<CartItem, "qua
       )}
 
       <div className="flex flex-col gap-2.5 sm:flex-row">
-        <AddToCartButton product={product} quantity={quantity} size="lg" fullWidth />
+        <AddToCartButton
+          product={product}
+          quantity={quantity}
+          size="lg"
+          fullWidth
+        />
 
         {!soldOut && (
-          <button type="button" onClick={buyNow} className="btn btn-secondary btn-lg w-full">
+          <button
+            type="button"
+            onClick={buyNow}
+            className="btn btn-secondary btn-lg w-full"
+          >
             {t.product.buyNow}
           </button>
         )}

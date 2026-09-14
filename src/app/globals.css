@@ -430,6 +430,11 @@
     justify-content: center;
     gap: 0.5rem;
     border-radius: var(--radius-control);
+    /* Every variant carries the same 1px edge, transparent unless the variant
+       colours it. Only `.btn-outline` had a border, so a button that changed
+       variant — added to the cart, filled on hover — grew or shrank by two
+       pixels and moved whatever sat beside it. */
+    border: 1px solid transparent;
     font-weight: 600;
     /* Long Georgian labels ("კალათაში დამატება") do not fit a phone-width
        button. `nowrap` with a fixed height made them spill out of the button.
@@ -508,7 +513,7 @@
     color: var(--color-ink-900);
     /* Against the ink, not the decorative rule — a control's edge has to be
        seen, and `line` is deliberately quiet. */
-    border: 1px solid var(--color-ink-300);
+    border-color: var(--color-ink-300);
   }
 
   .btn-outline:hover:not(:disabled) {
@@ -1427,6 +1432,46 @@
 @media (prefers-reduced-motion: reduce) {
   .buy-bar {
     transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Dashboard bulk bar                                                  */
+/*                                                                     */
+/* The actions for a selection. Fixed to the bottom of the window       */
+/* rather than laid into the page above the list: as a block in flow it */
+/* appeared the moment the first box was ticked and pushed the whole    */
+/* list down by its own height — 126px on a phone, where its buttons    */
+/* wrap to three rows — so the row under the reader's thumb moved away  */
+/* from it. Beside the rail on a wide screen, where the rail is 15rem.  */
+/* ------------------------------------------------------------------ */
+
+.bulk-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  /* The strip spans the window so the card can be centred in it; only the
+     card takes the pointer. */
+  pointer-events: none;
+}
+
+.bulk-bar > * {
+  pointer-events: auto;
+  box-shadow: var(--shadow-pop);
+}
+
+@media (min-width: 64rem) {
+  .bulk-bar {
+    left: 15rem;
+    padding-inline: 2rem;
+  }
+}
+
+@media print {
+  .bulk-bar {
+    display: none;
   }
 }
 

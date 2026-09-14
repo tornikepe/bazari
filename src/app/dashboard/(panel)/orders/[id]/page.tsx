@@ -109,8 +109,12 @@ export default async function AdminOrderDetailPage({
         title={order.number}
         lead={`${t.admin.placedAt}: ${formatDateTime(order.createdAt)}`}
         action={
-          <div className="flex flex-col items-end gap-1.5">
-            <div className="flex items-center gap-3">
+          /* Four controls in a row are wider than a phone. They wrap, and the
+             row starts at the left edge on a narrow screen, where an
+             `items-end` column left a ragged right margin and — before the
+             wrap — the whole page scrolling sideways. */
+          <div className="flex flex-col gap-1.5 sm:items-end">
+            <div className="flex flex-wrap items-center gap-3">
               <PrintButton />
               <a
                 href={`/api/orders/${encodeURIComponent(order.number)}/invoice`}

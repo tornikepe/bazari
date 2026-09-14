@@ -75,7 +75,9 @@ export function BulkOrders({
       // The one that gives stock back and marks money refunded. `confirm` is
       // the browser's: it cannot be styled into looking like a hint, and it
       // works before hydration has finished.
-      const sure = window.confirm(fill(t.admin.bulkConfirmCancel, { count: chosen.length }));
+      const sure = window.confirm(
+        fill(t.admin.bulkConfirmCancel, { count: chosen.length }),
+      );
       if (!sure) return;
     }
 
@@ -115,48 +117,67 @@ export function BulkOrders({
           return next;
         });
       }}
+      /* Room under the list for the bar, so its last rows can still be reached
+         with the bar over them. Added only while the bar is up: the page grows
+         off the bottom of the window and nothing in view moves. */
+      className={selected.size > 0 ? "pb-24" : undefined}
     >
-      {/* Takes no room until it has something to say. A permanently visible
-          row of disabled buttons is noise on every visit for a feature used
-          occasionally. */}
+      {/* Appears only once there is a selection — a permanently visible row
+          of disabled buttons is noise on every visit for a feature used
+          occasionally — and fixed to the bottom of the window (`.bulk-bar`),
+          so ticking the first box does not push the list down under the
+          reader's thumb. Same in the product and customer lists. */}
       {selected.size > 0 && (
-        <div className="card card-pad-tight sticky top-[calc(var(--header-h)+0.5rem)] z-20 mt-3 flex flex-wrap items-center gap-2">
-          <p aria-live="polite" className="mr-auto text-sm font-bold text-ink-900">
-            {fill(t.admin.bulkSelected, { count: selected.size })}
-          </p>
-
-          <span className="text-xs text-ink-500">{t.admin.bulkMarkAs}</span>
-
-          {BULK_STATUSES.map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => run(status)}
-              disabled={isPending}
-              className={`btn btn-outline btn-sm ${
-                status === "cancelled" ? "text-danger hover:bg-danger-soft" : ""
-              }`}
+        <div className="bulk-bar">
+          <div className="card card-pad-tight mx-auto flex max-w-3xl flex-wrap items-center gap-2">
+            <p
+              aria-live="polite"
+              className="mr-auto text-sm font-bold text-ink-900"
             >
-              {isPending && <SpinnerIcon size={14} />}
-              {t.status[status]}
-            </button>
-          ))}
+              {fill(t.admin.bulkSelected, { count: selected.size })}
+            </p>
 
-          <button
-            type="button"
-            onClick={() => {
-              setSelected(new Set());
-              syncBoxes(false);
-            }}
-            aria-label={t.admin.bulkClear}
-            className="btn btn-ghost h-9 w-9 rounded-control p-0"
-          >
-            <CloseIcon size={16} />
-          </button>
+            <span className="text-xs text-ink-500">{t.admin.bulkMarkAs}</span>
+
+            {BULK_STATUSES.map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => run(status)}
+                disabled={isPending}
+                className={`btn btn-outline btn-sm ${
+                  status === "cancelled"
+                    ? "text-danger hover:bg-danger-soft"
+                    : ""
+                }`}
+              >
+                {isPending && <SpinnerIcon size={14} />}
+                {t.status[status]}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelected(new Set());
+                syncBoxes(false);
+              }}
+              aria-label={t.admin.bulkClear}
+              className="btn btn-ghost h-9 w-9 rounded-control p-0"
+            >
+              <CloseIcon size={16} />
+            </button>
+          </div>
         </div>
       )}
 
-      {failed && <ErrorNote className="mt-3" title={t.common.error} hint={t.common.errorHint} />}
+      {failed && (
+        <ErrorNote
+          className="mt-3"
+          title={t.common.error}
+          hint={t.common.errorHint}
+        />
+      )}
 
       {/* `status` rather than `alert`: it confirms something the reader asked
           for and must not interrupt them. */}
@@ -165,7 +186,9 @@ export function BulkOrders({
           role="status"
           className={`mt-3 text-sm font-semibold ${done > 0 ? "text-success" : "text-ink-500"}`}
         >
-          {done > 0 ? fill(t.admin.bulkOrdersDone, { count: done }) : t.admin.bulkOrdersNone}
+          {done > 0
+            ? fill(t.admin.bulkOrdersDone, { count: done })
+            : t.admin.bulkOrdersNone}
         </p>
       )}
 

@@ -7,6 +7,7 @@ import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { SpinnerIcon } from "@/components/ui/icons";
 import { setCustomerDisabled } from "@/app/actions/customers";
 import { fill } from "@/lib/i18n";
+import { Swap } from "@/components/ui/Swap";
 
 /**
  * One customer's account, on or off.
@@ -56,8 +57,20 @@ export function CustomerSwitch({ id, disabled }: { id: string; disabled: boolean
         }}
         className={`btn btn-outline btn-sm ${disabled ? "" : "text-danger hover:bg-danger-soft"}`}
       >
-        {isPending && <SpinnerIcon size={14} />}
-        {disabled ? t.admin.customerEnable : t.admin.customerDisable}
+        {/* The spinner stands in for the label rather than beside it, so the
+            button is the same width busy or idle. */}
+        <Swap
+          show={
+            isPending ? (
+              <SpinnerIcon size={14} className="mx-auto" />
+            ) : disabled ? (
+              t.admin.customerEnable
+            ) : (
+              t.admin.customerDisable
+            )
+          }
+          of={[t.admin.customerEnable, t.admin.customerDisable]}
+        />
       </button>
 
       {failed && (

@@ -7,9 +7,11 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { deleteCategory, saveCategory } from "@/app/actions/admin";
 import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
-import { CloseIcon, PencilIcon, PlusIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
+import { CloseIcon, PencilIcon, PlusIcon, TrashIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { countText } from "@/lib/i18n";
+import { Busy, Swap } from "@/components/ui/Swap";
 
 export type AdminCategory = {
   id: string;
@@ -198,8 +200,18 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
               {t.admin.cancel}
             </button>
             <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
-              {isPending && <SpinnerIcon size={15} />}
-              {editing === "new" ? t.admin.create : t.admin.save}
+              <Swap
+                show={
+                  isPending ? (
+                    <Busy label={t.admin.saving} />
+                  ) : editing === "new" ? (
+                    t.admin.create
+                  ) : (
+                    t.admin.save
+                  )
+                }
+                of={[editing === "new" ? t.admin.create : t.admin.save]}
+              />
             </button>
           </div>
         </form>
@@ -227,7 +239,8 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                   {locale === "ka" ? category.nameKa : category.nameEn}
                 </p>
                 <p className="truncate text-xs text-ink-400">
-                  /{category.slug} · {category._count.products} {t.admin.productCount}
+                  /{category.slug} ·{" "}
+                  {countText(t.admin.productCountOne, t.admin.productCount, category._count.products)}
                 </p>
               </div>
 

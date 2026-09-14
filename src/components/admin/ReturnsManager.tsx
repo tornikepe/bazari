@@ -90,7 +90,7 @@ export function ReturnsManager({ requests }: { requests: ReturnRow[] }) {
                 <p className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/dashboard/orders/${request.order.id}`}
-                    className="font-mono text-sm font-bold text-ink-900 hover:text-brand-600"
+                    className="font-mono text-sm font-bold whitespace-nowrap text-ink-900 hover:text-brand-600"
                   >
                     {request.order.number}
                   </Link>

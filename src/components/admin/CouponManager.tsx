@@ -7,6 +7,7 @@ import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PencilIcon, PlusIcon, SpinnerIcon } from "@/components/ui/icons";
 import { saveCoupon, setCouponActive } from "@/app/actions/coupons";
+import { Swap } from "@/components/ui/Swap";
 
 export type CouponRow = {
   id: string;
@@ -75,7 +76,11 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
         <ul className="flex flex-col gap-2">
           {coupons.map((coupon) => (
             <li key={coupon.id} className="card flex flex-wrap items-center gap-x-4 gap-y-2 card-pad-tight">
-              <div className="min-w-0 flex-1">
+              {/* `min-w-56`: with a plain `flex-1` the text squeezed into a
+                  column three words wide beside the buttons on a phone rather
+                  than sending them to the next line, which is what the wrap
+                  is for. */}
+              <div className="min-w-56 flex-1">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-sm font-bold text-ink-900">{coupon.code}</span>
                   <span
@@ -118,7 +123,10 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
                     onClick={() => toggle(coupon)}
                     className="btn btn-outline btn-sm"
                   >
-                    {coupon.isActive ? t.admin.couponPause : t.admin.couponResume}
+                    <Swap
+                      show={coupon.isActive ? t.admin.couponPause : t.admin.couponResume}
+                      of={[t.admin.couponPause, t.admin.couponResume]}
+                    />
                   </button>
                 </div>
               )}

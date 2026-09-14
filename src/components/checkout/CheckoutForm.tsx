@@ -19,6 +19,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/orders";
 import { lineKey } from "@/lib/cart-store";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
+import { Busy, Swap } from "@/components/ui/Swap";
 
 /** Maps a rejection reason to the matching translated message. */
 const COUPON_ERRORS: Record<
@@ -604,8 +605,20 @@ export function CheckoutForm({
                 }}
                 className="btn btn-ghost btn-md shrink-0"
               >
-                {checkingCoupon && <SpinnerIcon size={15} />}
-                {coupon?.ok ? t.checkout.couponRemove : t.checkout.couponApply}
+                {/* Pinned to its widest label: the input beside it is what
+                    would otherwise shrink when "apply" became "remove". */}
+                <Swap
+                  show={
+                    checkingCoupon ? (
+                      <Busy label={t.checkout.couponApply} />
+                    ) : coupon?.ok ? (
+                      t.checkout.couponRemove
+                    ) : (
+                      t.checkout.couponApply
+                    )
+                  }
+                  of={[t.checkout.couponRemove, t.checkout.couponApply]}
+                />
               </button>
             </div>
 

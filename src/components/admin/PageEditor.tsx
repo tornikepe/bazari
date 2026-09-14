@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { savePage } from "@/app/actions/pages";
-import { AlertIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
+import { AlertIcon, CheckIcon } from "@/components/ui/icons";
+import { Busy, Swap } from "@/components/ui/Swap";
 
 export type EditablePage = {
   slug: string;
@@ -83,8 +84,7 @@ export function PageEditor({ page }: { page: EditablePage }) {
       {canWrite && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
-            {isPending && <SpinnerIcon size={15} />}
-            {isPending ? t.admin.saving : t.admin.save}
+            <Swap show={isPending ? <Busy label={t.admin.saving} /> : t.admin.save} of={[t.admin.save]} />
           </button>
 
           {status === "saved" && !isPending && (

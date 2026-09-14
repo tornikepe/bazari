@@ -124,9 +124,15 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
 
                   <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
                     <div className="flex items-center rounded-control border border-line">
+                      {/* Stops at one, as the product page's does. It used
+                          to go on to zero and take the line out, so a thumb
+                          reaching for "one fewer" deleted the row and the
+                          rows below it jumped up into the thumb's place. The
+                          bin beside the total is the way out of the cart. */}
                       <button
                         type="button"
                         onClick={() => setQuantity(key, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
                         aria-label="-"
                         className="btn btn-ghost h-8 w-8 rounded-none rounded-l-control p-0"
                       >
