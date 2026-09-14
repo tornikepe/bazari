@@ -68,12 +68,16 @@ export async function signIn(page: Page, email: string, password: string) {
  */
 export async function seedCart(page: Page, quantity = 1) {
   await page.goto("/");
+  /* The first product that is *in stock*. The catalogue's first card is
+     whatever the suite sold out last — a product with no stock says "out of
+     stock" on its own page, and the click below then landed on a related
+     card's button instead, buying something other than the slug returned. */
   const product = await page.evaluate(async () => {
-    const res = await fetch("/catalog", { headers: { Accept: "text/html" } });
+    const res = await fetch("/catalog?stock=1", { headers: { Accept: "text/html" } });
     const html = await res.text();
     return html.match(/\/product\/([a-z0-9-]+)/)?.[1] ?? null;
   });
-  if (!product) throw new Error("no product found in the catalogue");
+  if (!product) throw new Error("no product in stock in the catalogue");
 
   await page.goto(`/product/${product}`);
   const addButton = page.getByRole("button", { name: /add to cart|კალათაში/i }).first();

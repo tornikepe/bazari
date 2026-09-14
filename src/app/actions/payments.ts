@@ -109,21 +109,48 @@ export async function refundPayment(paymentId: string): Promise<PaymentActionRes
     // Only return stock for an order that was not already cancelled, or the
     // units would be credited twice.
     if (payment.order.status !== "cancelled") {
+      /* And not for what a return already put back. A return marked received
+         restocks its lines through the ledger; refunding the payment after
+         that — which is the natural next step — restocked them a second
+         time. What came back through a return is subtracted per line. */
+      const returned = await tx.returnItem.findMany({
+        where: {
+          request: { orderId: payment.orderId, status: { in: ["received", "refunded"] } },
+        },
+        select: { orderItemId: true, quantity: true },
+      });
+      const alreadyBack = new Map<string, number>();
+      for (const line of returned) {
+        alreadyBack.set(line.orderItemId, (alreadyBack.get(line.orderItemId) ?? 0) + line.quantity);
+      }
+
       for (const item of payment.order.items) {
         // `productId` is null when the product was deleted after the sale —
         // the line survives for the invoice, but there is no shelf to restock.
         if (!item.productId) continue;
 
+        const quantity = Math.max(0, item.quantity - (alreadyBack.get(item.id) ?? 0));
+        if (quantity === 0) continue;
+
+        // The combination's own pile as well as the product's sum, the way
+        // the sale took from both.
+        if (item.variantId) {
+          await tx.productVariant.updateMany({
+            where: { id: item.variantId },
+            data: { stock: { increment: quantity } },
+          });
+        }
+
         const updated = await tx.product.update({
           where: { id: item.productId },
-          data: { stock: { increment: item.quantity } },
+          data: { stock: { increment: quantity } },
           select: { stock: true },
         });
 
         await tx.stockMovement.create({
           data: {
             productId: item.productId,
-            delta: item.quantity,
+            delta: quantity,
             reason: "return_to_stock",
             balance: updated.stock,
             orderId: payment.orderId,

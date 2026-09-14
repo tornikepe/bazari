@@ -724,6 +724,7 @@ async function applyOrderStatus(
       total: true,
       items: {
         select: {
+          id: true,
           productId: true,
           variantId: true,
           quantity: true,
@@ -741,7 +742,7 @@ async function applyOrderStatus(
 
   /* Per call, not per module: this runs once per order in a bulk change, and
      a list left over from the previous one would announce the wrong product. */
-  const returned: { productId: string; before: number; after: number }[] = [];
+  const restocked: { productId: string; before: number; after: number }[] = [];
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -762,10 +763,22 @@ async function applyOrderStatus(
       });
 
       // Cancelling releases the reserved stock back to the catalogue, with a
-      // ledger row explaining the increase.
+      // ledger row explaining the increase — less whatever a return already
+      // put back, which would otherwise be counted twice.
       if (status === "cancelled" && order.status !== "cancelled") {
+        const returned = await tx.returnItem.findMany({
+          where: { request: { orderId: id, status: { in: ["received", "refunded"] } } },
+          select: { orderItemId: true, quantity: true },
+        });
+        const alreadyBack = new Map<string, number>();
+        for (const line of returned) {
+          alreadyBack.set(line.orderItemId, (alreadyBack.get(line.orderItemId) ?? 0) + line.quantity);
+        }
+
         for (const item of order.items) {
           if (!item.productId) continue;
+          const quantity = Math.max(0, item.quantity - (alreadyBack.get(item.id) ?? 0));
+          if (quantity === 0) continue;
 
           /* The combination's own pile first, while it still exists. The sale
              took one unit from the variant *and* one from the product's sum;
@@ -774,20 +787,20 @@ async function applyOrderStatus(
           if (item.variantId) {
             await tx.productVariant.updateMany({
               where: { id: item.variantId },
-              data: { stock: { increment: item.quantity } },
+              data: { stock: { increment: quantity } },
             });
           }
 
           const updated = await tx.product.update({
             where: { id: item.productId },
-            data: { stock: { increment: item.quantity } },
+            data: { stock: { increment: quantity } },
             select: { stock: true },
           });
 
           await tx.stockMovement.create({
             data: {
               productId: item.productId,
-              delta: item.quantity,
+              delta: quantity,
               reason: "return_to_stock",
               balance: updated.stock,
               orderId: id,
@@ -798,9 +811,9 @@ async function applyOrderStatus(
           /* Collected here and announced after the commit. A cancellation is
              the fourth way a product comes back, and to somebody waiting it is
              indistinguishable from a delivery. */
-          returned.push({
+          restocked.push({
             productId: item.productId,
-            before: updated.stock - item.quantity,
+            before: updated.stock - quantity,
             after: updated.stock,
           });
         }
@@ -839,7 +852,7 @@ async function applyOrderStatus(
     });
   }
 
-  for (const item of returned) {
+  for (const item of restocked) {
     await announceIfBack(item.productId, item.before, item.after);
   }
 

@@ -58,7 +58,10 @@ export async function saveCoupon(formData: FormData): Promise<CouponResult> {
     minOrderTotal: minOrder,
     maxUses: maxUsesRaw === "" ? null : Math.max(1, Math.floor(Number(maxUsesRaw))),
     expiresAt: expiresRaw === "" ? null : new Date(`${expiresRaw}T23:59:59`),
-    isActive: formData.get("isActive") !== "off",
+    // An unchecked checkbox is absent from the form, not "off": the old test
+    // read absence as on, so the box could be unticked and the code stayed
+    // live — only the pause button could ever stop one.
+    isActive: formData.get("isActive") === "on",
   };
 
   if (data.expiresAt && Number.isNaN(data.expiresAt.getTime())) {
