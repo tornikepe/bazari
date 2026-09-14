@@ -85,6 +85,5 @@ Motion is restrained and reversible, and switched off under `prefers-reduced-mot
 
 ## 8. Nothing moves when the language changes
 
-Georgian is the longer language. Switching to it must not move or resize anything;
-[`stability.spec.ts`](tests/e2e/stability.spec.ts) measures every control in both languages at four
-widths and fails if one changes size.
+Georgian is the longer language. Switching to it must not move or resize anything: a control
+whose width would follow its label is pinned, and a string that only fits in English is wrong.

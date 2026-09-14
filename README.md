@@ -38,7 +38,6 @@
 - [Scripts](#scripts)
 - [Project structure](#project-structure)
 - [Design system](#design-system) — and [DESIGN.md](DESIGN.md), the rules on one page
-- [Testing](#testing)
 - [Deploying](#deploying)
 - [The storefront](#the-storefront) — the 3D hero, search suggestions, photo uploads, the theme fade
 - [Configuring the shop](#configuring-the-shop) — using this for a different business
@@ -282,11 +281,6 @@ Hiding a button is not a permission. Every mutating Server Action independently 
 `getCurrentAdmin()`, because Server Actions are reachable by direct `POST` and the dashboard
 layout's redirect only governs what gets *rendered*.
 
-That claim is tested rather than asserted:
-[`tests/e2e/viewer-role.spec.ts`](tests/e2e/viewer-role.spec.ts) captures a real product-toggle
-request off the wire while an admin performs it, replays it byte-for-byte with the viewer's
-session cookie, and checks the database column is unchanged.
-
 ---
 
 ## Google and Facebook sign-in
@@ -364,8 +358,6 @@ providers is about a hundred lines, and these are decisions worth being able to 
   to work around.
 - **A social sign-in cannot create staff.** The role is hardcoded to `customer`.
 
-Covered by [`tests/e2e/oauth.spec.ts`](tests/e2e/oauth.spec.ts).
-
 ---
 
 ## Environment variables
@@ -397,7 +389,6 @@ against the source (`grep process.env`), not against memory.
 | `CRON_SECRET` | for the daily sweep | The bearer token `/api/cron/daily` expects — Vercel sends it on the schedule in `vercel.json`. Unset, the route refuses every call, and no payment attempt expires and no cart reminder goes. |
 | `DATABASE_POOL_MAX` | optional | Connections per instance. Defaults to 3 on Vercel, where many short-lived instances share one plan, and 10 elsewhere, where one process takes every request. |
 | `VERCEL` | set by Vercel | Read only to pick that default. |
-| `LOAD_URL`, `LOAD_CONNECTIONS`, `LOAD_SECONDS`, `LOAD_P99_MS` | `npm run load` only | Where to aim the load test, how hard, for how long, and the tail it may not exceed. |
 
 `.env.example` carries the same list with fuller comments and is what `npm run setup:credentials`
 copies from. Nothing is read from `.env.local` or `.env.production` that is not also read from
@@ -460,7 +451,7 @@ place a division by 100 happens.
 | **i18n** | Cookie-driven dictionaries, type-checked so `en` cannot drift from `ka` |
 | **Icons** | Hand-rolled inline SVG set — no icon dependency |
 | **Assistant** | Pluggable provider (`@google/genai` free tier, or `@anthropic-ai/sdk`), streamed as NDJSON |
-| **Tests** | Playwright, run in GitHub Actions |
+| **CI** | GitHub Actions — lint, types, and every migration against an empty Postgres, on each push |
 
 ---
 
@@ -472,10 +463,6 @@ place a division by 100 happens.
 | `npm run build` | Production build |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
-| `npm run test:e2e` | End-to-end tests (Playwright), screenshots included |
-| `npm run test:visual` | Just the thirty screenshots; `test:visual:update` accepts them |
-| `npm run test:e2e:scratch` | The suite against a Postgres it creates, migrates and seeds itself, gone in two hours; arguments after `--` go to Playwright |
-| `npm run load` | Twenty connections at the catalogue for ten seconds a scenario, against `LOAD_URL` (a production build on 3100 by default) |
 | `npm run setup:credentials` | Generate `AUTH_SECRET` and the three account passwords into `.env`. Never overwrites what is set; `-- --show` prints them, `-- --force` replaces them |
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:seed` | Seed catalogue, orders and the three accounts (idempotent) |
@@ -549,9 +536,8 @@ The type scale is deliberately **fixed** — no font-size changes at any breakpo
 floor. Text is the same size on a 380px phone as on a 27-inch monitor.
 
 Switching between Georgian and English never moves or resizes anything. Controls whose width
-would otherwise follow their label are pinned. This is verified rather than assumed:
-[`tests/e2e/stability.spec.ts`](tests/e2e/stability.spec.ts) renders every page in both
-languages at four widths and compares the measured height of every control.
+would otherwise follow their label are pinned, and every string is written knowing Georgian is
+the longer language.
 
 Dark mode overrides token *values* only, so every component re-themes at once and not a single
 `dark:` variant is written anywhere in the app. Every token pair was measured for contrast in
@@ -584,128 +570,6 @@ It has two named variants:
 - **the account page** — [`AccountIdentity`](src/components/account/AccountIdentity.tsx) is the
   same eyebrow / title / sub-line / action shape inside a card with the customer's initials
   beside it. It is the one page whose header is about *who is reading it*.
-
----
-
-## Testing
-
-```bash
-npm run test:e2e    # end-to-end — the flows, the security properties, the screenshots
-```
-
-The end-to-end suite covers what is easiest to break invisibly: authorization boundaries, the
-read-only role, OAuth failure paths, layout stability across both languages, that overlays
-animate in both directions, that every control has an accessible name and a reachable target,
-and that the drawers hold the keyboard as well as the pointer.
-
-### Three engines
-
-It runs in **Chromium**, **WebKit** and **Firefox**. WebKit is not thoroughness for its own sake
-— it is the only engine iOS is allowed to render with, so it is the only way to see an iPhone
-problem without an iPhone. Firefox is the one engine that shares no code with the other two.
-Running everything three times would triple an eleven-minute run for no gain, so both run the
-specs tagged `@engine`: layout, sticky, overflow, focus and motion. A server action behaves the
-same in all of them.
-
-```bash
-npx playwright test --project=webkit
-npx playwright test --project=firefox
-```
-
-Firefox's first run found two things Chromium had hidden. The chat launcher took focus on every
-page load — an effect meant to return focus to it *after the panel closed* also ran on mount, and
-in Chromium the next Tab happened to wrap round to the skip link, so the keyboard suite passed
-by accident. And at 320px the product page's "customers also bought" grid put two cards in a row
-where the catalogue puts one, and the Georgian "add to cart" no longer fit its button; Chromium's
-font metrics squeezed it in by a pixel and Firefox's did not.
-
-Its first run failed 24 of 34, and one cause explained nearly all of them. The CSP sent
-`upgrade-insecure-requests` on every response. Chromium exempts localhost from that directive;
-WebKit does not, so every stylesheet, script and server action on `http://127.0.0.1:3100` was
-upgraded to a port with no TLS listener and failed. The page rendered unstyled, never hydrated,
-and every form silently did nothing — which looked like two dozen unrelated layout and focus
-bugs. The directive is now sent only when the request is really over HTTPS, which is the only
-situation it means anything in.
-
-The tests that press Tab are excluded from WebKit, and that is a fact rather than a workaround:
-**Safari does not put links or buttons in the tab order** unless the reader turns on "Use
-keyboard navigation to move focus between controls". Measured rather than assumed — in WebKit,
-Tab on the home page cycles between the body and one text input. Firefox on macOS follows the
-same system setting, but unlike Safari it can be told otherwise from the outside
-(`accessibility.tabfocus`), so the Tab tests do run there.
-
-### Every page, through axe
-
-`tests/e2e/a11y.spec.ts` runs [axe-core](https://github.com/dequelabs/axe-core) against every
-route — nineteen public pages, the account area and the whole dashboard — in both languages and
-both themes: 84 audits at WCAG 2.1 AA. It is what the structure spec is not: contrast, names,
-roles, and the ARIA that is wrong rather than missing. Its first run found the deals banner's
-white text dimmed to 80% over the brand red (3.5:1), the dashboard rail's sign-out button
-rendered past the rail's bottom edge on a short window, and a `<dl>` on the account page with
-its terms two `div`s deep. Under reduced motion, deliberately: otherwise it measures the entry
-fade, and a button at 60% opacity is pink.
-
-### A database that deletes itself
-
-The suite writes to whatever `DATABASE_URL` points at: it places orders, sells stock down,
-invites staff, changes the settings and puts them back. That is fine against a database made
-for it and alarming against the one the shop runs on. So:
-
-```bash
-npm run test:e2e:scratch                                   # the whole suite
-npm run test:e2e:scratch -- --project=firefox tests/e2e/returns.spec.ts
-```
-
-It asks Prisma's `create-db` for a temporary Postgres — no account, gone in two hours —
-applies every migration, seeds it from the same `.env` the app uses, and runs Playwright
-against it. Nothing about it is written anywhere. It is also, as a side effect, a rehearsal of
-every migration on a fresh database each time it runs.
-
-### The catalogue under a crowd
-
-```bash
-npm run build && npm start        # a production build, in one terminal
-npm run load                      # in another; LOAD_URL=… for a deployed site
-```
-
-Twenty connections for ten seconds each at the home page, the catalogue, a filtered catalogue,
-a handful of product pages and the search endpoint, with a p99 budget (`LOAD_P99_MS`, 2000 by
-default) the run fails past. Read paths only: a checkout under load is a different question —
-not "how many a second" but "what if they all arrive at once" — and
-`tests/e2e/checkout-race.spec.ts` answers that one with six real browsers buying the last
-three units in the same instant, of which exactly three may succeed.
-
-Its first run found two things. The product page awaited its "customers also bought" query
-and then its "related" query, one after the other, under a comment saying they ran together.
-And the production pool of three connections per instance — right for Vercel, where many
-short-lived instances share one small plan — is a queue for `next start` on a box of its own,
-where one process takes every request: two requests a second with twenty people waiting,
-fourteen once the pool could breathe. The default is now three on Vercel and ten elsewhere;
-`DATABASE_POOL_MAX` overrides either.
-
-### The look of it
-
-Six pages, in two languages at two widths plus dark mode: thirty screenshots, compared pixel for
-pixel on every run. It is the only check that would notice a heading losing its weight or a price
-turning the colour of its background, and it is what makes a design change *measured* rather than
-admired.
-
-```bash
-npm run test:visual          # compare
-npm run test:visual:update   # accept, after looking at every diff
-```
-
-A screenshot is a picture of one browser on one operating system, so the baselines are committed
-per platform — `-darwin` beside `-linux` — and neither set is ever compared against the other.
-After a deliberate design change, refresh the macOS pair locally and take the Linux pair from the
-`test-results` artifact CI uploads when it fails: every `*-actual.png` in it is a new baseline,
-named after the test that took it.
-
-What is masked is the data — prices, stock counts, the four newest products — because this suite
-shares a database with tests that place orders and sell stock down. Their boxes still take up
-space, so a card that changes shape still fails. And it refuses to compare at all if the shop is
-not wearing its default brand colour, which is the only way thirty diffs about nothing ever get
-reported here.
 
 ---
 
@@ -950,9 +814,9 @@ bulk import of a real catalogue, which is where spreadsheet arithmetic and
 non-Latin text go wrong most often.
 
 **This path is rehearsed on every push.** CI creates an empty `postgres:16`
-container, runs the same `migrate deploy`, `db:seed` and `db:verify`, then the
-whole end-to-end suite against it. A green build is a statement that a brand
-new database works.
+container and runs the same `migrate deploy`, `db:seed`, `db:verify` and
+`db:audit` against it. A green build is a statement that a brand new database
+works.
 
 ### Which region
 

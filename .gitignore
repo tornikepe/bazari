@@ -55,8 +55,3 @@ skills-lock.json
 # database backups — a copy of the shop, never in the repository
 /backups/
 
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/

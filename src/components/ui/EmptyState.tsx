@@ -30,8 +30,7 @@ export function EmptyState({
    * The heading level, which is the caller's business and not this
    * component's: the cart's empty state *is* the page's `h1`, the one on the
    * account page sits under one, and the dashboard's is not a heading at all.
-   * Guessing here is how a page ends up with two `h1`s or a skipped level,
-   * both of which `document-structure.spec.ts` fails on.
+   * Guessing here is how a page ends up with two `h1`s or a skipped level.
    */
   titleAs?: "h1" | "h2" | "h3" | "p";
   className?: string;

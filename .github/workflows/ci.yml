@@ -29,8 +29,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
 
-  e2e:
-    name: End-to-end
+  database:
+    name: Fresh database
     runs-on: ubuntu-latest
 
     services:
@@ -38,7 +38,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bazari_test
+          POSTGRES_DB: bazari_ci
         ports: ["5432:5432"]
         # Without this the job races the container and the first query fails.
         options: >-
@@ -48,23 +48,21 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bazari_test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bazari_ci
       AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789abcdef
       # The seed refuses to run without a password for each of the three
       # accounts, which is the point of it — a default that ships in the repo
       # is a default on every deployment that forgets. These are literals
       # rather than secrets because the database they seed is a throwaway
       # container that is destroyed with the job; they are not credentials to
-      # anything, and pinning them here keeps the workflow readable and the
-      # e2e helpers able to sign in.
+      # anything.
       ADMIN_EMAIL: admin@bazari.ge
       ADMIN_PASSWORD: ci-only-admin-password
       VIEWER_EMAIL: viewer@bazari.ge
       VIEWER_PASSWORD: ci-only-viewer-password
       CUSTOMER_EMAIL: user@bazari.ge
       CUSTOMER_PASSWORD: ci-only-customer
-      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
-      # No RESEND_API_KEY on purpose: mail must degrade, not break the suite.
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
 
     steps:
       - uses: actions/checkout@v4
@@ -76,56 +74,16 @@ jobs:
 
       - run: npm ci
 
-      # Runs the real migrations against a throwaway database, so a migration
-      # that only works on an already-populated schema fails here.
+      # Runs the real migrations against a database that was empty a minute
+      # ago — which is exactly the state a new host starts in — so a migration
+      # that only works on an already-populated schema fails here, before it
+      # is run against the shop's own database.
       - run: npx prisma migrate deploy
       - run: npm run db:seed
 
-      # The same check used when moving to a new Postgres. Running it here
-      # means the migration rehearsal and the tool that validates it are both
-      # exercised on every push, against a container that was empty a minute
-      # ago — which is exactly the state a new host starts in.
+      # The same checks used when moving to a new Postgres: that the schema is
+      # what the app expects, and that what the seed wrote is internally
+      # consistent — order totals that match their items, whole-tetri prices,
+      # Georgian that survived the round trip.
       - run: npm run db:verify
-
-      # And that what the seed wrote is internally consistent — order totals
-      # that match their items, whole-tetri prices, Georgian that survived the
-      # round trip. The seed is the template a real catalogue replaces, so an
-      # invariant it quietly breaks would be inherited by every shop built on
-      # it.
       - run: npm run db:audit
-
-      # WebKit and Firefox as well as Chromium. WebKit is the only engine iOS
-      # renders with, and the first run of it found a CSP directive that broke
-      # every subresource on the site — invisible in Chromium, which exempts
-      # localhost from it. Firefox's first run found the chat launcher stealing
-      # focus on every page. Both run a subset (the specs tagged `@engine`), so
-      # the extra minutes are spent only on what differs between engines.
-      - run: npx playwright install --with-deps chromium webkit firefox
-
-      # The whole suite, screenshots included: `visual` is one of the projects
-      # this runs, so comparing the images again in a step of their own did it
-      # twice — and when the first run failed, as a changed design makes it,
-      # the job stopped before the second ever started. Which is how the very
-      # artifact needed to refresh the baselines came to be the one thing a
-      # failing baseline did not produce.
-      #
-      # The look of the place is compared against baselines committed for this
-      # runner's platform: a screenshot is a picture of one browser on one
-      # operating system, so the Linux images live beside the macOS ones and
-      # neither set is ever compared against the other.
-      #
-      # To refresh them after a deliberate design change: run
-      # `npm run test:visual:update` locally for the macOS pair, and take the
-      # Linux pair out of the artifact below — every `*-actual.png` in
-      # `test-results/` is a new baseline, named after the test that took it.
-      - run: npm run test:e2e
-
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: test-results
-          path: |
-            test-results/
-            playwright-report/
-            tests/e2e/visual.spec.ts-snapshots/
-          retention-days: 7

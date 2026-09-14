@@ -28,8 +28,8 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   // The title is real rather than a grey bar: it is a fixed string the server
   // knows perfectly well, and without it this page had *no* `h1` at all before
   // hydration — no title for a screen reader, and none ever for a reader
-  // without JavaScript. `document-structure.spec.ts` found it on a machine
-  // slow enough to look before React ran.
+  // without JavaScript. It showed on a machine slow enough to look before
+  // React ran.
   if (!hydrated) {
     return (
       <div className="page">
