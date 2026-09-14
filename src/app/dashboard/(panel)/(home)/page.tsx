@@ -112,7 +112,13 @@ export default async function DashboardPage({
     {
       label: t.admin.pendingOrders,
       value: String(pendingCount),
-      hint: `${orderCount} · ${productCount}`,
+      // "182 orders · 40 products", not "182 · 40" — two numbers with no
+      // nouns are two numbers.
+      hint: `${countText(t.admin.orderCountOne, t.admin.orderCount, orderCount)} · ${countText(
+        t.admin.productCountOne,
+        t.admin.productCount,
+        productCount,
+      )}`,
       icon: TruckIcon,
       tone: "bg-warning-soft text-warning",
       href: "/dashboard/orders?status=pending",

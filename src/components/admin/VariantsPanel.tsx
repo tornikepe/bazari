@@ -396,6 +396,11 @@ export function VariantsPanel({
 
       {error && <ErrorNote className="mt-3" title={error} hint={t.common.errorHint} />}
 
+      {/* Nothing to save is nothing to press: a product with no questions
+          and none saved showed a red button that did nothing, on every
+          product in the shop. It appears with the first question, and stays
+          while there are saved ones to clear. */}
+      {(options.length > 0 || saved.length > 0) && (
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button type="button" onClick={save} disabled={isPending} className="btn btn-primary btn-sm">
           {isPending && <SpinnerIcon size={14} />}
@@ -408,6 +413,7 @@ export function VariantsPanel({
           </span>
         )}
       </div>
+      )}
     </section>
   );
 }

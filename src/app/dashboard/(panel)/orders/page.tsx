@@ -239,7 +239,8 @@ export default async function AdminOrdersPage({
                       {order.number}
                     </Link>
                     <p className="mt-0.5 truncate text-xs text-ink-500">
-                      {order.customerName} · {order.city}
+                      {order.customerName} ·{" "}
+                      {order.deliveryMethod === "pickup" ? t.checkout.deliveryPickup : order.city}
                     </p>
                     <p className="truncate text-xs text-ink-400">{order.phone}</p>
                   </div>
@@ -247,6 +248,17 @@ export default async function AdminOrdersPage({
                   <div className="shrink-0 text-right">
                     <p className="text-sm font-bold text-ink-900">
                       {formatPrice(order.total, locale)}
+                    </p>
+                    <p
+                      className={`text-xs font-semibold ${
+                        order.paymentStatus === "paid"
+                          ? "text-success"
+                          : order.paymentStatus === "refunded"
+                            ? "text-ink-400"
+                            : "text-warning"
+                      }`}
+                    >
+                      {t.payment[order.paymentStatus]}
                     </p>
                     <p className="text-xs text-ink-400">
                       {countText(t.admin.productCountOne, t.admin.productCount, order._count.items)}
@@ -305,9 +317,12 @@ export default async function AdminOrdersPage({
                     </WriteOnly>
 
                     <td>
+                      {/* One token. The column is narrow and the number is
+                          mono; let wrap, it broke as "BZ-" over "8D6C2EAB",
+                          which reads as two things. */}
                       <Link
                         href={`/dashboard/orders/${order.id}`}
-                        className="font-mono text-xs font-bold text-ink-900 hover:text-brand-600"
+                        className="font-mono text-xs font-bold whitespace-nowrap text-ink-900 hover:text-brand-600"
                       >
                         {order.number}
                       </Link>
@@ -319,7 +334,8 @@ export default async function AdminOrdersPage({
                     <td>
                       <p className="text-sm font-medium text-ink-800">{order.customerName}</p>
                       <p className="text-xs text-ink-400">
-                        {order.phone} · {order.city}
+                        {order.phone} ·{" "}
+                        {order.deliveryMethod === "pickup" ? t.checkout.deliveryPickup : order.city}
                       </p>
                     </td>
 
@@ -337,6 +353,20 @@ export default async function AdminOrdersPage({
 
                     <td className="figures text-sm font-bold text-ink-900">
                       {formatPrice(order.total, locale)}
+                      {/* Whether the money is in, under the money: the one
+                          thing about an order the list did not say, and the
+                          first thing asked about a card order. */}
+                      <p
+                        className={`text-xs font-semibold ${
+                          order.paymentStatus === "paid"
+                            ? "text-success"
+                            : order.paymentStatus === "refunded"
+                              ? "text-ink-400"
+                              : "text-warning"
+                        }`}
+                      >
+                        {t.payment[order.paymentStatus]}
+                      </p>
                     </td>
 
                     <td>

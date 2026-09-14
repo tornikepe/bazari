@@ -516,6 +516,16 @@
     background: var(--color-ink-50);
   }
 
+  /* A product card's button fills with the brand while the card is hovered:
+     the one card the pointer is on makes its offer in red, the other eleven
+     stay quiet. On a touch screen there is no hover and the outline stands
+     — a bordered button is still plainly a button. */
+  .hover-lift:hover .btn-outline:not(:disabled) {
+    background: var(--color-brand-solid);
+    border-color: var(--color-brand-solid);
+    color: var(--color-brand-on-solid);
+  }
+
   .btn-ghost {
     background: transparent;
     color: var(--color-ink-600);

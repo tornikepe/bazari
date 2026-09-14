@@ -38,20 +38,44 @@ export function AdminSidebar({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const links = [
-    { href: "/dashboard", label: t.admin.dashboard, icon: DashboardIcon, exact: true },
-    { href: "/dashboard/products", label: t.admin.products, icon: PackageIcon },
-    { href: "/dashboard/categories", label: t.admin.categories, icon: GridIcon },
-    { href: "/dashboard/orders", label: t.admin.orders, icon: BagIcon },
-    { href: "/dashboard/returns", label: t.admin.returns, icon: RefreshIcon },
-    { href: "/dashboard/reviews", label: t.admin.reviews, icon: StarIcon },
-    { href: "/dashboard/coupons", label: t.admin.coupons, icon: TagIcon },
-    { href: "/dashboard/customers", label: t.admin.customers, icon: UsersIcon },
-    { href: "/dashboard/staff", label: t.admin.staff, icon: ShieldIcon },
-    { href: "/dashboard/pages", label: t.admin.pages, icon: FileIcon },
-    { href: "/dashboard/settings", label: t.admin.settings, icon: SettingsIcon },
-    { href: "/dashboard/traffic", label: t.admin.traffic, icon: EyeIcon },
-    { href: "/dashboard/audit", label: t.admin.audit, icon: ClockIcon },
+  /* Thirteen pages in three groups. A flat list of thirteen is read from the
+     top every time; three short lists under a word each are read once. The
+     groups are what the pages are about — the catalogue, the money, the
+     shop itself — not who uses them. */
+  const groups: {
+    label?: string;
+    links: { href: string; label: string; icon: typeof DashboardIcon; exact?: boolean }[];
+  }[] = [
+    {
+      links: [{ href: "/dashboard", label: t.admin.dashboard, icon: DashboardIcon, exact: true }],
+    },
+    {
+      label: t.admin.navCatalogue,
+      links: [
+        { href: "/dashboard/products", label: t.admin.products, icon: PackageIcon },
+        { href: "/dashboard/categories", label: t.admin.categories, icon: GridIcon },
+        { href: "/dashboard/reviews", label: t.admin.reviews, icon: StarIcon },
+      ],
+    },
+    {
+      label: t.admin.navSales,
+      links: [
+        { href: "/dashboard/orders", label: t.admin.orders, icon: BagIcon },
+        { href: "/dashboard/returns", label: t.admin.returns, icon: RefreshIcon },
+        { href: "/dashboard/coupons", label: t.admin.coupons, icon: TagIcon },
+        { href: "/dashboard/customers", label: t.admin.customers, icon: UsersIcon },
+      ],
+    },
+    {
+      label: t.admin.navShop,
+      links: [
+        { href: "/dashboard/staff", label: t.admin.staff, icon: ShieldIcon },
+        { href: "/dashboard/pages", label: t.admin.pages, icon: FileIcon },
+        { href: "/dashboard/settings", label: t.admin.settings, icon: SettingsIcon },
+        { href: "/dashboard/traffic", label: t.admin.traffic, icon: EyeIcon },
+        { href: "/dashboard/audit", label: t.admin.audit, icon: ClockIcon },
+      ],
+    },
   ];
 
   const isActive = (href: string, exact?: boolean) =>
@@ -67,24 +91,35 @@ export function AdminSidebar({
         </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1">
-        {links.map((link) => {
-          const active = isActive(link.href, link.exact);
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-2.5 rounded-control px-3 py-2.5 text-sm font-medium transition-colors ${
-                active ? "bg-brand-solid text-brand-on-solid" : "text-panel-muted hover:bg-panel-fg/10 hover:text-panel-fg"
-              }`}
-            >
-              <link.icon size={17} className="shrink-0" />
-              {link.label}
-            </Link>
-          );
-        })}
+      <nav className="flex flex-1 flex-col gap-4">
+        {groups.map((group, index) => (
+          <div key={group.label ?? index} className="flex flex-col gap-0.5">
+            {group.label && (
+              <p className="px-3 pb-1 text-xs font-bold tracking-wider text-panel-muted uppercase">
+                {group.label}
+              </p>
+            )}
+            {group.links.map((link) => {
+              const active = isActive(link.href, link.exact);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-2.5 rounded-control px-3 py-2 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-brand-solid text-brand-on-solid"
+                      : "text-panel-muted hover:bg-panel-fg/10 hover:text-panel-fg"
+                  }`}
+                >
+                  <link.icon size={17} className="shrink-0" />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="flex flex-col gap-3 border-t border-panel-fg/10 pt-4">

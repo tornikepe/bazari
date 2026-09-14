@@ -103,6 +103,13 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               stock: product.stock,
             }}
             fullWidth
+            /* Outlined on the card, filled on the product page. Twelve solid
+               red buttons on a catalogue page were twelve claims on the eye,
+               and the deals banner was meant to be the one place the red
+               fills a region. The card you are over fills its button — see
+               `.hover-lift:hover .btn-outline` — so the offer is still made,
+               one at a time. */
+            variant="outline"
           />
         </div>
       </div>

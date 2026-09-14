@@ -71,8 +71,14 @@ async function removeVariants(page: Page, id: string, stock: number | null) {
     await remove.first().click();
   }
 
-  await page.getByRole("button", { name: /save the variants/i }).click();
-  await expect(page.getByRole("status").filter({ hasText: /variants saved/i })).toBeVisible();
+  // The button is only drawn when there is something to save — a question
+  // on the page, or saved ones to clear. A product already at nothing has
+  // nothing to press.
+  const save = page.getByRole("button", { name: /save the variants/i });
+  if ((await save.count()) > 0) {
+    await save.click();
+    await expect(page.getByRole("status").filter({ hasText: /variants saved/i })).toBeVisible();
+  }
 
   /* Let the refresh the save starts finish before anybody navigates. WebKit
      rejects a `goto` that interrupts a navigation already in flight, and the
