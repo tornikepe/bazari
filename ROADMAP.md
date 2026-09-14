@@ -1,106 +1,160 @@
-# Bazari — to do
+# Bazari — რა დარჩა გასაკეთებელი
 
-Only what is left. ⛔ marks work blocked on something that cannot be produced here. What was
-done, and why, is in the commit messages and the README; it is not repeated here.
+მხოლოდ ის, რაც არ არის გაკეთებული. რაც გაკეთდა და რატომ — კომიტების ისტორიაშია და README-ში;
+აქ არ მეორდება. ⛔ ნიშნავს, რომ საქმე დაბლოკილია რაღაცაზე, რაც ამ მანქანაზე ვერ შეიქმნება.
 
----
-
-## 1. Responsive — needs a real phone
-
-- Look at the site on a phone with a notch, in landscape too: `viewport-fit=cover` is on, and
-  every fixed edge pads by its inset — the header's top, the page's sides, the buy bar, the
-  chat launcher, the sheets, the footer. Correct by construction and unverifiable without the
-  device (**A7**, or your own phone on the deployed site)
-- Open the site at 200% zoom, in forced colours, and with reduced motion — on the device,
-  not in an emulator
+მდგომარეობა 2026-09-14-ის მიხედვით: კოდი `main`-ზეა და Vercel-ზე ცოცხალია, production ბაზას
+ყველა მიგრაცია (35) აქვს, ბექაპი აღებულია (`backups/bazari-2026-09-14T05-24.json`).
 
 ---
 
-## 2. Shop features
+## რა უნდა გავიგოთ ჯერ: რატომ ვერ ვაკეთებ დარჩენილს მე
 
-| | Item | What it needs |
+ყველაფერი, რაც კოდით კეთდებოდა, გაკეთებულია. დარჩენილი ორი სახისაა:
+
+1. **ანგარიშები და საიდუმლოებები** — Google-ის, Resend-ის, Sentry-ის, ბანკის. ისინი შენს სახელზე
+   იხსნება და გასაღებები შენს ხელში უნდა იყოს. კოდი მზადაა და მხოლოდ ცვლადის შეყვანას ელოდება.
+2. **ფაქტები ბიზნესის შესახებ** — ფოტოები, მისამართი, ტელეფონი, საგადასახადო ნომერი. არავის
+   შეუძლია გამოიგონოს ფოტო პროდუქტისა, რომელიც არსებობს.
+
+---
+
+## 1. რაც ახლავე, 10 წუთში კეთდება (Vercel-ის პარამეტრებში)
+
+Vercel → პროექტი `bazari` → Settings → Environment Variables. თითოეულის შემდეგ **Redeploy**.
+
+| ცვლადი | რა არის | რა ხდება უიმისოდ |
 |---|---|---|
-| 🔴 | Payment | A real gateway's adapter — the card path itself runs end to end through the sandbox one (`PAYMENT_SANDBOX=1`): redirect, hosted page, signed callback, capture, refund, retry. What is left is `start`, `parseWebhook` and `refund` against a bank's API, and its credentials. Blocked on **A4** |
-
-Everything that emails a shopper — the confirmation with its PDF, the shipping notice, the
-return answer, the abandoned-cart reminder, the back-in-stock message — is written and goes
-to the server log until **A3**.
-
----
-
-## 3. Testing
-
-- Run `npm run load` once against the deployed site (`LOAD_URL=https://…`), gently — the
-  figures measured here go through a database on another continent and say more about the
-  round trip than about the pages
+| `CRON_SECRET` | ნებისმიერი გრძელი შემთხვევითი სტრიქონი (მაგ. `openssl rand -base64 32`) | ყოველდღიური სამუშაო არ ეშვება: მიტოვებული კალათის შეხსენება არ იგზავნება, გადაუხდელი მცდელობები არ იხურება |
+| `AUTH_SECRET` | შეამოწმე, რომ **არ არის** ძველი საჯარო placeholder (`dev-only-change-me…`) | თუ ისევ ისაა, სესიის ქუქი ყალბდება — ყველას შეუძლია ადმინად შევიდეს. შეცვლა ყველას გამოიყვანს სისტემიდან, ეს სწორია |
+| `NEXT_PUBLIC_SITE_URL` | საიტის მისამართი, `https://…` | ელფოსტებში ლინკები `localhost`-ზე მიდის |
+| `PAYMENT_SANDBOX` | **არ დააყენო** production-ზე | თუ `1` დგას, ბარათით შეკვეთა ფულის გარეშე „გადახდილად" ინიშნება |
 
 ---
 
-## 4. Operations
+## 2. რაც ანგარიშის გახსნას ითხოვს
 
-- Error tracking — wired on both sides and asleep: set `NEXT_PUBLIC_SENTRY_DSN` and it
-  reports; set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` and the build uploads source
-  maps. The account is **A8**
-- Uptime alerting to your phone — point the monitor at `/api/health`, which answers 503
-  when the database does not; the page itself would answer 200 with no products on it
-- Backups: confirm the provider's point-in-time retention on the Neon dashboard — it is the
-  only thing that catches the hour between two of ours. Ours exist and restore: `npm run
-  db:backup` writes every table to one file, `npm run db:restore` puts it into a fresh database,
-  and the restore was done once, checked table by table
-- A custom domain
-- A staging database, so migrations are rehearsed before production. (`npm run
-  test:e2e:scratch` rehearses every migration on a throwaway database each time it runs,
-  which is most of what a staging database is for)
+### A3 — ელფოსტა (Resend) — ყველაზე მნიშვნელოვანი
 
----
+ექვსი წერილი უკვე დაწერილია და სერვერის ლოგში იწერება, სანამ გამგზავნი დომენი არ არსებობს:
+შეკვეთის დადასტურება (PDF ინვოისით), გაგზავნის შეტყობინება, დაბრუნების პასუხი, მიტოვებული
+კალათა, „პროდუქტი დაბრუნდა", ვერიფიკაციის კოდი / პაროლის აღდგენა.
 
-## 5. Documentation, at the end
+1. [resend.com](https://resend.com) → ანგარიში → Domains → დაამატე შენი დომენი და ჩაწერე DNS-ში
+   ის ჩანაწერები, რასაც გაჩვენებს (SPF, DKIM). ვერიფიკაციას რამდენიმე წუთი–საათი სჭირდება.
+2. API Keys → შექმენი გასაღები.
+3. Vercel-ზე: `RESEND_API_KEY=…` და `MAIL_FROM="Bazari <noreply@შენი-დომენი.ge>"`.
 
-- Screenshots that match what ships, in both languages and both themes — after **A5**, or
-  they are screenshots of one placeholder photo forty times
-- Read the README top to bottom once more after **A3** and **A4** land, since both change
-  what the "honest limits" say
+დომენის გარეშე (მხოლოდ გასაღებით) Resend არაფერს გზავნის — დომენი აუცილებელია.
 
----
+### A8 — შეცდომების თვალყური (Sentry)
 
-## 6. What only you can do
+კოდი ბრაუზერშიც, სერვერზეც და edge-ზეც ჩართულია და DSN-ს ელოდება.
 
-| | What | Why it is yours |
-|---|---|---|
-| **A1** | `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` | The console is signed into as you, and the secret is a secret |
-| **A2** | Check `AUTH_SECRET` on Vercel — if it is still the public placeholder, session cookies can be forged | Only you can read your project's environment |
-| **A3** | A sending domain verified in Resend, and `RESEND_API_KEY` | Domain ownership. Until then no customer email is sent at all |
-| **A4** | A payment provider application | A business relationship, and it takes weeks |
-| **A5** | Real product photographs | Nobody can invent a photo of a product that exists |
-| **A6** | Real business details — address, phone, hours, tax ID | They are facts about a business |
-| **A7** | A full Xcode install, then `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` | It needs your password |
-| **A8** | A Sentry account | An account and a billing decision |
-| **A9** | Run the new migrations against production — nine of them, all additive — *before* deploying: `npm run db:backup && npm run db:migrate` from the main checkout | They were rehearsed on throwaway databases, not on yours, and the deployed code needs them first |
-| **A10** | Set `CRON_SECRET` in the Vercel project (any long random string) | Without it the daily sweep refuses every call, and no cart reminder or payment expiry ever runs |
-| **A11** | Refresh the visual baselines on your machine: `npm run test:visual:update`, then take the Linux pair from CI | The baselines are pictures of your database's newest products; the deals banner and the product page changed on purpose |
+1. [sentry.io](https://sentry.io) → ახალი პროექტი (Next.js).
+2. Settings → Projects → Client Keys (DSN) → Vercel-ზე `NEXT_PUBLIC_SENTRY_DSN=…`.
+3. სურვილისამებრ, რომ შეცდომა ფაილის ხაზზე მიუთითებდეს და არა minified სვეტზე:
+   `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` (პროექტის URL-დან).
 
-```bash
-# A1 — register the client at console.cloud.google.com/apis/credentials with these
-#      redirect URIs, character for character:
-#        http://localhost:3000/api/auth/google/callback
-#        https://bazari-git-main-tornikepes-projects.vercel.app/api/auth/google/callback
-GOOGLE_CLIENT_ID="…"
-GOOGLE_CLIENT_SECRET="…"
-```
+### A1 — Google-ით შესვლა
 
-```bash
-# A2 — replacing it signs everyone out, which is the correct outcome.
-npm run setup:credentials -- --force   # locally; set the Vercel one by hand
-```
+1. [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) →
+   Create Credentials → OAuth client ID → Web application.
+2. Authorized redirect URIs — **სიმბოლო-სიმბოლო**:
+   - `http://localhost:3000/api/auth/google/callback`
+   - `https://bazari-git-main-tornikepes-projects.vercel.app/api/auth/google/callback`
+   (და შენი დომენისა, როცა გექნება)
+3. Vercel-ზე: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. ღილაკი მხოლოდ ორივეს არსებობისას ჩნდება.
+
+Facebook — იგივე [developers.facebook.com](https://developers.facebook.com)-ზე, `email` უფლებით;
+`FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET`.
+
+### A4 — ნამდვილი გადახდა (ბანკი)
+
+ბარათით გადახდის მთელი გზა უკვე მუშაობს sandbox-ით: გადამისამართება → გვერდი → ხელმოწერილი
+callback → capture → refund → უარყოფის შემდეგ „გადახდა ახლა". ნამდვილი პროვაიდერისთვის
+დასაწერია ერთი ფაილი — `src/lib/payments/<ბანკი>.ts` — სამი მეთოდით (`start`, `parseWebhook`,
+`refund`) ბანკის API-ს წინააღმდეგ, იმავე ინტერფეისზე, რაზეც `sandbox.ts`-ია.
+
+შენი ნაწილი: განაცხადი ბანკში (TBC Pay, BOG iPay ან სხვა) — ეს ბიზნეს-ურთიერთობაა და
+კვირები სჭირდება. როცა მერჩანტის ID და გასაღები გექნება, ადაპტერს ერთ დღეში დავწერ.
 
 ---
 
-## 7. Order of work
+## 3. რაც ბიზნესის ფაქტებს ითხოვს
 
-1. **A9** — apply the migrations to production *before* the new code is deployed: the code
-   reads columns the old database does not have, and deploying first is a broken shop until
-   the migration lands. `npm run db:backup` first, then `npm run db:migrate`, then push
-2. **A10** — `CRON_SECRET` on Vercel, so the daily sweep runs from the first day
-3. **A3** — it switches on six emails that are already written
-4. **§4** and **§5**, last
-5. **§1** whenever a real phone is to hand
+### A6 — მაღაზიის რეკვიზიტები
+
+Dashboard → Settings: მისამართი, ტელეფონი, ელფოსტა, სამუშაო საათები, თვითგატანის მისამართი
+(თუ გინდა), მიწოდების ზონები და ფასები, დღგ (18 დგას), დაბრუნების ვადა (14 დღე დგას).
+ინვოისზე და საკონტაქტო გვერდზე მხოლოდ შევსებული ველები ჩნდება.
+
+საგადასახადო ნომერი და ინვოისის ნუმერაცია — ინვოისი ახლა წერს „ეს არ არის ფისკალური
+დოკუმენტი". ფისკალურად რომ გახდეს, ბუღალტერთან უნდა შეთანხმდეს ნუმერაცია და რეკვიზიტები;
+მერე ერთი ველი და ერთი ხაზი დაემატება.
+
+### A5 — ნამდვილი ფოტოები
+
+ყველა პროდუქტს ერთი placeholder აქვს. Dashboard → Products → პროდუქტი → ფოტოს ატვირთვა
+(JPEG/PNG/WebP/AVIF, 2 MB-მდე, რამდენიმეც შეიძლება, აღწერით ორივე ენაზე). ფოტოები ბაზაში
+ინახება — ცალკე storage არ სჭირდება.
+
+ფოტოების შემდეგ: README-ს სქრინშოტები (§5) და ვიზუალური ტესტების baseline-ები (A11).
+
+---
+
+## 4. ოპერაციები
+
+- **Uptime** — რომელიმე მონიტორი (UptimeRobot, Better Stack — უფასოა) მიუთითე
+  `https://…/api/health`-ზე: 200 ნიშნავს, რომ ბაზაც პასუხობს, 503 — რომ არა. მთავარი გვერდი
+  ბაზის გარეშეც 200-ს იძლევა, ამიტომ ის არ გამოდგება.
+- **ბექაპები** — ჩვენი არსებობს და აღდგენა შემოწმებულია (`npm run db:backup`,
+  `npm run db:restore`). Neon-ის დეშბორდზე შეამოწმე point-in-time recovery-ს ვადა — ის ფარავს
+  იმ საათს, რომელიც ორ ჩვენს ბექაპს შორისაა. მიგრაციის წინ ყოველთვის `npm run db:backup`.
+- **დომენი** — შენი დომენი Vercel-ზე (Settings → Domains), მერე `NEXT_PUBLIC_SITE_URL`,
+  Google-ის redirect URI და Resend-ის დომენი შესაბამისად.
+- **Staging ბაზა** — `npm run test:e2e:scratch` ყოველ გაშვებაზე ახალ დროებით ბაზაზე ატარებს
+  ყველა მიგრაციას და მთელ სუიტას; ეს staging-ის სამუშაოს დიდ ნაწილს აკეთებს. ცალკე მუდმივი
+  staging მხოლოდ მაშინ დაგჭირდება, თუ ორ ადამიანზე მეტი დაიწყებს დეპლოის.
+
+---
+
+## 5. ტელეფონზე შესამოწმებელი (A7 აღარ არის საჭირო — შენი ტელეფონი საკმარისია)
+
+გახსენი ცოცხალი საიტი ტელეფონზე და ნახე:
+
+- „ჭრილიანი" ეკრანი (notch), პორტრეტშიც და ლანდშაფტშიც — header ზედა ზოლის ქვეშ არ უნდა
+  შევიდეს, ტექსტი კამერის ქვეშ, „კალათაში" ზოლი და ჩატის ღილაკი ქვედა ინდიკატორის ქვეშ.
+  `viewport-fit=cover` ჩართულია და ყველა კიდე დაშორებულია — მაგრამ დესკტოპზე ეს ვერ მოწმდება.
+- iOS Safari-ში მისამართის ზოლის გაქრობა/გამოჩენა: ფილტრის ფურცელი და ჩატის პანელი
+  ეკრანიდან არ უნდა „გადმოცვივდეს".
+- გაფორმებისას კლავიატურა ველს არ უნდა ფარავდეს.
+- სისტემის პარამეტრებში: 200% ზუმი, „reduce motion" (კუბი და ამანათი უნდა გაჩერდეს),
+  Android-ის forced colours.
+
+რაც აქ ვერ იმუშავებს — მითხარი, ეკრანით და მოდელით.
+
+---
+
+## 6. დოკუმენტაცია, ბოლოს
+
+- სქრინშოტები README-სთვის ორივე ენაზე და ორივე თემაზე — **ფოტოების შემდეგ** (A5), თორემ
+  ორმოცჯერ ერთი placeholder-ის სურათი გამოვა.
+- A3-ისა და A4-ის შემდეგ README-ს „honest limits" სექცია თავიდან წასაკითხია — ორივე ცვლის
+  იმას, რაც იქ წერია.
+- A11 — ვიზუალური baseline-ები: `npm run test:visual:update` შენს მანქანაზე, Linux-ის წყვილი
+  CI-დან. baseline-ები შენი ბაზის უახლესი პროდუქტების სურათებია; deals-ბანერი და პროდუქტის
+  გვერდი განზრახ შეიცვალა.
+
+---
+
+## 7. რიგი
+
+1. **§1** — Vercel-ის ცვლადები (10 წუთი): `CRON_SECRET`, `AUTH_SECRET`-ის შემოწმება,
+   `NEXT_PUBLIC_SITE_URL`
+2. **A3** — Resend: ერთი დომენი ექვს წერილს რთავს
+3. **A6, A5** — რეკვიზიტები და ფოტოები Dashboard-იდან — ამის შემდეგ საიტი „დემო" აღარ არის
+4. **A8, A1** — Sentry, Google
+5. **§4** — uptime, Neon-ის retention, დომენი
+6. **A4** — ბანკი, როცა განაცხადი დამტკიცდება
+7. **§5, §6** — ტელეფონი და დოკუმენტაცია, ბოლოს
