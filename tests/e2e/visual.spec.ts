@@ -122,7 +122,20 @@ const PAGES: { name: string; path: string; masks?: (page: Page) => Locator[] }[]
      * over and their boxes are not, so the grid still has to hold its shape. */
     masks: (page) => [page.locator("#new-arrivals article")],
   },
-  { name: "catalog", path: "/catalog" },
+  {
+    name: "catalog",
+    path: "/catalog",
+    /* The twelve cards on the first page, whatever they hold.
+     *
+     * The suite that runs before these screenshots uploads a photo to the
+     * first product, moves it to the front, buys the first product down,
+     * types a price over and puts it back. Every one of those changes a card
+     * — a photo where the placeholder was, a badge one character wider — and
+     * a screenshot of the catalogue then reports the suite's own footprints.
+     * The cards are painted over, the way the home page's newest four are;
+     * the rail, the toolbar and the grid still have to hold their shape. */
+    masks: (page) => [page.locator("#results article")],
+  },
   { name: "cart-empty", path: "/cart" },
   { name: "track", path: "/track" },
   { name: "login", path: "/login" },

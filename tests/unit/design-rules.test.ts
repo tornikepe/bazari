@@ -143,6 +143,11 @@ describe("one page header", () => {
         // The notice template: one centred card and no page furniture.
         "src/app/not-found.tsx",
         "src/app/error.tsx",
+        // The boundary under the root layout: reached only when the layout
+        // itself failed, so there is no dictionary, no theme and no
+        // `PageHeader` to reach for — it draws its own `<html>` and says two
+        // sentences in both languages.
+        "src/app/global-error.tsx",
         "src/app/(shop)/error.tsx",
         "src/app/(shop)/order/[number]/page.tsx",
         "src/components/auth/AuthCard.tsx",

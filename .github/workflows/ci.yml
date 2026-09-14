@@ -95,12 +95,13 @@ jobs:
       # it.
       - run: npm run db:audit
 
-      # WebKit as well as Chromium. It is the only engine iOS renders with, and
-      # the first run of it found a CSP directive that broke every subresource
-      # on the site — invisible in Chromium, which exempts localhost from it.
-      # It runs a subset (the specs tagged `@engine`), so the extra minutes are
-      # spent only on what differs between engines.
-      - run: npx playwright install --with-deps chromium webkit
+      # WebKit and Firefox as well as Chromium. WebKit is the only engine iOS
+      # renders with, and the first run of it found a CSP directive that broke
+      # every subresource on the site — invisible in Chromium, which exempts
+      # localhost from it. Firefox's first run found the chat launcher stealing
+      # focus on every page. Both run a subset (the specs tagged `@engine`), so
+      # the extra minutes are spent only on what differs between engines.
+      - run: npx playwright install --with-deps chromium webkit firefox
 
       # The whole suite, screenshots included: `visual` is one of the projects
       # this runs, so comparing the images again in a step of their own did it
