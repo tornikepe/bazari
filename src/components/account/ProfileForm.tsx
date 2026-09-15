@@ -28,7 +28,10 @@ export function ProfileForm({
       <h2 className="text-sm font-bold text-ink-900">{t.account.profile}</h2>
       <p className="mt-1 text-xs text-ink-500">{t.account.profileHint}</p>
 
-      <form action={formAction} className="mt-4 flex flex-col gap-4">
+      {/* Two fields to a row from `sm` up: name beside phone, city beside
+          street. Four full-width fields down a card the width of the page
+          were a column of 900px inputs holding twelve characters each. */}
+      <form action={formAction} className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <label className="field-label" htmlFor="name">
             {t.auth.name}
@@ -83,7 +86,7 @@ export function ProfileForm({
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:col-span-2">
           <button
             type="submit"
             disabled={pending}

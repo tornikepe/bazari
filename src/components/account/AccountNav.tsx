@@ -6,9 +6,15 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { BagIcon, CardIcon, SettingsIcon } from "@/components/ui/icons";
 
 /**
- * The account's three pages, as a row of tabs under the identity card:
- * the overview with the orders, the settings, and the payment page. The
- * current one is marked for a screen reader as well as by colour.
+ * The account's three pages, as a row of tabs along the foot of the
+ * identity card: the overview with the orders, the settings, and the
+ * payment page. The current one is underlined, and marked for a screen
+ * reader as well as by colour.
+ *
+ * Three equal cells on a phone, where a row of pills was one and a half
+ * pills wide and the third scrolled out of sight; from `sm` up the tabs
+ * take their own width and sit to the left. The icons go on a phone too —
+ * "პარამეტრები" with an icon beside it does not fit a third of 375px.
  */
 export function AccountNav() {
   const { t } = useI18n();
@@ -26,7 +32,7 @@ export function AccountNav() {
   return (
     <nav
       aria-label={t.account.title}
-      className="mt-4 flex gap-1.5 overflow-x-auto no-scrollbar"
+      className="grid grid-cols-3 border-t border-line px-1 sm:flex sm:px-2"
     >
       {tabs.map((tab) => {
         const active = pathname === tab.href;
@@ -35,17 +41,24 @@ export function AccountNav() {
             key={tab.href}
             href={tab.href}
             aria-current={active ? "page" : undefined}
-            className={`flex min-h-10 shrink-0 items-center gap-2 rounded-control px-3.5 text-sm font-semibold transition-colors ${
-              active
-                ? "bg-panel text-panel-fg"
-                : "border border-line bg-surface text-ink-600 hover:bg-ink-50 hover:text-ink-900"
+            className={`relative flex min-h-12 min-w-0 items-center justify-center gap-2 px-1 text-[13px] font-semibold transition-colors sm:px-3.5 sm:text-sm ${
+              active ? "text-ink-900" : "text-ink-500 hover:text-ink-900"
             }`}
           >
             <tab.icon
               size={16}
-              className={active ? "text-panel-muted" : "text-ink-400"}
+              className={`hidden shrink-0 sm:block ${active ? "text-brand-600" : "text-ink-400"}`}
             />
-            {tab.label}
+            <span className="truncate">{tab.label}</span>
+            {/* The underline: inset from the tab's edges so two neighbours
+                never read as one bar, and drawn only under the current page
+                rather than faded under the rest. */}
+            {active && (
+              <span
+                aria-hidden="true"
+                className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand-600 sm:inset-x-3"
+              />
+            )}
           </Link>
         );
       })}

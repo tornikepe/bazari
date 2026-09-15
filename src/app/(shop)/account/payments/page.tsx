@@ -45,7 +45,7 @@ export default async function AccountPaymentsPage() {
 
   return (
     <AccountShell user={user} t={t}>
-      <div className="mt-4 mx-auto w-full max-w-3xl">
+      <div className="mt-4">
         <PaymentPrefsForm
           methods={methods}
           prefs={{

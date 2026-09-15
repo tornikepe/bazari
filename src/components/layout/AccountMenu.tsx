@@ -47,6 +47,7 @@ export function AccountMenu({ user }: { user: MenuUser }) {
   return (
     <HoverPanel
       label={label}
+      width="w-64"
       trigger={
         <Link
           href={href}
@@ -94,9 +95,9 @@ function Avatar({ url, size }: { url: string; size: number }) {
 function SignedOut() {
   const { t } = useI18n();
   return (
-    <div className="px-5 py-6 text-center">
-      <span className="mx-auto grid h-12 w-12 place-items-center rounded-pill bg-ink-100 text-ink-400">
-        <UserIcon size={22} />
+    <div className="px-4 py-5 text-center">
+      <span className="mx-auto grid h-11 w-11 place-items-center rounded-pill bg-ink-100 text-ink-400">
+        <UserIcon size={20} />
       </span>
       <p className="mt-3 text-sm font-bold text-ink-900">
         {t.account.signedOutTitle}
@@ -122,7 +123,7 @@ function Who({ user }: { user: NonNullable<MenuUser> }) {
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+    <div className="flex items-center gap-3 border-b border-line px-3.5 py-3">
       {user.avatarUrl ? (
         <Avatar url={user.avatarUrl} size={40} />
       ) : (

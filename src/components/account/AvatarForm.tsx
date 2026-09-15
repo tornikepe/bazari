@@ -63,29 +63,37 @@ export function AvatarForm({
 
   return (
     <section className="card card-pad">
-      <h2 className="text-sm font-bold text-ink-900">{t.account.photo}</h2>
-      <p className="mt-1 text-xs text-ink-500">{t.account.photoHint}</p>
-
-      <div className="mt-4 flex flex-wrap items-center gap-4">
+      {/* One row: the picture, what the card is for, and the buttons at the
+          far end. The picture is the subject, so it comes first and the
+          heading stands beside it rather than above a card that is mostly
+          empty space around a square. */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-4">
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={avatarUrl}
             alt=""
-            width={96}
-            height={96}
-            className="h-24 w-24 shrink-0 rounded-card object-cover ring-1 ring-line"
+            width={80}
+            height={80}
+            className="h-20 w-20 shrink-0 rounded-card object-cover ring-1 ring-line"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="grid h-24 w-24 shrink-0 place-items-center rounded-card bg-brand-solid text-2xl font-extrabold tracking-tight text-brand-on-solid"
+            className="grid h-20 w-20 shrink-0 place-items-center rounded-card bg-brand-solid text-2xl font-extrabold tracking-tight text-brand-on-solid"
           >
             {initialsOf(name, email)}
           </span>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-48 flex-1">
+          <h2 className="text-sm font-bold text-ink-900">{t.account.photo}</h2>
+          <p className="mt-1 text-xs leading-relaxed text-ink-500">
+            {t.account.photoHint}
+          </p>
+        </div>
+
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <input
             ref={input}
             type="file"

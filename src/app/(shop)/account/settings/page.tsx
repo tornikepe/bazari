@@ -31,15 +31,17 @@ export default async function AccountSettingsPage({
 
   return (
     <AccountShell user={user} t={t}>
-      <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
-        <div className="flex flex-col gap-4">
-          <AvatarForm
-            name={user.name}
-            email={user.email}
-            avatarUrl={user.avatarUrl}
-          />
-          <ProfileForm user={user} justSaved={params.saved === "1"} />
-        </div>
+      {/* One column, each card the width of the page. Two columns put a
+          four-field form beside an address book that is three lines tall
+          until an address is saved, and the page was half empty on the
+          right; stacked, every card is as tall as what it holds. */}
+      <div className="mt-4 flex flex-col gap-4">
+        <AvatarForm
+          name={user.name}
+          email={user.email}
+          avatarUrl={user.avatarUrl}
+        />
+        <ProfileForm user={user} justSaved={params.saved === "1"} />
         <AddressBook addresses={addresses} />
       </div>
     </AccountShell>

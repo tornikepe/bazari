@@ -5,9 +5,14 @@ import type { SessionUser } from "@/lib/auth";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
- * What every account page opens with: who this is, the note if their
- * address is unconfirmed, and the three tabs. The page's own content
- * follows.
+ * What every account page opens with: who this is, the three tabs along
+ * the foot of that card, and the note if their address is unconfirmed.
+ * The page's own content follows.
+ *
+ * Held to `max-w-4xl` and centred, on every one of the three pages. Left to
+ * the full container the settings sat in the left half of a wide screen
+ * with the right half empty, while the payment page centred its form under
+ * a header that did not — three pages, three widths.
  */
 export function AccountShell({
   user,
@@ -20,16 +25,19 @@ export function AccountShell({
 }) {
   return (
     <div className="page">
-      <AccountIdentity
-        name={user.name}
-        email={user.email}
-        verified={user.emailVerified}
-        avatarUrl={user.avatarUrl}
-        t={t}
-      />
-      {!user.emailVerified && <VerifyBanner email={user.email} />}
-      <AccountNav />
-      {children}
+      <div className="mx-auto w-full max-w-4xl">
+        <AccountIdentity
+          name={user.name}
+          email={user.email}
+          verified={user.emailVerified}
+          avatarUrl={user.avatarUrl}
+          t={t}
+        >
+          <AccountNav />
+        </AccountIdentity>
+        {!user.emailVerified && <VerifyBanner email={user.email} />}
+        {children}
+      </div>
     </div>
   );
 }

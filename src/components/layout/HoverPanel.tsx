@@ -25,12 +25,15 @@ export function HoverPanel({
   trigger,
   label,
   className = "",
+  width = "w-[22rem]",
   children,
 }: {
   trigger: ReactNode;
   /** The panel's accessible name. */
   label: string;
   className?: string;
+  /** The panel's width class: a list of orders wants more than a list of links. */
+  width?: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -97,7 +100,7 @@ export function HoverPanel({
         open={open}
         role="region"
         aria-label={label}
-        className="mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-card border border-line bg-surface shadow-pop"
+        className={`mt-2 ${width} max-w-[calc(100vw-2rem)] overflow-hidden rounded-card border border-line bg-surface shadow-pop`}
       >
         {children}
       </Popover>

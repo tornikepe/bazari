@@ -98,12 +98,15 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
         <p className="mt-4 text-sm text-ink-500">{t.account.addressNone}</p>
       )}
 
+      {/* Tiles, two to a row from `sm` up: an address is four short lines,
+          and a list of full-width rows four lines tall was a column of
+          mostly empty boxes on a card the width of the page. */}
       {addresses.length > 0 && (
-        <ul className="mt-4 flex flex-col gap-2">
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {addresses.map((address) => (
             <li
               key={address.id}
-              className="rounded-control border border-line p-3"
+              className="rounded-control border border-line p-3.5"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -173,9 +176,13 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
         <form
           key={editing}
           onSubmit={submit}
-          className="mt-4 flex flex-col gap-2 border-t border-line pt-4"
+          className="mt-4 grid gap-x-4 gap-y-2 border-t border-line pt-4 sm:grid-cols-2"
         >
           {current && <input type="hidden" name="id" value={current.id} />}
+
+          <p className="text-sm font-bold text-ink-900 sm:col-span-2">
+            {current ? t.account.addressEdit : t.account.addressAdd}
+          </p>
 
           {(
             [
@@ -202,7 +209,7 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
               saved becomes the default on its own, and re-offering the choice
               on the one that already is one is a control that does nothing. */}
           {!(current?.isDefault ?? false) && addresses.length > 0 && (
-            <label className="mt-1 flex items-center gap-2 text-sm text-ink-600">
+            <label className="mt-1 flex items-center gap-2 text-sm text-ink-600 sm:col-span-2">
               <input
                 type="checkbox"
                 name="isDefault"
@@ -212,7 +219,7 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
             </label>
           )}
 
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap gap-2 sm:col-span-2">
             <button
               type="submit"
               disabled={isPending}
