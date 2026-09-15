@@ -7,6 +7,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
 import { lineKey } from "@/lib/cart-store";
+import { fill } from "@/lib/i18n";
 import { MinusIcon, PlusIcon } from "@/components/ui/icons";
 
 /**
@@ -44,7 +45,9 @@ export function ProductPurchasePanel({
 
   const key = lineKey(product);
   const line =
-    hydrated && !prompt ? items.find((entry) => lineKey(entry) === key) : undefined;
+    hydrated && !prompt
+      ? items.find((entry) => lineKey(entry) === key)
+      : undefined;
   const quantity = line ? line.quantity : pending;
 
   const soldOut = product.stock <= 0;
@@ -74,15 +77,18 @@ export function ProductPurchasePanel({
             {t.product.quantity}
           </span>
 
-          <div className="flex items-center rounded-control border border-line bg-surface">
+          {/* A stepper: minus, the number, plus, as one control the height
+              of the buttons under it. The number is a field, so it can also
+              be typed; the stock is the ceiling on both. */}
+          <div className="stepper">
             <button
               type="button"
               onClick={() => setQuantity(quantity - 1)}
               disabled={soldOut || quantity <= 1}
               aria-label="-"
-              className="btn btn-ghost h-10 w-10 rounded-none rounded-l-control p-0"
+              className="stepper-button"
             >
-              <MinusIcon size={15} />
+              <MinusIcon size={16} strokeWidth={2.5} />
             </button>
 
             <input
@@ -93,7 +99,7 @@ export function ProductPurchasePanel({
               disabled={soldOut}
               onChange={(event) => setQuantity(Number(event.target.value) || 1)}
               aria-label={t.product.quantity}
-              className="h-10 w-14 border-x border-line bg-transparent text-center text-sm font-semibold outline-none"
+              className="stepper-value"
             />
 
             <button
@@ -101,11 +107,18 @@ export function ProductPurchasePanel({
               onClick={() => setQuantity(quantity + 1)}
               disabled={soldOut || quantity >= max}
               aria-label="+"
-              className="btn btn-ghost h-10 w-10 rounded-none rounded-r-control p-0"
+              className="stepper-button"
             >
-              <PlusIcon size={15} />
+              <PlusIcon size={16} strokeWidth={2.5} />
             </button>
           </div>
+
+          {/* How many there are to have, so "+" stopping is explained. */}
+          {!soldOut && (
+            <span className="text-xs text-ink-400 tabular-nums">
+              {fill(t.product.inStockCount, { count: product.stock })}
+            </span>
+          )}
         </div>
       )}
 

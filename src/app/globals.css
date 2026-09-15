@@ -775,6 +775,56 @@
       box-shadow 0.15s ease;
   }
 
+  /* The product page's stepper: minus, the number, plus, as one bordered
+     control the height of the large buttons under it. The two ends are
+     buttons that fill on hover and go quiet at the limits; the middle is a
+     field, so a number can be typed as well as stepped to. */
+  .stepper {
+    display: inline-flex;
+    align-items: stretch;
+    height: 3.25rem;
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .stepper-button {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    color: var(--color-ink-700);
+    transition:
+      background-color var(--dur-fast) ease,
+      color var(--dur-fast) ease;
+  }
+
+  .stepper-button:hover:not(:disabled) {
+    background: var(--color-brand-solid);
+    color: var(--color-brand-on-solid);
+  }
+
+  .stepper-button:disabled {
+    color: var(--color-ink-300);
+    cursor: not-allowed;
+  }
+
+  .stepper-value {
+    width: 3.5rem;
+    border-inline: 1px solid var(--color-line);
+    background: transparent;
+    text-align: center;
+    font-size: var(--text-base);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-900);
+    outline: none;
+  }
+
+  .stepper-value:focus {
+    background: var(--color-brand-50);
+  }
+
   /* A quantity select shaped like a small outline button, so it can sit
      flush beside one. The chevron is drawn here because a native select's
      arrow cannot be styled and differs between platforms. */
@@ -1421,8 +1471,15 @@
   }
 }
 
+/* No fill mode: once the entrance has run, the element must be left with no
+   transform at all. A finished animation held at its last keyframe keeps a
+   transform — an identity one, but a transform — and an element with a
+   transform is the containing block for everything `position: fixed`
+   inside it. The mobile filter sheet, fixed to the bottom of the window,
+   was fixed to the bottom of the page's content instead and opened off the
+   top of the screen. */
 .page-enter {
-  animation: page-in 0.5s var(--ease-out) both;
+  animation: page-in 0.5s var(--ease-out);
 }
 
 /* Revealed by an IntersectionObserver as the section scrolls into view. */

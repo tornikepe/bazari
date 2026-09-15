@@ -66,7 +66,7 @@ export function ProductGallery({
   }
 
   return (
-    <div className="flex flex-col gap-3 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
+    <div className="flex flex-col gap-3 lg:self-start">
       {/* One panel that changes its photo, rather than one panel per photo:
           seven `<Image fill>` boxes stacked with six hidden is seven downloads
           for a page most people never scroll. */}

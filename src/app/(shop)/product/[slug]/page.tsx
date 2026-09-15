@@ -292,15 +292,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
         {/* ------------------------------ gallery ---------------------------- */}
-        {/* `lg:self-start` is what makes the sticky work at all. A grid item
-            defaults to `align-self: stretch`, so this box was as tall as the
-            whole row — and a sticky element with no room between its own
-            height and its container's has nowhere to travel, so it sat there
-            looking like `position: sticky` had been ignored. */}
+        {/* The picture scrolls with the page, as the words beside it do. It
+            was pinned while the column beside it moved, and to a reader that
+            read as the picture lagging behind the page rather than staying
+            put on purpose. `lg:self-start` keeps the box its own height
+            rather than the row's. */}
         {photos.length > 1 ? (
           <ProductGallery photos={photos} name={name} badge={saleBadge} />
         ) : (
-          <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
+          <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:self-start">
             <Image
               src={product.image}
               // The written description when there is one, the name when not.
@@ -446,7 +446,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           }
         />
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
+        {/* Two columns only when there is a form to put in the second: a
+            reader who cannot review here is not told why in a sidebar of
+            their own, they simply see the reviews. */}
+        <div
+          className={`grid gap-6 lg:items-start ${reviewAllowed.ok ? "lg:grid-cols-[1fr_20rem]" : ""}`}
+        >
           <div>
             {reviews.length === 0 ? (
               <div className="card card-pad">
@@ -488,31 +493,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
 
-          <aside className="flex flex-col gap-3">
-            {reviewAllowed.ok ? (
-              <>
-                {ownReview && !ownReview.isPublished && (
-                  <p className="text-xs text-ink-500">{t.product.reviewHidden}</p>
-                )}
-                <ReviewForm
-                  slug={product.slug}
-                  existing={
-                    ownReview
-                      ? { rating: ownReview.rating, title: ownReview.title, body: ownReview.body }
-                      : null
-                  }
-                />
-              </>
-            ) : (
-              <p className="text-sm text-ink-500">
-                {reviewAllowed.reason === "sign-in"
-                  ? t.product.reviewSignIn
-                  : reviewAllowed.reason === "not-delivered"
-                    ? t.product.reviewNotDelivered
-                    : t.product.reviewNotBought}
-              </p>
-            )}
-          </aside>
+          {reviewAllowed.ok && (
+            <aside className="flex flex-col gap-3">
+              {ownReview && !ownReview.isPublished && (
+                <p className="text-xs text-ink-500">{t.product.reviewHidden}</p>
+              )}
+              <ReviewForm
+                slug={product.slug}
+                existing={
+                  ownReview
+                    ? { rating: ownReview.rating, title: ownReview.title, body: ownReview.body }
+                    : null
+                }
+              />
+            </aside>
+          )}
         </div>
       </section>
 

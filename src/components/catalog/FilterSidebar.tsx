@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { CheckIcon, CloseIcon, SpinnerIcon } from "@/components/ui/icons";
 import { buildQuery, type CatalogFilters } from "@/lib/filters";
+import { fill } from "@/lib/i18n";
+
+/** Brands shown before "more". */
+const BRANDS_SHOWN = 8;
 
 export type FilterCategory = {
   slug: string;
@@ -23,7 +27,13 @@ type Props = {
   onApplied?: () => void;
 };
 
-export function FilterSidebar({ filters, categories, brands, bounds, onApplied }: Props) {
+export function FilterSidebar({
+  filters,
+  categories,
+  brands,
+  bounds,
+  onApplied,
+}: Props) {
   const { locale, t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -31,6 +41,11 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
   // Price is the one filter that shouldn't navigate on every keystroke, so it
   // holds local state until submitted.
   const [minPrice, setMinPrice] = useState(filters.minPrice?.toString() ?? "");
+  // Eight brands to begin with and the rest behind one press. Thirty-six
+  // checkboxes made the rail three screens tall, and a filter that has to
+  // be scrolled to be seen is a filter most people never see the end of.
+  // Any brand already chosen is always in the short list.
+  const [allBrands, setAllBrands] = useState(false);
   const [maxPrice, setMaxPrice] = useState(filters.maxPrice?.toString() ?? "");
 
   // Re-sync when the URL changes from elsewhere (chip removal, clear-all).
@@ -47,7 +62,9 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
 
   function apply(overrides: Partial<CatalogFilters>) {
     startTransition(() => {
-      router.push(`/catalog${buildQuery(filters, overrides)}`, { scroll: false });
+      router.push(`/catalog${buildQuery(filters, overrides)}`, {
+        scroll: false,
+      });
       onApplied?.();
     });
   }
@@ -56,7 +73,9 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
     event.preventDefault();
     const parse = (value: string) => {
       const parsed = Number(value);
-      return value.trim() !== "" && Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+      return value.trim() !== "" && Number.isFinite(parsed) && parsed >= 0
+        ? parsed
+        : null;
     };
     apply({ minPrice: parse(minPrice), maxPrice: parse(maxPrice) });
   }
@@ -72,7 +91,11 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
     locale === "ka" ? category.nameKa : category.nameEn;
 
   return (
-    <div className={isPending ? "opacity-60 transition-opacity" : "transition-opacity"}>
+    <div
+      className={
+        isPending ? "opacity-60 transition-opacity" : "transition-opacity"
+      }
+    >
       {/* ---------------------------- categories --------------------------- */}
       <FilterGroup title={t.catalog.category}>
         <ul className="flex flex-col gap-0.5">
@@ -138,7 +161,13 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
               happens to be over, and neither shows you where you are in the
               list. One scroller, the outer one. */}
           <ul className="flex flex-col gap-0.5">
-            {brands.map((brand) => (
+            {(allBrands
+              ? brands
+              : brands.filter(
+                  (brand, index) =>
+                    index < BRANDS_SHOWN || filters.brands.includes(brand),
+                )
+            ).map((brand) => (
               <li key={brand}>
                 <CheckboxRow
                   label={brand}
@@ -148,6 +177,20 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
               </li>
             ))}
           </ul>
+          {brands.length > BRANDS_SHOWN && (
+            <button
+              type="button"
+              onClick={() => setAllBrands((current) => !current)}
+              aria-expanded={allBrands}
+              className="mt-1.5 px-2 text-xs font-semibold text-brand-600 hover:underline"
+            >
+              {allBrands
+                ? t.catalog.brandsFewer
+                : fill(t.catalog.brandsMore, {
+                    count: brands.length - BRANDS_SHOWN,
+                  })}
+            </button>
+          )}
         </FilterGroup>
       )}
 
@@ -173,9 +216,12 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
           startTransition(() => {
             // `q` survives a filter reset — clearing facets shouldn't throw
             // away what the shopper searched for.
-            router.push(`/catalog${filters.q ? `?q=${encodeURIComponent(filters.q)}` : ""}`, {
-              scroll: false,
-            });
+            router.push(
+              `/catalog${filters.q ? `?q=${encodeURIComponent(filters.q)}` : ""}`,
+              {
+                scroll: false,
+              },
+            );
             onApplied?.();
           })
         }
@@ -203,7 +249,9 @@ function FilterGroup({
 }) {
   return (
     <section className={last ? "py-4" : "border-b border-line py-4 first:pt-0"}>
-      <h3 className="mb-2.5 text-xs font-bold tracking-wide text-ink-900">{title}</h3>
+      <h3 className="mb-2.5 text-xs font-bold tracking-wide text-ink-900">
+        {title}
+      </h3>
       {children}
     </section>
   );
@@ -228,7 +276,9 @@ function RadioRow({
       onClick={onSelect}
       aria-pressed={checked}
       className={`flex w-full items-center gap-2 rounded-control px-2 py-1.5 text-left text-xs transition-colors ${
-        checked ? "bg-brand-50 font-semibold text-brand-700" : "text-ink-600 hover:bg-ink-50"
+        checked
+          ? "bg-brand-50 font-semibold text-brand-700"
+          : "text-ink-600 hover:bg-ink-50"
       }`}
     >
       {icon && (
@@ -236,7 +286,9 @@ function RadioRow({
           {icon}
         </span>
       )}
-      <span className="flex-1 truncate">{label}</span>
+      {/* Wraps rather than truncates: "ტელეფონები და აქსესუარები" cut to
+          "ტელეფონები და აქსესუ…" is a category nobody can read. */}
+      <span className="min-w-0 flex-1 leading-snug">{label}</span>
       {typeof count === "number" && (
         <span className="shrink-0 text-xs text-ink-400">{count}</span>
       )}
@@ -255,11 +307,18 @@ function CheckboxRow({
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-2.5 rounded-control px-2 py-1.5 transition-colors hover:bg-ink-50">
-      <input type="checkbox" checked={checked} onChange={onToggle} className="sr-only" />
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onToggle}
+        className="sr-only"
+      />
       <span
         aria-hidden="true"
         className={`grid h-4 w-4 shrink-0 place-items-center border transition-colors ${
-          checked ? "border-brand-solid bg-brand-solid text-brand-on-solid" : "border-ink-300 bg-surface"
+          checked
+            ? "border-brand-solid bg-brand-solid text-brand-on-solid"
+            : "border-ink-300 bg-surface"
         }`}
       >
         {checked && <CheckIcon size={11} strokeWidth={3.5} />}
