@@ -33,6 +33,7 @@ export const AUDIT_ACTIONS = [
   "staff.disable",
   "customer.disable",
   "review.publish",
+  "spend.update",
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

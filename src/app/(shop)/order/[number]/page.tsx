@@ -18,6 +18,7 @@ import {
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderProgress } from "@/components/order/OrderProgress";
 import { PaymentBadge } from "@/components/order/PaymentBadge";
+import { OrderBeacon } from "@/components/order/OrderBeacon";
 import { orderHistory } from "@/lib/order-status";
 import { getSettings } from "@/lib/settings";
 import { InvoiceHead } from "@/components/order/InvoiceHead";
@@ -111,6 +112,13 @@ export default async function OrderConfirmationPage({
   return (
     <div className="page">
       <div className="mx-auto max-w-2xl">
+        {/* The owner following their order, counted for the funnel. Not a
+            member of staff reading it — that is the shop looking at itself. */}
+        {owner && (
+          <OrderBeacon
+            productIds={order.items.flatMap((item) => (item.productId ? [item.productId] : []))}
+          />
+        )}
         <InvoiceHead
           number={order.number}
           createdAt={order.createdAt}

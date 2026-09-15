@@ -220,6 +220,7 @@ model Product {
   variants      ProductVariant[]
   favorites     Favorite[]
   reviews       Review[]
+  events        ProductEvent[]
   /// The published reviews, summed and counted, so the catalogue can print a
   /// star without a query per card. Recomputed from the rows on every
   /// review write — never edited by hand, and zero until somebody real has
@@ -931,6 +932,37 @@ model PageView {
 /// changes every day, so it cannot be turned back into an address and means
 /// nothing tomorrow — the same person is a different row on Tuesday, which is
 /// exactly the point.
+/// What shoppers did with one product on one day, as counts — a card
+/// opened from a list, a line put in the cart, an order's page looked at
+/// afterwards. Rows of numbers like `PageView`, nothing about anybody. The
+/// product page's own views are `PageView` rows by path, and the sales are
+/// the orders themselves; these are the steps in between.
+model ProductEvent {
+  /// `YYYY-MM-DD` in shop time.
+  day       String
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// `click`, `cart` or `track`.
+  kind      String
+  count     Int     @default(0)
+
+  @@id([day, productId, kind])
+  @@index([day])
+}
+
+/// What the shop spent bringing people to it in a month, typed in by the
+/// owner. It is what "cost to bring one customer" divides, and what the
+/// net profit takes off — the shop knows this figure and nothing here
+/// could guess it.
+model MarketingSpend {
+  /// `YYYY-MM`.
+  month     String   @id
+  /// Tetri.
+  amount    Int      @default(0)
+  note      String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
 model DailyVisitor {
   day  String
   hash String

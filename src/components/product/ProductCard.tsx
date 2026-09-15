@@ -10,12 +10,17 @@ import { TruckIcon } from "@/components/ui/icons";
 import { Stars } from "@/components/product/Stars";
 import { discountPercent } from "@/lib/format";
 import { fill } from "@/lib/i18n";
+import { trackProductEvent } from "@/lib/product-events";
 import type { ProductCardData } from "@/lib/catalog";
 
 const LOW_STOCK_THRESHOLD = 10;
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const { locale, t } = useI18n();
+
+  // The card opened from a list, for the dashboard's funnel: one beacon,
+  // and the navigation goes on as it would.
+  const opened = () => trackProductEvent("click", [product.id]);
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const discount = discountPercent(product.price, product.oldPrice);
@@ -29,6 +34,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
     <article className="product-card group hover-lift reveal-view card relative flex flex-col overflow-hidden">
       <Link
         href={`/product/${product.slug}`}
+        onClick={opened}
         className="card-media relative block aspect-square overflow-hidden bg-ink-50"
       >
         <Image
@@ -68,6 +74,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         <h3 className="text-sm font-medium text-ink-800">
           <Link
             href={`/product/${product.slug}`}
+            onClick={opened}
             className="clamp-2 transition-colors hover:text-brand-600"
           >
             {name}

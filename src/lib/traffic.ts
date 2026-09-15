@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { shopDayKey } from "@/lib/format";
+import type { ProductEventKind } from "@/lib/product-events";
 
 /**
  * Page views, counted the way a shop can count them without a cookie banner.
@@ -65,6 +66,31 @@ export async function recordView(path: string, ip: string, userAgent: string): P
       update: {},
     }),
   ]);
+}
+
+/**
+ * Counts one of the steps between seeing a product and buying it, for each
+ * product named — see `product-events.ts` for which steps and why. Capped
+ * at twenty ids a beacon, which is more than any page shows; a longer list
+ * is not a page, it is a script.
+ */
+export async function recordProductEvents(kind: ProductEventKind, productIds: string[]): Promise<void> {
+  const day = shopDayKey(new Date());
+  const ids = [...new Set(productIds.filter((id) => typeof id === "string" && id.length < 40))].slice(0, 20);
+  if (ids.length === 0) return;
+
+  // Only ids that are products: the composite key would take any string,
+  // and the foreign key would throw on one that is not.
+  const known = await prisma.product.findMany({ where: { id: { in: ids } }, select: { id: true } });
+  await prisma.$transaction(
+    known.map(({ id }) =>
+      prisma.productEvent.upsert({
+        where: { day_productId_kind: { day, productId: id, kind } },
+        create: { day, productId: id, kind, count: 1 },
+        update: { count: { increment: 1 } },
+      }),
+    ),
+  );
 }
 
 export type TrafficReport = {

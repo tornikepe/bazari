@@ -12,6 +12,7 @@ import {
   subscribe,
   type CartItem,
 } from "@/lib/cart-store";
+import { trackProductEvent } from "@/lib/product-events";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
 export type { CartItem };
@@ -48,7 +49,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<CartContextValue>(() => {
     const actions = {
-      add: addItem,
+      // Counted for the dashboard's funnel as it goes in; the store itself
+      // knows nothing of the shop's analytics.
+      add: (item: Omit<CartItem, "quantity">, quantity?: number) => {
+        addItem(item, quantity);
+        trackProductEvent("cart", [item.productId]);
+      },
       setQuantity: setItemQuantity,
       remove: removeItem,
       clear: clearCart,

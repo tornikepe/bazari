@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { clientIp } from "@/lib/rate-limit";
-import { normalisePath, recordView } from "@/lib/traffic";
+import { normalisePath, recordProductEvents, recordView } from "@/lib/traffic";
+import { isProductEventKind } from "@/lib/product-events";
 
 /**
  * The beacon a page sends when it is opened.
@@ -15,14 +16,29 @@ import { normalisePath, recordView } from "@/lib/traffic";
  * counted exactly like a stranger.
  */
 export async function POST(request: NextRequest) {
-  let path: string | null = null;
+  const done = new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+
+  let body: { path?: unknown; event?: unknown; productIds?: unknown } = {};
   try {
-    const body = (await request.json()) as { path?: unknown };
-    path = normalisePath(String(body?.path ?? ""));
+    body = (await request.json()) as typeof body;
   } catch {
-    path = null;
+    return done;
   }
-  if (!path) return new NextResponse(null, { status: 204 });
+
+  // A product step — a card opened, a line put in the cart, an order looked
+  // at — rather than a page. Same beacon, same route, same nothing kept.
+  if (isProductEventKind(body.event)) {
+    const ids = Array.isArray(body.productIds) ? body.productIds.filter((id): id is string => typeof id === "string") : [];
+    try {
+      await recordProductEvents(body.event, ids);
+    } catch (error) {
+      console.error("[traffic] could not count a product event", error);
+    }
+    return done;
+  }
+
+  const path = normalisePath(String(body.path ?? ""));
+  if (!path) return done;
 
   try {
     await recordView(path, await clientIp(), request.headers.get("user-agent") ?? "");
@@ -30,5 +46,5 @@ export async function POST(request: NextRequest) {
     console.error("[traffic] could not count a view", error);
   }
 
-  return new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+  return done;
 }

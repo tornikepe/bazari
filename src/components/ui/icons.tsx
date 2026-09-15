@@ -247,6 +247,15 @@ export const TagIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const ChartIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 3v18h18" />
+    <rect width="3" height="7" x="7" y="10" rx="0.5" />
+    <rect width="3" height="11" x="12" y="6" rx="0.5" />
+    <rect width="3" height="4" x="17" y="13" rx="0.5" />
+  </Icon>
+);
+
 export const DashboardIcon = (p: IconProps) => (
   <Icon {...p}>
     <rect width="7" height="9" x="3" y="3" rx="1" />

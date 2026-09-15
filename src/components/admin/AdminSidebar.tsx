@@ -13,6 +13,7 @@ import type { Role } from "@/lib/auth-roles";
 import {
   BagIcon,
   CardIcon,
+  ChartIcon,
   CloseIcon,
   DashboardIcon,
   GridIcon,
@@ -75,6 +76,7 @@ export function AdminSidebar({
         { href: "/dashboard/settings", label: t.admin.settings, icon: SettingsIcon },
         { href: "/dashboard/payments", label: t.admin.payments, icon: CardIcon },
         { href: "/dashboard/traffic", label: t.admin.traffic, icon: EyeIcon },
+        { href: "/dashboard/analytics", label: t.admin.analytics, icon: ChartIcon },
         { href: "/dashboard/audit", label: t.admin.audit, icon: ClockIcon },
       ],
     },

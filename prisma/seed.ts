@@ -11,6 +11,7 @@ import { hashPassword } from "../src/lib/auth-hash";
 import { DEFAULT_SHIPPING } from "../src/lib/cart-rules";
 import { getInfoPage, INFO_SLUGS } from "../src/lib/info-pages";
 import { serialiseSections } from "../src/lib/info-content";
+import { shopDayKey } from "../src/lib/format";
 
 // `DIRECT_URL` when set: seeding is bulk writes run next to migrations, and
 // belongs on the same unpooled endpoint they use. Falls back to DATABASE_URL,
@@ -1095,6 +1096,54 @@ async function main() {
   for (const coupon of await prisma.coupon.findMany({ select: { id: true } })) {
     const usedCount = await prisma.order.count({ where: { couponId: coupon.id } });
     await prisma.coupon.update({ where: { id: coupon.id }, data: { usedCount } });
+  }
+
+  /* ------------------------- the funnel ------------------------- */
+  // What the analytics page counts as the shop is used: product-page views
+  // and the click / cart / track beacons, ninety days of them, and a spend
+  // figure for the months they touch. Only when there are none — a shop
+  // that has been open has its own, and these would be added on top.
+  const existingEvents = await prisma.productEvent.count();
+  if (existingEvents > 0) {
+    console.log(`→ skipping funnel (${existingEvents} event rows already exist)`);
+  } else {
+    console.log("→ generating 90 days of views, clicks and carts…");
+    const random = makeRandom(20260915);
+    const DAY = 24 * 60 * 60 * 1000;
+    const FUNNEL_DAYS = 90;
+    const views: { day: string; path: string; views: number }[] = [];
+    const events: { day: string; productId: string; kind: string; count: number }[] = [];
+    for (let back = FUNNEL_DAYS - 1; back >= 0; back--) {
+      const day = shopDayKey(new Date(Date.now() - back * DAY));
+      for (const product of seeded) {
+        // A few products draw most of the looking; the tail is looked at
+        // now and then. The steps thin out the way a funnel does.
+        const pull = random() < 0.25 ? 3 : 1;
+        const seen = Math.floor(random() * 6 * pull);
+        if (seen === 0) continue;
+        views.push({ day, path: `/product/${product.slug}`, views: seen });
+        const clicks = Math.round(seen * (0.5 + random() * 0.4));
+        const carts = Math.round(clicks * (0.15 + random() * 0.25));
+        const tracks = random() < 0.3 ? 1 : 0;
+        if (clicks > 0) events.push({ day, productId: product.id, kind: "click", count: clicks });
+        if (carts > 0) events.push({ day, productId: product.id, kind: "cart", count: carts });
+        if (tracks > 0) events.push({ day, productId: product.id, kind: "track", count: tracks });
+      }
+    }
+    await prisma.pageView.createMany({ data: views, skipDuplicates: true });
+    await prisma.productEvent.createMany({ data: events, skipDuplicates: true });
+
+    const months = new Set<string>();
+    for (let back = 0; back < FUNNEL_DAYS; back += 1) {
+      months.add(shopDayKey(new Date(Date.now() - back * DAY)).slice(0, 7));
+    }
+    for (const month of months) {
+      await prisma.marketingSpend.upsert({
+        where: { month },
+        create: { month, amount: 40_000 + Math.floor(random() * 5) * 10_000 },
+        update: {},
+      });
+    }
   }
 
   const [orderCount, movementCount, couponCount] = await Promise.all([
