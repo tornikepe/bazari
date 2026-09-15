@@ -191,6 +191,8 @@ const ka = {
     taxIncluded: "მათ შორის დღგ {rate}%",
     checkout: "შეკვეთის გაფორმება",
     freeShippingHint: "დაამატე კიდევ {amount} უფასო მიწოდებისთვის",
+    moreItems: "და კიდევ {count}",
+    open: "კალათის გახსნა",
   },
 
   checkout: {
@@ -1277,6 +1279,8 @@ const en: Dictionary = {
     taxIncluded: "Including VAT {rate}%",
     checkout: "Checkout",
     freeShippingHint: "Add {amount} more for free shipping",
+    moreItems: "and {count} more",
+    open: "Open the cart",
   },
 
   checkout: {

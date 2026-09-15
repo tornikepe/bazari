@@ -271,13 +271,27 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
-    /* Room under the sticky header when the browser scrolls something into
-       view on its own — a focused checkout field as the on-screen keyboard
-       opens, an anchor, a `scrollIntoView`. Without it the field lands at the
-       top edge of the viewport, exactly where the header is, and the shopper
-       types into something they cannot see. */
-    scroll-padding-top: calc(var(--header-h) + 1rem);
     scroll-padding-bottom: 1rem;
+  }
+
+  /* Room under the sticky header when the browser scrolls something into
+     view on its own — a focused checkout field as the on-screen keyboard
+     opens, an anchor, a `scrollIntoView`. Without it the field lands at the
+     top edge of the viewport, exactly where the header is, and the shopper
+     types into something they cannot see.
+
+     A margin on the things that can be scrolled to, not `scroll-padding-top`
+     on the page. The padding said "the top header-height of the window is
+     not visible", which is true of the page and false of the header itself:
+     the search box sits in that band by definition, and asked on focus to
+     bring it into the visible area the browser scrolled the whole page to
+     the top trying — a click in the search box threw the reader back to
+     the top of whatever they were reading, and every keystroke that moved
+     focus did it again. The header's own controls carry no margin, so they
+     are in view where they are. */
+  main :is(a, button, input, select, textarea, summary, [tabindex], [id]),
+  footer :is(a, button, input, select, textarea, [tabindex], [id]) {
+    scroll-margin-top: calc(var(--header-h) + 1rem);
   }
 
   body {

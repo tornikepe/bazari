@@ -29,6 +29,9 @@ import {
 } from "@/components/ui/icons";
 import { useChangeKey } from "@/components/ui/useChangeKey";
 import { useScrolled } from "@/components/layout/useScrolled";
+import { HoverPanel } from "@/components/layout/HoverPanel";
+import { MiniCart } from "@/components/layout/MiniCart";
+import { MiniFavorites } from "@/components/layout/MiniFavorites";
 
 export type HeaderCategory = {
   slug: string;
@@ -195,55 +198,73 @@ export function HeaderBar({
               "ანგარიში" vs "Account" happens to be. */}
           <AccountMenu user={user} />
 
-          <Link
-            href="/favorites"
-            title={t.favorites.title}
-            aria-label={t.favorites.title}
-            // Hidden on the narrowest phones: five icon buttons plus the logo
-            // overflow 320px. The drawer still links to it.
-            className="btn btn-ghost relative hidden h-11 w-11 rounded-control p-0 min-[360px]:flex"
-          >
-            <span className="relative">
-              <HeartIcon size={20} />
-              {/* Only after hydration — the server can't know the wishlist. */}
-              {hydrated && favorites.length > 0 && (
-                <span
-                  key={savedBump}
-                  className={`absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid ${
-                    savedBump > 0 ? "animate-bump" : ""
-                  }`}
-                >
-                  {favorites.length > 99 ? "99+" : favorites.length}
+          {/* The heart and the cart each open a panel under the pointer —
+              the list itself, in brief — and stay links: a click goes to the
+              page as it always did. Hidden on the narrowest phones: five
+              icon buttons plus the logo overflow 320px. The drawer still
+              links to it. */}
+          <HoverPanel
+            label={t.favorites.title}
+            className="hidden min-[360px]:block"
+            trigger={
+              <Link
+                href="/favorites"
+                title={t.favorites.title}
+                aria-label={t.favorites.title}
+                className="btn btn-ghost relative flex h-11 w-11 rounded-control p-0"
+              >
+                <span className="relative">
+                  <HeartIcon size={20} />
+                  {/* Only after hydration — the server can't know the wishlist. */}
+                  {hydrated && favorites.length > 0 && (
+                    <span
+                      key={savedBump}
+                      className={`absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid ${
+                        savedBump > 0 ? "animate-bump" : ""
+                      }`}
+                    >
+                      {favorites.length > 99 ? "99+" : favorites.length}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-          </Link>
+              </Link>
+            }
+          >
+            <MiniFavorites />
+          </HoverPanel>
 
-          <Link
-            href="/cart"
-            aria-label={t.nav.cart}
-            title={t.nav.cart}
-            className="btn btn-ghost relative h-11 w-11 rounded-control p-0"
-          >
-            <span className="relative">
-              <CartIcon size={21} />
-              {/* Rendered only after hydration — the server has no cart. */}
-              {hydrated && count > 0 && (
-                /* Keyed on the change, so the badge remounts and replays the
-                   bump. Adding something from a product page changes a number
-                   in the corner of the screen and nothing else; without this
-                   the only feedback is a digit quietly becoming another digit. */
-                <span
-                  key={cartBump}
-                  className={`absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid ${
-                    cartBump > 0 ? "animate-bump" : ""
-                  }`}
-                >
-                  {count > 99 ? "99+" : count}
+          <HoverPanel
+            label={t.nav.cart}
+            trigger={
+              <Link
+                href="/cart"
+                aria-label={t.nav.cart}
+                title={t.nav.cart}
+                className="btn btn-ghost relative h-11 w-11 rounded-control p-0"
+              >
+                <span className="relative">
+                  <CartIcon size={21} />
+                  {/* Rendered only after hydration — the server has no cart. */}
+                  {hydrated && count > 0 && (
+                    /* Keyed on the change, so the badge remounts and replays the
+                       bump. Adding something from a product page changes a number
+                       in the corner of the screen and nothing else; without this
+                       the only feedback is a digit quietly becoming another digit. */
+                    <span
+                      key={cartBump}
+                      className={`absolute -top-2 -right-2.5 grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-pill bg-brand-solid px-1 text-xs font-bold text-brand-on-solid ${
+                        cartBump > 0 ? "animate-bump" : ""
+                      }`}
+                    >
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-          </Link>
+              </Link>
+            }
+          >
+            <MiniCart />
+          </HoverPanel>
         </div>
       </div>
 
