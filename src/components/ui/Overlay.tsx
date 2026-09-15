@@ -21,7 +21,8 @@ export function Overlay({
 }: {
   open: boolean;
   onClose: () => void;
-  side: "left" | "right" | "bottom";
+  /** Where it comes from — or `center`, a card in the middle of the screen. */
+  side: "left" | "right" | "bottom" | "center";
   closeLabel: string;
   /**
    * What this drawer is, announced when it opens.
@@ -50,10 +51,19 @@ export function Overlay({
   if (!mounted) return null;
 
   const anchor =
-    side === "bottom" ? "inset-x-0 bottom-0" : side === "right" ? "inset-y-0 right-0" : "inset-y-0 left-0";
+    side === "bottom"
+      ? "inset-x-0 bottom-0"
+      : side === "right"
+        ? "inset-y-0 right-0"
+        : side === "left"
+          ? "inset-y-0 left-0"
+          : "top-1/2 left-1/2";
 
   return (
-    <div ref={containerRef} className="fixed inset-0 z-50">
+    // Above everything that is fixed on a page — the buy bar at 50, the chat
+    // button and the progress line at 60 — since a thing that is modal is
+    // modal over those too.
+    <div ref={containerRef} className="fixed inset-0 z-[70]">
       <button
         type="button"
         aria-label={closeLabel}

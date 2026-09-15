@@ -9,6 +9,7 @@ import { ErrorNote } from "@/components/ui/ErrorNote";
 import { SpinnerIcon, StarIcon } from "@/components/ui/icons";
 import { setReviewPublished } from "@/app/actions/reviews";
 import { Swap } from "@/components/ui/Swap";
+import { ReviewPhotos } from "@/components/product/ReviewPhotos";
 
 export type ReviewRow = {
   id: string;
@@ -16,6 +17,8 @@ export type ReviewRow = {
   title: string;
   body: string;
   isPublished: boolean;
+  /** The pictures the customer attached, by address. */
+  photos: { id: string; url: string }[];
   /** Formatted on the server, where the time zone lives. */
   createdAtLabel: string;
   customer: string;
@@ -99,6 +102,7 @@ export function ReviewsManager({ reviews }: { reviews: ReviewRow[] }) {
           {review.body && (
             <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-ink-700">{review.body}</p>
           )}
+          <ReviewPhotos photos={review.photos} />
 
           {canWrite && (
             <div className="mt-3">

@@ -613,9 +613,26 @@ model Review {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  photos ReviewPhoto[]
+
   @@unique([productId, userId])
   @@index([productId, isPublished, createdAt])
   @@index([userId])
+}
+
+/// A picture a customer attached to their review — the product as it
+/// arrived, on their own table. Kept in the database like the product
+/// photos and the avatars, shrunk in the browser before it is sent, at
+/// most four to a review. Goes with the review.
+model ReviewPhoto {
+  id          String   @id @default(cuid())
+  reviewId    String
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  data        Bytes
+  contentType String
+  createdAt   DateTime @default(now())
+
+  @@index([reviewId])
 }
 
 /// A product a customer has marked to come back to.

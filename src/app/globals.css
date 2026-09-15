@@ -1209,6 +1209,29 @@
   transform: translate3d(0, 100%, 0);
 }
 
+/* A card in the middle of the screen: it does not slide in from an edge,
+   it settles — a touch smaller and clear, then its own size and solid. It
+   keeps to the screen with a margin, and scrolls inside itself when its
+   contents are taller than that. */
+.overlay-panel[data-side="center"] {
+  width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
+  border-radius: var(--radius-card);
+  transform: translate3d(-50%, -50%, 0) scale(1);
+  opacity: 1;
+  transition:
+    transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.22s ease-out;
+}
+
+.overlay-panel[data-state="closed"][data-side="center"] {
+  transform: translate3d(-50%, -50%, 0) scale(0.96);
+  opacity: 0;
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 1, 1),
+    opacity 0.16s ease-in;
+}
+
 @starting-style {
   .overlay-scrim {
     opacity: 0;
@@ -1224,6 +1247,11 @@
 
   .overlay-panel[data-side="bottom"] {
     transform: translate3d(0, 100%, 0);
+  }
+
+  .overlay-panel[data-side="center"] {
+    transform: translate3d(-50%, -50%, 0) scale(0.96);
+    opacity: 0;
   }
 }
 

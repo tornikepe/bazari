@@ -15,7 +15,7 @@ import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel"
 import { StickyBuyBar } from "@/components/product/StickyBuyBar";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
+import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -29,6 +29,8 @@ import { VariantPicker } from "@/components/product/VariantPicker";
 import { parsePhotos, altOf } from "@/lib/product-photos";
 import { Stars } from "@/components/product/Stars";
 import { ReviewForm } from "@/components/product/ReviewForm";
+import { ReviewPhotos } from "@/components/product/ReviewPhotos";
+import { initialsOf } from "@/components/account/AccountIdentity";
 import { getCurrentUser } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { averageRating, mayReview } from "@/lib/review-rules";
@@ -95,7 +97,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
      load test found the second `await` waiting on the first.) */
   const user = await getCurrentUser();
   const settings = await getSettings();
-  const [boughtTogether, related, reviews, ownOrders, ownReview] = await Promise.all([
+  const [boughtTogether, related, reviews, ratingRows, ownOrders, ownReview] = await Promise.all([
     getBoughtTogether(product.id),
     prisma.product.findMany({
       where: { isActive: true, categoryId: product.categoryId, NOT: { id: product.id } },
@@ -117,7 +119,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         createdAt: true,
         userId: true,
         user: { select: { name: true } },
+        photos: { select: { id: true }, orderBy: { createdAt: "asc" } },
       },
+    }),
+    // How the stars fall, for the bars beside the average: one grouped
+    // query rather than five counts.
+    prisma.review.groupBy({
+      by: ["rating"],
+      where: { productId: product.id, isPublished: true },
+      _count: { _all: true },
     }),
     // Whether this reader may write one: their orders of this product, any
     // status — the rule wants to know the difference between "never bought"
@@ -131,11 +141,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     user?.role === "customer"
       ? prisma.review.findUnique({
           where: { productId_userId: { productId: product.id, userId: user.id } },
-          select: { rating: true, title: true, body: true, isPublished: true },
+          select: {
+            rating: true,
+            title: true,
+            body: true,
+            isPublished: true,
+            photos: { select: { id: true }, orderBy: { createdAt: "asc" } },
+          },
         })
       : Promise.resolve(null),
   ]);
   const reviewAllowed = mayReview(user?.role === "customer", ownOrders);
+  const photoUrl = (id: string) => `/api/reviews/photos/${id}`;
+  const starCounts = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: ratingRows.find((row) => row.rating === star)?._count._all ?? 0,
+  }));
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const description = locale === "ka" ? product.descriptionKa : product.descriptionEn;
@@ -446,82 +467,141 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           they are about others. Drawn even when empty — the empty state is
           where the rule is stated, and the rule is the point. */}
       <section id="reviews" className="mt-12 scroll-mt-[calc(var(--header-h)+1rem)]">
-        <SectionHeading
-          title={t.product.reviews}
-          hint={
-            product.ratingCount > 0
-              ? `${t.product.reviewAverage} ${averageRating(product.ratingSum, product.ratingCount)} · ${countText(
-                  t.product.reviewsCountOne,
-                  t.product.reviewsCount,
-                  product.ratingCount,
-                )}`
-              : undefined
-          }
-        />
+        <SectionHeading title={t.product.reviews} />
 
-        {/* Two columns only when there is a form to put in the second: a
-            reader who cannot review here is not told why in a sidebar of
-            their own, they simply see the reviews. */}
-        <div
-          className={`grid gap-6 lg:items-start ${reviewAllowed.ok ? "lg:grid-cols-[1fr_20rem]" : ""}`}
-        >
-          <div>
-            {reviews.length === 0 ? (
-              <div className="card card-pad">
-                <p className="text-sm font-bold text-ink-900">{t.product.reviewsNone}</p>
-                <p className="mt-1 text-sm text-ink-500">{t.product.reviewsNoneHint}</p>
-              </div>
-            ) : (
-              <ol className="card divide-y divide-line">
-                {reviews.map((review) => (
-                  <li key={review.id} className="card-pad-tight">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Stars sum={review.rating} count={1} t={t} />
-                      <span className="text-xs text-ink-400">{formatDate(review.createdAt)}</span>
-                    </div>
-                    {review.title && (
-                      <p className="mt-2 text-sm font-bold text-ink-900">{review.title}</p>
-                    )}
-                    {review.body && (
-                      <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-ink-700">
-                        {review.body}
-                      </p>
-                    )}
-                    <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-500">
-                      <span className="font-semibold text-ink-700">
-                        {review.user.name || t.product.reviewVerified}
-                      </span>
-                      {/* Every review here is one, which is why the badge is
-                          not a filter but a statement. */}
-                      <span className="badge bg-success-soft text-success">
-                        {t.product.reviewVerified}
-                      </span>
-                      {user && review.userId === user.id && (
-                        <span className="text-ink-400">· {t.product.reviewYours}</span>
-                      )}
-                    </p>
-                  </li>
-                ))}
-              </ol>
+        {/* The figures first: the average, large, with the count under it;
+            how the stars fall, as five bars; and the way to add one, when
+            this reader may. One card, three cells, centred on a phone. */}
+        <div className="card grid gap-6 card-pad sm:grid-cols-[auto_1fr] lg:grid-cols-[auto_1fr_auto] lg:items-center">
+          <div className="text-center sm:pr-6 sm:text-left lg:border-r lg:border-line">
+            <p className="text-4xl font-extrabold tracking-tight text-ink-900 tabular-nums">
+              {product.ratingCount > 0 ? averageRating(product.ratingSum, product.ratingCount).toFixed(1) : "–"}
+            </p>
+            <div className="mt-1 flex justify-center sm:justify-start">
+              {product.ratingCount > 0 ? (
+                <Stars sum={product.ratingSum} count={product.ratingCount} t={t} size="md" />
+              ) : (
+                <span className="text-sm text-ink-400">{t.product.reviewsNone}</span>
+              )}
+            </div>
+            {product.ratingCount > 0 && (
+              <p className="mt-1 text-xs text-ink-500">
+                {countText(t.product.reviewsCountOne, t.product.reviewsCount, product.ratingCount)}
+              </p>
             )}
           </div>
 
-          {reviewAllowed.ok && (
-            <aside className="flex flex-col gap-3">
-              {ownReview && !ownReview.isPublished && (
-                <p className="text-xs text-ink-500">{t.product.reviewHidden}</p>
-              )}
-              <ReviewForm
-                slug={product.slug}
-                existing={
-                  ownReview
-                    ? { rating: ownReview.rating, title: ownReview.title, body: ownReview.body }
-                    : null
-                }
-              />
-            </aside>
-          )}
+          <ol className="flex flex-col gap-1.5">
+            {starCounts.map(({ star, count }) => (
+              <li key={star} className="flex items-center gap-2.5 text-xs text-ink-500 tabular-nums">
+                <span className="w-3 text-right font-semibold text-ink-700">{star}</span>
+                <StarIcon size={12} filled className="shrink-0 text-accent-500" />
+                <span className="h-2 flex-1 overflow-hidden rounded-pill bg-ink-100">
+                  <span
+                    className="block h-full rounded-pill bg-accent-500 transition-[width] duration-500"
+                    style={{
+                      width: `${product.ratingCount > 0 ? (count / product.ratingCount) * 100 : 0}%`,
+                    }}
+                  />
+                </span>
+                <span className="w-6 text-right">{count}</span>
+              </li>
+            ))}
+          </ol>
+
+          <div className="flex flex-col items-center gap-2 text-center lg:items-end lg:text-right">
+            {reviewAllowed.ok ? (
+              <>
+                {ownReview && !ownReview.isPublished && (
+                  <p className="text-xs text-ink-500">{t.product.reviewHidden}</p>
+                )}
+                <ReviewForm
+                  slug={product.slug}
+                  existing={
+                    ownReview
+                      ? {
+                          rating: ownReview.rating,
+                          title: ownReview.title,
+                          body: ownReview.body,
+                          photos: ownReview.photos.map((photo) => ({
+                            id: photo.id,
+                            url: photoUrl(photo.id),
+                          })),
+                        }
+                      : null
+                  }
+                />
+              </>
+            ) : (
+              <p className="max-w-xs text-xs leading-relaxed text-ink-400">
+                {t.product.reviewsNoneHint}
+              </p>
+            )}
+          </div>
         </div>
+
+        {reviews.length > 0 && (
+          <ol className="mt-4 grid gap-4 lg:grid-cols-2">
+            {reviews.map((review) => (
+              <li key={review.id} className="card card-pad-tight">
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-pill bg-brand-50 text-xs font-extrabold text-brand-700"
+                  >
+                    {initialsOf(review.user.name, "")}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-ink-900">
+                      {review.user.name || t.product.reviewVerified}
+                    </p>
+                    <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink-400">
+                      <span>{formatDate(review.createdAt)}</span>
+                      {/* Every review here is one, which is why the badge is
+                          not a filter but a statement. */}
+                      <span className="badge bg-success-soft text-success whitespace-nowrap">
+                        {t.product.reviewVerified}
+                      </span>
+                      {user && review.userId === user.id && (
+                        <span className="whitespace-nowrap">· {t.product.reviewYours}</span>
+                      )}
+                    </p>
+                  </div>
+                  {/* Five stars, the lit ones this review's — not the shared
+                      `Stars`, whose "(1)" count is a fact about one review
+                      that says nothing. */}
+                  <span
+                    role="img"
+                    aria-label={fill(t.product.reviewStars, { count: review.rating })}
+                    className="flex shrink-0 items-center gap-px"
+                  >
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <StarIcon
+                        key={star}
+                        size={14}
+                        filled={star <= review.rating}
+                        className={star <= review.rating ? "text-accent-500" : "text-ink-300"}
+                      />
+                    ))}
+                  </span>
+                </div>
+
+                {review.title && (
+                  <p className="mt-3 text-sm font-bold text-ink-900">{review.title}</p>
+                )}
+                {review.body && (
+                  <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-ink-700">
+                    {review.body}
+                  </p>
+                )}
+
+                <ReviewPhotos
+                  photos={review.photos.map((photo) => ({ id: photo.id, url: photoUrl(photo.id) }))}
+                />
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
 
       {/* -------------------------- bought together -------------------------- */}

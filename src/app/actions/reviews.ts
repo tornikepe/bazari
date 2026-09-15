@@ -5,15 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin, getCurrentUser } from "@/lib/auth";
 import { consume } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
-import { BODY_MAX, isRating, mayReview, TITLE_MAX } from "@/lib/review-rules";
+import { BODY_MAX, isRating, mayReview, PHOTOS_MAX, TITLE_MAX } from "@/lib/review-rules";
+import { checkUpload } from "@/lib/image-upload";
 import type { Prisma } from "@/generated/prisma/client";
-
-export type SubmitReviewInput = {
-  slug: string;
-  rating: number;
-  title: string;
-  body: string;
-};
 
 export type SubmitReviewResult =
   | { ok: true }
@@ -46,22 +40,42 @@ async function refreshRating(tx: Prisma.TransactionClient, productId: string) {
  *
  * The right to write is checked here from the orders, not trusted from the
  * form: this is a Server Action and takes a POST from anywhere. A second
- * review of the same product replaces the first.
+ * review of the same product replaces the first — pictures included: the
+ * ones sent are the ones kept, and the ones kept from before that the form
+ * still lists are named in `keep`.
+ *
+ * A `FormData` rather than an object, because pictures travel that way.
+ * Each is read for what it is (see `image-upload.ts`), not for what the
+ * browser called it.
  */
-export async function submitReview(input: SubmitReviewInput): Promise<SubmitReviewResult> {
+export async function submitReview(formData: FormData): Promise<SubmitReviewResult> {
   const user = await getCurrentUser();
   if (!user || user.role !== "customer") return { ok: false, error: "sign-in-required" };
 
   const throttle = await consume(`review:user:${user.id}`, 20, 60 * 60);
   if (!throttle.ok) return { ok: false, error: "rate-limited" };
 
-  const rating = Number(input?.rating);
-  const title = String(input?.title ?? "").trim().slice(0, TITLE_MAX);
-  const body = String(input?.body ?? "").trim().slice(0, BODY_MAX);
+  const rating = Number(formData.get("rating"));
+  const title = String(formData.get("title") ?? "").trim().slice(0, TITLE_MAX);
+  const body = String(formData.get("body") ?? "").trim().slice(0, BODY_MAX);
+  const slug = String(formData.get("slug") ?? "");
   if (!isRating(rating)) return { ok: false, error: "invalid" };
 
+  const keep = formData
+    .getAll("keep")
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  const photos: { data: Uint8Array<ArrayBuffer>; contentType: string }[] = [];
+  for (const value of formData.getAll("photo")) {
+    if (!(value instanceof File)) continue;
+    const bytes = new Uint8Array(await value.arrayBuffer());
+    const checked = checkUpload(bytes);
+    if (!checked.ok) return { ok: false, error: "invalid" };
+    photos.push({ data: bytes, contentType: checked.type });
+  }
+  if (keep.length + photos.length > PHOTOS_MAX) return { ok: false, error: "invalid" };
+
   const product = await prisma.product.findUnique({
-    where: { slug: String(input?.slug ?? "") },
+    where: { slug },
     select: { id: true, nameEn: true },
   });
   if (!product) return { ok: false, error: "not-found" };
@@ -75,13 +89,25 @@ export async function submitReview(input: SubmitReviewInput): Promise<SubmitRevi
 
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.review.upsert({
+      const review = await tx.review.upsert({
         where: { productId_userId: { productId: product.id, userId: user.id } },
         create: { productId: product.id, userId: user.id, orderId: allowed.orderId, rating, title, body },
         // A rewrite is published again: the shop hid what was written, and
         // what is written now is different.
         update: { rating, title, body, isPublished: true },
+        select: { id: true },
       });
+      // The pictures the form no longer lists go; the new ones come. The
+      // ids to keep are checked against this review's own, so a form
+      // cannot name somebody else's picture into its list.
+      await tx.reviewPhoto.deleteMany({
+        where: { reviewId: review.id, ...(keep.length > 0 ? { id: { notIn: keep } } : {}) },
+      });
+      if (photos.length > 0) {
+        await tx.reviewPhoto.createMany({
+          data: photos.map((photo) => ({ reviewId: review.id, ...photo })),
+        });
+      }
       await refreshRating(tx, product.id);
     });
   } catch (error) {
@@ -89,7 +115,7 @@ export async function submitReview(input: SubmitReviewInput): Promise<SubmitRevi
     return { ok: false, error: "failed" };
   }
 
-  revalidatePath(`/product/${input.slug}`);
+  revalidatePath(`/product/${slug}`);
   revalidatePath("/catalog");
   revalidatePath("/dashboard/reviews");
   return { ok: true };

@@ -31,6 +31,7 @@ export default async function AdminReviewsPage({
       user: { select: { name: true, email: true } },
       product: { select: { id: true, slug: true, nameKa: true, nameEn: true } },
       order: { select: { number: true } },
+      photos: { select: { id: true }, orderBy: { createdAt: "asc" } },
     },
   });
 
@@ -78,6 +79,10 @@ export default async function AdminReviewsPage({
             reviews={reviews.map((review) => ({
               id: review.id,
               rating: review.rating,
+              photos: review.photos.map((photo) => ({
+                id: photo.id,
+                url: `/api/reviews/photos/${photo.id}`,
+              })),
               title: review.title,
               body: review.body,
               isPublished: review.isPublished,

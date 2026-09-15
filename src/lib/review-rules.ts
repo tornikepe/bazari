@@ -11,6 +11,8 @@ export const RATING_MIN = 1;
 export const RATING_MAX = 5;
 export const TITLE_MAX = 80;
 export const BODY_MAX = 2000;
+/** Pictures to a review. Four is a phone's worth of "here is how it came". */
+export const PHOTOS_MAX = 4;
 
 export function isRating(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= RATING_MIN && value <= RATING_MAX;
