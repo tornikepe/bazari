@@ -73,12 +73,15 @@ export function CheckoutForm({
   saved = [],
   zones = [],
   methods: offered,
+  preferred = null,
 }: {
   defaults: CheckoutDefaults;
   saved?: CheckoutAddress[];
   zones?: CheckoutZone[];
   /** The ways to pay the page decided on — gateways first. */
   methods?: PaymentMethod[];
+  /** The customer's default from their payment page, when it is offered. */
+  preferred?: PaymentMethod | null;
 }) {
   const { locale, t } = useI18n();
   const { items, hydrated, subtotal, clear } = useCart();
@@ -119,7 +122,9 @@ export function CheckoutForm({
         method === "bank_transfer" ||
         (method === "cash_on_delivery" && settings.codEnabled),
     );
-  const [payment, setPayment] = useState<PaymentMethod>(methods[0] ?? "bank_transfer");
+  const [payment, setPayment] = useState<PaymentMethod>(
+    preferred && methods.includes(preferred) ? preferred : (methods[0] ?? "bank_transfer"),
+  );
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [checkingCoupon, setCheckingCoupon] = useState(false);

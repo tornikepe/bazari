@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { orderHistory } from "@/lib/order-status";
 import { getLocale } from "@/lib/locale";
 import type { OrderStatus } from "@/lib/order-status";
 
@@ -86,33 +87,7 @@ export async function trackOrder(orderNumber: string, phone: string): Promise<Tr
 
   const locale = await getLocale();
 
-  /*
-   * The history, reconstructed rather than trusted.
-   *
-   * `OrderEvent` is the record, but an order placed before that table existed
-   * — or one whose events were pruned — would show an empty timeline while
-   * plainly being delivered. The columns on the order itself are the other
-   * witness, so both are merged and the earliest time for each status wins.
-   */
-  const reached = new Map<OrderStatus, Date>();
-  const note = (status: OrderStatus, at: Date | null) => {
-    if (!at) return;
-    const existing = reached.get(status);
-    if (!existing || at < existing) reached.set(status, at);
-  };
-
-  note("pending", order.createdAt);
-  for (const event of order.events) note(event.status, event.createdAt);
-  note("shipped", order.shippedAt);
-  note("delivered", order.deliveredAt);
-
-  // The current status is always shown as reached, even if nothing recorded
-  // when — a "shipped" order with no timestamp still shipped.
-  if (!reached.has(order.status)) reached.set(order.status, order.createdAt);
-
-  const history = [...reached.entries()]
-    .map(([status, at]) => ({ status, at: at.toISOString() }))
-    .sort((a, b) => a.at.localeCompare(b.at));
+  const history = orderHistory(order);
 
   return {
     ok: true,

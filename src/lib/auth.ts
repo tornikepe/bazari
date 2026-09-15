@@ -92,6 +92,12 @@ export type SessionUser = {
   address: string;
   role: Role;
   emailVerified: boolean;
+  /**
+   * The picture's address, or `null` when there is none. Versioned by the
+   * row's `updatedAt`, so a new upload is a new URL and no browser shows the
+   * old picture from its cache.
+   */
+  avatarUrl: string | null;
 };
 
 export { isStaff } from "@/lib/auth-roles";
@@ -118,6 +124,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       emailVerified: true,
       sessionVersion: true,
       disabledAt: true,
+      avatarType: true,
+      updatedAt: true,
     },
   });
   if (!user) return null;
@@ -144,6 +152,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     address: user.address,
     role: user.role,
     emailVerified: user.emailVerified,
+    avatarUrl: user.avatarType ? `/api/avatars/${user.id}?v=${user.updatedAt.getTime()}` : null,
   };
 }
 

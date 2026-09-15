@@ -533,6 +533,20 @@ model User {
   /// and the row stays: an order points at the customer who placed it, and a
   /// deleted staff account takes its own audit trail with it.
   disabledAt     DateTime?
+  /// The customer's picture, as uploaded: the bytes and what they were
+  /// sniffed as. Served by `/api/avatars/[id]`. Small — the upload is capped
+  /// like a product photo — and on the row rather than in a table of its own,
+  /// since an account has one and it is read with the account.
+  avatar         Bytes?
+  avatarType     String              @default("")
+  /// What the customer chose on their payment page: the method the checkout
+  /// preselects, an account to refund cash and transfer orders to, and the
+  /// company line an invoice should carry. All optional; all theirs.
+  preferredPayment PaymentMethod?
+  refundIban     String              @default("")
+  refundName     String              @default("")
+  invoiceCompany String              @default("")
+  invoiceTaxId   String              @default("")
   orders         Order[]
   tokens         VerificationToken[]
   addresses      Address[]

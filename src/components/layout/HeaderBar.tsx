@@ -40,7 +40,7 @@ export type HeaderCategory = {
   icon: string;
 };
 
-export type HeaderUser = { name: string; email: string; role: Role } | null;
+export type HeaderUser = { name: string; email: string; role: Role; avatarUrl: string | null } | null;
 
 export function HeaderBar({
   categories,

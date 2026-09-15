@@ -7,7 +7,17 @@ import { getCurrentUser } from "@/lib/auth";
 import { readReceipts } from "@/lib/order-access";
 import { formatPrice } from "@/lib/format";
 import { Price } from "@/components/ui/Price";
-import { CheckIcon, FileIcon, MapPinIcon, TruckIcon } from "@/components/ui/icons";
+import {
+  CheckIcon,
+  ClockIcon,
+  CloseIcon,
+  FileIcon,
+  MapPinIcon,
+  TruckIcon,
+} from "@/components/ui/icons";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { OrderProgress } from "@/components/order/OrderProgress";
+import { orderHistory } from "@/lib/order-status";
 import { getSettings } from "@/lib/settings";
 import { InvoiceHead } from "@/components/order/InvoiceHead";
 import { PrintButton } from "@/components/order/PrintButton";
@@ -33,12 +43,19 @@ export default async function OrderConfirmationPage({
     include: {
       items: true,
       coupon: { select: { code: true } },
+      // The timeline: when each status was reached, for the progress below.
+      events: {
+        select: { status: true, createdAt: true },
+        orderBy: { createdAt: "asc" },
+      },
       returns: {
         orderBy: { createdAt: "desc" },
         include: {
           items: {
             include: {
-              orderItem: { select: { nameKa: true, nameEn: true, variantLabel: true } },
+              orderItem: {
+                select: { nameKa: true, nameEn: true, variantLabel: true },
+              },
             },
           },
         },
@@ -64,7 +81,8 @@ export default async function OrderConfirmationPage({
 
   // Only the owner may ask for a return. An admin reading the page, or a
   // browser holding the receipt cookie, sees what was asked and not the form.
-  const owner = user !== null && order.userId === user.id && user.role === "customer";
+  const owner =
+    user !== null && order.userId === user.id && user.role === "customer";
 
   /* A card order that is not paid, with somewhere to pay it: the attempt was
      declined, or the tab closed, or the gateway blinked. The order exists
@@ -80,6 +98,14 @@ export default async function OrderConfirmationPage({
   const returnAllowed = owner
     ? mayRequestReturn(order, order.returns, settings.returnWindowDays)
     : ({ ok: false, reason: "off" } as const);
+
+  const sticker = {
+    pending: { icon: ClockIcon, className: "bg-warning-soft text-warning" },
+    confirmed: { icon: CheckIcon, className: "bg-info-soft text-info" },
+    shipped: { icon: TruckIcon, className: "bg-info-soft text-info" },
+    delivered: { icon: CheckIcon, className: "bg-success-soft text-success" },
+    cancelled: { icon: CloseIcon, className: "bg-danger-soft text-danger" },
+  }[order.status];
 
   return (
     <div className="page">
@@ -97,37 +123,70 @@ export default async function OrderConfirmationPage({
         />
 
         <div className="card card-pad-notice flex flex-col items-center text-center">
-          {/* The order as a thing, with the tick stuck on its corner like a
-              sticker: the parcel says what happened, the tick that it went
-              well. Both are decoration; the heading below is the statement. */}
+          {/* The order as a thing, with its state stuck on its corner like a
+              sticker: the parcel says what it is, the sticker where it has
+              got to — a clock while it waits, a tick once confirmed, a truck
+              on the way, a green tick delivered, a cross cancelled. Both are
+              decoration; the heading below is the statement, and it says the
+              same thing in words. */}
           <div className="relative -my-4">
             <Parcel />
-            <span className="absolute top-8 right-6 grid h-9 w-9 place-items-center rounded-pill bg-success-soft text-success ring-4 ring-surface">
-              <CheckIcon size={18} strokeWidth={3} />
+            <span
+              className={`absolute top-8 right-6 grid h-9 w-9 place-items-center rounded-pill ring-4 ring-surface ${sticker.className}`}
+            >
+              <sticker.icon size={18} strokeWidth={3} />
             </span>
           </div>
 
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-ink-900">
-            {t.orderDone.title}
+            {t.orderDone.byStatus[order.status].title}
           </h1>
-          <p className="mt-2 max-w-md text-sm text-ink-500">{t.orderDone.subtitle}</p>
+          <p className="mt-2 max-w-md text-sm text-ink-500">
+            {t.orderDone.byStatus[order.status].subtitle}
+          </p>
 
-          {awaitingCard ? (
-            <div className="mt-6 w-full max-w-sm border border-warning/40 bg-warning-soft p-4 text-center">
-              <p className="text-sm font-bold text-warning">{t.orderDone.unpaidCard}</p>
-              <p className="mt-1 text-xs text-ink-600">{t.orderDone.unpaidCardHint}</p>
+          {/* Where it stands and whether it is paid, as two badges: the
+              status is the shop's, the payment the money's, and one does not
+              imply the other. */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <StatusBadge status={order.status} t={t} />
+            <span
+              className={`badge ${
+                order.paymentStatus === "paid"
+                  ? "bg-success-soft text-success"
+                  : order.paymentStatus === "refunded"
+                    ? "bg-ink-100 text-ink-600"
+                    : "bg-warning-soft text-warning"
+              }`}
+            >
+              {order.paymentStatus === "paid"
+                ? t.orderDone.paidBadge
+                : order.paymentStatus === "refunded"
+                  ? t.orderDone.refundedBadge
+                  : t.orderDone.unpaidBadge}
+            </span>
+          </div>
+
+          {awaitingCard && (
+            <div className="mt-6 w-full max-w-sm rounded-control border border-warning/40 bg-warning-soft p-4 text-center">
+              <p className="text-sm font-bold text-warning">
+                {t.orderDone.unpaidCard}
+              </p>
+              <p className="mt-1 text-xs text-ink-600">
+                {t.orderDone.unpaidCardHint}
+              </p>
               <div className="mt-3">
                 <PayNowButton orderNumber={order.number} />
               </div>
             </div>
-          ) : order.paymentStatus === "paid" ? (
-            <span className="badge mt-4 bg-success-soft text-success">{t.orderDone.paidBadge}</span>
-          ) : null}
+          )}
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <div className="rounded-control border border-line bg-ink-50 px-4 py-2.5">
               <p className="text-xs text-ink-400">{t.orderDone.orderNumber}</p>
-              <p className="font-mono text-base font-bold text-ink-900">{order.number}</p>
+              <p className="font-mono text-base font-bold text-ink-900">
+                {order.number}
+              </p>
             </div>
 
             <div className="rounded-control border border-line bg-ink-50 px-4 py-2.5">
@@ -139,6 +198,11 @@ export default async function OrderConfirmationPage({
           </div>
         </div>
 
+        {/* Where it has got to, step by step, dated from its own history. */}
+        <div className="card mt-4 card-pad">
+          <OrderProgress status={order.status} history={orderHistory(order)} />
+        </div>
+
         {/* items */}
         <div className="card mt-4 card-pad">
           <h2 className="text-sm font-bold text-ink-900">{t.admin.items}</h2>
@@ -147,7 +211,13 @@ export default async function OrderConfirmationPage({
             {order.items.map((item) => (
               <li key={item.id} className="flex items-center gap-3">
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control bg-ink-50">
-                  <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -155,7 +225,9 @@ export default async function OrderConfirmationPage({
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </p>
                   {item.variantLabel && (
-                    <p className="mt-0.5 text-xs text-ink-500">{item.variantLabel}</p>
+                    <p className="mt-0.5 text-xs text-ink-500">
+                      {item.variantLabel}
+                    </p>
                   )}
                   <p className="mt-0.5 text-xs text-ink-400">
                     {item.quantity} × {formatPrice(item.price, locale)}
@@ -172,7 +244,9 @@ export default async function OrderConfirmationPage({
           <dl className="mt-4 flex flex-col gap-2 border-t border-line pt-4 text-sm">
             <div className="flex items-center justify-between">
               <dt className="text-ink-500">{t.cart.itemsTotal}</dt>
-              <dd className="font-semibold text-ink-800">{formatPrice(order.subtotal, locale)}</dd>
+              <dd className="font-semibold text-ink-800">
+                {formatPrice(order.subtotal, locale)}
+              </dd>
             </div>
 
             <div className="flex items-center justify-between">
@@ -203,7 +277,9 @@ export default async function OrderConfirmationPage({
             )}
 
             <div className="mt-1 flex items-center justify-between border-t border-line pt-3">
-              <dt className="text-base font-bold text-ink-900">{t.cart.total}</dt>
+              <dt className="text-base font-bold text-ink-900">
+                {t.cart.total}
+              </dt>
               <dd>
                 <Price value={order.total} size="lg" />
               </dd>
@@ -230,7 +306,9 @@ export default async function OrderConfirmationPage({
                 <span className="block font-semibold text-ink-800">
                   {t.checkout.deliveryPickup} · {t.checkout.deliveryPickupFrom}
                 </span>
-                {settings.pickupAddress || settings.contactAddress || settings.name}
+                {settings.pickupAddress ||
+                  settings.contactAddress ||
+                  settings.name}
                 <span className="mt-1 block">
                   {order.customerName} · {order.phone}
                 </span>
@@ -243,10 +321,13 @@ export default async function OrderConfirmationPage({
                 {(order.deliveryZoneKa || order.deliveryZoneEn) && (
                   <span className="block font-semibold text-ink-800">
                     {t.checkout.deliveryCourier} ·{" "}
-                    {locale === "ka" ? order.deliveryZoneKa : order.deliveryZoneEn}
+                    {locale === "ka"
+                      ? order.deliveryZoneKa
+                      : order.deliveryZoneEn}
                   </span>
                 )}
-                {order.customerName} · {order.phone} · {order.city}, {order.address}
+                {order.customerName} · {order.phone} · {order.city},{" "}
+                {order.address}
               </span>
             </div>
           )}

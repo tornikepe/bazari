@@ -1,33 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
-import { recentOrders, type RecentOrder } from "@/app/actions/account";
 import { HoverPanel } from "@/components/layout/HoverPanel";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatDate, formatPrice } from "@/lib/format";
 import { isStaff, type Role } from "@/lib/auth-roles";
 import {
   CardIcon,
   DashboardIcon,
   LogoutIcon,
+  SettingsIcon,
   UserIcon,
 } from "@/components/ui/icons";
 
-export type MenuUser = { name: string; email: string; role: Role } | null;
+export type MenuUser = {
+  name: string;
+  email: string;
+  role: Role;
+  avatarUrl: string | null;
+} | null;
 
 /**
  * The header's account control: a link that opens a panel under the pointer,
  * the way the cart and the heart do.
  *
  * Signed out, the panel offers the two doors in. A customer sees who they
- * are signed in as, their last few orders with what each came to and where
- * it stands — fetched when the panel first opens, once per session — and
- * the way to the account and out. Staff see the dashboard and the payment
- * methods. The click goes where it always went: sign-in, the account, the
- * dashboard.
+ * are signed in as and the three pages that are theirs — the account, its
+ * settings, its payment page — and the way out. Staff see the dashboard and
+ * the payment methods. The click goes where it always went: sign-in, the
+ * account, the dashboard.
  */
 export function AccountMenu({ user }: { user: MenuUser }) {
   const { t } = useI18n();
@@ -53,7 +54,11 @@ export function AccountMenu({ user }: { user: MenuUser }) {
           title={label}
           className="btn btn-ghost h-11 w-11 rounded-control p-0"
         >
-          <UserIcon size={19} />
+          {user?.avatarUrl ? (
+            <Avatar url={user.avatarUrl} size={28} />
+          ) : (
+            <UserIcon size={19} />
+          )}
         </Link>
       }
     >
@@ -65,6 +70,24 @@ export function AccountMenu({ user }: { user: MenuUser }) {
         <CustomerPanel user={user} />
       )}
     </HoverPanel>
+  );
+}
+
+/** The customer's picture, round, at the size the place asks for. */
+function Avatar({ url, size }: { url: string; size: number }) {
+  return (
+    // A plain `img`: the bytes come from this app's own route and are
+    // already the size they will be shown at, so there is nothing for the
+    // optimiser to do but stand in the way.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt=""
+      width={size}
+      height={size}
+      className="shrink-0 rounded-pill object-cover"
+      style={{ width: size, height: size }}
+    />
   );
 }
 
@@ -100,9 +123,13 @@ function Who({ user }: { user: NonNullable<MenuUser> }) {
     .toUpperCase();
   return (
     <div className="flex items-center gap-3 border-b border-line px-4 py-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-solid text-sm font-extrabold text-brand-on-solid">
-        {initials}
-      </span>
+      {user.avatarUrl ? (
+        <Avatar url={user.avatarUrl} size={40} />
+      ) : (
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-solid text-sm font-extrabold text-brand-on-solid">
+          {initials}
+        </span>
+      )}
       <div className="min-w-0">
         <p className="truncate text-sm font-bold text-ink-900">
           {user.name || user.email}
@@ -162,105 +189,34 @@ function StaffPanel({ user }: { user: NonNullable<MenuUser> }) {
   );
 }
 
-/**
- * Orders already fetched this session, and whose — the panel opens more
- * than once, and a different account signing in on the same tab must not
- * be shown the last one's.
- */
-let known: { email: string; rows: RecentOrder[] } | null = null;
-
 function CustomerPanel({ user }: { user: NonNullable<MenuUser> }) {
-  const { t, locale } = useI18n();
-  const [orders, setOrders] = useState<RecentOrder[] | null>(
-    known?.email === user.email ? known.rows : null,
-  );
-
-  useEffect(() => {
-    if (known?.email === user.email) return;
-    let live = true;
-    recentOrders()
-      .then((rows) => {
-        known = { email: user.email, rows };
-        if (live) setOrders(rows);
-      })
-      .catch(() => {
-        if (live) setOrders([]);
-      });
-    return () => {
-      live = false;
-    };
-  }, [user.email]);
-
+  const { t } = useI18n();
+  const links = [
+    { href: "/account", label: t.account.title, icon: UserIcon },
+    {
+      href: "/account/settings",
+      label: t.account.settings,
+      icon: SettingsIcon,
+    },
+    { href: "/account/payments", label: t.account.payments, icon: CardIcon },
+  ];
   return (
     <>
       <Who user={user} />
-
-      <div className="px-4 pt-3 pb-1">
-        <p className="text-xs font-bold tracking-wider text-ink-400 uppercase">
-          {t.account.recentOrders}
-        </p>
-      </div>
-
-      {orders === null ? (
-        <ul className="divide-y divide-line" aria-busy>
-          {[0, 1, 2].map((index) => (
-            <li
-              key={index}
-              className="flex items-center justify-between gap-3 px-4 py-2.5"
+      <ul className="p-1.5">
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link
+              href={link.href}
+              className="flex items-center gap-2.5 rounded-control px-2.5 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-900"
             >
-              <span className="flex flex-col gap-1.5">
-                <span className="skeleton h-3 w-24 rounded-sm" />
-                <span className="skeleton h-3 w-16 rounded-sm" />
-              </span>
-              <span className="skeleton h-4 w-14 rounded-sm" />
-            </li>
-          ))}
-        </ul>
-      ) : orders.length === 0 ? (
-        <p className="px-4 pb-3 text-sm text-ink-500">{t.account.noOrders}</p>
-      ) : (
-        <ul className="divide-y divide-line">
-          {orders.map((order) => (
-            <li key={order.number}>
-              <Link
-                href={`/order/${order.number}`}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-ink-50"
-              >
-                <span className="min-w-0">
-                  <span className="block font-mono text-xs font-bold text-ink-900">
-                    {order.number}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-ink-400">
-                    {formatDate(order.createdAt)} ·{" "}
-                    <span
-                      className={
-                        order.paymentStatus === "paid" ? "text-success" : ""
-                      }
-                    >
-                      {t.payment[order.paymentStatus]}
-                    </span>
-                  </span>
-                </span>
-                <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="text-sm font-bold text-ink-900 tabular-nums">
-                    {formatPrice(order.total, locale)}
-                  </span>
-                  <StatusBadge status={order.status} t={t} />
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="border-t border-line bg-canvas p-1.5">
-        <Link
-          href="/account"
-          className="flex items-center gap-2.5 rounded-control px-2.5 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-900"
-        >
-          <UserIcon size={16} className="shrink-0 text-ink-400" />
-          {t.account.title}
-        </Link>
+              <link.icon size={16} className="shrink-0 text-ink-400" />
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <div className="border-t border-line p-1.5">
         <SignOut />
       </div>
     </>

@@ -18,7 +18,11 @@ async function HeaderContent() {
     <>
       <HeaderBar
         categories={categories}
-        user={user ? { name: user.name, email: user.email, role: user.role } : null}
+        user={
+          user
+            ? { name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl }
+            : null
+        }
       />
       {/* Here rather than in the layout, because this is where the session is
           already read: the sync is only mounted for a shopper, and mounting it

@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { CheckIcon, AlertIcon, HeartIcon, ChevronRightIcon } from "@/components/ui/icons";
+import {
+  CheckIcon,
+  AlertIcon,
+  HeartIcon,
+  ChevronRightIcon,
+} from "@/components/ui/icons";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
@@ -12,8 +17,16 @@ import type { Dictionary } from "@/lib/i18n";
  */
 export function initialsOf(name: string, email: string): string {
   const source = name.trim() || email.split("@")[0] || "";
-  const words = source.split(/[\s._-]+/).filter(Boolean).slice(0, 2);
-  return words.map((word) => ([...word][0] ?? "")).join("").toUpperCase() || "?";
+  const words = source
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  return (
+    words
+      .map((word) => [...word][0] ?? "")
+      .join("")
+      .toUpperCase() || "?"
+  );
 }
 
 /**
@@ -23,32 +36,48 @@ export function initialsOf(name: string, email: string): string {
  * whether the account was confirmed, nothing that made it feel like *an
  * account* rather than a list of orders that happened to be filtered.
  *
- * The mark is initials in a square rather than an avatar: nothing here holds a
- * photo, and a grey silhouette standing in for one is a placeholder that never
- * gets filled.
+ * The mark is the customer's own picture when they have set one on the
+ * settings page, and their initials in a square until then — never a grey
+ * silhouette standing in for a photo, which is a placeholder that stays.
  */
 export function AccountIdentity({
   name,
   email,
   verified,
+  avatarUrl,
   t,
 }: {
   name: string;
   email: string;
   verified: boolean;
+  /** The customer's own picture, when they have set one; initials until then. */
+  avatarUrl: string | null;
   t: Dictionary;
 }) {
   return (
-    <div className="card flex flex-wrap items-center gap-x-4 gap-y-3 card-pad">
-      <span
-        aria-hidden="true"
-        className="grid h-14 w-14 shrink-0 place-items-center bg-brand-solid text-xl font-extrabold tracking-tight text-brand-on-solid"
-      >
-        {initialsOf(name, email)}
-      </span>
+    <div className="card account-identity flex flex-wrap items-center gap-x-4 gap-y-3 card-pad">
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={avatarUrl}
+          alt=""
+          width={64}
+          height={64}
+          className="h-16 w-16 shrink-0 rounded-card object-cover ring-1 ring-line"
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="grid h-16 w-16 shrink-0 place-items-center rounded-card bg-brand-solid text-xl font-extrabold tracking-tight text-brand-on-solid"
+        >
+          {initialsOf(name, email)}
+        </span>
+      )}
 
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold tracking-wider text-ink-400 uppercase">{t.account.title}</p>
+        <p className="text-xs font-bold tracking-wider text-ink-400 uppercase">
+          {t.account.title}
+        </p>
         <h1 className="truncate text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
           {name || email}
         </h1>

@@ -7,18 +7,17 @@ import { countText, fill } from "@/lib/i18n";
 import { formatDate, formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { isOrderStatus, ORDER_STATUSES } from "@/lib/order-status";
-import { ProfileForm } from "@/components/account/ProfileForm";
-import { VerifyBanner } from "@/components/account/VerifyBanner";
 import {
   BagIcon,
+  CardIcon,
   ChevronRightIcon,
   HeartIcon,
+  SettingsIcon,
   TagIcon,
   TruckIcon,
   UserIcon,
 } from "@/components/ui/icons";
-import { AccountIdentity } from "@/components/account/AccountIdentity";
-import { AddressBook } from "@/components/account/AddressBook";
+import { AccountShell } from "@/components/account/AccountShell";
 import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyOrdersArt } from "@/components/ui/illustrations";
@@ -30,7 +29,6 @@ export default async function AccountPage({
 }) {
   const { locale, t } = await getI18n();
   const params = await searchParams;
-  const justSaved = params.saved === "1";
 
   // The layout redirects anonymous visitors, but this page renders in the same
   // pass — so it has to handle the null itself rather than assert it away.
@@ -48,7 +46,7 @@ export default async function AccountPage({
   /* The session carries what every page needs; "member since" is wanted by
      this one page only, so it is read here rather than added to the cookie
      that every request in the shop parses. */
-  const [orders, orderCount, byStatus, addresses, account, spending, favoriteCount] = await Promise.all([
+  const [orders, orderCount, byStatus, account, spending, favoriteCount] = await Promise.all([
     prisma.order.findMany({
       where: { userId: user.id, ...(status ? { status } : {}) },
       orderBy: { createdAt: "desc" },
@@ -60,10 +58,6 @@ export default async function AccountPage({
        five round trips to label five links is five times the work for the
        same page. */
     prisma.order.groupBy({ by: ["status"], where: { userId: user.id }, _count: { _all: true } }),
-    prisma.address.findMany({
-      where: { userId: user.id },
-      orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-    }),
     prisma.user.findUnique({ where: { id: user.id }, select: { createdAt: true } }),
     /* Summed in the database over *every* order, not over the twenty rows
        drawn below. Counting the page rather than the account is how a figure
@@ -100,16 +94,7 @@ export default async function AccountPage({
   ];
 
   return (
-    <div className="page">
-      <AccountIdentity
-        name={user.name}
-        email={user.email}
-        verified={Boolean(user.emailVerified)}
-        t={t}
-      />
-
-      {!user.emailVerified && <VerifyBanner email={user.email} />}
-
+    <AccountShell user={user} t={t}>
       {/* -------------------------------- stats ------------------------------ */}
       {/* One strip divided by hairlines rather than four floating cards: the
           figures belong to each other, and the rule between them is the same
@@ -129,7 +114,7 @@ export default async function AccountPage({
                   this is; the icon is decoration and goes first. */}
               <span
                 aria-hidden="true"
-                className="hidden h-10 w-10 shrink-0 place-items-center bg-brand-50 text-brand-600 sm:grid"
+                className="hidden h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600 sm:grid"
               >
                 <stat.icon size={18} />
               </span>
@@ -262,34 +247,48 @@ export default async function AccountPage({
           )}
         </section>
 
-        {/* ------------------------------ profile ---------------------------- */}
-        {/* Two cards in the right column rather than one and a gap: the
-            profile is what checkout falls back to, the book is what it offers
-            first, and they belong beside each other. */}
-        <div className="flex flex-col gap-4">
-          <ProfileForm user={user} justSaved={justSaved} />
-          <AddressBook addresses={addresses} />
-
-          {/* The wishlist lives on the account now, and this is the account:
-              a count and the way to it, nothing more — the list itself has a
-              page of its own. */}
-          <Link
-            href="/favorites"
-            className="card flex items-center gap-3 card-pad-tight transition-colors hover:bg-ink-50"
-          >
-            <span className="grid h-10 w-10 shrink-0 place-items-center bg-brand-50 text-brand-600">
-              <HeartIcon size={18} filled={favoriteCount > 0} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold text-ink-900">{t.favorites.title}</span>
-              <span className="block text-xs text-ink-500">
-                {countText(t.favorites.countOne, t.favorites.count, favoriteCount)}
+        {/* ------------------------------ the rest --------------------------- */}
+        {/* Three doors, not three forms: the profile and the addresses have a
+            page of their own now, and so does the payment page, so this
+            column says where they are and what is in them. */}
+        <div className="flex flex-col gap-3">
+          {[
+            {
+              href: "/favorites",
+              icon: <HeartIcon size={18} filled={favoriteCount > 0} />,
+              title: t.favorites.title,
+              text: countText(t.favorites.countOne, t.favorites.count, favoriteCount),
+            },
+            {
+              href: "/account/settings",
+              icon: <SettingsIcon size={18} />,
+              title: t.account.settings,
+              text: t.account.settingsHint,
+            },
+            {
+              href: "/account/payments",
+              icon: <CardIcon size={18} />,
+              title: t.account.payments,
+              text: t.account.paymentsHint,
+            },
+          ].map((door) => (
+            <Link
+              key={door.href}
+              href={door.href}
+              className="card hover-lift flex items-center gap-3 card-pad-tight"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600">
+                {door.icon}
               </span>
-            </span>
-            <ChevronRightIcon size={16} aria-hidden="true" className="shrink-0 text-ink-400" />
-          </Link>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-ink-900">{door.title}</span>
+                <span className="block text-xs text-ink-500">{door.text}</span>
+              </span>
+              <ChevronRightIcon size={16} aria-hidden="true" className="shrink-0 text-ink-400" />
+            </Link>
+          ))}
         </div>
       </div>
-    </div>
+    </AccountShell>
   );
 }

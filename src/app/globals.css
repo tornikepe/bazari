@@ -1818,6 +1818,14 @@
   );
 }
 
+/* The account's identity card: a wash of the brand colour from the corner
+   the picture sits in, fading into the surface — a profile, not a row. */
+.account-identity {
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--color-brand-500) 12%, var(--color-surface)) 0%, var(--color-surface) 55%),
+    var(--color-surface);
+}
+
 /* The deals band: the brand red across a whole region, with a slow
    diagonal towards the deeper shade and a ring of light in one corner so
    the surface has a curve to it. */

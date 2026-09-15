@@ -1,0 +1,158 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { removeAvatar, updateAvatar } from "@/app/actions/account";
+import { initialsOf } from "@/components/account/AccountIdentity";
+import { Busy, Swap } from "@/components/ui/Swap";
+import { CameraIcon, CheckIcon, TrashIcon } from "@/components/ui/icons";
+
+/**
+ * The customer's picture: what it is now, a way to pick another, a way to
+ * take it off. The file goes up the moment it is chosen — a "save" button
+ * between choosing a photo and seeing it is a step nobody wants — and the
+ * page refreshes so the header and the identity card show the new one.
+ */
+export function AvatarForm({
+  name,
+  email,
+  avatarUrl,
+}: {
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+}) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const input = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
+  const [status, setStatus] = useState<
+    "idle" | "saved" | "too-large" | "not-an-image" | "failed"
+  >("idle");
+
+  function upload(file: File) {
+    const formData = new FormData();
+    formData.set("avatar", file);
+    setStatus("idle");
+    startTransition(async () => {
+      const result = await updateAvatar(formData);
+      if (!result.ok) {
+        setStatus(
+          result.error === "too-large"
+            ? "too-large"
+            : result.error === "not-an-image"
+              ? "not-an-image"
+              : "failed",
+        );
+        return;
+      }
+      setStatus("saved");
+      router.refresh();
+    });
+  }
+
+  function remove() {
+    setStatus("idle");
+    startTransition(async () => {
+      const result = await removeAvatar();
+      setStatus(result.ok ? "saved" : "failed");
+      router.refresh();
+    });
+  }
+
+  return (
+    <section className="card card-pad">
+      <h2 className="text-sm font-bold text-ink-900">{t.account.photo}</h2>
+      <p className="mt-1 text-xs text-ink-500">{t.account.photoHint}</p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatarUrl}
+            alt=""
+            width={96}
+            height={96}
+            className="h-24 w-24 shrink-0 rounded-card object-cover ring-1 ring-line"
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="grid h-24 w-24 shrink-0 place-items-center rounded-card bg-brand-solid text-2xl font-extrabold tracking-tight text-brand-on-solid"
+          >
+            {initialsOf(name, email)}
+          </span>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            ref={input}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) upload(file);
+              event.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => input.current?.click()}
+            className="btn btn-primary btn-md"
+          >
+            <Swap
+              show={
+                isPending ? (
+                  <Busy label={t.account.photoChoose} />
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <CameraIcon size={16} />
+                    {t.account.photoChoose}
+                  </span>
+                )
+              }
+              of={[
+                <span key="choose" className="inline-flex items-center gap-2">
+                  <CameraIcon size={16} />
+                  {t.account.photoChoose}
+                </span>,
+              ]}
+            />
+          </button>
+          {avatarUrl && (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={remove}
+              className="btn btn-outline btn-md text-danger hover:bg-danger-soft"
+            >
+              <TrashIcon size={16} />
+              {t.account.photoRemove}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {status !== "idle" && (
+        <p
+          role="status"
+          className={`mt-3 flex items-center gap-1.5 text-sm font-semibold ${
+            status === "saved" ? "text-success" : "text-danger"
+          }`}
+        >
+          {status === "saved" && <CheckIcon size={16} />}
+          {status === "saved"
+            ? t.account.photoSaved
+            : status === "too-large"
+              ? t.account.photoTooLarge
+              : status === "not-an-image"
+                ? t.account.photoNotImage
+                : t.account.photoFailed}
+        </p>
+      )}
+    </section>
+  );
+}

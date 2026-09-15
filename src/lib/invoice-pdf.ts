@@ -7,6 +7,7 @@ import { formatDateTime, formatPrice } from "@/lib/format";
 import { fill, getDictionary, type Locale } from "@/lib/i18n";
 import { vatIncluded } from "@/lib/tax";
 import type { ShopSettings } from "@/lib/settings-defaults";
+import type { PaymentMethod, PaymentStatus } from "@/lib/payment";
 
 /**
  * The order as a PDF.
@@ -54,6 +55,12 @@ export type InvoiceOrder = {
   tax: number;
   taxRate: number;
   couponCode?: string | null;
+  /** How it was, or is to be, paid — and whether it has been. */
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
+  /** The company line the customer set on their payment page, if any. */
+  billingCompany?: string;
+  billingTaxId?: string;
 };
 
 const FONT_DIR = join(process.cwd(), "assets");
@@ -75,11 +82,28 @@ function fonts() {
 }
 
 // Points. A4 with the margins the printed page uses.
-const PAGE = { width: 595.28, height: 841.89, margin: 48 };
+const PAGE = { width: 595.28, height: 841.89, margin: 44 };
 const INK = "#161a23";
 const MUTED = "#5f6675";
-const LINE = "#d7dbe2";
+const LINE = "#e3e6ec";
+const PANEL = "#f4f5f8";
+const BRAND = "#dc1f24";
+const BRAND_DEEP = "#9a161b";
+const SUCCESS = "#11813a";
+const SUCCESS_SOFT = "#dcfce7";
+const WARNING = "#a75c05";
+const WARNING_SOFT = "#fef3c7";
 
+/**
+ * The invoice, drawn.
+ *
+ * A band of the brand colour across the top with the shop's name and the
+ * document's number, two panels under it — who it is for and what the
+ * order is — a ruled table of the lines with the columns aligned, a totals
+ * box on the right with the sum set large, a stamp saying whether it is
+ * paid, and the shop's contact lines along the foot. The same colours and
+ * radii as the site, so the paper and the page read as one thing.
+ */
 export async function renderInvoicePdf(
   order: InvoiceOrder,
   settings: ShopSettings,
@@ -91,7 +115,10 @@ export async function renderInvoicePdf(
   const doc = new PDFDocument({
     size: "A4",
     margin: PAGE.margin,
-    info: { Title: `${t.orderDone.invoice} ${order.number}`, Author: settings.name },
+    info: {
+      Title: `${t.orderDone.invoice} ${order.number}`,
+      Author: settings.name,
+    },
   });
   doc.registerFont("regular", regular);
   doc.registerFont("bold", bold);
@@ -110,137 +137,350 @@ export async function renderInvoicePdf(
   const right = PAGE.width - PAGE.margin;
   const width = right - left;
 
-  /* ------------------------------ masthead ------------------------------ */
-  doc.font("bold").fontSize(18).fillColor(INK).text(settings.name, left, PAGE.margin);
-  doc.font("regular").fontSize(9).fillColor(MUTED);
-  for (const line of [settings.contactAddress, settings.contactPhone, settings.contactEmail]) {
-    if (line.trim()) doc.text(line);
+  /* ------------------------------- the band ------------------------------ */
+  const bandHeight = 96;
+  doc.rect(0, 0, PAGE.width, bandHeight).fill(BRAND);
+  // The mark: four squares, one of them the deeper red, as the site's own.
+  const mark = { x: left, y: 30, size: 36, gap: 3 };
+  const cell = (mark.size - mark.gap) / 2;
+  for (const [i, j] of [
+    [0, 0],
+    [1, 0],
+    [0, 1],
+    [1, 1],
+  ]) {
+    doc
+      .rect(
+        mark.x + i * (cell + mark.gap),
+        mark.y + j * (cell + mark.gap),
+        cell,
+        cell,
+      )
+      .fill(i === 1 && j === 0 ? BRAND_DEEP : "#ffffff");
   }
-  const mastheadBottom = doc.y;
-
-  doc.font("bold").fontSize(9).fillColor(MUTED);
-  doc.text(t.orderDone.invoice, left, PAGE.margin, { width, align: "right" });
-  doc.font("bold").fontSize(14).fillColor(INK).text(order.number, { width, align: "right" });
+  doc
+    .font("bold")
+    .fontSize(20)
+    .fillColor("#ffffff")
+    .text(settings.name, mark.x + mark.size + 12, 32);
   doc
     .font("regular")
     .fontSize(9)
-    .fillColor(MUTED)
-    .text(`${t.orderDone.issued}: ${formatDateTime(order.createdAt)}`, { width, align: "right" });
+    .fillColor("#ffffff")
+    .text(t.orderDone.invoiceNote, mark.x + mark.size + 12, 58, {
+      width: width * 0.5,
+    });
 
-  doc.y = Math.max(doc.y, mastheadBottom) + 14;
-  doc.moveTo(left, doc.y).lineTo(right, doc.y).lineWidth(1.5).strokeColor(INK).stroke();
-  doc.y += 14;
-
-  /* ------------------------------- bill to ------------------------------ */
-  doc.font("bold").fontSize(8).fillColor(MUTED).text(t.orderDone.billTo, left);
-  doc.font("bold").fontSize(11).fillColor(INK).text(order.customerName);
-  doc.font("regular").fontSize(9).fillColor(MUTED);
-  for (const line of [order.phone, order.email]) if (line.trim()) doc.text(line);
-
-  const zone = locale === "ka" ? order.deliveryZoneKa : order.deliveryZoneEn;
-  if (order.deliveryMethod === "pickup") {
-    doc.text(
-      `${t.checkout.deliveryPickup} · ${settings.pickupAddress || settings.contactAddress || settings.name}`,
+  doc
+    .font("bold")
+    .fontSize(9)
+    .fillColor("#ffd5d5")
+    .text(t.orderDone.invoice, left, 28, { width, align: "right" });
+  doc
+    .font("bold")
+    .fontSize(18)
+    .fillColor("#ffffff")
+    .text(order.number, left, 40, { width, align: "right" });
+  doc
+    .font("regular")
+    .fontSize(9)
+    .fillColor("#ffd5d5")
+    .text(
+      `${t.orderDone.issued}: ${formatDateTime(order.createdAt)}`,
+      left,
+      64,
+      { width, align: "right" },
     );
-  } else {
-    const where = [order.city, order.address].filter(Boolean).join(", ");
-    doc.text(zone ? `${t.checkout.deliveryCourier} · ${zone} · ${where}` : where);
-  }
-  doc.y += 18;
 
-  /* -------------------------------- lines ------------------------------- */
-  /* No capitals anywhere on the page: Georgian has them — Mtavruli — and
-     the site never sets them, so the PDF does not either. The headings are
-     small, bold and grey instead, which is what the printed page does. */
-  const columns = {
-    name: { x: left, width: width * 0.5 },
-    qty: { x: left + width * 0.52, width: width * 0.1 },
-    price: { x: left + width * 0.64, width: width * 0.17 },
-    total: { x: left + width * 0.82, width: width * 0.18 },
+  /* ------------------------------ two panels ----------------------------- */
+  const panelTop = bandHeight + 22;
+  const panelGap = 12;
+  const panelWidth = (width - panelGap) / 2;
+  const panelPad = 12;
+
+  const panel = (
+    x: number,
+    title: string,
+    lines: { text: string; strong?: boolean }[],
+  ) => {
+    // Measured first, drawn second: the box must be as tall as its text.
+    let height = panelPad * 2 + 14;
+    for (const line of lines) {
+      doc.font(line.strong ? "bold" : "regular").fontSize(line.strong ? 11 : 9);
+      height +=
+        doc.heightOfString(line.text, { width: panelWidth - panelPad * 2 }) + 2;
+    }
+    doc.roundedRect(x, panelTop, panelWidth, height, 8).fill(PANEL);
+    doc
+      .font("bold")
+      .fontSize(8)
+      .fillColor(MUTED)
+      .text(title, x + panelPad, panelTop + panelPad);
+    let y = panelTop + panelPad + 14;
+    for (const line of lines) {
+      doc
+        .font(line.strong ? "bold" : "regular")
+        .fontSize(line.strong ? 11 : 9)
+        .fillColor(line.strong ? INK : MUTED)
+        .text(line.text, x + panelPad, y, { width: panelWidth - panelPad * 2 });
+      y = doc.y + 2;
+    }
+    return height;
   };
 
+  const zone = locale === "ka" ? order.deliveryZoneKa : order.deliveryZoneEn;
+  const where =
+    order.deliveryMethod === "pickup"
+      ? `${t.checkout.deliveryPickup} · ${settings.pickupAddress || settings.contactAddress || settings.name}`
+      : [
+          t.checkout.deliveryCourier,
+          zone,
+          [order.city, order.address].filter(Boolean).join(", "),
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+  const billTo = [
+    { text: order.customerName, strong: true },
+    ...(order.billingCompany
+      ? [{ text: order.billingCompany, strong: true }]
+      : []),
+    ...(order.billingTaxId
+      ? [{ text: `${t.account.invoiceTaxId}: ${order.billingTaxId}` }]
+      : []),
+    ...[order.phone, order.email]
+      .filter((line) => line.trim())
+      .map((text) => ({ text })),
+    { text: where },
+  ];
+  const paidLabel =
+    order.paymentStatus === "paid"
+      ? t.payment.paid
+      : order.paymentStatus === "refunded"
+        ? t.payment.refunded
+        : t.payment.unpaid;
+  // The number and the date are in the band already; this panel is how it
+  // is paid and how it travels.
+  const about = [
+    ...(order.paymentMethod
+      ? [{ text: t.payment[order.paymentMethod], strong: true }]
+      : []),
+    ...(order.paymentStatus
+      ? [{ text: `${t.admin.paymentStatus}: ${paidLabel}` }]
+      : []),
+    {
+      text: `${t.checkout.delivery}: ${
+        order.deliveryMethod === "pickup"
+          ? t.checkout.deliveryPickup
+          : t.checkout.deliveryCourier
+      }${zone ? ` · ${zone}` : ""}`,
+    },
+    {
+      text: `${t.cart.item}: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}`,
+    },
+  ];
+
+  const h1 = panel(left, t.orderDone.billTo, billTo);
+  const h2 = panel(left + panelWidth + panelGap, t.checkout.payment, about);
+  doc.y = panelTop + Math.max(h1, h2) + 22;
+
+  /* -------------------------------- lines ------------------------------- */
+  const columns = {
+    name: { x: left + 10, width: width * 0.5 - 10 },
+    qty: { x: left + width * 0.52, width: width * 0.1 },
+    price: { x: left + width * 0.64, width: width * 0.17 },
+    total: { x: left + width * 0.82, width: width * 0.18 - 10 },
+  };
+
+  // A tinted header row rather than a rule: the table starts where the
+  // colour starts.
   const headerY = doc.y;
+  doc.roundedRect(left, headerY, width, 22, 6).fill(PANEL);
   doc.font("bold").fontSize(8).fillColor(MUTED);
-  doc.text(t.cart.item, columns.name.x, headerY, { width: columns.name.width });
-  // "qty", not "quantity": the Georgian word does not fit a column.
-  doc.text(t.returns.quantity, columns.qty.x, headerY, { width: columns.qty.width, align: "right" });
-  doc.text(t.cart.price, columns.price.x, headerY, { width: columns.price.width, align: "right" });
-  doc.text(t.cart.subtotal, columns.total.x, headerY, { width: columns.total.width, align: "right" });
-  doc.y = headerY + 14;
-  doc.moveTo(left, doc.y).lineTo(right, doc.y).lineWidth(0.5).strokeColor(LINE).stroke();
-  doc.y += 6;
+  doc.text(t.cart.item, columns.name.x, headerY + 7, {
+    width: columns.name.width,
+  });
+  doc.text(t.returns.quantity, columns.qty.x, headerY + 7, {
+    width: columns.qty.width,
+    align: "right",
+  });
+  doc.text(t.cart.price, columns.price.x, headerY + 7, {
+    width: columns.price.width,
+    align: "right",
+  });
+  doc.text(t.cart.subtotal, columns.total.x, headerY + 7, {
+    width: columns.total.width,
+    align: "right",
+  });
+  doc.y = headerY + 22;
 
   for (const item of order.items) {
-    const rowY = doc.y;
+    const rowY = doc.y + 8;
     doc.font("regular").fontSize(10).fillColor(INK);
     doc.text(name(item), columns.name.x, rowY, { width: columns.name.width });
     const nameBottom = doc.y;
     if (item.variantLabel || item.sku) {
       doc.font("regular").fontSize(8).fillColor(MUTED);
-      doc.text([item.variantLabel, item.sku].filter(Boolean).join(" · "), columns.name.x, nameBottom, {
-        width: columns.name.width,
-      });
+      doc.text(
+        [item.variantLabel, item.sku].filter(Boolean).join(" · "),
+        columns.name.x,
+        nameBottom + 1,
+        {
+          width: columns.name.width,
+        },
+      );
     }
     const rowBottom = doc.y;
 
     doc.font("regular").fontSize(10).fillColor(INK);
-    doc.text(String(item.quantity), columns.qty.x, rowY, { width: columns.qty.width, align: "right" });
-    doc.text(money(item.price), columns.price.x, rowY, { width: columns.price.width, align: "right" });
-    doc.font("bold").text(money(item.price * item.quantity), columns.total.x, rowY, {
-      width: columns.total.width,
+    doc.text(String(item.quantity), columns.qty.x, rowY, {
+      width: columns.qty.width,
       align: "right",
     });
+    doc.text(money(item.price), columns.price.x, rowY, {
+      width: columns.price.width,
+      align: "right",
+    });
+    doc
+      .font("bold")
+      .text(money(item.price * item.quantity), columns.total.x, rowY, {
+        width: columns.total.width,
+        align: "right",
+      });
 
-    doc.y = rowBottom + 6;
-    doc.moveTo(left, doc.y).lineTo(right, doc.y).lineWidth(0.5).strokeColor(LINE).stroke();
-    doc.y += 6;
+    doc.y = rowBottom + 8;
+    doc
+      .moveTo(left, doc.y)
+      .lineTo(right, doc.y)
+      .lineWidth(0.5)
+      .strokeColor(LINE)
+      .stroke();
   }
 
   /* -------------------------------- totals ------------------------------ */
   // Georgian labels are long — "სულ გადასახდელი" is the total — so the
-  // block takes more than half the page and the label two thirds of that.
-  const totalsX = left + width * 0.42;
-  const totalsWidth = width * 0.58;
-  const labelWidth = totalsWidth * 0.64;
-  const row = (label: string, value: string, strong = false) => {
-    const y = doc.y;
-    doc.font(strong ? "bold" : "regular").fontSize(strong ? 12 : 10).fillColor(strong ? INK : MUTED);
-    doc.text(label, totalsX, y, { width: labelWidth });
-    const labelBottom = doc.y;
-    doc.fillColor(INK).text(value, totalsX + labelWidth, y, {
-      width: totalsWidth - labelWidth,
-      align: "right",
-    });
-    doc.y = Math.max(labelBottom, y + (strong ? 16 : 13)) + 3;
-  };
+  // box takes more than half the page and the label two thirds of that.
+  const totalsWidth = width * 0.56;
+  const totalsX = right - totalsWidth;
+  const boxPad = 12;
+  const labelWidth = (totalsWidth - boxPad * 2) * 0.62;
+  const valueX = totalsX + boxPad + labelWidth;
+  const valueWidth = totalsWidth - boxPad * 2 - labelWidth;
 
-  doc.y += 4;
-  row(t.cart.itemsTotal, money(order.subtotal));
-  row(t.cart.shipping, order.shipping <= 0 ? t.cart.freeShipping : money(order.shipping));
-  if (order.discount > 0) {
-    row(
-      order.couponCode ? `${t.cart.discount} (${order.couponCode})` : t.cart.discount,
-      `−${money(order.discount)}`,
-    );
+  const rows: {
+    label: string;
+    value: string;
+    strong?: boolean;
+    small?: boolean;
+  }[] = [
+    { label: t.cart.itemsTotal, value: money(order.subtotal) },
+    {
+      label: t.cart.shipping,
+      value: order.shipping <= 0 ? t.cart.freeShipping : money(order.shipping),
+    },
+    ...(order.discount > 0
+      ? [
+          {
+            label: order.couponCode
+              ? `${t.cart.discount} (${order.couponCode})`
+              : t.cart.discount,
+            value: `−${money(order.discount)}`,
+          },
+        ]
+      : []),
+    { label: t.cart.total, value: money(order.total), strong: true },
+    ...(order.taxRate > 0
+      ? [
+          {
+            label: fill(t.cart.taxIncluded, { rate: order.taxRate }),
+            value: money(order.tax || vatIncluded(order.total, order.taxRate)),
+            small: true,
+          },
+        ]
+      : []),
+  ];
+
+  // Measured, then drawn, so the box fits its rows.
+  let boxHeight = boxPad * 2;
+  for (const row of rows) {
+    doc
+      .font(row.strong ? "bold" : "regular")
+      .fontSize(row.strong ? 14 : row.small ? 8 : 10);
+    boxHeight +=
+      Math.max(
+        doc.heightOfString(row.label, { width: labelWidth }),
+        row.strong ? 18 : 13,
+      ) + 5;
   }
-  doc.moveTo(totalsX, doc.y).lineTo(right, doc.y).lineWidth(1).strokeColor(INK).stroke();
-  doc.y += 6;
-  row(t.cart.total, money(order.total), true);
+  const boxTop = doc.y + 14;
+  doc.roundedRect(totalsX, boxTop, totalsWidth, boxHeight, 8).fill(PANEL);
 
-  if (order.taxRate > 0) {
-    doc.font("regular").fontSize(8).fillColor(MUTED);
-    const y = doc.y;
-    doc.text(fill(t.cart.taxIncluded, { rate: order.taxRate }), totalsX, y, { width: labelWidth });
-    doc.text(money(order.tax || vatIncluded(order.total, order.taxRate)), totalsX + labelWidth, y, {
-      width: totalsWidth - labelWidth,
-      align: "right",
-    });
-    doc.y = y + 14;
+  let y = boxTop + boxPad;
+  for (const row of rows) {
+    if (row.strong) {
+      doc
+        .moveTo(totalsX + boxPad, y)
+        .lineTo(right - boxPad, y)
+        .lineWidth(1)
+        .strokeColor(INK)
+        .stroke();
+      y += 7;
+    }
+    doc
+      .font(row.strong ? "bold" : "regular")
+      .fontSize(row.strong ? 14 : row.small ? 8 : 10)
+      .fillColor(row.strong ? INK : MUTED);
+    doc.text(row.label, totalsX + boxPad, y, { width: labelWidth });
+    const labelBottom = doc.y;
+    doc.fillColor(row.strong ? INK : row.small ? MUTED : INK);
+    doc.text(row.value, valueX, y, { width: valueWidth, align: "right" });
+    y = Math.max(labelBottom, y + (row.strong ? 18 : 13)) + 5;
+  }
+
+  /* --------------------------------- stamp ------------------------------ */
+  // Paid or not, said once more where the eye lands last, in the colours
+  // the site uses for the same words.
+  if (order.paymentStatus) {
+    const paid = order.paymentStatus === "paid";
+    const label = paid
+      ? t.orderDone.paidBadge
+      : order.paymentStatus === "refunded"
+        ? t.orderDone.refundedBadge
+        : t.orderDone.unpaidBadge;
+    doc.font("bold").fontSize(10);
+    const stampWidth = doc.widthOfString(label) + 28;
+    const stampX = left;
+    const stampY = boxTop;
+    doc
+      .roundedRect(stampX, stampY, stampWidth, 28, 14)
+      .fill(paid ? SUCCESS_SOFT : WARNING_SOFT);
+    doc
+      .fillColor(paid ? SUCCESS : WARNING)
+      .text(label, stampX + 14, stampY + 8);
   }
 
   /* ------------------------------- footer ------------------------------- */
-  doc.y += 24;
-  doc.font("regular").fontSize(8).fillColor(MUTED).text(t.orderDone.invoiceNote, left, doc.y, { width });
+  const footY = PAGE.height - PAGE.margin - 30;
+  doc
+    .moveTo(left, footY)
+    .lineTo(right, footY)
+    .lineWidth(0.5)
+    .strokeColor(LINE)
+    .stroke();
+  doc
+    .font("bold")
+    .fontSize(9)
+    .fillColor(INK)
+    .text(settings.name, left, footY + 10);
+  doc.font("regular").fontSize(8).fillColor(MUTED);
+  const contact = [
+    settings.contactAddress,
+    settings.contactPhone,
+    settings.contactEmail,
+  ]
+    .filter((line) => line.trim())
+    .join("  ·  ");
+  if (contact) doc.text(contact, left, footY + 10, { width, align: "right" });
 
   doc.end();
   return done;

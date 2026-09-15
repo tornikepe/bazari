@@ -412,11 +412,21 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
          font file that cannot be read must not fail a sale, so a failure here
          means a message without an attachment rather than no message. */
       const email = input.email?.trim() ?? "";
+      const billing = email
+        ? await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { invoiceCompany: true, invoiceTaxId: true },
+          })
+        : null;
       const invoice = email
         ? await renderInvoicePdf(
             {
               number: order.number,
               createdAt: order.createdAt,
+              paymentMethod,
+              paymentStatus: "unpaid",
+              billingCompany: billing?.invoiceCompany ?? "",
+              billingTaxId: billing?.invoiceTaxId ?? "",
               customerName,
               phone,
               email,

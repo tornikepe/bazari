@@ -28,7 +28,7 @@ export default async function CheckoutPage() {
   if (!user) redirect("/login?next=%2Fcheckout");
   if (user.role !== "customer") redirect("/cart");
 
-  const [saved, zones, gateways, settings] = await Promise.all([
+  const [saved, zones, gateways, settings, prefs] = await Promise.all([
     prisma.address.findMany({
       where: { userId: user.id },
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
@@ -49,6 +49,8 @@ export default async function CheckoutPage() {
     // Likewise the gateways: only the ones switched on and filled in.
     enabledGateways(),
     getSettings(),
+    // What the customer chose on their payment page, to have ready.
+    prisma.user.findUnique({ where: { id: user.id }, select: { preferredPayment: true } }),
   ]);
 
   /* The ways to pay, in the order they are offered: the online gateways the
@@ -71,6 +73,7 @@ export default async function CheckoutPage() {
   return (
     <CheckoutForm
       methods={methods}
+      preferred={prefs?.preferredPayment ?? null}
       defaults={{
         customerName: preferred?.fullName || user.name,
         phone: preferred?.phone || user.phone,

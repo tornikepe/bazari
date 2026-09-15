@@ -14,7 +14,9 @@ export async function VerifyBanner({ email }: { email: string }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-warning/30 bg-warning-soft px-4 py-3">
       <AlertIcon size={16} className="shrink-0 text-warning" />
-      <p className="min-w-0 flex-1 text-sm leading-snug text-ink-800">{t.auth.unverified}</p>
+      <p className="min-w-0 flex-1 text-sm leading-snug text-ink-800">
+        {t.auth.unverified}
+      </p>
 
       <Link
         href={`/verify?email=${encodeURIComponent(email)}`}

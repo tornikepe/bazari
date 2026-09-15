@@ -4,8 +4,18 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
-import { CheckIcon, PencilIcon, PlusIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
-import { deleteAddress, makeDefaultAddress, saveAddress } from "@/app/actions/addresses";
+import {
+  CheckIcon,
+  PencilIcon,
+  PlusIcon,
+  SpinnerIcon,
+  TrashIcon,
+} from "@/components/ui/icons";
+import {
+  deleteAddress,
+  makeDefaultAddress,
+  saveAddress,
+} from "@/app/actions/addresses";
 import { MAX_ADDRESSES } from "@/lib/addresses";
 
 export type SavedAddress = {
@@ -76,7 +86,13 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
       <h2 className="text-sm font-bold text-ink-900">{t.account.addresses}</h2>
       <p className="mt-1 text-xs text-ink-400">{t.account.addressesHint}</p>
 
-      {failed && <ErrorNote className="mt-3" title={t.common.error} hint={t.common.errorHint} />}
+      {failed && (
+        <ErrorNote
+          className="mt-3"
+          title={t.common.error}
+          hint={t.common.errorHint}
+        />
+      )}
 
       {addresses.length === 0 && !editing && (
         <p className="mt-4 text-sm text-ink-500">{t.account.addressNone}</p>
@@ -85,7 +101,10 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
       {addresses.length > 0 && (
         <ul className="mt-4 flex flex-col gap-2">
           {addresses.map((address) => (
-            <li key={address.id} className="rounded-control border border-line p-3">
+            <li
+              key={address.id}
+              className="rounded-control border border-line p-3"
+            >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink-900">
@@ -118,7 +137,8 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
                     type="button"
                     disabled={isPending}
                     onClick={() => {
-                      if (!window.confirm(t.account.addressDeleteConfirm)) return;
+                      if (!window.confirm(t.account.addressDeleteConfirm))
+                        return;
                       act(() => deleteAddress(address.id));
                     }}
                     aria-label={`${t.account.addressDelete} — ${address.label || address.city}`}
@@ -150,7 +170,11 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
            editing another remounts the fields. Without it React keeps the
            uncontrolled inputs and shows the first address's street under the
            second one's heading. */
-        <form key={editing} onSubmit={submit} className="mt-4 flex flex-col gap-2 border-t border-line pt-4">
+        <form
+          key={editing}
+          onSubmit={submit}
+          className="mt-4 flex flex-col gap-2 border-t border-line pt-4"
+        >
           {current && <input type="hidden" name="id" value={current.id} />}
 
           {(
@@ -179,13 +203,21 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
               on the one that already is one is a control that does nothing. */}
           {!(current?.isDefault ?? false) && addresses.length > 0 && (
             <label className="mt-1 flex items-center gap-2 text-sm text-ink-600">
-              <input type="checkbox" name="isDefault" className="h-4 w-4 accent-brand-600" />
+              <input
+                type="checkbox"
+                name="isDefault"
+                className="h-4 w-4 accent-brand-600"
+              />
               {t.account.addressMakeDefault}
             </label>
           )}
 
           <div className="mt-2 flex flex-wrap gap-2">
-            <button type="submit" disabled={isPending} className="btn btn-primary btn-sm">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="btn btn-primary btn-sm"
+            >
               {isPending && <SpinnerIcon size={14} />}
               {t.account.addressSave}
             </button>

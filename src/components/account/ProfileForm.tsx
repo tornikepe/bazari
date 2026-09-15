@@ -15,10 +15,16 @@ export function ProfileForm({
   justSaved: boolean;
 }) {
   const { t } = useI18n();
-  const [, formAction, pending] = useActionState<AuthState, FormData>(updateProfile, {});
+  const [, formAction, pending] = useActionState<AuthState, FormData>(
+    updateProfile,
+    {},
+  );
 
   return (
-    <section id="profile" className="card scroll-mt-[calc(var(--header-h)+1rem)] card-pad">
+    <section
+      id="profile"
+      className="card scroll-mt-[calc(var(--header-h)+1rem)] card-pad"
+    >
       <h2 className="text-sm font-bold text-ink-900">{t.account.profile}</h2>
       <p className="mt-1 text-xs text-ink-500">{t.account.profileHint}</p>
 
@@ -78,9 +84,19 @@ export function ProfileForm({
         </div>
 
         <div className="flex items-center gap-3">
-          <button type="submit" disabled={pending} className="btn btn-primary btn-md">
+          <button
+            type="submit"
+            disabled={pending}
+            className="btn btn-primary btn-md"
+          >
             <Swap
-              show={pending ? <Busy label={t.account.saving} /> : t.account.saveProfile}
+              show={
+                pending ? (
+                  <Busy label={t.account.saving} />
+                ) : (
+                  t.account.saveProfile
+                )
+              }
               of={[t.account.saveProfile]}
             />
           </button>

@@ -312,7 +312,7 @@ export async function updateProfile(
     return { error: "failed" };
   }
 
-  redirect("/account?saved=1");
+  redirect("/account/settings?saved=1");
 }
 
 /**

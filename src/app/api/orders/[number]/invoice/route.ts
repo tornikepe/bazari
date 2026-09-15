@@ -26,7 +26,11 @@ export async function GET(
 
   const order = await prisma.order.findUnique({
     where: { number: decodeURIComponent(number) },
-    include: { items: true, coupon: { select: { code: true } } },
+    include: {
+      items: true,
+      coupon: { select: { code: true } },
+      user: { select: { invoiceCompany: true, invoiceTaxId: true } },
+    },
   });
   if (!order) return new NextResponse(null, { status: 404 });
 
@@ -42,6 +46,8 @@ export async function GET(
     {
       ...order,
       couponCode: order.coupon?.code ?? null,
+      billingCompany: order.user?.invoiceCompany ?? "",
+      billingTaxId: order.user?.invoiceTaxId ?? "",
       items: order.items.map((item) => ({
         nameKa: item.nameKa,
         nameEn: item.nameEn,
