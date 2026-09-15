@@ -39,7 +39,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   return (
     // `reveal-view`: the card rises into place as it scrolls into view.
     // `hover-lift`: under the pointer it lifts and its picture leans in.
-    <article className="group hover-lift reveal-view card relative flex flex-col overflow-hidden">
+    <article className="product-card group hover-lift reveal-view card relative flex flex-col overflow-hidden">
       <Link
         href={`/product/${product.slug}`}
         className="card-media relative block aspect-square overflow-hidden bg-ink-50"
@@ -120,14 +120,15 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               {t.product.variantChoose}
             </Link>
           ) : (
-            /* Side by side from `sm`; stacked on a phone, where a two-column
-             grid leaves a card too narrow for both and the label was
-             clipped mid-word. */
-            <div className="flex flex-col gap-1.5 sm:flex-row">
+            /* One row at every width: the select is as narrow as two digits
+               and the button's label is one word, so even a phone's
+               two-column card holds both side by side. */
+            <div className="flex gap-1">
               {/* The select stays put when the product is sold out rather than
                 disappearing, so the button beside it does not change width
                 between one card and the next. */}
               <QuantitySelect
+                size="xs"
                 value={quantity}
                 stock={product.stock}
                 disabled={soldOut}
@@ -147,6 +148,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
                 }}
                 quantity={quantity}
                 short
+                showIcon={false}
                 fullWidth
                 /* Outlined on the card, filled on the product page. Twelve solid
                  red buttons on a catalogue page were twelve claims on the eye,

@@ -68,7 +68,10 @@ export function PaymentPanel({ payments }: { payments: PaymentRow[] }) {
               </div>
 
               <p className="mt-1.5 text-xs text-ink-400">
-                {payment.provider} · {formatDateTime(payment.createdAt)}
+                {/* The gateway by its name where it has one; the two that
+                    are not gateways — manual, sandbox — by their id. */}
+                {(t.payment as Record<string, string>)[payment.provider] ?? payment.provider} ·{" "}
+                {formatDateTime(payment.createdAt)}
               </p>
 
               {payment.failReason && (

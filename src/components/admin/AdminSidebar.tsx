@@ -12,6 +12,7 @@ import { Overlay } from "@/components/ui/Overlay";
 import type { Role } from "@/lib/auth-roles";
 import {
   BagIcon,
+  CardIcon,
   CloseIcon,
   DashboardIcon,
   GridIcon,
@@ -38,7 +39,7 @@ export function AdminSidebar({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  /* Thirteen pages in three groups. A flat list of thirteen is read from the
+  /* Fourteen pages in three groups. A flat list of fourteen is read from the
      top every time; three short lists under a word each are read once. The
      groups are what the pages are about — the catalogue, the money, the
      shop itself — not who uses them. */
@@ -72,6 +73,7 @@ export function AdminSidebar({
         { href: "/dashboard/staff", label: t.admin.staff, icon: ShieldIcon },
         { href: "/dashboard/pages", label: t.admin.pages, icon: FileIcon },
         { href: "/dashboard/settings", label: t.admin.settings, icon: SettingsIcon },
+        { href: "/dashboard/payments", label: t.admin.payments, icon: CardIcon },
         { href: "/dashboard/traffic", label: t.admin.traffic, icon: EyeIcon },
         { href: "/dashboard/audit", label: t.admin.audit, icon: ClockIcon },
       ],

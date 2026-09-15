@@ -1,7 +1,12 @@
 import "server-only";
 
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { Adapter, StartInput, StartResult, WebhookResult } from "@/lib/payments/types";
+import type {
+  Adapter,
+  StartInput,
+  StartResult,
+  WebhookResult,
+} from "@/lib/payments/types";
 
 /**
  * A gateway that takes no money.
@@ -31,7 +36,9 @@ export function sandboxEnabled(): boolean {
 
 /** Keyed on the session secret, so nothing else has to be configured. */
 function key(): string {
-  return createHmac("sha256", process.env.AUTH_SECRET ?? "").update("payments:sandbox").digest("hex");
+  return createHmac("sha256", process.env.AUTH_SECRET ?? "")
+    .update("payments:sandbox")
+    .digest("hex");
 }
 
 /** Signs the hosted page's link and the webhook's body the same way. */
@@ -57,6 +64,8 @@ export type SandboxEvent = {
 
 export const sandboxAdapter: Adapter = {
   id: "sandbox",
+  name: "Sandbox",
+  fields: [],
 
   isConfigured: sandboxEnabled,
 
@@ -76,10 +85,17 @@ export const sandboxAdapter: Adapter = {
     });
     params.set("sig", sandboxSign(params.toString()));
     const origin = new URL(input.returnUrl).origin;
-    return { kind: "redirect", url: `${origin}/pay/sandbox?${params.toString()}`, providerRef };
+    return {
+      kind: "redirect",
+      url: `${origin}/pay/sandbox?${params.toString()}`,
+      providerRef,
+    };
   },
 
-  async parseWebhook(request: Request, rawBody: string): Promise<WebhookResult> {
+  async parseWebhook(
+    request: Request,
+    rawBody: string,
+  ): Promise<WebhookResult> {
     const given = request.headers.get("x-sandbox-signature") ?? "";
     if (!given || !sameSignature(given, sandboxSign(rawBody))) {
       return { ok: false, reason: "bad signature" };
@@ -107,7 +123,9 @@ export const sandboxAdapter: Adapter = {
       state: event.status,
       amount: event.amount,
       providerRef: event.ref,
-      ...(event.status === "failed" ? { failReason: "declined on the sandbox page" } : {}),
+      ...(event.status === "failed"
+        ? { failReason: "declined on the sandbox page" }
+        : {}),
     };
   },
 

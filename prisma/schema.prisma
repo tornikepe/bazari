@@ -33,6 +33,12 @@ enum PaymentMethod {
   cash_on_delivery
   card
   bank_transfer
+  /// Online gateways, one value each so an order says which it was paid
+  /// through — the same ids as `PaymentProvider` below.
+  tbc
+  bog
+  paypal
+  crypto
 }
 
 /// Which gateway handled a payment. `manual` covers cash on delivery and
@@ -46,6 +52,12 @@ enum PaymentProvider {
   /// card path — redirect, return, callback, capture, refund — runs end to
   /// end before a real adapter is written against the same interface.
   sandbox
+  /// The real ones. Each is switched on and given its credentials in the
+  /// dashboard (`PaymentGateway`), not in the environment.
+  tbc
+  bog
+  paypal
+  crypto
 }
 
 /// Lifecycle of one payment attempt. An order can have several — a failed card
@@ -693,6 +705,12 @@ model Payment {
   /// Charged amount in tetri, copied from the order when the attempt starts.
   amount   Int
   currency String @default("GEL")
+  /// What the gateway was actually asked for, when that is not lari: PayPal
+  /// and the crypto processor take no GEL, so the attempt is opened in the
+  /// currency the dashboard set at the rate it set, and this is the figure —
+  /// in that currency's minor unit — a callback has to match.
+  chargedAmount   Int?
+  chargedCurrency String?
   /// Set once money has actually moved back out again.
   refunded Int    @default(0)
 
@@ -739,6 +757,18 @@ model ChatUsage {
 ///
 /// `externalId` is unique: gateways retry webhooks, and replaying one must not
 /// capture an order twice.
+/// A gateway as the dashboard configured it: on or off, live or test, and
+/// the credentials its adapter needs. One row per provider. Secret fields
+/// are sealed before they are written (see `secret-box.ts`), so a database
+/// backup does not carry a bank's client secret in the clear.
+model PaymentGateway {
+  provider  PaymentProvider @id
+  enabled   Boolean         @default(false)
+  testMode  Boolean         @default(true)
+  config    Json            @default("{}")
+  updatedAt DateTime        @updatedAt
+}
+
 model PaymentEvent {
   id        String  @id @default(cuid())
   paymentId String

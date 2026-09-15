@@ -25,16 +25,22 @@ export function ScrollProgress() {
     let frame = 0;
     const update = () => {
       frame = 0;
-      const root = document.documentElement;
-      const travel = root.scrollHeight - window.innerHeight;
+      const root = document.scrollingElement ?? document.documentElement;
+      // The visual viewport where there is one: on a phone the browser's
+      // toolbar collapses and grows as the page scrolls, and `innerHeight`
+      // lags behind what is actually on screen.
+      const viewport = window.visualViewport?.height ?? window.innerHeight;
+      const scrolled = root.scrollTop;
+      const travel = root.scrollHeight - viewport;
+      // Within two pixels of the end is the end: a bar 99.7% full reads as
+      // a bar that did not make it, and a phone's rounding lands there.
       const progress =
-        travel > 0 ? Math.min(1, Math.max(0, window.scrollY / travel)) : 0;
-      // Within a pixel of the end is the end: a bar 99.7% full reads as a
-      // bar that did not make it.
-      node.style.setProperty(
-        "--progress",
-        String(travel - window.scrollY < 1 ? 1 : progress),
-      );
+        travel <= 0
+          ? 0
+          : travel - scrolled < 2
+            ? 1
+            : Math.min(1, Math.max(0, scrolled / travel));
+      node.style.setProperty("--progress", progress.toFixed(4));
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(update);
@@ -43,6 +49,8 @@ export function ScrollProgress() {
     update();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("scroll", schedule);
     // The page grows after load — images, streamed sections, a chat panel
     // — and every change to its height changes what "the bottom" is.
     const observer =
@@ -54,6 +62,8 @@ export function ScrollProgress() {
     return () => {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("scroll", schedule);
       observer?.disconnect();
       if (frame) cancelAnimationFrame(frame);
     };

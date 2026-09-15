@@ -1,5 +1,5 @@
 import { getAdapter } from "@/lib/payments";
-import { applyPaymentEvent } from "@/lib/payments/service";
+import { applyPaymentEvent, gatewayContext } from "@/lib/payments/service";
 import { isPaymentProvider } from "@/lib/payments/guards";
 
 /**
@@ -18,10 +18,15 @@ export async function POST(
     return Response.json({ error: "unknown provider" }, { status: 404 });
   }
 
+  // A gateway that is switched off gets nothing: its callbacks may still
+  // arrive for a while after it is, and none of them may move an order.
+  const context = await gatewayContext(provider);
+  if (!context) return Response.json({ error: "unknown provider" }, { status: 404 });
+
   const rawBody = await request.text();
   const adapter = getAdapter(provider);
 
-  const parsed = await adapter.parseWebhook(request, rawBody);
+  const parsed = await adapter.parseWebhook(request, rawBody, context.config);
   if (!parsed.ok) {
     // Deliberately terse: a caller that fails verification learns nothing.
     console.warn(`[payments] rejected ${provider} webhook: ${parsed.reason}`);
@@ -29,10 +34,12 @@ export async function POST(
   }
 
   const result = await applyPaymentEvent({
+    provider,
     paymentId: parsed.paymentId,
     externalId: parsed.externalId,
     state: parsed.state,
     amount: parsed.amount,
+    currency: parsed.currency,
     providerRef: parsed.providerRef,
     failReason: parsed.failReason,
     payload: rawBody,

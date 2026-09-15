@@ -3,6 +3,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { getActiveZones } from "@/lib/delivery";
+import { getSettings } from "@/lib/settings";
+import { cardGateway } from "@/lib/payments";
+import { enabledGateways } from "@/lib/payments/gateways";
+import type { PaymentMethod } from "@/lib/payment";
 
 /**
  * Checkout requires an account.
@@ -24,7 +28,7 @@ export default async function CheckoutPage() {
   if (!user) redirect("/login?next=%2Fcheckout");
   if (user.role !== "customer") redirect("/cart");
 
-  const [saved, zones] = await Promise.all([
+  const [saved, zones, gateways, settings] = await Promise.all([
     prisma.address.findMany({
       where: { userId: user.id },
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
@@ -42,7 +46,21 @@ export default async function CheckoutPage() {
     // The same list `placeOrder` reads, so the form cannot offer a zone the
     // action will then refuse.
     getActiveZones(),
+    // Likewise the gateways: only the ones switched on and filled in.
+    enabledGateways(),
+    getSettings(),
   ]);
+
+  /* The ways to pay, in the order they are offered: the online gateways the
+     dashboard switched on, then a plain card when the sandbox stands in for
+     one, then the two that need no gateway. Decided here, once, so the form
+     cannot offer a method the action will refuse. */
+  const methods: PaymentMethod[] = [
+    ...gateways.map((gateway) => gateway.provider),
+    ...(cardGateway() ? (["card"] as const) : []),
+    "bank_transfer",
+    ...(settings.codEnabled ? (["cash_on_delivery"] as const) : []),
+  ];
 
   /* The default address wins over the profile fields when there is one: a
      customer who has taken the trouble to save "work, and send it to the
@@ -52,6 +70,7 @@ export default async function CheckoutPage() {
 
   return (
     <CheckoutForm
+      methods={methods}
       defaults={{
         customerName: preferred?.fullName || user.name,
         phone: preferred?.phone || user.phone,

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth";
 import { getAdapter, fromMinor } from "@/lib/payments";
-import { expireStalePayments } from "@/lib/payments/service";
+import { expireStalePayments, gatewayContext } from "@/lib/payments/service";
 
 export type PaymentActionResult =
   | { ok: true }
@@ -87,11 +87,17 @@ export async function refundPayment(paymentId: string): Promise<PaymentActionRes
   if (outstanding <= 0) return { ok: false, error: "not-refundable" };
 
   // Ask the gateway first: if the money cannot actually be sent back, the
-  // database must not claim otherwise.
+  // database must not claim otherwise. A gateway since switched off, or a
+  // crypto payment, cannot send it back either way: that refund is settled
+  // by hand and recorded here, like a manual one.
   const adapter = getAdapter(payment.provider);
-  const sent = await adapter.refund(payment.providerRef ?? "", outstanding);
+  const context = await gatewayContext(payment.provider);
+  const byHand = payment.provider === "manual" || payment.provider === "crypto" || !context;
+  const sent = byHand
+    ? { ok: false as const, reason: "settled by hand" }
+    : await adapter.refund(payment.providerRef ?? "", outstanding, context.config);
 
-  if (!sent.ok && payment.provider !== "manual") {
+  if (!sent.ok && !byHand) {
     return { ok: false, error: "failed", detail: sent.reason };
   }
 

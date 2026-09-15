@@ -385,7 +385,7 @@ against the source (`grep process.env`), not against memory.
 | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | optional | The Facebook button. Same rule. |
 | `NEXT_PUBLIC_SENTRY_DSN` | optional | Switches Sentry on — browser, server and edge — the moment it is set. Without it the SDK is in the bundle and asleep, and errors go to the server log as before. |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | optional | Source-map upload at build time, so a report names a line in a source file. Without them reports still arrive, minified. |
-| `PAYMENT_SANDBOX` | never in production | `1` sends card orders through the gateway that takes no money — see the limits below. Unset, a card order is recorded like cash. |
+| `PAYMENT_SANDBOX` | never in production | `1` offers a "card" that goes through the gateway that takes no money — see the limits below. The real gateways are configured in the dashboard, not here. |
 | `CRON_SECRET` | for the daily sweep | The bearer token `/api/cron/daily` expects — Vercel sends it on the schedule in `vercel.json`. Unset, the route refuses every call, and no payment attempt expires and no cart reminder goes. |
 | `DATABASE_POOL_MAX` | optional | Connections per instance. Defaults to 3 on Vercel, where many short-lived instances share one plan, and 10 elsewhere, where one process takes every request. |
 | `VERCEL` | set by Vercel | Read only to pick that default. |
@@ -953,14 +953,26 @@ you own, and never in a fork.
   image URL per product in the dashboard. The placeholder is deliberately transparent so it takes
   the card's own background and works in both themes; a real photograph on a white studio ground
   will look like a white square in dark mode, which is a fact about photographs rather than a bug.
-- **Payments are not real, and the card path is.** By default every order is recorded the way
-  cash is: a payment row that waits for a human. With `PAYMENT_SANDBOX=1`, "card" at the
-  checkout goes through a gateway that takes no money — a hosted page of this app with "pay" and
-  "decline" on it, which calls the shop's webhook back with a signed body the way a real bank
-  does — so the redirect, the return, the callback's signature and idempotency, the amount
-  check, the capture, the refund and "pay now" after a decline all run end to end. A real
-  adapter implements the same three methods against a bank's API and is swapped in by
-  configuration. Never enable the sandbox on a shop that sells.
+- **Online payment is four gateways, configured from the dashboard.** TBC Bank, Bank of
+  Georgia, PayPal and crypto (Coinbase Commerce), each a card on *Dashboard → Payments* with a
+  switch, a test-mode switch, the credentials its adapter asks for and the callback URL to paste
+  into the provider's portal. Nothing about them lives in the environment; secrets are sealed
+  (AES-GCM under `AUTH_SECRET`) before they are written. A method that is on and filled in is
+  offered at the checkout by name; the order is placed, the shopper is sent to the provider's
+  page, and comes back through `/api/payments/{provider}/return`, which asks the provider what
+  happened before the order is shown — a PayPal order is captured there, a bank's status is
+  fetched — so a late callback is not a late payment. The callback itself lands on
+  `/api/payments/{provider}/webhook`, verified before it is believed: the banks are asked back
+  over our own authenticated call rather than trusted on the body they posted, PayPal is asked to
+  verify its signature, Coinbase's HMAC is checked. A capture marks the order paid and confirmed
+  in one transaction, once — a replayed callback collides on `(paymentId, externalId)` and does
+  nothing. PayPal and Coinbase take no lari, so those two carry a currency and a rate; the
+  converted figure is stored on the attempt and is what their callback has to match. The
+  adapters follow the providers' published APIs and have not been run against a live merchant
+  account: the first real order on each is the one to watch. Without any gateway on, an order is
+  recorded the way cash is — a payment row that waits for a human — and with `PAYMENT_SANDBOX=1`
+  a plain "card" goes through a gateway that takes no money, so the whole path can be walked
+  without a bank. Never enable the sandbox on a shop that sells.
 - **Order tracking requires the phone number**, not just the order number, so order numbers
   cannot be enumerated to read customers' details.
 - **Both languages are served from the same URL** via a cookie, so there is deliberately no

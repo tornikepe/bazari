@@ -13,11 +13,16 @@ import type { Adapter, StartInput, StartResult } from "@/lib/payments/types";
  */
 export const manualAdapter: Adapter = {
   id: "manual",
+  name: "Manual",
+  fields: [],
 
   isConfigured: () => true,
 
   async start(input: StartInput): Promise<StartResult> {
-    return { kind: "offline", providerRef: `manual_${input.paymentId}_${randomUUID().slice(0, 8)}` };
+    return {
+      kind: "offline",
+      providerRef: `manual_${input.paymentId}_${randomUUID().slice(0, 8)}`,
+    };
   },
 
   async parseWebhook() {

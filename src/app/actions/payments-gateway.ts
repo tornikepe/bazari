@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale } from "@/lib/locale";
-import { cardGateway } from "@/lib/payments";
-import { startPayment } from "@/lib/payments/service";
+import { gatewayFor } from "@/lib/payments";
+import { gatewayContext, startPayment } from "@/lib/payments/service";
 import { sandboxLinkValid, sandboxSign, type SandboxEvent } from "@/lib/payments/sandbox";
 import { requestOrigin } from "@/lib/request-origin";
 
@@ -31,11 +31,11 @@ export async function retryPayment(orderNumber: string): Promise<RetryPaymentRes
     select: { number: true, paymentMethod: true, paymentStatus: true, status: true },
   });
   if (!order) return { ok: false, error: "not-found" };
-  if (order.paymentMethod !== "card") return { ok: false, error: "not-card" };
   if (order.paymentStatus === "paid" || order.status === "cancelled") return { ok: false, error: "paid" };
 
-  const gateway = cardGateway();
-  if (!gateway) return { ok: false, error: "no-gateway" };
+  const gateway = gatewayFor(order.paymentMethod);
+  if (!gateway) return { ok: false, error: "not-card" };
+  if (!(await gatewayContext(gateway))) return { ok: false, error: "no-gateway" };
 
   const started = await startPayment(order.number, gateway, await requestOrigin(), await getLocale());
   if (!started.ok || started.kind !== "redirect") return { ok: false, error: "failed" };
@@ -85,5 +85,11 @@ export async function sandboxDecide(formData: FormData): Promise<void> {
     console.error("[sandbox] webhook unreachable", error);
   }
 
-  redirect(params.get("return") ?? "/");
+  // Straight to the order rather than through the return route: a Server
+  // Action's redirect is a client-side navigation, and one that lands on a
+  // route handler shows the handler's address in the bar. A real gateway
+  // arrives at the return route by a full page load and is redirected
+  // properly; the sandbox has already called the webhook, so there is
+  // nothing for the return route to fetch.
+  redirect(`/order/${encodeURIComponent(params.get("order") ?? "")}`);
 }

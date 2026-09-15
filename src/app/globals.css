@@ -802,6 +802,26 @@
       box-shadow 0.15s ease;
   }
 
+  /* The card's size: as tall as `.btn-sm`, as narrow as two digits and a
+     chevron, so it and the button share one row even in a two-column grid
+     on a phone. */
+  .quantity-select-xs select {
+    min-height: 2.25rem;
+    padding-inline: 0.45rem 1.1rem;
+    font-size: var(--text-xs);
+  }
+
+  .quantity-select-xs .quantity-select-chevron {
+    right: 0.25rem;
+  }
+
+  /* The card's button sits beside the select in a column that, on a phone,
+     is a hundred and forty pixels wide. Its padding is what gives, not its
+     label. */
+  .product-card .btn-sm {
+    padding-inline: 0.5rem;
+  }
+
   .quantity-select-md select {
     min-height: 2.75rem;
     padding-inline: 0.75rem 1.75rem;
@@ -1353,13 +1373,18 @@
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
   z-index: 60;
-  width: 100%;
+  /* Both edges pinned rather than a width, so the bar is the window's own
+     width whatever a phone's viewport and its scrollbar do. */
   height: 3px;
   transform-origin: 0 50%;
   transform: scaleX(var(--progress, 0));
   background: linear-gradient(90deg, var(--color-brand-500), var(--color-accent-400));
   pointer-events: none;
+  /* On the compositor, so it moves in step with the scroll and not a frame
+     behind it. */
+  will-change: transform;
 }
 
 /* The header stays where it is and changes what it is made of: at the top

@@ -1,7 +1,12 @@
 import "server-only";
 
 import { manualAdapter } from "@/lib/payments/manual";
-import { sandboxAdapter } from "@/lib/payments/sandbox";
+import { sandboxAdapter, sandboxEnabled } from "@/lib/payments/sandbox";
+import { tbcAdapter } from "@/lib/payments/tbc";
+import { bogAdapter } from "@/lib/payments/bog";
+import { paypalAdapter } from "@/lib/payments/paypal";
+import { cryptoAdapter } from "@/lib/payments/crypto";
+import { isGatewayMethod, type PaymentMethod } from "@/lib/payment";
 import type { Adapter, Minor, PaymentProvider } from "@/lib/payments/types";
 
 export type * from "@/lib/payments/types";
@@ -10,32 +15,39 @@ export type * from "@/lib/payments/types";
  * Every integration the app knows about.
  *
  * Adding a gateway is: write the adapter, add its id to the `PaymentProvider`
- * enum in the schema, and register it here. Nothing else in the app needs to
- * change — the actions and the webhook route are written against `Adapter`.
+ * and `PaymentMethod` enums in the schema, register it here and in
+ * `GATEWAY_IDS`, and give it a label in the dictionary. The actions, the
+ * dashboard's page, the checkout and the webhook route are written against
+ * `Adapter` and need no change.
  */
 const ADAPTERS: Record<PaymentProvider, Adapter> = {
   manual: manualAdapter,
   sandbox: sandboxAdapter,
+  tbc: tbcAdapter,
+  bog: bogAdapter,
+  paypal: paypalAdapter,
+  crypto: cryptoAdapter,
 };
 
 /**
- * The gateway a card is sent to, if any is configured. `null` means a card
- * order is recorded the way cash is — a payment row that waits for a human —
- * which is what every deployment without a provider gets.
+ * The gateway a plain "card" order is sent to: the sandbox, when it is on.
+ * `null` means a card order is recorded the way cash is — a payment row
+ * that waits for a human — which is what every deployment without it gets.
+ * The real gateways are not "card": each is a payment method of its own,
+ * chosen by name at the checkout.
  */
 export function cardGateway(): PaymentProvider | null {
-  return availableProviders().find((id) => id !== "manual") ?? null;
+  return sandboxEnabled() ? "sandbox" : null;
+}
+
+/** The gateway an order's method is paid through, or `null` for cash and transfer. */
+export function gatewayFor(method: PaymentMethod): PaymentProvider | null {
+  if (isGatewayMethod(method)) return method;
+  return method === "card" ? cardGateway() : null;
 }
 
 export function getAdapter(provider: PaymentProvider): Adapter {
   return ADAPTERS[provider];
-}
-
-/** Only the gateways that actually have credentials configured. */
-export function availableProviders(): PaymentProvider[] {
-  return (Object.keys(ADAPTERS) as PaymentProvider[]).filter((id) =>
-    ADAPTERS[id].isConfigured(),
-  );
 }
 
 /**

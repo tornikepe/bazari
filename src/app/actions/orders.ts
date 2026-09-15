@@ -7,11 +7,12 @@ import { shippingFor, type DeliveryChoice } from "@/lib/cart-rules";
 import { getActiveZones } from "@/lib/delivery";
 import { getSettings } from "@/lib/settings";
 import { checkCoupon } from "@/lib/coupons";
-import { isPaymentMethod } from "@/lib/payment";
+import { isGatewayMethod, isPaymentMethod } from "@/lib/payment";
 import { rememberReceipt } from "@/lib/order-access";
 import { clientIp, consume } from "@/lib/rate-limit";
 import { toMinor, PAYMENT_WINDOW_MINUTES, cardGateway } from "@/lib/payments";
-import { startPayment } from "@/lib/payments/service";
+import { gatewayContext, startPayment } from "@/lib/payments/service";
+import type { PaymentProvider } from "@/lib/payments/types";
 import { requestOrigin } from "@/lib/request-origin";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
 import { sendLowStockEmail, type LowStockItem } from "@/lib/stock-emails";
@@ -225,14 +226,24 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   if (paymentMethod === "cash_on_delivery" && !settings.codEnabled) {
     return { ok: false, error: "invalid" };
   }
+  // An online gateway the dashboard has not switched on — or has switched
+  // off since the form was drawn — is refused here, the same way cash is.
+  if (isGatewayMethod(paymentMethod) && !(await gatewayContext(paymentMethod))) {
+    return { ok: false, error: "invalid" };
+  }
 
-  /* Where a card is charged. With a gateway configured the order opens no
-     payment row of its own — `startPayment` opens one against the gateway
-     after the commit and the shopper is sent there. Without one, a card
-     order is recorded the way cash is: a manual row that waits for a human,
-     which is what this shop has always done and every deployment without a
-     provider still does. */
-  const gateway = paymentMethod === "card" ? cardGateway() : null;
+  /* Where the money is collected. A gateway method — a bank, PayPal, crypto
+     — opens no payment row of its own: `startPayment` opens one against the
+     gateway after the commit and the shopper is sent there. "Card" goes the
+     same way when the sandbox is on. Otherwise a card order is recorded the
+     way cash is: a manual row that waits for a human, which is what this
+     shop has always done and every deployment without a provider still
+     does. */
+  const gateway: PaymentProvider | null = isGatewayMethod(paymentMethod)
+    ? paymentMethod
+    : paymentMethod === "card"
+      ? cardGateway()
+      : null;
 
   const total = subtotal + shipping - discount;
   // The VAT inside that total, at today's rate. Both are written to the order:

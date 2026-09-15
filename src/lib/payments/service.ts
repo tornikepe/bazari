@@ -2,7 +2,32 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { getAdapter, toMinor, PAYMENT_WINDOW_MINUTES } from "@/lib/payments";
-import type { Minor, PaymentProvider, PaymentState } from "@/lib/payments/types";
+import { getGateway, isGatewayId } from "@/lib/payments/gateways";
+import { getSettings } from "@/lib/settings";
+import type {
+  GatewayConfig,
+  Minor,
+  PaymentProvider,
+  PaymentState,
+} from "@/lib/payments/types";
+
+/**
+ * What an adapter is handed to talk to its gateway: the dashboard's row for
+ * the four configured there, nothing for the two that need nothing. `null`
+ * when the provider is switched off or not fully filled in, which is the
+ * one answer every caller treats the same way — as "not available".
+ */
+export async function gatewayContext(
+  provider: PaymentProvider,
+): Promise<{ config: GatewayConfig; testMode: boolean } | null> {
+  if (!isGatewayId(provider)) {
+    const adapter = getAdapter(provider);
+    return adapter.isConfigured({}) ? { config: {}, testMode: false } : null;
+  }
+  const gateway = await getGateway(provider);
+  if (!gateway || !gateway.enabled || !gateway.configured) return null;
+  return { config: gateway.config, testMode: gateway.testMode };
+}
 
 /**
  * Provider-independent payment logic.
@@ -39,11 +64,13 @@ export async function startPayment(
   });
 
   if (!order) return { ok: false, reason: "no such order" };
-  if (order.paymentStatus === "paid") return { ok: false, reason: "already paid" };
+  if (order.paymentStatus === "paid")
+    return { ok: false, reason: "already paid" };
 
   const amount = toMinor(order.total);
   const adapter = getAdapter(provider);
-  if (!adapter.isConfigured()) return { ok: false, reason: `${provider} is not configured` };
+  const context = await gatewayContext(provider);
+  if (!context) return { ok: false, reason: `${provider} is not configured` };
 
   const payment = await prisma.payment.create({
     data: {
@@ -55,15 +82,24 @@ export async function startPayment(
     select: { id: true },
   });
 
-  const started = await adapter.start({
-    paymentId: payment.id,
-    orderNumber: order.number,
-    amount,
-    currency: "GEL",
-    returnUrl: `${origin}/order/${order.number}`,
-    webhookUrl: `${origin}/api/payments/${provider}/webhook`,
-    locale,
-  });
+  const settings = await getSettings();
+  const started = await adapter.start(
+    {
+      paymentId: payment.id,
+      orderNumber: order.number,
+      amount,
+      currency: "GEL",
+      // Back through our own route, which asks the gateway what happened
+      // before showing the order — so the page the shopper lands on already
+      // says "paid" when it is, callback or no callback.
+      returnUrl: `${origin}/api/payments/${provider}/return?payment=${payment.id}`,
+      webhookUrl: `${origin}/api/payments/${provider}/webhook`,
+      locale,
+      testMode: context.testMode,
+      shopName: settings.name,
+    },
+    context.config,
+  );
 
   if (started.kind === "error") {
     await prisma.payment.update({
@@ -75,7 +111,15 @@ export async function startPayment(
 
   await prisma.payment.update({
     where: { id: payment.id },
-    data: { providerRef: started.providerRef },
+    data: {
+      providerRef: started.providerRef,
+      ...(started.kind === "redirect" && started.charged
+        ? {
+            chargedAmount: started.charged.amount,
+            chargedCurrency: started.charged.currency,
+          }
+        : {}),
+    },
   });
 
   return started.kind === "redirect"
@@ -100,29 +144,63 @@ export type ApplyResult =
  * that follows happens in the same transaction as that insert.
  */
 export async function applyPaymentEvent(input: {
-  paymentId: string;
+  provider: PaymentProvider;
+  paymentId?: string;
   externalId: string;
   state: PaymentState;
   amount: Minor;
+  currency?: string;
   providerRef?: string;
   failReason?: string;
   payload: string;
 }): Promise<ApplyResult> {
-  const payment = await prisma.payment.findUnique({
-    where: { id: input.paymentId },
-    select: { id: true, orderId: true, amount: true, state: true },
-  });
+  const select = {
+    id: true,
+    orderId: true,
+    amount: true,
+    currency: true,
+    chargedAmount: true,
+    chargedCurrency: true,
+    state: true,
+  } as const;
+  // By our id when the gateway carried it, by the gateway's own reference
+  // when it did not — the pair is unique per provider.
+  const payment = input.paymentId
+    ? await prisma.payment.findUnique({
+        where: { id: input.paymentId },
+        select,
+      })
+    : input.providerRef
+      ? await prisma.payment.findUnique({
+          where: {
+            provider_providerRef: {
+              provider: input.provider,
+              providerRef: input.providerRef,
+            },
+          },
+          select,
+        })
+      : null;
 
   if (!payment) return { ok: false, reason: "unknown payment" };
 
   // A gateway that reports a different figure than we asked for is either
-  // misconfigured or being tampered with. Never capture on that.
-  if (input.state === "captured" && input.amount !== payment.amount) {
+  // misconfigured or being tampered with. Never capture on that. The figure
+  // asked for is the converted one when the gateway was asked in another
+  // currency, and the order's own otherwise.
+  const expected = payment.chargedAmount ?? payment.amount;
+  const expectedCurrency = payment.chargedCurrency ?? payment.currency;
+  const currencyMatches =
+    !input.currency || input.currency.toUpperCase() === expectedCurrency;
+  if (
+    input.state === "captured" &&
+    (input.amount !== expected || !currencyMatches)
+  ) {
     await prisma.payment.update({
       where: { id: payment.id },
       data: {
         state: "failed",
-        failReason: `amount mismatch: gateway ${input.amount}, expected ${payment.amount}`,
+        failReason: `amount mismatch: gateway ${input.amount} ${input.currency ?? ""}, expected ${expected} ${expectedCurrency}`,
       },
     });
     return { ok: false, reason: "amount mismatch" };
@@ -151,12 +229,27 @@ export async function applyPaymentEvent(input: {
       });
 
       if (input.state === "captured") {
+        // Paid, and — for an order still waiting to be looked at — confirmed
+        // in the same breath: the money is the confirmation an online order
+        // was waiting for, and the shop can start on it.
+        const order = await tx.order.findUnique({
+          where: { id: payment.orderId },
+          select: { status: true },
+        });
+        const confirm = order?.status === "pending";
         await tx.order.update({
           where: { id: payment.orderId },
-          data: { paymentStatus: "paid" },
+          data: {
+            paymentStatus: "paid",
+            ...(confirm ? { status: "confirmed" } : {}),
+          },
         });
         await tx.orderEvent.create({
-          data: { orderId: payment.orderId, status: "pending", note: "Payment received" },
+          data: {
+            orderId: payment.orderId,
+            status: confirm ? "confirmed" : (order?.status ?? "pending"),
+            note: "Payment received",
+          },
         });
       }
     });
@@ -178,6 +271,65 @@ export async function applyPaymentEvent(input: {
 }
 
 /* ------------------------------------------------------------------ */
+/* The shopper's return                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * What to do when the shopper comes back from a gateway: ask the adapter
+ * whether there is something final to record — a capture to make, a status
+ * to fetch — and record it through the same path a callback takes. Returns
+ * the order number to send the shopper on to, or `null` for a payment that
+ * is not ours to show.
+ */
+export async function finalizeReturn(
+  provider: PaymentProvider,
+  paymentId: string,
+  request: Request,
+): Promise<string | null> {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    select: {
+      id: true,
+      provider: true,
+      providerRef: true,
+      amount: true,
+      currency: true,
+      chargedAmount: true,
+      chargedCurrency: true,
+      state: true,
+      order: { select: { number: true } },
+    },
+  });
+  if (!payment || payment.provider !== provider) return null;
+
+  const adapter = getAdapter(provider);
+  const context = await gatewayContext(provider);
+  if (adapter.finalize && context && payment.state !== "captured") {
+    try {
+      const event = await adapter.finalize(payment, request, context.config);
+      if (event?.ok) {
+        await applyPaymentEvent({
+          provider,
+          paymentId: event.paymentId ?? payment.id,
+          externalId: event.externalId,
+          state: event.state,
+          amount: event.amount,
+          currency: event.currency,
+          providerRef: event.providerRef,
+          failReason: event.failReason,
+          payload: JSON.stringify({ source: "return", ...event }),
+        });
+      }
+    } catch (error) {
+      // The order page still shows; a callback can still land later.
+      console.error(`[payments] ${provider} finalize failed`, error);
+    }
+  }
+
+  return payment.order.number;
+}
+
+/* ------------------------------------------------------------------ */
 /* Housekeeping                                                        */
 /* ------------------------------------------------------------------ */
 
@@ -189,8 +341,14 @@ export async function applyPaymentEvent(input: {
  */
 export async function expireStalePayments(): Promise<number> {
   const { count } = await prisma.payment.updateMany({
-    where: { state: { in: ["pending", "authorized"] }, expiresAt: { lt: new Date() } },
-    data: { state: "expired", failReason: "no response from the gateway in time" },
+    where: {
+      state: { in: ["pending", "authorized"] },
+      expiresAt: { lt: new Date() },
+    },
+    data: {
+      state: "expired",
+      failReason: "no response from the gateway in time",
+    },
   });
   return count;
 }

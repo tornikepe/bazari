@@ -61,6 +61,13 @@ export const CloseIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const CardIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <path d="M2 10h20" />
+  </Icon>
+);
+
 export const ChevronDownIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="m6 9 6 6 6-6" />

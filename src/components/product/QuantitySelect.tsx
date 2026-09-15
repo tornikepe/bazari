@@ -27,7 +27,7 @@ export function QuantitySelect({
   stock: number;
   onChange: (next: number) => void;
   disabled?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }) {
   const { t } = useI18n();

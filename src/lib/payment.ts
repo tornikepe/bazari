@@ -12,7 +12,19 @@ export const PAYMENT_METHODS = [
   "cash_on_delivery",
   "card",
   "bank_transfer",
+  "tbc",
+  "bog",
+  "paypal",
+  "crypto",
 ] as const satisfies readonly PaymentMethod[];
+
+/** The methods that are an online gateway, each the provider of the same name. */
+export const GATEWAY_METHODS = ["tbc", "bog", "paypal", "crypto"] as const satisfies readonly PaymentMethod[];
+export type GatewayMethod = (typeof GATEWAY_METHODS)[number];
+
+export function isGatewayMethod(value: unknown): value is GatewayMethod {
+  return typeof value === "string" && (GATEWAY_METHODS as readonly string[]).includes(value);
+}
 
 export const PAYMENT_STATUSES = [
   "unpaid",

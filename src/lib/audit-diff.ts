@@ -18,6 +18,7 @@ export const AUDIT_ACTIONS = [
   "order.status",
   "payment.received",
   "payment.refund",
+  "payment.gateway",
   "return.move",
   "coupon.create",
   "coupon.update",

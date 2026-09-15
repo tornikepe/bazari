@@ -7,11 +7,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
 import { Popover } from "@/components/ui/Overlay";
 import { isStaff, type Role } from "@/lib/auth-roles";
-import {
-  DashboardIcon,
-  LogoutIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { CardIcon, DashboardIcon, LogoutIcon, UserIcon } from "@/components/ui/icons";
 
 export type MenuUser = { name: string; email: string; role: Role } | null;
 
@@ -76,7 +72,12 @@ export function AccountMenu({ user }: { user: MenuUser }) {
    * the page's own headings do that job better once they are on it.
    */
   const links = isStaff(user.role)
-    ? [{ href: "/dashboard", label: t.admin.dashboard, icon: DashboardIcon }]
+    ? [
+        { href: "/dashboard", label: t.admin.dashboard, icon: DashboardIcon },
+        // The payment methods, from the shop as well as from the rail: the
+        // page a bank's letter sends the owner to, wherever they are.
+        { href: "/dashboard/payments", label: t.admin.paymentMethods, icon: CardIcon },
+      ]
     : [{ href: "/account", label: t.account.title, icon: UserIcon }];
 
   return (

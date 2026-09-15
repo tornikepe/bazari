@@ -18,7 +18,8 @@ import { shippingFor, type DeliveryChoice } from "@/lib/cart-rules";
 import type { Dictionary } from "@/lib/i18n";
 import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/orders";
 import { lineKey } from "@/lib/cart-store";
-import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
+import { PAYMENT_METHODS, isGatewayMethod, type PaymentMethod } from "@/lib/payment";
+import { PaymentMark } from "@/components/checkout/PaymentMark";
 import { Busy, Swap } from "@/components/ui/Swap";
 
 /** Maps a rejection reason to the matching translated message. */
@@ -71,10 +72,13 @@ export function CheckoutForm({
   defaults,
   saved = [],
   zones = [],
+  methods: offered,
 }: {
   defaults: CheckoutDefaults;
   saved?: CheckoutAddress[];
   zones?: CheckoutZone[];
+  /** The ways to pay the page decided on — gateways first. */
+  methods?: PaymentMethod[];
 }) {
   const { locale, t } = useI18n();
   const { items, hydrated, subtotal, clear } = useCart();
@@ -102,13 +106,20 @@ export function CheckoutForm({
   // Prefilled from the account. Requiring people to sign in and then making
   // them retype the address they already gave us would be the worst of both.
   const [form, setForm] = useState({ ...defaults });
-  // What the shop offers. Cash on delivery is a switch in the settings, and a
-  // switch nothing reads is a lie in the dashboard — the action refuses it
-  // too, so hiding it here is the courtesy and not the enforcement.
-  const methods = PAYMENT_METHODS.filter(
-    (method) => method !== "cash_on_delivery" || settings.codEnabled,
-  );
-  const [payment, setPayment] = useState<PaymentMethod>(methods[0] ?? "card");
+  // What the shop offers, as the page decided: the gateways it switched on
+  // and the two that need none. Cash on delivery is a switch in the
+  // settings, and a switch nothing reads is a lie in the dashboard — the
+  // action refuses it too, so hiding it here is the courtesy and not the
+  // enforcement.
+  const methods: PaymentMethod[] =
+    offered ??
+    PAYMENT_METHODS.filter(
+      (method) =>
+        method === "card" ||
+        method === "bank_transfer" ||
+        (method === "cash_on_delivery" && settings.codEnabled),
+    );
+  const [payment, setPayment] = useState<PaymentMethod>(methods[0] ?? "bank_transfer");
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
@@ -497,11 +508,11 @@ export function CheckoutForm({
           <fieldset className="card card-pad">
             <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.payment}</legend>
 
-            <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               {methods.map((method) => (
                 <label
                   key={method}
-                  className={`flex cursor-pointer items-center gap-2.5 rounded-control border px-3.5 py-3 text-sm transition-colors ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-control border px-3.5 py-3 text-sm transition-colors ${
                     payment === method
                       ? "border-brand-600 bg-brand-50 font-semibold text-brand-700"
                       : "border-line text-ink-700 hover:border-ink-300"
@@ -515,14 +526,22 @@ export function CheckoutForm({
                     onChange={() => setPayment(method)}
                     className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
                   />
+                  <PaymentMark method={method} />
                   <span className="min-w-0 leading-snug">{t.payment[method]}</span>
                 </label>
               ))}
             </div>
 
-            {settings.codEnabled && (
-              <p className="mt-3 text-xs text-ink-500">{t.checkout.paymentNote}</p>
-            )}
+            {/* What happens next for the method chosen: a gateway takes the
+                shopper to its own page and brings them back paid; cash is
+                paid at the door. One line, and it changes with the choice. */}
+            <p className="mt-3 text-xs text-ink-500">
+              {isGatewayMethod(payment) || payment === "card"
+                ? t.checkout.paymentGatewayNote
+                : payment === "bank_transfer"
+                  ? t.checkout.paymentTransferNote
+                  : t.checkout.paymentNote}
+            </p>
           </fieldset>
         </div>
 

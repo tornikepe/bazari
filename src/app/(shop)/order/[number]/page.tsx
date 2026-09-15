@@ -14,7 +14,8 @@ import { PrintButton } from "@/components/order/PrintButton";
 import { TaxNote } from "@/components/ui/TaxNote";
 import { ReturnPanel } from "@/components/order/ReturnPanel";
 import { PayNowButton } from "@/components/order/PayNowButton";
-import { cardGateway } from "@/lib/payments";
+import { gatewayFor } from "@/lib/payments";
+import { gatewayContext } from "@/lib/payments/service";
 import { Parcel } from "@/components/order/Parcel";
 import { mayRequestReturn } from "@/lib/returns";
 import { formatDate } from "@/lib/format";
@@ -69,12 +70,13 @@ export default async function OrderConfirmationPage({
      declined, or the tab closed, or the gateway blinked. The order exists
      either way, and this is the way back to paying for it. Only the owner
      is offered it; only when a gateway is configured. */
+  const gateway = gatewayFor(order.paymentMethod);
   const awaitingCard =
     owner &&
-    order.paymentMethod === "card" &&
+    gateway !== null &&
     order.paymentStatus === "unpaid" &&
     order.status !== "cancelled" &&
-    cardGateway() !== null;
+    (await gatewayContext(gateway)) !== null;
   const returnAllowed = owner
     ? mayRequestReturn(order, order.returns, settings.returnWindowDays)
     : ({ ok: false, reason: "off" } as const);
