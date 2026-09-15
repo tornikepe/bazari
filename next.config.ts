@@ -19,6 +19,20 @@ const nextConfig: NextConfig = {
     "/checkout": ["./assets/**/*", "./node_modules/pdfkit/js/data/**/*"],
   },
 
+  /*
+   * Server Actions take 1 MB by default. The avatar upload is a Server
+   * Action, and the picture is shrunk in the browser first, so it is normally
+   * fifty kilobytes — but one the browser could not decode is sent as it
+   * came, and the action's own check should be what refuses it, with the
+   * message that says why, not the server in front of the action with a
+   * crash. The check allows 2 MB; this is that plus the multipart overhead.
+   */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "2200kb",
+    },
+  },
+
   images: {
     // The bundled sample photo is an SVG. Next refuses to optimise SVG unless
     // this is on, because a hostile SVG can carry script — the CSP below is

@@ -10,6 +10,7 @@ import Image from "next/image";
 import { formatDate, formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
 import { OrderProgress } from "@/components/order/OrderProgress";
+import { PaymentBadge } from "@/components/order/PaymentBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { trackOrder, type TrackResult } from "@/app/actions/track";
 
@@ -129,17 +130,14 @@ function TrackOrderForm() {
                   <dt className="text-ink-500">{t.admin.paymentMethod}</dt>
                   <dd className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-ink-800">
-                      {t.payment[found.paymentMethod as keyof typeof t.payment]}
+                      {t.payment[found.paymentMethod]}
                     </span>
-                    <span
-                      className={`badge ${
-                        found.paymentStatus === "paid"
-                          ? "bg-success-soft text-success"
-                          : "bg-ink-100 text-ink-600"
-                      }`}
-                    >
-                      {t.payment[found.paymentStatus as keyof typeof t.payment]}
-                    </span>
+                    <PaymentBadge
+                      method={found.paymentMethod}
+                      status={found.paymentStatus}
+                      orderStatus={found.status}
+                      t={t}
+                    />
                   </dd>
                 </div>
               </dl>

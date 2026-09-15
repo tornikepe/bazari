@@ -950,8 +950,22 @@ async function main() {
 
       const paymentMethod =
         random() < 0.72 ? "cash_on_delivery" : random() < 0.7 ? "card" : "bank_transfer";
+      /* Paid when the money has actually moved. Cash is collected at the
+         door, so a cash order is paid once delivered and not before; a card
+         or transfer order is confirmed *because* it was paid, so any the
+         shop has touched is paid, and a cancelled card order was refunded.
+         A cancelled cash or transfer order never paid anything, and
+         "refunded" on it was a lie. */
       const paymentStatus =
-        status === "delivered" ? "paid" : status === "cancelled" ? "refunded" : "unpaid";
+        status === "delivered"
+          ? "paid"
+          : status === "cancelled"
+            ? paymentMethod === "card"
+              ? "refunded"
+              : "unpaid"
+            : paymentMethod !== "cash_on_delivery" && status !== "pending"
+              ? "paid"
+              : "unpaid";
 
       const shippedAt =
         status === "shipped" || status === "delivered"

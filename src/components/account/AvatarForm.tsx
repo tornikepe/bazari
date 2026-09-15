@@ -7,6 +7,59 @@ import { removeAvatar, updateAvatar } from "@/app/actions/account";
 import { initialsOf } from "@/components/account/AccountIdentity";
 import { Busy, Swap } from "@/components/ui/Swap";
 import { CameraIcon, CheckIcon, TrashIcon } from "@/components/ui/icons";
+import { MAX_BYTES } from "@/lib/image-upload";
+
+/** The longest side the picture is kept at: the largest it is ever drawn. */
+const SIDE = 512;
+
+/**
+ * The picture as a square of at most `SIDE`, cropped to its middle and
+ * re-encoded as a JPEG. Returned as it came when the browser cannot decode
+ * it (a HEIC on a browser without HEIC), so the server's own check gets to
+ * say "that is not an image" rather than this saying nothing.
+ */
+async function shrink(file: File): Promise<File> {
+  let bitmap: ImageBitmap;
+  try {
+    // `from-image`: the phone's orientation flag is applied, so a portrait
+    // shot does not come out on its side.
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    return file;
+  }
+
+  const side = Math.min(bitmap.width, bitmap.height);
+  const out = Math.min(SIDE, side);
+  const canvas = document.createElement("canvas");
+  canvas.width = out;
+  canvas.height = out;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    return file;
+  }
+  // A JPEG has no transparency: a PNG logo on a clear background would get
+  // a black one, so the square is painted white first.
+  context.fillStyle = "#fff";
+  context.fillRect(0, 0, out, out);
+  context.drawImage(
+    bitmap,
+    (bitmap.width - side) / 2,
+    (bitmap.height - side) / 2,
+    side,
+    side,
+    0,
+    0,
+    out,
+    out,
+  );
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.86),
+  );
+  return blob ? new File([blob], "avatar.jpg", { type: "image/jpeg" }) : file;
+}
 
 /**
  * The customer's picture: what it is now, a way to pick another, a way to
@@ -31,20 +84,39 @@ export function AvatarForm({
     "idle" | "saved" | "too-large" | "not-an-image" | "failed"
   >("idle");
 
-  function upload(file: File) {
-    const formData = new FormData();
-    formData.set("avatar", file);
+  function upload(original: File) {
     setStatus("idle");
     startTransition(async () => {
-      const result = await updateAvatar(formData);
-      if (!result.ok) {
-        setStatus(
-          result.error === "too-large"
-            ? "too-large"
-            : result.error === "not-an-image"
-              ? "not-an-image"
-              : "failed",
-        );
+      /* Shrunk here, before it leaves the browser. A phone's photo is four
+         to eight megabytes, and the request that carried it was refused
+         at one — not by the size check in the action, which never ran,
+         but by the server in front of it, so the page showed a crash
+         where it meant to show "too large". A 512px square is every size
+         this picture is ever drawn at, and weighs fifty kilobytes. */
+      const file = await shrink(original);
+      if (file.size > MAX_BYTES) {
+        setStatus("too-large");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.set("avatar", file);
+      try {
+        const result = await updateAvatar(formData);
+        if (!result.ok) {
+          setStatus(
+            result.error === "too-large"
+              ? "too-large"
+              : result.error === "not-an-image"
+                ? "not-an-image"
+                : "failed",
+          );
+          return;
+        }
+      } catch {
+        // The request itself failed — the network, or a body the server
+        // would not take. A message on the page, not an error page.
+        setStatus("failed");
         return;
       }
       setStatus("saved");

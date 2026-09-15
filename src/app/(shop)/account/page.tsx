@@ -9,12 +9,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { isOrderStatus, ORDER_STATUSES } from "@/lib/order-status";
 import {
   BagIcon,
-  CardIcon,
   ChevronRightIcon,
   HeartIcon,
-  SettingsIcon,
   TagIcon,
-  TruckIcon,
   UserIcon,
 } from "@/components/ui/icons";
 import { AccountShell } from "@/components/account/AccountShell";
@@ -78,19 +75,24 @@ export default async function AccountPage({
     byStatus.find((row) => row.status === value)?._count._all ?? 0;
   const total = byStatus.reduce((sum, row) => sum + row._count._all, 0);
 
-  /* Four figures, all of them counted rather than described. "Last order" is
-     the date of the newest one and nothing when there is none — an account
-     with no orders should say so once, in the empty state below, not print a
-     zero in a box as though it were a measurement. */
+  /* Four figures, all of them counted rather than described. The wishlist
+     is one of them and the way to the wishlist page — the overview used to
+     keep a column of three doors beside the orders, and two of the three
+     went where the tabs above already go. */
   const stats = [
     { icon: BagIcon, label: t.account.ordersCount, value: String(orderCount) },
     { icon: TagIcon, label: t.account.spentTotal, value: formatPrice(spent, locale) },
     {
-      icon: TruckIcon,
-      label: t.account.lastOrder,
-      value: orders[0] ? formatDate(orders[0].createdAt) : t.account.noOrdersYet,
+      icon: HeartIcon,
+      label: t.favorites.title,
+      value: countText(t.favorites.countOne, t.favorites.count, favoriteCount),
+      href: "/favorites",
     },
-    { icon: UserIcon, label: t.account.memberSince, value: account ? formatDate(account.createdAt) : t.account.noOrdersYet },
+    {
+      icon: UserIcon,
+      label: t.account.memberSince,
+      value: account ? formatDate(account.createdAt) : "—",
+    },
   ];
 
   return (
@@ -105,32 +107,59 @@ export default async function AccountPage({
           hold them read as a list with no items. The icon lives inside the
           term instead, where decoration beside a label belongs. */}
       <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-surface p-4">
-            <dt className="flex items-center gap-3 text-xs text-ink-500">
-              {/* Hidden on a phone, where two cells share 390px: the icon and
-                  its gap take 52 of the ~146px a cell has, and "₾27,892.00"
-                  arrived as "₾27,892…". The label already says which figure
-                  this is; the icon is decoration and goes first. */}
-              <span
-                aria-hidden="true"
-                className="hidden h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600 sm:grid"
+        {stats.map((stat) => {
+          const inner = (
+            <>
+              <dt className="flex items-center gap-3 text-xs text-ink-500">
+                {/* Hidden on a phone, where two cells share 390px: the icon
+                    and its gap take 52 of the ~146px a cell has, and
+                    "₾27,892.00" arrived as "₾27,892…". The label already says
+                    which figure this is; the icon is decoration and goes
+                    first. */}
+                <span
+                  aria-hidden="true"
+                  className="hidden h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600 sm:grid"
+                >
+                  <stat.icon size={18} />
+                </span>
+                <span className="truncate">{stat.label}</span>
+                {stat.href && (
+                  <ChevronRightIcon
+                    size={14}
+                    aria-hidden="true"
+                    className="ml-auto shrink-0 text-ink-400"
+                  />
+                )}
+              </dt>
+              {/* `tabular-nums` so four figures in a row line up by digit — a
+                  strip of numbers that does not is the thing that makes a
+                  dashboard look homemade. */}
+              <dd className="truncate text-base font-extrabold tracking-tight text-ink-900 tabular-nums sm:pl-[3.25rem] sm:text-lg">
+                {stat.value}
+              </dd>
+            </>
+          );
+          /* The wishlist cell is a link — the whole cell, so the target is
+             the box and not the word. A `<dl>` allows nothing but `div`
+             between it and its terms, so the link goes inside the cell. */
+          return stat.href ? (
+            <div key={stat.label} className="bg-surface">
+              <Link
+                href={stat.href}
+                className="block p-4 transition-colors hover:bg-ink-50"
               >
-                <stat.icon size={18} />
-              </span>
-              <span className="truncate">{stat.label}</span>
-            </dt>
-            {/* `tabular-nums` so four figures in a row line up by digit — a
-                strip of numbers that does not is the thing that makes a
-                dashboard look homemade. */}
-            <dd className="truncate text-base font-extrabold tracking-tight text-ink-900 tabular-nums sm:pl-[3.25rem] sm:text-lg">
-              {stat.value}
-            </dd>
-          </div>
-        ))}
+                {inner}
+              </Link>
+            </div>
+          ) : (
+            <div key={stat.label} className="bg-surface p-4">
+              {inner}
+            </div>
+          );
+        })}
       </dl>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+      <div className="mt-4">
         {/* ------------------------------ orders ----------------------------- */}
         <section id="orders" className="card overflow-hidden scroll-mt-[calc(var(--header-h)+1rem)]">
           <div className="card-head flex items-center justify-between gap-3">
@@ -247,47 +276,6 @@ export default async function AccountPage({
           )}
         </section>
 
-        {/* ------------------------------ the rest --------------------------- */}
-        {/* Three doors, not three forms: the profile and the addresses have a
-            page of their own now, and so does the payment page, so this
-            column says where they are and what is in them. */}
-        <div className="flex flex-col gap-3">
-          {[
-            {
-              href: "/favorites",
-              icon: <HeartIcon size={18} filled={favoriteCount > 0} />,
-              title: t.favorites.title,
-              text: countText(t.favorites.countOne, t.favorites.count, favoriteCount),
-            },
-            {
-              href: "/account/settings",
-              icon: <SettingsIcon size={18} />,
-              title: t.account.settings,
-              text: t.account.settingsHint,
-            },
-            {
-              href: "/account/payments",
-              icon: <CardIcon size={18} />,
-              title: t.account.payments,
-              text: t.account.paymentsHint,
-            },
-          ].map((door) => (
-            <Link
-              key={door.href}
-              href={door.href}
-              className="card hover-lift flex items-center gap-3 card-pad-tight"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600">
-                {door.icon}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold text-ink-900">{door.title}</span>
-                <span className="block text-xs text-ink-500">{door.text}</span>
-              </span>
-              <ChevronRightIcon size={16} aria-hidden="true" className="shrink-0 text-ink-400" />
-            </Link>
-          ))}
-        </div>
       </div>
     </AccountShell>
   );

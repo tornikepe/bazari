@@ -1,10 +1,4 @@
-import Link from "next/link";
-import {
-  CheckIcon,
-  AlertIcon,
-  HeartIcon,
-  ChevronRightIcon,
-} from "@/components/ui/icons";
+import { AlertIcon, CheckIcon } from "@/components/ui/icons";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
@@ -79,9 +73,9 @@ export function AccountIdentity({
         )}
 
         {/* `min-w-56` rather than `min-w-0`: the row wraps, and a block that
-            may shrink to nothing never makes it — at 640px the badge and the
-            button took the line and left the name 70px to truncate in. Given
-            a floor, the two of them move to a line of their own instead. */}
+            may shrink to nothing never makes it — the badge would take the
+            line and leave the name 70px to truncate in. Given a floor, the
+            badge moves to a line of its own instead. */}
         <div className="min-w-56 flex-1">
           <p className="text-xs font-bold tracking-wider text-ink-400 uppercase">
             {t.account.title}
@@ -95,31 +89,13 @@ export function AccountIdentity({
         {/* The state, not a call to action: confirming is offered by the
             banner below, which is where the code entry lives. Saying it twice
             in two different voices reads as two different problems. On a
-            phone it takes the whole line under the name — beside the wishlist
-            button the two of them are 386px wide in a 301px row. */}
-        {/* One group, so the two move to the next line together: as
-            separate items the badge stayed beside the name at 700px and the
-            button dropped under the picture on its own. */}
-        <div className="flex items-center gap-2">
-          <span
-            className={`badge ${verified ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}
-          >
-            {verified ? <CheckIcon size={13} /> : <AlertIcon size={13} />}
-            {verified ? t.account.emailVerified : t.account.emailUnverified}
-          </span>
-
-          {/* From `sm` up only: the header's heart and the overview's own
-              wishlist door reach the same page, and a third way there did
-              not earn its line on a phone. */}
-          <Link
-            href="/favorites"
-            className="btn btn-outline btn-sm hidden h-9 gap-1.5 whitespace-nowrap sm:inline-flex"
-          >
-            <HeartIcon size={14} />
-            {t.account.savedItems}
-            <ChevronRightIcon size={14} className="text-ink-400" />
-          </Link>
-        </div>
+            phone it takes the line under the name. */}
+        <span
+          className={`badge ${verified ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}
+        >
+          {verified ? <CheckIcon size={13} /> : <AlertIcon size={13} />}
+          {verified ? t.account.emailVerified : t.account.emailUnverified}
+        </span>
       </div>
 
       {children}

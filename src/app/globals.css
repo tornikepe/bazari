@@ -825,82 +825,10 @@
     background: var(--color-brand-50);
   }
 
-  /* A quantity select shaped like a small outline button, so it can sit
-     flush beside one. The chevron is drawn here because a native select's
-     arrow cannot be styled and differs between platforms. */
-  .quantity-select {
-    position: relative;
-    display: inline-flex;
-    flex-shrink: 0;
-  }
-
-  .quantity-select select {
-    appearance: none;
-    width: 100%;
-    height: 100%;
-    min-height: 2.25rem;
-    padding-inline: 0.625rem 1.5rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-ink-300);
-    border-radius: var(--radius-control);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    color: var(--color-ink-900);
-    transition:
-      border-color 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-
-  /* The card's size: as tall as `.btn-sm`, as narrow as two digits and a
-     chevron, so it and the button share one row even in a two-column grid
-     on a phone. */
-  .quantity-select-xs select {
-    min-height: 2.25rem;
-    padding-inline: 0.45rem 1.1rem;
-    font-size: var(--text-xs);
-  }
-
-  .quantity-select-xs .quantity-select-chevron {
-    right: 0.25rem;
-  }
-
-  /* The card's button sits beside the select in a column that, on a phone,
-     is a hundred and forty pixels wide. Its padding is what gives, not its
-     label. */
+  /* The card's button fills a column that, on a phone, is a hundred and
+     forty pixels wide. Its padding is what gives, not its label. */
   .product-card .btn-sm {
     padding-inline: 0.5rem;
-  }
-
-  .quantity-select-md select {
-    min-height: 2.75rem;
-    padding-inline: 0.75rem 1.75rem;
-  }
-
-  .quantity-select-lg select {
-    min-height: 3.25rem;
-    padding-inline: 0.875rem 1.875rem;
-    font-size: var(--text-base);
-  }
-
-  .quantity-select select:focus {
-    outline: none;
-    border-color: var(--color-brand-400);
-    box-shadow: 0 0 0 3px var(--color-brand-100);
-  }
-
-  .quantity-select select:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  .quantity-select-chevron {
-    position: absolute;
-    top: 50%;
-    right: 0.5rem;
-    transform: translateY(-50%);
-    pointer-events: none;
-    color: var(--color-ink-500);
   }
 
   .field::placeholder {
@@ -1570,6 +1498,23 @@
     transparent
   );
   animation: shimmer 1.6s infinite;
+}
+
+/* The marker of the step an order is on: a halo that breathes, slowly, so
+   the eye lands on it before reading anything. The global reduced-motion
+   block below stops it after one cycle, and the ring stays. */
+@keyframes progress-now {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px var(--color-brand-100);
+  }
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in oklab, var(--color-brand-100) 55%, transparent);
+  }
+}
+
+.progress-now {
+  animation: progress-now 2.2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

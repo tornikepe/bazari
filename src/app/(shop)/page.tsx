@@ -14,6 +14,7 @@ import {
   ShieldIcon,
   TruckIcon,
 } from "@/components/ui/icons";
+import { SectionLink } from "@/components/ui/SectionLink";
 
 export default async function HomePage() {
   const { locale, t } = await getI18n();
@@ -172,14 +173,9 @@ export default async function HomePage() {
         every product still shares one placeholder.
       */}
       <section className="page-container py-12 lg:py-16">
-        <div className="flex items-baseline justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <h2 className="label">{t.home.shopByCategory}</h2>
-          <Link
-            href="/catalog"
-            className="text-xs font-bold text-brand-600 underline underline-offset-4"
-          >
-            {t.home.viewAll}
-          </Link>
+          <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
         </div>
 
         <div className="index-list mt-5">
@@ -200,14 +196,9 @@ export default async function HomePage() {
       {/* ------------------------------ featured --------------------------- */}
       {featured.length > 0 && (
         <section className="page-container rule pt-12 pb-12 lg:pt-16">
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <h2 className="label">{t.home.featured}</h2>
-            <Link
-              href="/catalog"
-              className="text-xs font-bold text-brand-600 underline underline-offset-4"
-            >
-              {t.home.viewAll}
-            </Link>
+            <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
           </div>
           <p className="mt-1.5 text-sm text-ink-500">{t.home.featuredHint}</p>
 
@@ -254,14 +245,9 @@ export default async function HomePage() {
         // Named so the screenshot suite can paint over it: these four cards
         // are whatever was added last, and the suite adds products.
         <section id="new-arrivals" className="page-container rule py-12 lg:py-16">
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <h2 className="label">{t.home.newArrivals}</h2>
-            <Link
-              href="/catalog"
-              className="text-xs font-bold text-brand-600 underline underline-offset-4"
-            >
-              {t.home.viewAll}
-            </Link>
+            <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
           </div>
           <p className="mt-1.5 text-sm text-ink-500">{t.home.newArrivalsHint}</p>
 

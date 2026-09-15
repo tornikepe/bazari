@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/icons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderProgress } from "@/components/order/OrderProgress";
+import { PaymentBadge } from "@/components/order/PaymentBadge";
 import { orderHistory } from "@/lib/order-status";
 import { getSettings } from "@/lib/settings";
 import { InvoiceHead } from "@/components/order/InvoiceHead";
@@ -150,21 +151,12 @@ export default async function OrderConfirmationPage({
               imply the other. */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <StatusBadge status={order.status} t={t} />
-            <span
-              className={`badge ${
-                order.paymentStatus === "paid"
-                  ? "bg-success-soft text-success"
-                  : order.paymentStatus === "refunded"
-                    ? "bg-ink-100 text-ink-600"
-                    : "bg-warning-soft text-warning"
-              }`}
-            >
-              {order.paymentStatus === "paid"
-                ? t.orderDone.paidBadge
-                : order.paymentStatus === "refunded"
-                  ? t.orderDone.refundedBadge
-                  : t.orderDone.unpaidBadge}
-            </span>
+            <PaymentBadge
+              method={order.paymentMethod}
+              status={order.paymentStatus}
+              orderStatus={order.status}
+              t={t}
+            />
           </div>
 
           {awaitingCard && (

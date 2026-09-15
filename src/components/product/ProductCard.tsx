@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { useCart } from "@/components/providers/CartProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
-import { QuantitySelect } from "@/components/product/QuantitySelect";
 import { Price } from "@/components/ui/Price";
 import { TruckIcon } from "@/components/ui/icons";
 import { Stars } from "@/components/product/Stars";
@@ -19,16 +16,6 @@ const LOW_STOCK_THRESHOLD = 10;
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const { locale, t } = useI18n();
-  const { items, hydrated, setQuantity: setLineQuantity } = useCart();
-  const [pending, setPending] = useState(1);
-
-  /* The quantity beside the button is the cart's own once the product is
-     in the cart — the button is a toggle, so this is the only way to buy
-     two of something from the card — and the number to add until then. */
-  const line = hydrated
-    ? items.find((entry) => entry.productId === product.id && !entry.variantId)
-    : undefined;
-  const quantity = line ? line.quantity : pending;
 
   const name = locale === "ka" ? product.nameKa : product.nameEn;
   const discount = discountPercent(product.price, product.oldPrice);
@@ -120,45 +107,30 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               {t.product.variantChoose}
             </Link>
           ) : (
-            /* One row at every width: the select is as narrow as two digits
-               and the button's label is one word, so even a phone's
-               two-column card holds both side by side. */
-            <div className="flex gap-1">
-              {/* The select stays put when the product is sold out rather than
-                disappearing, so the button beside it does not change width
-                between one card and the next. */}
-              <QuantitySelect
-                size="xs"
-                value={quantity}
-                stock={product.stock}
-                disabled={soldOut}
-                onChange={(next) =>
-                  line ? setLineQuantity(product.id, next) : setPending(next)
-                }
-              />
-              <AddToCartButton
-                product={{
-                  productId: product.id,
-                  slug: product.slug,
-                  nameKa: product.nameKa,
-                  nameEn: product.nameEn,
-                  image: product.image,
-                  price: product.price,
-                  stock: product.stock,
-                }}
-                quantity={quantity}
-                short
-                showIcon={false}
-                fullWidth
-                /* Outlined on the card, filled on the product page. Twelve solid
+            /* One of it, in one press; how many is the product page's
+               question, where there is a stepper and the room to answer it.
+               The card had a quantity select beside the button for a while,
+               and a page of twelve of them read as twelve small forms. */
+            <AddToCartButton
+              product={{
+                productId: product.id,
+                slug: product.slug,
+                nameKa: product.nameKa,
+                nameEn: product.nameEn,
+                image: product.image,
+                price: product.price,
+                stock: product.stock,
+              }}
+              short
+              fullWidth
+              /* Outlined on the card, filled on the product page. Twelve solid
                  red buttons on a catalogue page were twelve claims on the eye,
                  and the deals banner was meant to be the one place the red
                  fills a region. The card you are over fills its button — see
                  `.hover-lift:hover .btn-outline` — so the offer is still made,
                  one at a time. */
-                variant="outline"
-              />
-            </div>
+              variant="outline"
+            />
           )}
         </div>
       </div>

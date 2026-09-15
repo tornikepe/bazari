@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { orderHistory } from "@/lib/order-status";
 import { getLocale } from "@/lib/locale";
 import type { OrderStatus } from "@/lib/order-status";
+import type { PaymentMethod, PaymentStatus } from "@/lib/payment";
 
 /**
  * Looks up an order for the storefront tracking page.
@@ -42,8 +43,8 @@ export type TrackResult =
       shipping: number;
       discount: number;
       total: number;
-      paymentMethod: string;
-      paymentStatus: string;
+      paymentMethod: PaymentMethod;
+      paymentStatus: PaymentStatus;
       items: TrackedItem[];
       /** The recorded history, which is what makes this a timeline and not a badge. */
       history: TrackedStep[];

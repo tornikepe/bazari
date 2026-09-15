@@ -17,6 +17,11 @@ const STEPS = ORDER_STATUSES.filter((status) => status !== "cancelled");
  * ones behind you dated from the order's own history, the one you are on
  * explained, and the ones ahead named but not pretended to be scheduled.
  *
+ * The step the order is on is the one thing the page is asked, so it is the
+ * one thing drawn loudly: its own tinted panel, a marker with a halo, and
+ * the words "it is here now". A numbered box in an outline, which is what
+ * it used to get, read as one more step in the list.
+ *
  * No invented dates. A step that has not happened shows no time at all, and
  * there is no "expected delivery" anywhere, because nothing in this shop
  * knows one — a guessed date is the fastest way to lose someone's trust.
@@ -35,6 +40,28 @@ export function OrderProgress({
   const cancelled = status === "cancelled";
   const currentIndex = STEPS.indexOf(status as (typeof STEPS)[number]);
 
+  /* A cancelled order shows the steps it did reach and then the cancellation
+     as the step it is on, in place of the ones it will never reach — a list
+     that still promised "delivered" under a cancelled order was a list that
+     had not been told. */
+  const rows: { step: OrderStatus; done: boolean; current: boolean }[] = cancelled
+    ? [
+        ...STEPS.filter((step) => reachedAt.has(step)).map((step) => ({
+          step,
+          done: true,
+          current: false,
+        })),
+        { step: "cancelled" as const, done: false, current: true },
+      ]
+    : STEPS.map((step, index) => ({
+        step,
+        /* Ticked when the order actually got here — read from the history
+           rather than from the position, so "delivered" ticks its own last
+           box instead of standing on it wearing a number. */
+        done: reachedAt.has(step) && (index !== currentIndex || status === "delivered"),
+        current: index === currentIndex,
+      }));
+
   return (
     <section aria-label={t.track.progressTitle}>
       <h3 className="text-sm font-bold text-ink-900">{t.track.progressTitle}</h3>
@@ -43,25 +70,21 @@ export function OrderProgress({
           `aria-current` marks where the order stands, which is the one thing a
           screen reader cannot infer from ticks and colours. */}
       <ol className="mt-3">
-        {STEPS.map((step, index) => {
+        {rows.map(({ step, done, current }, index) => {
           const at = reachedAt.get(step);
-          const isCurrent = !cancelled && index === currentIndex;
-
-          /* Ticked when the order actually got here — read from the history
-             rather than from the position, so a cancelled order still shows
-             the steps it did reach, and "delivered" ticks its own last box
-             instead of standing on it wearing a number. */
-          const done = reachedAt.has(step) && (!isCurrent || status === "delivered");
-          const reached = done || isCurrent;
+          const reached = done || current;
+          const last = index === rows.length - 1;
+          const isCancelRow = step === "cancelled";
 
           return (
-            <li key={step} className="relative flex gap-3 pb-5 last:pb-0">
+            <li key={step} className="relative flex gap-3">
               {/* The rail, drawn between the markers rather than behind them,
-                  so a hairline never shows through a tick. */}
-              {index < STEPS.length - 1 && (
+                  so a hairline never shows through a tick. Brand-coloured up
+                  to the current step and grey beyond it. */}
+              {!last && (
                 <span
                   aria-hidden="true"
-                  className={`absolute top-7 bottom-0 left-[11px] w-px ${
+                  className={`absolute top-8 bottom-0 left-[13px] w-0.5 ${
                     done ? "bg-brand-600" : "bg-line"
                   }`}
                 />
@@ -69,35 +92,81 @@ export function OrderProgress({
 
               <span
                 aria-hidden="true"
-                className={`relative z-1 mt-0.5 grid h-6 w-6 shrink-0 place-items-center border text-xs ${
-                  done
-                    ? "border-brand-600 bg-brand-600 text-brand-on-solid"
-                    : isCurrent
-                      ? "border-brand-600 bg-surface text-brand-600"
-                      : "border-line bg-surface text-ink-300"
+                className={`relative z-1 mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-pill text-xs font-bold ${
+                  isCancelRow
+                    ? "bg-danger text-brand-on-solid ring-4 ring-danger-soft"
+                    : done && current
+                      ? "bg-success text-brand-on-solid ring-4 ring-success-soft"
+                      : done
+                        ? "bg-brand-600 text-brand-on-solid"
+                        : current
+                          ? "bg-brand-600 text-brand-on-solid ring-4 ring-brand-100 progress-now"
+                          : "border-2 border-line bg-surface text-ink-400"
                 }`}
               >
-                {done ? <CheckIcon size={13} strokeWidth={3} /> : index + 1}
+                {isCancelRow ? (
+                  <CloseIcon size={14} strokeWidth={3} />
+                ) : done ? (
+                  <CheckIcon size={14} strokeWidth={3} />
+                ) : (
+                  index + 1
+                )}
               </span>
 
-              <div className="min-w-0 flex-1">
-                <p
-                  {...(isCurrent ? { "aria-current": "step" as const } : {})}
-                  className={`text-sm font-bold ${reached ? "text-ink-900" : "text-ink-400"}`}
-                >
-                  {t.status[step]}
-                </p>
+              {/* The current step gets the panel; the others a line each. */}
+              <div
+                className={`mb-2 min-w-0 flex-1 ${
+                  current
+                    ? `rounded-control px-3.5 py-3 ${
+                        isCancelRow
+                          ? "bg-danger-soft"
+                          : done
+                            ? "bg-success-soft"
+                            : "bg-brand-50"
+                      }`
+                    : "py-1.5"
+                }`}
+              >
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <p
+                    {...(current ? { "aria-current": "step" as const } : {})}
+                    className={`text-sm font-bold ${
+                      isCancelRow
+                        ? "text-danger"
+                        : reached
+                          ? "text-ink-900"
+                          : "text-ink-400"
+                    }`}
+                  >
+                    {t.status[step]}
+                  </p>
+                  {current && (
+                    <span
+                      className={`badge ${
+                        isCancelRow
+                          ? "bg-danger text-brand-on-solid"
+                          : done
+                            ? "bg-success text-brand-on-solid"
+                            : "bg-brand-600 text-brand-on-solid"
+                      }`}
+                    >
+                      {t.track.now}
+                    </span>
+                  )}
+                </div>
 
                 {/* The meaning only where the reader is standing. On every row
                     it becomes a wall of text that says nothing about *them*. */}
-                {isCurrent && (
-                  <p className="mt-0.5 text-sm text-ink-600">{t.track.meaning[step]}</p>
+                {current && (
+                  <p className={`mt-1 text-sm ${isCancelRow ? "text-danger" : "text-ink-700"}`}>
+                    {isCancelRow ? t.track.cancelledNote : t.track.meaning[step]}
+                  </p>
                 )}
 
                 {/* No line at all rather than an empty one: a step that
                     happened without a recorded time says nothing about when. */}
                 {(at || !reached) && (
-                  <p className="mt-0.5 text-xs text-ink-400">
+                  <p className={`text-xs ${current ? "mt-1.5 text-ink-500" : "mt-0.5 text-ink-400"}`}>
                     {at ? formatDateTime(at) : t.track.notReached}
                   </p>
                 )}
@@ -107,15 +176,8 @@ export function OrderProgress({
         })}
       </ol>
 
-      {cancelled && (
-        <p className="mt-1 flex items-start gap-2 border border-danger/30 bg-danger-soft p-3 text-sm text-danger">
-          <CloseIcon size={15} className="mt-0.5 shrink-0" />
-          {t.track.cancelledNote}
-        </p>
-      )}
-
       {/* What the shop will do next, in the shop's own voice. */}
-      <p className="mt-4 border-t border-line pt-4 text-sm text-ink-600">
+      <p className="mt-3 border-t border-line pt-4 text-sm text-ink-600">
         <span className="mr-1.5 font-bold text-ink-900">{t.track.nextLabel}:</span>
         {t.track.next[status]}
       </p>
