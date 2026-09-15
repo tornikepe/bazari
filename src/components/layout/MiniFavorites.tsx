@@ -12,9 +12,6 @@ import { HeartIcon, CloseIcon } from "@/components/ui/icons";
 import { fill } from "@/lib/i18n";
 import type { ProductCardData } from "@/lib/catalog";
 
-/** How many the panel shows before it points at the page. */
-const SHOWN = 5;
-
 /**
  * Answers already fetched, by the ids they answer. The list lives in
  * localStorage as ids alone, so the names and prices come from the server;
@@ -33,7 +30,7 @@ export function MiniFavorites() {
   const { t, locale } = useI18n();
   const favorites = useFavorites();
   // Newest first: the last thing saved is the thing most likely wanted.
-  const wanted = [...favorites].reverse().slice(0, SHOWN);
+  const wanted = [...favorites].reverse();
   const key = wanted.join(",");
   // The answer read straight from the cache during render, and the one the
   // effect fetched when the cache had none — state only for the second, so
@@ -57,20 +54,24 @@ export function MiniFavorites() {
     };
   }, [key]);
 
+  /* One height whatever the list holds — see `.mini-list` — so a line
+     taken off does not pull the button under it up, and every line can
+     be scrolled to. */
   if (favorites.length === 0) {
     return (
-      <div className="px-5 py-8 text-center">
-        <span className="mx-auto grid h-12 w-12 place-items-center rounded-pill bg-ink-100 text-ink-400">
-          <HeartIcon size={22} />
-        </span>
-        <p className="mt-3 text-sm font-bold text-ink-900">{t.favorites.empty}</p>
-        <p className="mt-1 text-xs text-ink-500">{t.favorites.emptyHint}</p>
+      <div className="mini-list grid place-items-center px-5 text-center">
+        <div>
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-pill bg-ink-100 text-ink-400">
+            <HeartIcon size={22} />
+          </span>
+          <p className="mt-3 text-sm font-bold text-ink-900">{t.favorites.empty}</p>
+          <p className="mt-1 text-xs text-ink-500">{t.favorites.emptyHint}</p>
+        </div>
       </div>
     );
   }
 
   const rows = products ?? null;
-  const more = favorites.length - wanted.length;
 
   return (
     <>
@@ -86,7 +87,7 @@ export function MiniFavorites() {
       {rows === null ? (
         /* The same rows, as shapes, so the panel is its final height while
            the names arrive and nothing under it jumps. */
-        <ul className="divide-y divide-line" aria-busy>
+        <ul className="mini-list divide-y divide-line" aria-busy>
           {wanted.map((id) => (
             <li key={id} className="flex gap-3 px-4 py-3">
               <span className="skeleton h-14 w-14 shrink-0 rounded-control" />
@@ -98,7 +99,7 @@ export function MiniFavorites() {
           ))}
         </ul>
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="mini-list divide-y divide-line">
           {rows.map((product) => {
             const name = locale === "ka" ? product.nameKa : product.nameEn;
             return (
@@ -137,7 +138,6 @@ export function MiniFavorites() {
       <div className="border-t border-line bg-canvas px-4 py-3">
         <Link href="/favorites" className="btn btn-outline btn-sm w-full">
           {t.home.viewAll}
-          {more > 0 && <span className="text-ink-400 tabular-nums">+{more}</span>}
         </Link>
       </div>
     </>

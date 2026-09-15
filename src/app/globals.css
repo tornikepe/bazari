@@ -831,6 +831,23 @@
     padding-inline: 0.5rem;
   }
 
+  /* The body of the header's cart and wishlist panels: four rows tall,
+     always — more rows scroll inside it, fewer leave it the same height,
+     so the panel never changes size as lines come and go. `overscroll`
+     contained, so reaching the end does not scroll the page behind. */
+  .mini-list {
+    height: 19.5rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* A field told it is wrong: the edge turns, and nothing else has to be
+     said — the coupon box says it this way and no other. */
+  .field[aria-invalid="true"] {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-soft);
+  }
+
   .field::placeholder {
     color: var(--color-ink-400);
   }

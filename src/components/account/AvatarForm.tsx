@@ -165,7 +165,10 @@ export function AvatarForm({
           </p>
         </div>
 
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        {/* Two equal halves on a phone rather than two buttons of their own
+            widths stacked — from `sm` up they take their own width and sit
+            at the row's end. */}
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <input
             ref={input}
             type="file"
@@ -181,7 +184,7 @@ export function AvatarForm({
             type="button"
             disabled={isPending}
             onClick={() => input.current?.click()}
-            className="btn btn-primary btn-md"
+            className="btn btn-primary btn-md flex-1 sm:flex-none"
           >
             <Swap
               show={
@@ -207,7 +210,7 @@ export function AvatarForm({
               type="button"
               disabled={isPending}
               onClick={remove}
-              className="btn btn-outline btn-md text-danger hover:bg-danger-soft"
+              className="btn btn-outline btn-md flex-1 text-danger hover:bg-danger-soft sm:flex-none"
             >
               <TrashIcon size={16} />
               {t.account.photoRemove}

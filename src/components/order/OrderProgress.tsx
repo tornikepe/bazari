@@ -85,23 +85,24 @@ export function OrderProgress({
                 <span
                   aria-hidden="true"
                   className={`absolute top-8 bottom-0 left-[13px] w-0.5 ${
-                    done ? "bg-brand-600" : "bg-line"
+                    done ? "bg-ink-200" : "bg-line"
                   }`}
                 />
               )}
 
               <span
                 aria-hidden="true"
+                /* Only the step it is on wears the shop's colour — the one
+                   from the settings page. The steps behind it are ticked in
+                   grey: they happened, and that is all they have to say. */
                 className={`relative z-1 mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-pill text-xs font-bold ${
                   isCancelRow
                     ? "bg-danger text-brand-on-solid ring-4 ring-danger-soft"
-                    : done && current
-                      ? "bg-success text-brand-on-solid ring-4 ring-success-soft"
+                    : current
+                      ? "bg-brand-600 text-brand-on-solid ring-4 ring-brand-100 progress-now"
                       : done
-                        ? "bg-brand-600 text-brand-on-solid"
-                        : current
-                          ? "bg-brand-600 text-brand-on-solid ring-4 ring-brand-100 progress-now"
-                          : "border-2 border-line bg-surface text-ink-400"
+                        ? "bg-ink-200 text-ink-700"
+                        : "border-2 border-line bg-surface text-ink-400"
                 }`}
               >
                 {isCancelRow ? (
@@ -117,13 +118,7 @@ export function OrderProgress({
               <div
                 className={`mb-2 min-w-0 flex-1 ${
                   current
-                    ? `rounded-control px-3.5 py-3 ${
-                        isCancelRow
-                          ? "bg-danger-soft"
-                          : done
-                            ? "bg-success-soft"
-                            : "bg-brand-50"
-                      }`
+                    ? `rounded-control px-3.5 py-3 ${isCancelRow ? "bg-danger-soft" : "bg-brand-50"}`
                     : "py-1.5"
                 }`}
               >
@@ -133,22 +128,18 @@ export function OrderProgress({
                     className={`text-sm font-bold ${
                       isCancelRow
                         ? "text-danger"
-                        : reached
+                        : current
                           ? "text-ink-900"
-                          : "text-ink-400"
+                          : reached
+                            ? "text-ink-600"
+                            : "text-ink-400"
                     }`}
                   >
                     {t.status[step]}
                   </p>
                   {current && (
                     <span
-                      className={`badge ${
-                        isCancelRow
-                          ? "bg-danger text-brand-on-solid"
-                          : done
-                            ? "bg-success text-brand-on-solid"
-                            : "bg-brand-600 text-brand-on-solid"
-                      }`}
+                      className={`badge ${isCancelRow ? "bg-danger" : "bg-brand-600"} text-brand-on-solid`}
                     >
                       {t.track.now}
                     </span>

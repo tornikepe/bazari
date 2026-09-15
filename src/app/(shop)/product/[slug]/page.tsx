@@ -30,8 +30,9 @@ import { parsePhotos, altOf } from "@/lib/product-photos";
 import { Stars } from "@/components/product/Stars";
 import { ReviewForm } from "@/components/product/ReviewForm";
 import { getCurrentUser } from "@/lib/auth";
+import { getSettings } from "@/lib/settings";
 import { averageRating, mayReview } from "@/lib/review-rules";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -93,6 +94,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
      the slower of them twice. (The comment said so before the code did — the
      load test found the second `await` waiting on the first.) */
   const user = await getCurrentUser();
+  const settings = await getSettings();
   const [boughtTogether, related, reviews, ownOrders, ownReview] = await Promise.all([
     getBoughtTogether(product.id),
     prisma.product.findMany({
@@ -194,8 +196,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     },
   ];
 
+  /* The delivery line says the shop's own threshold, from the settings page
+     — it said "over ₾200" whatever the shop had set. No threshold at all,
+     and it says delivery is free. */
   const guarantees = [
-    { icon: TruckIcon, text: t.topbar.shipping },
+    {
+      icon: TruckIcon,
+      text:
+        settings.freeShippingThreshold > 0
+          ? fill(t.topbar.shipping, {
+              amount: formatPrice(settings.freeShippingThreshold, locale),
+            })
+          : t.topbar.shippingAlways,
+    },
     { icon: RefreshIcon, text: t.home.why3Title },
     { icon: ShieldIcon, text: t.home.why4Title },
   ];

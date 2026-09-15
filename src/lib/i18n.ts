@@ -38,7 +38,8 @@ const ka = {
   topbar: {
     // Only claims the code actually enforces: the free-shipping threshold
     // lives in `cart-rules.ts`, the delivery estimate is per-product data.
-    shipping: "უფასო მიწოდება 200 ₾-ზე მეტ შეკვეთაზე",
+    shipping: "უფასო მიწოდება {amount}-დან",
+    shippingAlways: "მიწოდება უფასოა",
     delivery: "მიწოდების ვადა მითითებულია თითოეულ პროდუქტზე",
   },
 
@@ -194,7 +195,6 @@ const ka = {
     taxIncluded: "მათ შორის დღგ {rate}%",
     checkout: "შეკვეთის გაფორმება",
     freeShippingHint: "დაამატე კიდევ {amount} უფასო მიწოდებისთვის",
-    moreItems: "და კიდევ {count}",
     open: "კალათის გახსნა",
   },
 
@@ -1210,7 +1210,8 @@ const en: Dictionary = {
   },
 
   topbar: {
-    shipping: "Free delivery on orders over ₾200",
+    shipping: "Free delivery on orders from {amount}",
+    shippingAlways: "Delivery is free",
     delivery: "Delivery time is shown on every product",
   },
 
@@ -1366,7 +1367,6 @@ const en: Dictionary = {
     taxIncluded: "Including VAT {rate}%",
     checkout: "Checkout",
     freeShippingHint: "Add {amount} more for free shipping",
-    moreItems: "and {count} more",
     open: "Open the cart",
   },
 

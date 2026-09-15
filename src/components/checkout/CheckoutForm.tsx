@@ -557,32 +557,38 @@ export function CheckoutForm({
           {/* Keyed by the product *and* the combination: two sizes of one
               shirt are two lines, and keying on the product alone made React
               fold them onto one another. */}
-          <ul className="mt-4 flex max-h-64 flex-col gap-3 overflow-y-auto">
+          {/* The picture at 56px in its own bordered tile, and the count as
+              a line of text under the name rather than a badge over the
+              picture's corner — the badge covered a quarter of a 48px photo,
+              which is the part of the photo that told you what it was. */}
+          <ul className="mt-4 flex max-h-80 flex-col gap-3 overflow-y-auto overscroll-contain">
             {items.map((item) => (
               <li key={lineKey(item)} className="flex items-center gap-3">
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-control bg-ink-50">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control border border-line bg-surface">
                   <Image
                     src={item.image}
                     alt=""
                     fill
-                    sizes="48px"
+                    sizes="56px"
                     className="object-cover"
                   />
-                  <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-pill bg-panel px-1 text-xs font-bold text-panel-fg">
-                    {item.quantity}
-                  </span>
                 </div>
 
-                <span className="clamp-2-xs flex-1 text-xs leading-snug text-ink-700">
-                  {locale === "ka" ? item.nameKa : item.nameEn}
+                <span className="min-w-0 flex-1">
+                  <span className="clamp-2-xs block text-xs leading-snug font-semibold text-ink-900">
+                    {locale === "ka" ? item.nameKa : item.nameEn}
+                  </span>
                   {/* Two lines of the same product differ only here, so a
                       summary that left it out would show the same row twice. */}
                   {item.variantLabel && (
-                    <span className="block text-ink-400">{item.variantLabel}</span>
+                    <span className="block truncate text-xs text-ink-400">{item.variantLabel}</span>
                   )}
+                  <span className="mt-0.5 block text-xs text-ink-500 tabular-nums">
+                    {item.quantity} × {formatPrice(item.price, locale)}
+                  </span>
                 </span>
 
-                <span className="shrink-0 text-xs font-semibold text-ink-900">
+                <span className="shrink-0 text-sm font-bold text-ink-900 tabular-nums">
                   {formatPrice(item.price * item.quantity, locale)}
                 </span>
               </li>
@@ -603,6 +609,11 @@ export function CheckoutForm({
                 placeholder={t.checkout.couponPlaceholder}
                 autoComplete="off"
                 disabled={coupon?.ok}
+                /* A code the shop does not know turns the box's edge red
+                   and says nothing else — see `.field[aria-invalid]`. The
+                   reasons worth words (expired, used up, under the minimum)
+                   keep theirs below. */
+                aria-invalid={coupon !== null && !coupon.ok}
                 onChange={(event) => {
                   setCouponInput(event.target.value.toUpperCase());
                   setCoupon(null);
@@ -646,7 +657,7 @@ export function CheckoutForm({
               </button>
             </div>
 
-            {coupon && (
+            {coupon && (coupon.ok || coupon.reason !== "not-found") && (
               <p
                 className={`mt-1.5 text-xs leading-snug ${coupon.ok ? "text-success" : "text-danger"}`}
               >
