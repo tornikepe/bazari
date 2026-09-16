@@ -325,7 +325,10 @@ export default async function AdminOrdersPage({
                       </label>
                     </WriteOnly>
 
-                    <div className="min-w-0">
+                    {/* `flex-1`, so the words sit against the checkbox and the
+                        total against the far edge — with `justify-between`
+                        alone the words floated to the middle of a tablet. */}
+                    <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/orders/${order.id}`}
                         className="font-mono text-sm font-bold whitespace-nowrap text-ink-900"

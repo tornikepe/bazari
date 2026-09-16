@@ -22,10 +22,13 @@ import type { ReactNode } from "react";
  */
 
 /** Spelled out, because Tailwind cannot see a class name built at runtime. */
+/* Two to a row on a phone rather than one under another — a stack of three
+   full-width cells, each holding one number, took a screen. The odd cell
+   of a three takes the whole last row so the strip has no hole. */
 const COLUMNS = {
-  2: "sm:grid-cols-2",
-  3: "sm:grid-cols-3",
-  4: "sm:grid-cols-2 lg:grid-cols-4",
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1",
+  4: "grid-cols-2 lg:grid-cols-4",
 } as const;
 
 export function Figures({
@@ -40,9 +43,11 @@ export function Figures({
   return (
     <dl className={`grid gap-px overflow-hidden rounded-card border border-line bg-line ${COLUMNS[columns]} ${className}`}>
       {items.map((item) => (
-        <div key={item.label} className="bg-surface px-4 py-3.5">
-          <dt className="label text-ink-500">{item.label}</dt>
-          <dd className="mt-1.5 text-xl font-extrabold tracking-tight text-ink-900 tabular-nums">
+        <div key={item.label} className="min-w-0 bg-surface px-4 py-3.5">
+          <dt className="label truncate text-ink-500" title={item.label}>
+            {item.label}
+          </dt>
+          <dd className="mt-1.5 truncate text-lg font-extrabold tracking-tight text-ink-900 tabular-nums sm:text-xl">
             {item.value}
           </dd>
         </div>

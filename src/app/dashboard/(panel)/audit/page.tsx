@@ -26,6 +26,7 @@ const ENTITIES = [
   "customer",
   "review",
   "payment",
+  "spend",
 ] as const;
 
 /** Columns that hold tetri, so the log shows lari like everything else. */

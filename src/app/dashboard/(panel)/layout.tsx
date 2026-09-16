@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* The same entrance the shop's pages make: half a second of rise,
             replayed on every navigation, once. */}
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <PageTransition>{children}</PageTransition>
+          <PageTransition block>{children}</PageTransition>
         </main>
       </div>
     </StaffRoleProvider>

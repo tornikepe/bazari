@@ -89,12 +89,14 @@ export default async function AnalyticsPage({
       />
 
       {/* ------------------------------ money ------------------------------ */}
-      <dl className="mt-4 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line lg:grid-cols-4">
         {figures.map((figure) => (
-          <div key={figure.label} className="bg-surface px-4 py-3.5">
-            <dt className="label text-ink-500">{figure.label}</dt>
+          <div key={figure.label} className="min-w-0 bg-surface px-4 py-3.5">
+            <dt className="label truncate text-ink-500" title={figure.label}>
+              {figure.label}
+            </dt>
             <dd
-              className={`mt-1.5 text-xl font-extrabold tracking-tight tabular-nums ${
+              className={`mt-1.5 truncate text-lg font-extrabold tracking-tight tabular-nums sm:text-xl ${
                 "tone" in figure && figure.tone ? figure.tone : "text-ink-900"
               }`}
             >
