@@ -38,32 +38,42 @@ export async function getDashboardMetrics(days: RangeDays = DEFAULT_RANGE) {
   // `shopDayStart` — the two are four hours apart, and the gap is enough for
   // the revenue figure and the sum of the bars beside it to disagree.
   const since = shopDayStart(new Date(now.getTime() - (days - 1) * DAY_MS));
+  // The window before this one, the same length, for "up 12% on the last
+  // thirty days" — a figure with nothing beside it is a figure, not a reading.
+  const before = shopDayStart(new Date(since.getTime() - days * DAY_MS));
 
-  // Fetched once with its items rather than re-aggregated per statistic.
-  const orders = await prisma.order.findMany({
-    where: { status: { not: "cancelled" }, createdAt: { gte: since } },
+  // Fetched once with its items rather than re-aggregated per statistic; both
+  // windows in one query, split afterwards.
+  const all = await prisma.order.findMany({
+    where: { status: { not: "cancelled" }, createdAt: { gte: before } },
     select: {
       total: true,
       createdAt: true,
       items: { select: { price: true, costPrice: true, quantity: true } },
     },
   });
+  const orders = all.filter((order) => order.createdAt >= since);
+  const previousOrders = all.filter((order) => order.createdAt < since);
 
-  const revenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const sumOf = (rows: typeof all) => ({
+    revenue: rows.reduce((sum, order) => sum + order.total, 0),
+    // Uses the cost snapshotted on each line, so past margins stay correct
+    // even after a product's cost price is edited.
+    profit: rows.reduce(
+      (sum, order) =>
+        sum +
+        order.items.reduce((line, item) => line + (item.price - item.costPrice) * item.quantity, 0),
+      0,
+    ),
+    units: rows.reduce(
+      (sum, order) => sum + order.items.reduce((n, item) => n + item.quantity, 0),
+      0,
+    ),
+    orderCount: rows.length,
+  });
 
-  // Uses the cost snapshotted on each line, so past margins stay correct even
-  // after a product's cost price is edited.
-  const profit = orders.reduce(
-    (sum, order) =>
-      sum +
-      order.items.reduce((line, item) => line + (item.price - item.costPrice) * item.quantity, 0),
-    0,
-  );
-
-  const units = orders.reduce(
-    (sum, order) => sum + order.items.reduce((n, item) => n + item.quantity, 0),
-    0,
-  );
+  const { revenue, profit, units } = sumOf(orders);
+  const previous = sumOf(previousOrders);
 
   // Summed into a map in one pass rather than re-filtering the whole order
   // list once per bucket. That was O(days × orders), which is unremarkable at
@@ -84,6 +94,14 @@ export async function getDashboardMetrics(days: RangeDays = DEFAULT_RANGE) {
     return { date: key, total: byDay.get(key) ?? 0 };
   });
 
+  // Units per day too, for the small line beside that figure.
+  const unitsByDay = new Map<string, number>();
+  for (const order of orders) {
+    const key = shopDayKey(order.createdAt);
+    const count = order.items.reduce((n, item) => n + item.quantity, 0);
+    unitsByDay.set(key, (unitsByDay.get(key) ?? 0) + count);
+  }
+
   return {
     days,
     revenue,
@@ -93,5 +111,8 @@ export async function getDashboardMetrics(days: RangeDays = DEFAULT_RANGE) {
     avgOrder: orders.length ? revenue / orders.length : 0,
     marginPct: revenue > 0 ? Math.round((profit / revenue) * 100) : 0,
     daily,
+    dailyUnits: daily.map((day) => unitsByDay.get(day.date) ?? 0),
+    /** The same figures for the window before this one. */
+    previous,
   };
 }

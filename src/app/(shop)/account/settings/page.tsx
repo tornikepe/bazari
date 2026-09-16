@@ -35,7 +35,7 @@ export default async function AccountSettingsPage({
           four-field form beside an address book that is three lines tall
           until an address is saved, and the page was half empty on the
           right; stacked, every card is as tall as what it holds. */}
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="stagger mt-4 flex flex-col gap-4">
         <AvatarForm
           name={user.name}
           email={user.email}

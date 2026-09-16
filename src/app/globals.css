@@ -1562,6 +1562,252 @@
   animation: progress-now 2.2s ease-in-out infinite;
 }
 
+/* ---------------------------------------------------------------------------
+   The dashboards' motion — figures, lines, bars, and the band at the top.
+   --------------------------------------------------------------------------- */
+
+/* A figure the server printed and the client has not yet taken over: there,
+   for a screen reader and for the page's height, but not yet seen — it
+   appears as it starts to count. */
+.count-up-pending {
+  opacity: 0;
+}
+
+/* The sparkline: the fill is the line's colour at a tenth, and the line
+   draws itself from left to right on arrival. */
+.spark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.spark-area {
+  fill: currentColor;
+  opacity: 0.12;
+  animation: area-in 0.8s ease-out 0.4s both;
+}
+
+@keyframes area-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.12;
+  }
+}
+
+.spark-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 1.1s var(--ease-out) 0.15s both;
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The chart's bars grow out of the baseline one after another: each bar
+   carries its index in `--i`, and the delay is that many hundredths. */
+.chart-bar {
+  transform-origin: bottom;
+  animation: bar-up 0.55s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 14ms);
+}
+
+@keyframes bar-up {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* A proportion bar — a product's share, a stock level — that fills to its
+   width on arrival rather than being there already. */
+.fill-bar {
+  transform-origin: left;
+  animation: fill-in 0.8s var(--ease-out) 0.2s both;
+}
+
+@keyframes fill-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The band at the top of the dashboard and of the account: the dark panel
+   with two soft lights drifting behind a fine grid. The lights move slowly
+   — a minute a cycle — so the surface is alive without being busy. */
+.hero-band {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-panel);
+  color: var(--color-panel-fg);
+  isolation: isolate;
+}
+
+.hero-band::before,
+.hero-band::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.hero-band::before {
+  width: 24rem;
+  height: 24rem;
+  top: -10rem;
+  right: -5rem;
+  background: var(--color-brand-500);
+  animation: drift-a 48s ease-in-out infinite alternate;
+}
+
+.hero-band::after {
+  width: 20rem;
+  height: 20rem;
+  bottom: -12rem;
+  left: 10%;
+  background: color-mix(in oklab, var(--color-brand-500) 45%, #2563eb);
+  animation: drift-b 60s ease-in-out infinite alternate;
+}
+
+@keyframes drift-a {
+  to {
+    transform: translate(-6rem, 4rem) scale(1.15);
+  }
+}
+
+@keyframes drift-b {
+  to {
+    transform: translate(8rem, -3rem) scale(0.9);
+  }
+}
+
+/* The grid over the lights: hairlines every 2rem, fading to nothing at the
+   bottom so the band's foot is calm. */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+  background-size: 2rem 2rem;
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.9), transparent 90%);
+  pointer-events: none;
+}
+
+/* Text on the band: the eyebrow and the quiet lines take the panel's own
+   muted token, so they read the same in both themes. */
+.hero-band .hero-muted {
+  color: var(--color-panel-muted);
+}
+
+/* The avatar's ring: a conic sweep of the brand colour and its neighbours,
+   turning slowly under the pointer. */
+.avatar-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-card);
+  padding: 3px;
+  background: conic-gradient(
+    from var(--ring-angle, 0deg),
+    var(--color-brand-500),
+    #f59e0b,
+    var(--color-brand-500)
+  );
+}
+
+@property --ring-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@media (hover: hover) {
+  .avatar-ring:hover {
+    animation: ring-turn 2.4s linear infinite;
+  }
+}
+
+@keyframes ring-turn {
+  to {
+    --ring-angle: 360deg;
+  }
+}
+
+/* A single sheen sweeping across a card once, on arrival — the light
+   catching the surface as it settles into place. */
+.shine-once {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-once::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgb(255 255 255 / 0.12) 50%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  animation: sheen 1.4s ease-out 0.5s both;
+  pointer-events: none;
+}
+
+@keyframes sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* A row in a list that leans right under the pointer, its chevron ahead
+   of it — a nudge that the row goes somewhere. */
+.row-lean {
+  transition:
+    background-color var(--dur-fast) ease,
+    translate var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .row-lean:hover {
+    translate: 3px 0;
+  }
+
+  .row-lean:hover .row-chevron {
+    translate: 3px 0;
+    color: var(--color-brand-600);
+  }
+}
+
+.row-chevron {
+  transition:
+    translate var(--dur-base) var(--ease-out),
+    color var(--dur-fast) ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -1585,8 +1831,26 @@
   .reveal-view,
   .parallax-back,
   .parallax-fore,
-  .page-enter {
+  .page-enter,
+  .hero-band::before,
+  .hero-band::after,
+  .avatar-ring,
+  .shine-once::after {
     animation: none;
+  }
+
+  /* Drawn in full at once: a line and a bar are the reading, not decoration. */
+  .spark-line {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+
+  .spark-area,
+  .chart-bar,
+  .fill-bar {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 
   .site-header {

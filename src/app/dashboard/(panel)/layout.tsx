@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { StaffRoleProvider } from "@/components/admin/StaffRoleProvider";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 /**
  * Staff-only gate for the whole dashboard.
@@ -25,7 +26,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <StaffRoleProvider role={user.role}>
       <div className="flex min-h-screen flex-col bg-canvas lg:flex-row">
         <AdminSidebar admin={user} />
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        {/* The same entrance the shop's pages make: half a second of rise,
+            replayed on every navigation, once. */}
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </StaffRoleProvider>
   );

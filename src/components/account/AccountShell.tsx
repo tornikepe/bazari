@@ -25,7 +25,9 @@ export function AccountShell({
 }) {
   return (
     <div className="page">
-      <div className="mx-auto w-full max-w-4xl">
+      {/* `stagger`: the card, the tabs and each block of the page rise into
+          place one after another rather than landing as one. */}
+      <div className="stagger mx-auto w-full max-w-4xl">
         <AccountIdentity
           name={user.name}
           email={user.email}

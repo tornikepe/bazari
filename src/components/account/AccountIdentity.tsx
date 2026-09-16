@@ -52,25 +52,29 @@ export function AccountIdentity({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="card account-identity overflow-hidden">
+    <div className="card account-identity shine-once overflow-hidden">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 card-pad">
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={avatarUrl}
-            alt=""
-            width={64}
-            height={64}
-            className="h-14 w-14 shrink-0 rounded-card object-cover ring-1 ring-line sm:h-16 sm:w-16"
-          />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-card bg-brand-solid text-lg font-extrabold tracking-tight text-brand-on-solid sm:h-16 sm:w-16 sm:text-xl"
-          >
-            {initialsOf(name, email)}
-          </span>
-        )}
+        {/* The picture in a ring of the brand colour that turns under the
+            pointer — see `.avatar-ring`. */}
+        <span className="avatar-ring shrink-0">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt=""
+              width={64}
+              height={64}
+              className="h-14 w-14 rounded-[calc(var(--radius-card)-3px)] object-cover sm:h-16 sm:w-16"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="grid h-14 w-14 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-lg font-extrabold tracking-tight text-brand-on-solid sm:h-16 sm:w-16 sm:text-xl"
+            >
+              {initialsOf(name, email)}
+            </span>
+          )}
+        </span>
 
         {/* `min-w-56` rather than `min-w-0`: the row wraps, and a block that
             may shrink to nothing never makes it — the badge would take the

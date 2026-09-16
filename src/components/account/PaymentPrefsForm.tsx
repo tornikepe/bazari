@@ -60,7 +60,7 @@ export function PaymentPrefsForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4">
+    <form onSubmit={submit} className="stagger flex flex-col gap-4">
       {/* ------------------------- default method ------------------------- */}
       <section className="card card-pad">
         <h2 className="text-sm font-bold text-ink-900">

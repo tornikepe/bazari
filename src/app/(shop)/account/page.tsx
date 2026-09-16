@@ -12,8 +12,10 @@ import {
   ChevronRightIcon,
   HeartIcon,
   TagIcon,
+  TruckIcon,
   UserIcon,
 } from "@/components/ui/icons";
+import { CountUp } from "@/components/ui/CountUp";
 import { AccountShell } from "@/components/account/AccountShell";
 import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -43,7 +45,7 @@ export default async function AccountPage({
   /* The session carries what every page needs; "member since" is wanted by
      this one page only, so it is read here rather than added to the cookie
      that every request in the shop parses. */
-  const [orders, orderCount, byStatus, account, spending, favoriteCount] = await Promise.all([
+  const [orders, orderCount, byStatus, account, spending, favoriteCount, active] = await Promise.all([
     prisma.order.findMany({
       where: { userId: user.id, ...(status ? { status } : {}) },
       orderBy: { createdAt: "desc" },
@@ -67,7 +69,16 @@ export default async function AccountPage({
     // The wishlist as the account holds it — the browser's copy is merged
     // into this on arrival, so the figure is the whole list, not one tab's.
     prisma.favorite.count({ where: { userId: user.id } }),
+    // The newest order still on its way — the one thing a customer opens
+    // this page to check — drawn at the top with where it has got to.
+    prisma.order.findFirst({
+      where: { userId: user.id, status: { in: ["pending", "confirmed", "shipped"] } },
+      orderBy: { createdAt: "desc" },
+      select: { number: true, status: true, total: true, createdAt: true, _count: { select: { items: true } } },
+    }),
   ]);
+  const STEPS = ["pending", "confirmed", "shipped", "delivered"] as const;
+  const activeStep = active ? STEPS.indexOf(active.status as (typeof STEPS)[number]) : -1;
 
   const spent = spending._sum.total ?? 0;
 
@@ -80,8 +91,16 @@ export default async function AccountPage({
      keep a column of three doors beside the orders, and two of the three
      went where the tabs above already go. */
   const stats = [
-    { icon: BagIcon, label: t.account.ordersCount, value: String(orderCount) },
-    { icon: TagIcon, label: t.account.spentTotal, value: formatPrice(spent, locale) },
+    {
+      icon: BagIcon,
+      label: t.account.ordersCount,
+      value: <CountUp value={orderCount} locale={locale} />,
+    },
+    {
+      icon: TagIcon,
+      label: t.account.spentTotal,
+      value: <CountUp value={spent} kind="money" locale={locale} />,
+    },
     {
       icon: HeartIcon,
       label: t.favorites.title,
@@ -106,6 +125,60 @@ export default async function AccountPage({
           between a group's `div` and its terms, and the wrapper that used to
           hold them read as a list with no items. The icon lives inside the
           term instead, where decoration beside a label belongs. */}
+      {active && (
+        <Link
+          href={`/order/${active.number}`}
+          /* One row on a wide screen; on a phone the words above and the
+             marks below, since a number, a date and four marks do not
+             share 340px. */
+          className="card hover-lift mt-4 flex flex-col gap-3 card-pad-tight sm:flex-row sm:items-center sm:gap-5"
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600">
+              <TruckIcon size={18} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="text-xs font-bold tracking-wider text-ink-400 uppercase">
+                  {t.account.activeOrder}
+                </span>
+                <StatusBadge status={active.status} t={t} />
+              </span>
+              <span className="mt-0.5 block truncate text-sm">
+                <span className="font-mono font-bold text-ink-900">{active.number}</span>
+                <span className="ml-2 text-xs text-ink-400">
+                  {formatDate(active.createdAt)} ·{" "}
+                  {countText(t.admin.productCountOne, t.admin.productCount, active._count.items)} ·{" "}
+                  {formatPrice(active.total, locale)}
+                </span>
+              </span>
+            </span>
+          </span>
+          <span className="flex items-center justify-between gap-4 pl-13 sm:justify-end sm:pl-0">
+            {/* Four steps as four marks, the ones passed filled, the one it
+                is on breathing — the timeline on the order page in a line. */}
+            <span aria-hidden="true" className="flex items-center gap-1.5">
+              {STEPS.map((step, index) => (
+                <span
+                  key={step}
+                  className={`h-2 rounded-pill ${
+                    index < activeStep
+                      ? "w-4 bg-ink-300"
+                      : index === activeStep
+                        ? "progress-now w-8 bg-brand-600"
+                        : "w-4 bg-ink-100"
+                  }`}
+                />
+              ))}
+            </span>
+            <span className="flex items-center gap-1 text-xs font-semibold whitespace-nowrap text-brand-600">
+              {t.account.activeOrderOpen}
+              <ChevronRightIcon size={14} />
+            </span>
+          </span>
+        </Link>
+      )}
+
       <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line lg:grid-cols-4">
         {stats.map((stat) => {
           const inner = (
@@ -226,7 +299,7 @@ export default async function AccountPage({
               }
             />
           ) : (
-            <ul className="divide-y divide-line">
+            <ul className="stagger divide-y divide-line">
               {orders.map((order) => (
                 <li key={order.id}>
                   {/* A grid, not a wrapping row. Laid out with `flex-wrap` the
@@ -236,7 +309,7 @@ export default async function AccountPage({
                       which is the only thing this list is for. */}
                   <Link
                     href={`/order/${order.number}`}
-                    className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-ink-50 sm:grid-cols-[1fr_6.5rem_auto_1rem]"
+                    className="row-lean grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 hover:bg-ink-50 sm:grid-cols-[1fr_6.5rem_auto_1rem]"
                   >
                     <div className="min-w-0">
                       <p className="truncate font-mono text-sm font-bold text-ink-900">
@@ -267,7 +340,7 @@ export default async function AccountPage({
                     <ChevronRightIcon
                       size={16}
                       aria-hidden="true"
-                      className="hidden shrink-0 text-ink-300 sm:block"
+                      className="row-chevron hidden shrink-0 text-ink-300 sm:block"
                     />
                   </Link>
                 </li>

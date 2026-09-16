@@ -237,8 +237,11 @@ export function SalesChart({
                 const bar = (
                   <>
                     <span
-                      style={{ height: `${height}%` }}
-                      className={`w-full rounded-t-sm transition-colors ${
+                      /* `--i` is the bar's place in the row; the entrance
+                         in `.chart-bar` delays by it, so the bars rise
+                         left to right rather than all at once. */
+                      style={{ height: `${height}%`, "--i": index } as React.CSSProperties}
+                      className={`chart-bar w-full rounded-t-sm transition-colors ${
                         day.date === today
                           ? "bg-brand-solid-hover"
                           : "bg-brand-solid group-hover:bg-brand-solid-hover group-focus-visible:bg-brand-solid-hover"
