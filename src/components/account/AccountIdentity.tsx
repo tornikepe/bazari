@@ -76,30 +76,29 @@ export function AccountIdentity({
           )}
         </span>
 
-        {/* `min-w-56` rather than `min-w-0`: the row wraps, and a block that
-            may shrink to nothing never makes it — the badge would take the
-            line and leave the name 70px to truncate in. Given a floor, the
-            badge moves to a line of its own instead. */}
-        <div className="min-w-56 flex-1">
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-bold tracking-wider text-ink-400 uppercase">
             {t.account.title}
           </p>
           <h1 className="truncate text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
             {name || email}
           </h1>
-          <p className="truncate text-sm text-ink-500">{email}</p>
+          {/* The address, with its state as a small mark beside it — a
+              dot and three words in 11px, not a badge on a line of its
+              own. The state, not a call to action: confirming is offered
+              by the banner below, which is where the code entry lives. */}
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-ink-500">
+            <span className="truncate">{email}</span>
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap ${
+                verified ? "text-success" : "text-warning"
+              }`}
+            >
+              {verified ? <CheckIcon size={11} /> : <AlertIcon size={11} />}
+              {verified ? t.account.emailVerified : t.account.emailUnverified}
+            </span>
+          </p>
         </div>
-
-        {/* The state, not a call to action: confirming is offered by the
-            banner below, which is where the code entry lives. Saying it twice
-            in two different voices reads as two different problems. On a
-            phone it takes the line under the name. */}
-        <span
-          className={`badge ${verified ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}
-        >
-          {verified ? <CheckIcon size={13} /> : <AlertIcon size={13} />}
-          {verified ? t.account.emailVerified : t.account.emailUnverified}
-        </span>
       </div>
 
       {children}
