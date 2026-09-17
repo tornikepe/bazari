@@ -380,7 +380,6 @@ const ka = {
     skipForNow: "მოგვიანებით",
     unverified: "ელფოსტა დაუდასტურებელია",
     verifyNow: "დადასტურება",
-    demoNote: "სატესტო ანგარიშები იქმნება seed-ით — იხილე README.",
   },
 
   account: {
@@ -531,7 +530,6 @@ const ka = {
     privacy: "კონფიდენციალურობა",
     contactUs: "დაგვიკავშირდი",
     rights: "ყველა უფლება დაცულია.",
-    demoNote: "დემო პროექტი — რეალური გადახდები არ მუშაობს.",
     install: "დააინსტალირე აპლიკაცია",
   },
 
@@ -1612,7 +1610,6 @@ const en: Dictionary = {
     skipForNow: "Later",
     unverified: "Email not verified",
     verifyNow: "Verify",
-    demoNote: "Demo accounts are created by the seed — see the README.",
   },
 
   account: {
@@ -1763,7 +1760,6 @@ const en: Dictionary = {
     privacy: "Privacy",
     contactUs: "Contact us",
     rights: "All rights reserved.",
-    demoNote: "Demo project — real payments are not processed.",
     install: "Install the app",
   },
 

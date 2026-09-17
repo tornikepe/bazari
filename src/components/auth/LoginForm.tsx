@@ -152,10 +152,6 @@ export function LoginForm({
         </button>
       </form>
 
-      {/* Demo project — the seeded staff credentials are shown on purpose. */}
-      <p className="mt-4 rounded-control bg-ink-50 p-2.5 text-center text-xs text-ink-500">
-        {t.auth.demoNote}
-      </p>
     </AuthCard>
   );
 }

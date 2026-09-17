@@ -458,6 +458,29 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  /* A footer link on a phone: a pill with an edge and a little room, so
+     a wrapped row of them is a row of buttons. From `sm` up the edge and
+     the room go, and it is a row in a column. */
+  .footer-pill {
+    padding-inline: 0.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-pill);
+    background: var(--color-canvas);
+  }
+
+  .footer-pill:hover {
+    border-color: var(--color-ink-300);
+  }
+
+  @media (min-width: 640px) {
+    .footer-pill {
+      padding-inline: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
