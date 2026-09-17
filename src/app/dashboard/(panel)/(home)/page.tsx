@@ -9,15 +9,16 @@ import {
   DEFAULT_RANGE,
   getDashboardMetrics,
   isRangeDays,
+  parseDayKey,
+  type MetricsWindow,
   type RangeDays,
 } from "@/lib/analytics";
-import { ChartRangeTabs } from "@/components/admin/ChartRangeTabs";
+import { SalesTable } from "@/components/admin/SalesTable";
 import { countText, fill } from "@/lib/i18n";
 import type { RawSearchParams } from "@/lib/filters";
 import { getCurrentUser } from "@/lib/auth";
 import { initialsOf } from "@/components/account/AccountIdentity";
 import { CountUp } from "@/components/ui/CountUp";
-import { Sparkline } from "@/components/ui/Sparkline";
 import { Delta } from "@/components/ui/Delta";
 import {
   AlertIcon,
@@ -55,8 +56,16 @@ export default async function DashboardPage({
   // shared. Validated rather than trusted — `?range=99999` would otherwise
   // build ninety-nine thousand buckets.
   const params = await searchParams;
-  const raw = Number(Array.isArray(params.range) ? params.range[0] : params.range);
-  const range: RangeDays = isRangeDays(raw) ? raw : DEFAULT_RANGE;
+  const one = (key: string) => (Array.isArray(params[key]) ? params[key]![0] : params[key]);
+  const raw = Number(one("range"));
+  // Two dates picked on the sales table win over the quick windows; a
+  // half-picked or backwards pair falls back to the default.
+  const from = parseDayKey(one("from"));
+  const to = parseDayKey(one("to"));
+  const picked = from && to && from <= to ? { from, to } : null;
+  const range: RangeDays | null = picked ? null : isRangeDays(raw) ? raw : DEFAULT_RANGE;
+  const window: MetricsWindow = picked ?? range ?? DEFAULT_RANGE;
+  const showEmpty = one("empty") === "1";
 
   const today = shopDayKey(new Date());
   const [
@@ -75,7 +84,7 @@ export default async function DashboardPage({
     prisma.order.count({ where: { status: "pending" } }),
     prisma.order.count({ where: { createdAt: { gte: new Date(`${today}T00:00:00+04:00`) } } }),
 
-    getDashboardMetrics(range),
+    getDashboardMetrics(window),
 
     prisma.order.findMany({
       orderBy: { createdAt: "desc" },
@@ -104,7 +113,7 @@ export default async function DashboardPage({
     }),
   ]);
 
-  const { revenue, profit, units, avgOrder, marginPct, daily, dailyUnits, previous } = metrics;
+  const { revenue, profit, units, avgOrder, marginPct, daily, previous, days } = metrics;
   const needsRestock = lowStock.filter((product) => product.stock <= product.lowStockAt);
   const topMost = Math.max(1, ...topProducts.map((row) => row._sum.quantity ?? 0));
 
@@ -115,30 +124,22 @@ export default async function DashboardPage({
   const dateLine = `${t.common.weekdays[weekday]}, ${day} ${t.common.months[month! - 1]} ${year}`;
   const firstName = (user?.name ?? "").trim().split(/\s+/)[0] || user?.email || "";
 
-  // The daily profit is not kept per day; its line is the revenue's, scaled
-  // by the window's margin — the shape is the same, and the shape is what a
-  // sparkline shows.
-  const revenueLine = daily.map((point) => point.total);
-  const profitLine = revenueLine.map((value) => Math.round(value * (marginPct / 100)));
-
   const stats = [
     {
-      label: fill(t.admin.revenue30, { count: range }),
+      label: fill(t.admin.revenue30, { count: days }),
       value: revenue,
       kind: "money" as const,
       previous: previous.revenue,
-      line: revenueLine,
       icon: TagIcon,
       tone: "bg-success-soft text-success",
       href: "/dashboard/orders",
     },
     {
-      label: fill(t.admin.grossProfit, { count: range }),
+      label: fill(t.admin.grossProfit, { count: days }),
       value: profit,
       kind: "money" as const,
       previous: previous.profit,
       hint: `${marginPct}% ${t.admin.margin}`,
-      line: profitLine,
       icon: BagIcon,
       tone: "bg-brand-100 text-brand-700",
       href: "/dashboard/analytics",
@@ -149,7 +150,6 @@ export default async function DashboardPage({
       kind: "int" as const,
       previous: previous.units,
       hint: `${t.admin.avgOrder}: ${formatPrice(avgOrder, locale)}`,
-      line: dailyUnits,
       icon: PackageIcon,
       tone: "bg-info-soft text-info",
       href: "/dashboard/products",
@@ -229,19 +229,24 @@ export default async function DashboardPage({
             </ul>
           </div>
 
-          {/* The window's revenue, large, counting up, with its shape. */}
-          <div className="min-w-0 lg:w-72 lg:text-right">
-            <p className="hero-muted text-xs">{fill(t.admin.heroRevenue, { count: range })}</p>
+          {/* The window's revenue, large, counting up, and how it moved
+              against the window before — said in words, on the band's own
+              muted tone rather than green or red on the dark. */}
+          <div className="min-w-0 lg:max-w-xs lg:text-right">
+            <p className="hero-muted text-xs">
+              {picked
+                ? fill(t.admin.heroRevenueRange, {
+                    from: formatDate(`${picked.from}T12:00:00+04:00`),
+                    to: formatDate(`${picked.to}T12:00:00+04:00`),
+                  })
+                : fill(t.admin.heroRevenue, { count: days })}
+            </p>
             <p className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
               <CountUp value={revenue} kind="money" locale={locale} duration={1200} />
             </p>
-            <div className="mt-1 flex items-center gap-2 lg:justify-end">
-              <Delta current={revenue} previous={previous.revenue} days={range} t={t} />
-              <span className="hero-muted text-xs">{fill(t.admin.vsPrevious, { count: range })}</span>
-            </div>
-            <div className="mt-3 h-10 text-brand-300">
-              <Sparkline values={revenueLine} />
-            </div>
+            <p className="hero-muted mt-1 text-xs [&_span]:text-panel-fg">
+              <Delta current={revenue} previous={previous.revenue} days={days} t={t} />
+            </p>
           </div>
         </div>
       </section>
@@ -252,49 +257,48 @@ export default async function DashboardPage({
           <Link
             key={stat.label}
             href={stat.href}
-            className={`card hover-lift relative flex flex-col gap-3 overflow-hidden card-pad-tight ${
-              "line" in stat && stat.line ? "pb-10" : ""
-            }`}
+            className="card hover-lift flex items-start gap-3.5 card-pad-tight"
           >
-            <div className="flex items-center justify-between gap-3">
-              <span
-                className={`grid h-10 w-10 shrink-0 place-items-center rounded-control ${stat.tone}`}
-              >
-                <stat.icon size={18} />
-              </span>
-              {"previous" in stat && stat.previous !== undefined && (
-                <Delta current={stat.value} previous={stat.previous} days={range} t={t} />
-              )}
-            </div>
-            <div className="min-w-0">
+            <span
+              className={`grid h-10 w-10 shrink-0 place-items-center rounded-control ${stat.tone}`}
+            >
+              <stat.icon size={18} />
+            </span>
+            <div className="min-w-0 flex-1">
               <p className="text-xs text-ink-500">{stat.label}</p>
               <p className="truncate text-xl font-extrabold tracking-tight text-ink-900">
                 <CountUp value={stat.value} kind={stat.kind} locale={locale} />
               </p>
               {stat.hint && <p className="mt-0.5 truncate text-xs text-ink-400">{stat.hint}</p>}
+              {/* How it moved, in a sentence: "12% more than the 30 days
+                  before". */}
+              {"previous" in stat && stat.previous !== undefined && (
+                <p className="mt-1 leading-snug">
+                  <Delta current={stat.value} previous={stat.previous} days={days} t={t} />
+                </p>
+              )}
             </div>
-            {/* The line behind the figure, in the tile's own tone — its
-                shape over the window, nothing more. */}
-            {"line" in stat && stat.line && (
-              <div className="pointer-events-none absolute right-0 bottom-0 left-0 h-8 opacity-60">
-                <Sparkline values={stat.line} tone="var(--color-brand-500)" />
-              </div>
-            )}
           </Link>
         ))}
       </div>
 
       {/* ------------------------------- chart ------------------------------ */}
-      <section className="card mt-4 card-pad">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-bold text-ink-900">
-              {fill(t.admin.salesChart, { count: range })}
-            </h2>
-            <p className="mt-0.5 text-xs text-ink-500">{t.admin.chartHint}</p>
-          </div>
+      <SalesTable
+        daily={daily}
+        from={metrics.from}
+        to={metrics.to}
+        range={range}
+        showEmpty={showEmpty}
+        locale={locale}
+        t={t}
+      />
 
-          <ChartRangeTabs active={range} t={t} />
+      <section className="card mt-4 card-pad">
+        <div>
+          <h2 className="text-sm font-bold text-ink-900">
+            {fill(t.admin.salesChart, { count: days })}
+          </h2>
+          <p className="mt-0.5 text-xs text-ink-500">{t.admin.chartHint}</p>
         </div>
 
         <SalesChart

@@ -16,6 +16,7 @@ import {
   ChartIcon,
   CloseIcon,
   DashboardIcon,
+  DatabaseIcon,
   GridIcon,
   TagIcon,
   LogoutIcon,
@@ -78,6 +79,7 @@ export function AdminSidebar({
         { href: "/dashboard/traffic", label: t.admin.traffic, icon: EyeIcon },
         { href: "/dashboard/analytics", label: t.admin.analytics, icon: ChartIcon },
         { href: "/dashboard/audit", label: t.admin.audit, icon: ClockIcon },
+        { href: "/dashboard/database", label: t.admin.database, icon: DatabaseIcon },
       ],
     },
   ];
@@ -206,7 +208,10 @@ export function AdminSidebar({
           side="left"
           closeLabel={t.nav.close}
           label={t.nav.menu}
-          className="w-64 max-w-[85vw] bg-panel p-4 shadow-pop"
+          /* `overflow-y-auto`, like the rail: on a phone the drawer is
+             taller than the screen, and without it the theme switch and
+             the sign-out at its foot could not be scrolled to. */
+          className="w-64 max-w-[85vw] overflow-y-auto overscroll-contain bg-panel p-4 shadow-pop"
         >
             <button
               type="button"

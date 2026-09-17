@@ -53,13 +53,19 @@ export default async function AnalyticsPage({
   const products = showAll ? report.products : report.products.slice(0, TOP);
   const nameOf = (row: FunnelRow) => (locale === "ka" ? row.name.ka : row.name.en);
 
+  // Each step, and how it is read against the one before: "70% of views",
+  // not a bare percentage the reader has to place.
   const funnel = [
-    { label: t.admin.anViews, hint: t.admin.anViewsHint, value: report.totals.views },
-    { label: t.admin.anClicks, hint: t.admin.anClicksHint, value: report.totals.clicks },
-    { label: t.admin.anCarts, hint: t.admin.anCartsHint, value: report.totals.carts },
-    { label: t.admin.anOrders, hint: t.admin.anOrdersHint, value: report.totals.orders },
-    { label: t.admin.anTracks, hint: t.admin.anTracksHint, value: report.totals.tracks },
+    { label: t.admin.anViews, hint: t.admin.anViewsHint, value: report.totals.views, of: null },
+    { label: t.admin.anClicks, hint: t.admin.anClicksHint, value: report.totals.clicks, of: t.admin.anOfViews },
+    { label: t.admin.anCarts, hint: t.admin.anCartsHint, value: report.totals.carts, of: t.admin.anOfClicks },
+    { label: t.admin.anOrders, hint: t.admin.anOrdersHint, value: report.totals.orders, of: t.admin.anOfCarts },
+    { label: t.admin.anTracks, hint: t.admin.anTracksHint, value: report.totals.tracks, of: null },
   ];
+  const per100 =
+    report.totals.views > 0
+      ? Math.round((report.totals.orders / report.totals.views) * 1000) / 10
+      : 0;
 
   const figures = [
     { label: t.admin.anRevenue, value: money(report.totals.revenue), hint: null },
@@ -125,10 +131,7 @@ export default async function AnalyticsPage({
             <h2 className="text-sm font-bold text-ink-900">{t.admin.anFunnel}</h2>
             <ol className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-0">
               {funnel.map((step, index) => {
-                /* The drop from the step before — not on the last one, which
-                   is looked at more than once per order and would read as
-                   a conversion of three hundred percent. */
-                const previous = index > 0 && index < funnel.length - 1 ? funnel[index - 1]!.value : null;
+                const previous = step.of ? funnel[index - 1]!.value : null;
                 return (
                   <li key={step.label} className="relative sm:px-3 sm:first:pl-0 sm:last:pr-0">
                     {index > 0 && (
@@ -144,9 +147,9 @@ export default async function AnalyticsPage({
                     </p>
                     <p className="text-sm font-semibold text-ink-800">{step.label}</p>
                     <p className="text-xs text-ink-400">{step.hint}</p>
-                    {previous !== null && (
+                    {previous !== null && step.of && (
                       <p className="mt-1 text-xs font-semibold text-brand-600 tabular-nums">
-                        {percent(step.value, previous)}
+                        {fill(step.of, { percent: percent(step.value, previous) })}
                       </p>
                     )}
                   </li>
@@ -158,6 +161,9 @@ export default async function AnalyticsPage({
               <span className="font-bold text-ink-900 tabular-nums">
                 {percent(report.totals.orders, report.totals.views)}
               </span>
+              {report.totals.views > 0 && (
+                <span className="text-ink-400"> — {fill(t.admin.anConversionPlain, { count: per100 })}</span>
+              )}
             </p>
           </section>
 

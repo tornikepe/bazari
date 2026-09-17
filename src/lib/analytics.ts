@@ -31,13 +31,37 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * and wrong in a way nobody would catch until they compared a daily total
  * against the orders list and found four hours of takings on the wrong bar.
  */
-export async function getDashboardMetrics(days: RangeDays = DEFAULT_RANGE) {
+/**
+ * A window of shop days, `from` and `to` inclusive as `YYYY-MM-DD` keys.
+ * Either a count of trailing days or two dates the owner picked.
+ */
+export type MetricsWindow = RangeDays | { from: string; to: string };
+
+/** `YYYY-MM-DD`, or null — a date that came from a query string. */
+export function parseDayKey(value: unknown): string | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  return Number.isNaN(Date.parse(`${value}T12:00:00Z`)) ? null : value;
+}
+
+export async function getDashboardMetrics(window: MetricsWindow = DEFAULT_RANGE) {
   const now = new Date();
 
   // The start of the *shop* day the window opens on, not UTC midnight. See
   // `shopDayStart` — the two are four hours apart, and the gap is enough for
-  // the revenue figure and the sum of the bars beside it to disagree.
-  const since = shopDayStart(new Date(now.getTime() - (days - 1) * DAY_MS));
+  // the revenue figure and the sum of the bars beside it to disagree. Two
+  // picked dates are read the same way, and a window never runs past today.
+  const lastKey = typeof window === "number" ? shopDayKey(now) : window.to;
+  const firstKey =
+    typeof window === "number"
+      ? shopDayKey(new Date(now.getTime() - (window - 1) * DAY_MS))
+      : window.from;
+  const noon = (key: string) => new Date(`${key}T12:00:00+04:00`);
+  const days = Math.max(
+    1,
+    Math.round((noon(lastKey).getTime() - noon(firstKey).getTime()) / DAY_MS) + 1,
+  );
+  const since = shopDayStart(noon(firstKey));
+  const until = shopDayStart(new Date(noon(lastKey).getTime() + DAY_MS));
   // The window before this one, the same length, for "up 12% on the last
   // thirty days" — a figure with nothing beside it is a figure, not a reading.
   const before = shopDayStart(new Date(since.getTime() - days * DAY_MS));
@@ -45,7 +69,7 @@ export async function getDashboardMetrics(days: RangeDays = DEFAULT_RANGE) {
   // Fetched once with its items rather than re-aggregated per statistic; both
   // windows in one query, split afterwards.
   const all = await prisma.order.findMany({
-    where: { status: { not: "cancelled" }, createdAt: { gte: before } },
+    where: { status: { not: "cancelled" }, createdAt: { gte: before, lt: until } },
     select: {
       total: true,
       createdAt: true,
@@ -77,33 +101,42 @@ export async function getDashboardMetrics(days: RangeDays = DEFAULT_RANGE) {
 
   // Summed into a map in one pass rather than re-filtering the whole order
   // list once per bucket. That was O(days × orders), which is unremarkable at
-  // 30 days and wasteful at 90.
-  const byDay = new Map<string, number>();
+  // 30 days and wasteful at 90. Every figure the table shows is kept per day:
+  // the money, the orders, the units, the margin.
+  const byDay = new Map<string, { total: number; orders: number; units: number; profit: number }>();
   for (const order of orders) {
     const key = shopDayKey(order.createdAt);
-    byDay.set(key, (byDay.get(key) ?? 0) + order.total);
+    const row = byDay.get(key) ?? { total: 0, orders: 0, units: 0, profit: 0 };
+    row.total += order.total;
+    row.orders += 1;
+    for (const item of order.items) {
+      row.units += item.quantity;
+      row.profit += (item.price - item.costPrice) * item.quantity;
+    }
+    byDay.set(key, row);
   }
 
   // One bucket per day, so quiet days render as a baseline tick instead of
   // being skipped and distorting the shape of the chart.
-  // Each key is derived from a real instant counted back from now, rather
-  // than by adding 24h repeatedly to the window's start — the same reason the
+  // Each key is derived from a real instant counted forward from the first
+  // day, rather than by adding 24h to a string — the same reason the
   // boundary is computed rather than assumed.
   const daily = Array.from({ length: days }, (_, index) => {
-    const key = shopDayKey(new Date(now.getTime() - (days - 1 - index) * DAY_MS));
-    return { date: key, total: byDay.get(key) ?? 0 };
+    const key = shopDayKey(new Date(noon(firstKey).getTime() + index * DAY_MS));
+    const row = byDay.get(key);
+    return {
+      date: key,
+      total: row?.total ?? 0,
+      orders: row?.orders ?? 0,
+      units: row?.units ?? 0,
+      profit: row?.profit ?? 0,
+    };
   });
-
-  // Units per day too, for the small line beside that figure.
-  const unitsByDay = new Map<string, number>();
-  for (const order of orders) {
-    const key = shopDayKey(order.createdAt);
-    const count = order.items.reduce((n, item) => n + item.quantity, 0);
-    unitsByDay.set(key, (unitsByDay.get(key) ?? 0) + count);
-  }
 
   return {
     days,
+    from: firstKey,
+    to: lastKey,
     revenue,
     profit,
     units,
@@ -111,7 +144,6 @@ export async function getDashboardMetrics(days: RangeDays = DEFAULT_RANGE) {
     avgOrder: orders.length ? revenue / orders.length : 0,
     marginPct: revenue > 0 ? Math.round((profit / revenue) * 100) : 0,
     daily,
-    dailyUnits: daily.map((day) => unitsByDay.get(day.date) ?? 0),
     /** The same figures for the window before this one. */
     previous,
   };
