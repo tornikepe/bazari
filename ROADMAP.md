@@ -10,6 +10,8 @@ README-ში, აქ არ მეორდება.
 
 Vercel-ზე შემოწმებულია: `CRON_SECRET` დგას (cron-ი 401-ს აბრუნებს უცხოს), `AUTH_SECRET` ძველი
 placeholder არ არის, `NEXT_PUBLIC_SITE_URL` დაყენებულია, `PAYMENT_SANDBOX` სიაში არ არის.
+**Sentry ჩართულია** (2026-09-17): ორგანიზაცია `peit`, პროექტი `javascript-nextjs-ok`; ცოცხალი
+საიტიდან გაშვებული სატესტო შეცდომა Issues-ში ჩანს. ახალი შეცდომა — peit.sentry.io → Issues.
 
 ბაზა 2026-09-17-ს განულდა: შეკვეთები, მომხმარებლები (სატესტოც), შეფასებები, ვიზიტები,
 ჟურნალები წაშლილია; კატალოგი, მარაგი, ზონები, კუპონები, თანამშრომლები, პარამეტრები,
@@ -48,20 +50,6 @@ Variables → Add** (Key / Value, Environment: Production) → **Save**. ბო�
 4. Vercel-ზე ორი ცვლადი:
    - `RESEND_API_KEY` = `re_…`
    - `MAIL_FROM` = `Bazari <noreply@bazari.ge>` (დომენი — ის, რაც მე-2 ნაბიჯში დაადასტურე)
-
-### A8 — Sentry (შეცდომების თვალყური)
-
-1. [sentry.io](https://sentry.io) → **Sign up** → **Create Project** → პლატფორმა **Next.js** →
-   Project name `bazari` → **Create Project**.
-2. **Settings → Projects → bazari → Client Keys (DSN)** → დააკოპირე **DSN**
-   (`https://…@…ingest.sentry.io/…`).
-3. Vercel-ზე: `NEXT_PUBLIC_SENTRY_DSN` = DSN.
-4. სურვილისამებრ — რომ შეცდომა ფაილის ხაზზე მიუთითებდეს და არა minified კოდზე:
-   - **Settings → Auth Tokens → Create New Token** → Scopes: `project:releases`, `org:read`
-     → **Create** → დააკოპირე → Vercel: `SENTRY_AUTH_TOKEN`.
-   - `SENTRY_ORG` = ორგანიზაციის slug (ბრაუზერის მისამართიდან:
-     `sentry.io/organizations/`**`ეს-ნაწილი`**`/`).
-   - `SENTRY_PROJECT` = `bazari`.
 
 ### A1 — Google-ით შესვლა
 
@@ -208,8 +196,8 @@ Dashboard → Settings: მისამართი, ტელეფონი, �
 რაც არაფერს არ ელოდება — ჯერ; რაც დომენს, პროდუქტს ან რეგისტრირებულ ბიზნესს ითხოვს — ბოლოს.
 
 **ახლა, არაფრის მოლოდინში:**
-1. **A8** — Sentry (10 წუთი): შეცდომები ცოცხალ საიტზე ჩემამდე მოვა, არა მყიდველამდე
-2. **A1** — Google-ით შესვლა (10 წუთი): vercel.app მისამართით მუშაობს, დომენი არ სჭირდება
+1. ~~A8 — Sentry~~ გაკეთებულია
+2. **A1** — Google-ით შესვლა (10 წუთი): vercel.app მისამართით მუშაობს, დომენი არ სჭირდება — **შემდეგი**
 3. **§4** — uptime მონიტორი `/api/health`-ზე, Neon-ის retention-ის შემოწმება
 4. **§5** — ტელეფონზე ცოცხალი შემოწმება (vercel.app-ზე)
 
