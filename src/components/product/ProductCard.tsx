@@ -15,7 +15,18 @@ import type { ProductCardData } from "@/lib/catalog";
 
 const LOW_STOCK_THRESHOLD = 10;
 
-export function ProductCard({ product }: { product: ProductCardData }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: ProductCardData;
+  /**
+   * Fetch the picture at once rather than lazily: for the first row of a
+   * list, which is on screen before anything scrolls and is usually the
+   * page's largest paint. Lazy-loading that row cost the catalogue its LCP.
+   */
+  priority?: boolean;
+}) {
   const { locale, t } = useI18n();
 
   // The card opened from a list, for the dashboard's funnel: one beacon,
@@ -42,6 +53,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           alt={name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+          priority={priority}
           className="object-cover"
         />
 

@@ -39,9 +39,15 @@
 export const PRODUCT_GRID =
   "grid grid-cols-1 gap-3 min-[340px]:grid-cols-2 sm:gap-4 xl:grid-cols-3";
 
-/** The wishlist's grid, which goes one wider because it has no sidebar. */
+/**
+ * The grid without a sidebar — home, wishlist, the product page's rows —
+ * which goes one wider on a desktop. It goes to two columns at the same
+ * width as the catalogue: at 380px it did not, and a 375px phone (every
+ * small iPhone) got one column of cards each as tall as the screen, with
+ * the home page running to twelve screens of them.
+ */
 export const PRODUCT_GRID_WIDE =
-  "grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 xl:grid-cols-4";
+  "grid grid-cols-1 gap-3 min-[340px]:grid-cols-2 sm:gap-4 xl:grid-cols-4";
 
 export function ProductGridSkeleton({
   count = 12,

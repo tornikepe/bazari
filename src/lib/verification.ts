@@ -27,10 +27,8 @@ function generateCode() {
  * Issues a fresh code, invalidating any earlier unused one for the same
  * purpose so only the newest email works.
  *
- * There is no mail provider wired up in this demo, so the caller decides how
- * to surface the returned code (the UI shows it in a clearly-labelled panel).
- * In production this is where the send would happen, and the code would stop
- * being returned.
+ * The code is returned to the caller, who emails it (`sendVerificationEmail`)
+ * and never puts it anywhere else — not in the URL, not on the page.
  */
 export async function issueCode(userId: string, purpose: TokenPurpose) {
   await prisma.verificationToken.updateMany({

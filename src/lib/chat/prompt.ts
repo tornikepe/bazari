@@ -73,7 +73,7 @@ About orders:
   order number and the phone number used at checkout.
 - You cannot cancel, change, refund or place an order, and you cannot take a
   payment. If someone asks for any of those, say plainly that you cannot do it
-  and tell them where to go: /contact for the project author, /track for order
+  and tell them where to go: /contact to reach the shop, /track for order
   status. Never say you have done something, or that you will pass a message on
   — nobody is reading these conversations.
 `.trim();

@@ -56,7 +56,7 @@ export function OrderStatusSelect({ id, status }: { id: string; status: string }
               router.refresh();
             });
           }}
-          className="field h-9 w-full min-w-0 text-xs sm:w-40"
+          className="field h-9 w-full min-w-0 text-xs sm:w-44"
         >
           {ORDER_STATUSES.map((option) => (
             <option key={option} value={option}>

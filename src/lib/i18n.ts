@@ -264,7 +264,7 @@ const ka = {
     invoice: "ინვოისი",
     billTo: "მიმღები",
     issued: "გაცემულია",
-    invoiceNote: "დემო პროექტი — ეს არ არის ფისკალური დოკუმენტი.",
+    invoiceNote: "ეს ინვოისია, არა ფისკალური ჩეკი.",
     downloadPdf: "PDF-ის ჩამოტვირთვა",
     unpaidCard: "შეკვეთა ჯერ გადახდილი არ არის",
     unpaidCardHint: "ონლაინ გადახდა არ დასრულებულა. სცადე ისევ — შეკვეთა შენარჩუნებულია.",
@@ -317,9 +317,8 @@ const ka = {
   auth: {
     continueWith: "გაგრძელება {provider}-ით",
     or: "ან",
-    mailUnavailable: "ამ დემოზე წერილის გაგზავნა ჯერ ჩართული არ არის — კოდი ვერ მოვა.",
+    mailUnavailable: "წერილის გაგზავნა ჯერ ჩართული არ არის — კოდი ვერ მოვა.",
     mailUnavailableHint: "ანგარიში მაინც მუშაობს: შეგიძლია გააგრძელო და ელფოსტა მოგვიანებით დაადასტურო.",
-    socialUnavailable: "სოციალური ავტორიზაცია ამ დემოზე ჯერ ჩართული არ არის — გამოიყენე ელფოსტა.",
     oauthFailed: "სოციალური ქსელით შესვლა ვერ მოხერხდა. სცადე ხელახლა.",
     oauthUnverified:
       "ამ ანგარიშის ელფოსტა დადასტურებული არ არის. შედი ელფოსტითა და პაროლით.",
@@ -330,7 +329,7 @@ const ka = {
     signInTitle: "შესვლა",
     signInHint: "შედი ანგარიშში შეკვეთების სანახავად",
     signUpTitle: "რეგისტრაცია",
-    signUpHint: "შექმენი ანგარიში წამში — მხოლოდ სახელი და ელფოსტა",
+    signUpHint: "შექმენი ანგარიში წამში — სახელი, ელფოსტა და ტელეფონი",
     name: "სახელი და გვარი",
     email: "ელფოსტა",
     phone: "ტელეფონი",
@@ -379,6 +378,7 @@ const ka = {
     resetting: "იცვლება…",
     verifyTitle: "ელფოსტის დადასტურება",
     verifyHint: "შეიყვანე კოდი, რომელიც {email}-ზე გამოგიგზავნეთ",
+    verifyHintPlain: "შეიყვანე კოდი, რომელიც ელფოსტაზე გამოგიგზავნეთ",
     verify: "დადასტურება",
     verifying: "მოწმდება…",
     resend: "კოდის ხელახლა გაგზავნა",
@@ -535,7 +535,7 @@ const ka = {
   },
 
   footer: {
-    about: "Bazari — ონლაინ მაღაზია ტექნიკის, აქსესუარებისა და საყოფაცხოვრებო ნივთებისთვის. სასწავლო/საპორტფოლიო პროექტი.",
+    about: "Bazari — ონლაინ მაღაზია ტექნიკის, აქსესუარებისა და საყოფაცხოვრებო ნივთებისთვის, მიწოდებით მთელ საქართველოში.",
     shop: "მაღაზია",
     company: "კომპანია",
     help: "დახმარება",
@@ -1546,7 +1546,7 @@ const en: Dictionary = {
     invoice: "Invoice",
     billTo: "Bill to",
     issued: "Issued",
-    invoiceNote: "Demo project — this is not a fiscal document.",
+    invoiceNote: "This is an invoice, not a fiscal receipt.",
     downloadPdf: "Download PDF",
     unpaidCard: "This order is not paid yet",
     unpaidCardHint: "The online payment did not complete. Try again — the order is kept for you.",
@@ -1599,9 +1599,8 @@ const en: Dictionary = {
   auth: {
     continueWith: "Continue with {provider}",
     or: "or",
-    mailUnavailable: "Sending email is not enabled on this demo, so the code cannot arrive.",
+    mailUnavailable: "Sending email is not switched on yet, so the code cannot arrive.",
     mailUnavailableHint: "The account works anyway: carry on and confirm the address later.",
-    socialUnavailable: "Social sign-in is not enabled on this demo yet — use your email.",
     oauthFailed: "That sign-in did not complete. Please try again.",
     oauthUnverified:
       "That account's email address is not confirmed. Sign in with your email and password instead.",
@@ -1612,7 +1611,7 @@ const en: Dictionary = {
     signInTitle: "Sign in",
     signInHint: "Sign in to see your orders",
     signUpTitle: "Create account",
-    signUpHint: "Takes a second — just a name and an email",
+    signUpHint: "Takes a second — a name, an email and a phone",
     name: "Full name",
     email: "Email",
     phone: "Phone",
@@ -1661,6 +1660,7 @@ const en: Dictionary = {
     resetting: "Changing…",
     verifyTitle: "Verify your email",
     verifyHint: "Enter the code we sent to {email}",
+    verifyHintPlain: "Enter the code we sent to your email",
     verify: "Verify",
     verifying: "Checking…",
     resend: "Send a new code",
@@ -1817,7 +1817,7 @@ const en: Dictionary = {
   },
 
   footer: {
-    about: "Bazari is an online store for electronics, accessories and household goods. Built as a learning / portfolio project.",
+    about: "Bazari is an online store for electronics, accessories and household goods, delivering across Georgia.",
     shop: "Shop",
     company: "Company",
     help: "Help",

@@ -37,7 +37,9 @@ function VerifyForm() {
   return (
     <AuthCard
       title={t.auth.verifyTitle}
-      hint={fill(t.auth.verifyHint, { email })}
+      /* Opened from a link without the address — a bookmark, a retry — the
+         sentence still has to read as a sentence, not "sent to -". */
+      hint={email ? fill(t.auth.verifyHint, { email }) : t.auth.verifyHintPlain}
       footer={
         <Link href="/account" className="font-semibold text-brand-600 hover:underline">
           {t.auth.skipForNow}

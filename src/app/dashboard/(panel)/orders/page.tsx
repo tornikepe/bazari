@@ -304,8 +304,8 @@ export default async function AdminOrdersPage({
           </p>
 
           <BulkOrders ids={orders.map((order) => order.id)}>
-            {/* Cards below lg — an order row has too many columns for a phone. */}
-            <ul className="mt-3 flex flex-col gap-2 lg:hidden">
+            {/* Cards below xl — an order row has too many columns for a phone or a tablet. */}
+            <ul className="mt-3 flex flex-col gap-2 xl:hidden">
               {orders.map((order) => (
                 <li key={order.id} className="card card-pad-tight">
                   <div className="flex items-start justify-between gap-3">
@@ -389,7 +389,7 @@ export default async function AdminOrdersPage({
             {/* Table from lg upwards. Scrolls sideways inside the card when the
               window is narrower than its columns — with the rail beside it,
               a 1280px window is — rather than clipping its last column. */}
-            <div className="card mt-3 hidden overflow-x-auto lg:block">
+            <div className="card mt-3 hidden overflow-x-auto xl:block">
               <table className="table">
                 <thead>
                   <tr>
@@ -402,12 +402,16 @@ export default async function AdminOrdersPage({
                       </th>
                     </WriteOnly>
                     <th>{t.admin.orderNumber}</th>
-                    <th>
-                      <span className="sr-only">{t.admin.items}</span>
-                    </th>
+                    {/* No picture column here — the cards have one. With it
+                        the row was 1220px wide, and at 1280px the status
+                        control, the one thing the list is for, was off the
+                        right edge behind a scrollbar. The "status changed"
+                        date is the next thing a laptop can do without; it
+                        comes back from 1536px. Below 1280px the list is
+                        cards. */}
                     <th>{t.admin.customer}</th>
                     <th>{t.admin.placedAt}</th>
-                    <th>{t.admin.statusChangedAt}</th>
+                    <th className="hidden 2xl:table-cell">{t.admin.statusChangedAt}</th>
                     <th className="figures">{t.admin.total}</th>
                     <th>{t.admin.status}</th>
                     <th>{t.admin.updateStatus}</th>
@@ -455,23 +459,26 @@ export default async function AdminOrdersPage({
                       </td>
 
                       <td>
-                        <OrderThumbs
-                          items={order.items}
-                          count={order._count.items}
-                          locale={locale}
-                        />
-                      </td>
-
-                      <td>
-                        <p className="text-sm font-medium text-ink-800">
-                          {order.customerName}
-                        </p>
-                        <p className="text-xs text-ink-400">
-                          {order.phone} ·{" "}
-                          {order.deliveryMethod === "pickup"
-                            ? t.checkout.deliveryPickup
-                            : order.city}
-                        </p>
+                        {/* A fixed-width block inside the cell — a cell's own
+                            width is whatever the table decides — so the name
+                            is cut with an ellipsis rather than wrapped, and
+                            the number, which used to break in the middle,
+                            is on a line of its own. At 1280px this was the
+                            cell the table squeezed. */}
+                        <div className="w-40">
+                          <p
+                            className="truncate text-sm font-medium text-ink-800"
+                            title={order.customerName}
+                          >
+                            {order.customerName}
+                          </p>
+                          <p className="text-xs whitespace-nowrap text-ink-400">{order.phone}</p>
+                          <p className="truncate text-xs text-ink-400">
+                            {order.deliveryMethod === "pickup"
+                              ? t.checkout.deliveryPickup
+                              : order.city}
+                          </p>
+                        </div>
                       </td>
 
                       <td className="text-xs text-ink-500 tabular-nums">
@@ -482,7 +489,7 @@ export default async function AdminOrdersPage({
                         order has not moved yet — an em dash says "nothing has
                         happened", a duplicated timestamp says "it was
                         confirmed the second it arrived", which is not true. */}
-                      <td className="text-xs text-ink-500 tabular-nums">
+                      <td className="hidden text-xs text-ink-500 tabular-nums 2xl:table-cell">
                         {order.events[0]
                           ? formatDateTime(order.events[0].createdAt)
                           : "—"}

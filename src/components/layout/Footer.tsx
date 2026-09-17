@@ -135,7 +135,10 @@ export async function Footer() {
       </div>
 
       <div className="border-t border-line">
-        <div className="page-container flex flex-col items-center justify-between gap-1.5 py-3 text-center sm:flex-row sm:text-left">
+        {/* Extra room at the foot on a phone: the chat launcher is fixed to
+            the bottom-right corner, and with the page scrolled to its end it
+            sat on the last word of the copyright line. */}
+        <div className="page-container flex flex-col items-center justify-between gap-1.5 pt-3 pb-[4.25rem] text-center sm:flex-row sm:pb-3 sm:text-left">
           <p className="text-xs text-ink-400">
             © {new Date().getFullYear()} {settings.name}. {t.footer.rights}
           </p>

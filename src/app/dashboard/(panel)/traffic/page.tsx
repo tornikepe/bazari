@@ -1,4 +1,5 @@
 import { getI18n } from "@/lib/locale";
+import { fill } from "@/lib/i18n";
 import { DEFAULT_RANGE, isRangeDays } from "@/lib/analytics";
 import { getTraffic } from "@/lib/traffic";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -31,6 +32,11 @@ export default async function TrafficPage({
   const report = await getTraffic(range);
   const perVisitor = report.visitors > 0 ? report.views / report.visitors : 0;
   const count = new Intl.NumberFormat(locale === "ka" ? "ka-GE" : "en-GB");
+  // One decimal, with the locale's separator: "3,2" in Georgian, not "3.2".
+  const ratio = new Intl.NumberFormat(locale === "ka" ? "ka-GE" : "en-GB", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -52,7 +58,7 @@ export default async function TrafficPage({
             items={[
               { label: t.admin.trafficViews, value: count.format(report.views) },
               { label: t.admin.trafficVisitors, value: count.format(report.visitors) },
-              { label: t.admin.trafficPerVisitor, value: perVisitor.toFixed(1) },
+              { label: t.admin.trafficPerVisitor, value: ratio.format(perVisitor) },
             ]}
           />
           <p className="mt-2 text-xs text-ink-400">{t.admin.trafficVisitorsHint}</p>
@@ -105,8 +111,10 @@ export default async function TrafficPage({
                     <span className="relative shrink-0 text-xs font-bold text-ink-900 tabular-nums">
                       {count.format(page.views)}
                     </span>
-                    <span className="relative w-12 shrink-0 text-right text-xs text-ink-400 tabular-nums">
-                      {share.toFixed(0)}%
+                    {/* In words, like the analytics page: a bare "4%" in a
+                        column does not say four percent of what. */}
+                    <span className="relative shrink-0 text-right text-xs whitespace-nowrap text-ink-400 tabular-nums">
+                      {fill(t.admin.anOfViews, { percent: `${share.toFixed(0)}%` })}
                     </span>
                   </li>
                 );

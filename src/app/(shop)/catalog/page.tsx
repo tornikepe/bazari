@@ -135,8 +135,9 @@ export default async function CatalogPage({
           ) : (
             <>
               <div className={`stagger ${PRODUCT_GRID}`}>
-                {items.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {items.map((product, index) => (
+                  // The first row is on screen before anything scrolls.
+                  <ProductCard key={product.id} product={product} priority={index < 3} />
                 ))}
               </div>
 

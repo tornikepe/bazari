@@ -78,10 +78,12 @@ export async function getPage(slug: InfoSlug, locale: Locale): Promise<InfoConte
   const intro = locale === "ka" ? row.introKa : row.introEn;
   const body = locale === "ka" ? row.bodyKa : row.bodyEn;
 
+  // The intro gets the same substitution as the body. It did not, once, and
+  // the returns page opened with a literal "{returnWindow}" in its first line.
   return {
     slug,
-    title,
-    intro,
+    title: substitute(title, subs),
+    intro: substitute(intro, subs),
     sections: parseSections(body, subs),
     isPublished: row.isPublished,
   };

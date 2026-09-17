@@ -19,7 +19,8 @@
     "db:reset": "prisma migrate reset --force",
     "db:backup": "tsx scripts/backup-database.ts",
     "db:restore": "tsx scripts/restore-database.ts",
-    "db:reset-live": "tsx scripts/reset-live-data.ts"
+    "db:reset-live": "tsx scripts/reset-live-data.ts",
+    "db:refresh-pages": "tsx scripts/refresh-info-pages.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
