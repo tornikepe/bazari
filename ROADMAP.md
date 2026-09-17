@@ -96,6 +96,22 @@ Variables → Add** (Key / Value, Environment: Production) → **Save**. ბო�
    `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET`.
 4. ზედა ზოლში **App Mode: Development → Live**, თორემ მხოლოდ შენ შეძლებ შესვლას.
 
+### A9 — Google Maps (რუკაზე წერტილი გაფორმებისას)
+
+რას აძლევს: გაფორმებაზე და მისამართების წიგნაკში ღილაკი „რუკაზე მონიშვნა" — მყიდველი
+ზუსტ ადგილს დებს, კურიერი შეკვეთიდან ერთი დაჭერით ხსნის. გასაღების გარეშე ღილაკი უბრალოდ
+არ ჩანს; ქალაქის შეთავაზება და მისამართის ველი გასაღების გარეშეც მუშაობს.
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → იგივე პროექტი `Bazari` →
+   **APIs & Services → Library** → ჩართე **Maps JavaScript API** და **Geocoding API**.
+2. **Credentials → Create Credentials → API key** → დააკოპირე.
+3. გასაღებზე დააჭირე → **Application restrictions: Websites** → დაამატე
+   `https://bazari-tornikepes-projects.vercel.app/*` (და შენი დომენი, როცა გექნება) →
+   **API restrictions: Restrict key** → მხოლოდ ზემოთ ჩართული ორი API → **Save**.
+4. Vercel: `NEXT_PUBLIC_GOOGLE_MAPS_KEY` = გასაღები → Redeploy.
+5. Google-ს საბილინგო ანგარიში სჭირდება (**Billing**), მაგრამ თვეში $200 უფასოა — პატარა
+   მაღაზიისთვის ეს საკმარისზე მეტია.
+
 ### A4 — ონლაინ გადახდა: TBC, საქართველოს ბანკი, PayPal, კრიპტო
 
 კოდი მზადაა ოთხივესთვის. გასაღებები **Dashboard → გადახდები**-ში იწერება (არა Vercel-ზე):
@@ -212,7 +228,7 @@ Dashboard → Settings: მისამართი, ტელეფონი, �
    სიაში არ არის
 2. **A3** — Resend: ერთი დომენი ექვს წერილს რთავს
 3. **A6, A5** — რეკვიზიტები და ფოტოები Dashboard-იდან — ამის შემდეგ საიტი „დემო" აღარ არის
-4. **A8, A1** — Sentry, Google
+4. **A8, A1, A9** — Sentry, Google-ით შესვლა, Google Maps
 5. **§4** — uptime, Neon-ის retention, დომენი
 6. **A4** — გადახდის მეთოდები: PayPal და კრიპტო დღესვე, ბანკები ხელშეკრულების შემდეგ
 7. **§5, §6** — ტელეფონი და დოკუმენტაცია, ბოლოს

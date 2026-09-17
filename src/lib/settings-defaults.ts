@@ -62,7 +62,7 @@ export const DEFAULT_SETTINGS: ShopSettings = {
   freeShippingThreshold: 20_000,
   shippingFee: 1_500,
   codEnabled: true,
-  vatRate: 18,
+  vatRate: 0,
   pickupEnabled: false,
   pickupAddress: "",
   returnWindowDays: 14,

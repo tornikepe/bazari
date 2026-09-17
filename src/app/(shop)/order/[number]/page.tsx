@@ -328,6 +328,16 @@ export default async function OrderConfirmationPage({
                 )}
                 {order.customerName} · {order.phone} · {order.city},{" "}
                 {order.address}
+                {order.lat !== null && order.lng !== null && (
+                  <a
+                    href={`https://www.google.com/maps?q=${order.lat},${order.lng}`}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="mt-1 block font-semibold text-brand-600 hover:underline"
+                  >
+                    {t.checkout.mapOpen}
+                  </a>
+                )}
               </span>
             </div>
           )}

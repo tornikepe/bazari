@@ -7,7 +7,7 @@ import { updatePaymentPrefs } from "@/app/actions/account";
 import { PaymentMark } from "@/components/checkout/PaymentMark";
 import { Busy, Swap } from "@/components/ui/Swap";
 import { ErrorNote } from "@/components/ui/ErrorNote";
-import { CheckIcon, ShieldIcon } from "@/components/ui/icons";
+import { CheckIcon } from "@/components/ui/icons";
 import type { PaymentMethod } from "@/lib/payment";
 
 export type PaymentPrefs = {
@@ -42,7 +42,9 @@ export function PaymentPrefsForm({
   const [status, setStatus] = useState<"idle" | "saved" | "invalid" | "failed">(
     "idle",
   );
-  const [choice, setChoice] = useState<string>(prefs.preferredPayment ?? "");
+  // One of the methods is always chosen — the first, until a choice is
+  // saved: a default that can be "none" is not a default.
+  const [choice, setChoice] = useState<string>(prefs.preferredPayment ?? methods[0] ?? "");
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,37 +91,15 @@ export function PaymentPrefsForm({
                 className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
               />
               <PaymentMark method={method} />
-              <span className="min-w-0 leading-snug">{t.payment[method]}</span>
+              <span className="min-w-0 leading-snug">
+                {t.payment[method]}
+                <span className="block text-xs font-normal text-ink-500">
+                  {t.account.methodHint[method]}
+                </span>
+              </span>
             </label>
           ))}
-          <label
-            className={`flex cursor-pointer items-center gap-3 rounded-control border px-3.5 py-3 text-sm transition-colors ${
-              choice === ""
-                ? "border-brand-600 bg-brand-50 font-semibold text-brand-700"
-                : "border-line text-ink-700 hover:border-ink-300"
-            }`}
-          >
-            <input
-              type="radio"
-              name="preferredPayment"
-              value=""
-              checked={choice === ""}
-              onChange={() => setChoice("")}
-              className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
-            />
-            <span className="grid h-8 w-12 shrink-0 place-items-center rounded-control bg-ink-100 text-ink-500">
-              ?
-            </span>
-            <span className="min-w-0 leading-snug">
-              {t.account.preferredNone}
-            </span>
-          </label>
         </div>
-
-        <p className="mt-4 flex items-start gap-2 rounded-control bg-ink-50 px-3 py-2.5 text-xs text-ink-600">
-          <ShieldIcon size={15} className="mt-px shrink-0 text-success" />
-          {t.account.cardsNotStored}
-        </p>
       </section>
 
       {/* -------------------------- refund account ------------------------ */}

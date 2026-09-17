@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
 import { HoverPanel } from "@/components/layout/HoverPanel";
+import { MiniLogin } from "@/components/auth/MiniLogin";
 import { isStaff, type Role } from "@/lib/auth-roles";
 import {
   CardIcon,
@@ -47,7 +48,8 @@ export function AccountMenu({ user }: { user: MenuUser }) {
   return (
     <HoverPanel
       label={label}
-      width="w-64"
+      /* A form wants a little more room than a list of links. */
+      width={user ? "w-64" : "w-[19rem]"}
       trigger={
         <Link
           href={href}
@@ -92,26 +94,18 @@ function Avatar({ url, size }: { url: string; size: number }) {
   );
 }
 
+/* Signed out, the panel *is* the sign-in: the form itself, not two doors
+   to it — see `MiniLogin`. */
 function SignedOut() {
   const { t } = useI18n();
   return (
-    <div className="px-4 py-5 text-center">
-      <span className="mx-auto grid h-11 w-11 place-items-center rounded-pill bg-ink-100 text-ink-400">
-        <UserIcon size={20} />
-      </span>
-      <p className="mt-3 text-sm font-bold text-ink-900">
-        {t.account.signedOutTitle}
-      </p>
-      <p className="mt-1 text-xs text-ink-500">{t.account.signedOutHint}</p>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <Link href="/login" className="btn btn-primary btn-sm">
-          {t.auth.signIn}
-        </Link>
-        <Link href="/register" className="btn btn-outline btn-sm">
-          {t.auth.signUp}
-        </Link>
+    <>
+      <div className="border-b border-line px-4 py-3">
+        <p className="text-sm font-bold text-ink-900">{t.account.signedOutTitle}</p>
+        <p className="mt-0.5 text-xs text-ink-500">{t.account.signedOutHint}</p>
       </div>
-    </div>
+      <MiniLogin />
+    </>
   );
 }
 

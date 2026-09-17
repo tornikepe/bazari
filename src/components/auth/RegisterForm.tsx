@@ -6,6 +6,8 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { register, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { PasswordField } from "@/components/ui/PasswordField";
+import { PhoneField } from "@/components/ui/PhoneField";
 
 export function RegisterForm({ social }: { social: React.ReactNode }) {
   const { t } = useI18n();
@@ -14,6 +16,10 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
   const message =
     state.error === "taken"
       ? t.auth.taken
+      : state.error === "phone"
+        ? t.auth.phoneInvalid
+        : state.error === "phone-taken"
+          ? t.auth.phoneTaken
       : state.error === "weak"
         ? t.auth.weak
         : state.error === "mismatch"
@@ -62,29 +68,21 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
         <div>
           <label className="field-label" htmlFor="phone">
             {t.auth.phone}
+            <span className="ml-0.5 text-brand-600">*</span>
           </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder="+995 5XX XX XX XX"
-            className="field"
-          />
+          <PhoneField id="phone" name="phone" required invalid={state.error === "phone" || state.error === "phone-taken"} />
         </div>
 
         <div>
           <label className="field-label" htmlFor="password">
             {t.auth.password}
           </label>
-          <input
+          <PasswordField
             id="password"
             name="password"
-            type="password"
             required
             minLength={8}
             autoComplete="new-password"
-            className="field"
           />
           <p className="mt-1 text-xs text-ink-400">{t.auth.passwordHint}</p>
         </div>
@@ -93,14 +91,12 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
           <label className="field-label" htmlFor="confirmPassword">
             {t.auth.confirmPassword}
           </label>
-          <input
+          <PasswordField
             id="confirmPassword"
             name="confirmPassword"
-            type="password"
             required
             minLength={8}
             autoComplete="new-password"
-            className="field"
           />
         </div>
 

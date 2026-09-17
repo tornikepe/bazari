@@ -28,6 +28,11 @@ export function proxy(request: NextRequest) {
     ? forwarded.split(",")[0]!.trim() === "https"
     : request.nextUrl.protocol === "https:";
 
+  // The map at checkout loads from Google when there is a key for it. With
+  // `strict-dynamic` its script is allowed because ours adds it; its fetches
+  // and fonts need naming.
+  const maps = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY);
+
   const csp = [
     `default-src 'self'`,
     // 'strict-dynamic' lets the nonced bootstrap load the rest of the chunks.
@@ -38,9 +43,12 @@ export function proxy(request: NextRequest) {
     // inline script, so this stays permissive on purpose.
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' blob: data: https:`,
-    `font-src 'self' data:`,
-    // Same-origin only: server actions post back here and nothing else.
-    `connect-src 'self'${isDev ? " ws: http://localhost:*" : ""}`,
+    `font-src 'self' data:${maps ? " https://fonts.gstatic.com" : ""}`,
+    // Same-origin only: server actions post back here and nothing else —
+    // and, when the shop has a Maps key, the map's own calls home.
+    `connect-src 'self'${isDev ? " ws: http://localhost:*" : ""}${
+      maps ? " https://maps.googleapis.com https://maps.gstatic.com" : ""
+    }`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

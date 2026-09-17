@@ -8,6 +8,7 @@ import { useFavorites } from "@/components/product/FavoriteButton";
 import { getProductsByIds } from "@/app/actions/products";
 import { toggleFavorite } from "@/lib/favorites-store";
 import { Price } from "@/components/ui/Price";
+import { formatPrice } from "@/lib/format";
 import { HeartIcon, CloseIcon } from "@/components/ui/icons";
 import { fill } from "@/lib/i18n";
 import type { ProductCardData } from "@/lib/catalog";
@@ -135,10 +136,24 @@ export function MiniFavorites() {
         </ul>
       )}
 
+      {/* The same foot as the cart's — a figure and a row of buttons — so
+          the two panels are one size. The figure is what the list would
+          cost, which is the one thing a wishlist is asked. */}
       <div className="border-t border-line bg-canvas px-4 py-3">
-        <Link href="/favorites" className="btn btn-outline btn-sm w-full">
-          {t.home.viewAll}
-        </Link>
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs font-semibold text-ink-500">{t.favorites.worth}</span>
+          <span className="text-base font-extrabold text-ink-900 tabular-nums">
+            {rows ? formatPrice(rows.reduce((sum, product) => sum + product.price, 0), locale) : "…"}
+          </span>
+        </div>
+        <div className="mt-3 grid grid-cols-[auto_1fr] gap-2">
+          <Link href="/favorites" className="btn btn-outline btn-sm">
+            {t.home.viewAll}
+          </Link>
+          <Link href="/catalog" className="btn btn-primary btn-sm">
+            {t.catalog.title}
+          </Link>
+        </div>
       </div>
     </>
   );

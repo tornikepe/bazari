@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { MAX_ADDRESSES } from "@/lib/addresses";
@@ -19,14 +20,21 @@ export type AddressResult = { ok: true } | { ok: false; error: "invalid" | "fail
 
 function read(formData: FormData) {
   const value = (key: string) => String(formData.get(key) ?? "").trim().slice(0, 120);
+  // The pin: two finite numbers or nothing, never one of the two.
+  const lat = Number(value("lat"));
+  const lng = Number(value("lng"));
+  const pinned =
+    value("lat") !== "" && value("lng") !== "" && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
 
   return {
     label: value("label"),
     fullName: value("fullName"),
-    phone: value("phone"),
+    phone: normalizePhone(value("phone")) ?? "",
     city: value("city"),
     street: value("street"),
     note: value("note"),
+    lat: pinned ? lat : null,
+    lng: pinned ? lng : null,
   };
 }
 

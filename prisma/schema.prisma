@@ -378,6 +378,10 @@ model Order {
   city         String
   address      String
   note         String  @default("")
+  /// Where the pin was put on the map at checkout, when it was — the
+  /// courier's exact spot. Absent for an order typed as an address alone.
+  lat          Float?
+  lng          Float?
 
   /// How it leaves the shop. For `pickup` the address columns above may be
   /// empty — there is nowhere to send anything.
@@ -672,6 +676,9 @@ model Address {
   city      String
   street    String
   note      String   @default("")
+  /// The pin, when the address was saved with one.
+  lat       Float?
+  lng       Float?
   /// The one checkout offers first. At most one per user, enforced in the
   /// action that sets it rather than by a constraint, because "exactly one"
   /// is false the moment a customer has none.
@@ -854,9 +861,9 @@ model ShopSettings {
   freeShippingThreshold Int     @default(20000)
   shippingFee           Int     @default(1500)
   codEnabled            Boolean @default(true)
-  /// Whole percent. Georgia's VAT is 18; zero means the shop is not
-  /// registered for it and no tax line is shown anywhere.
-  vatRate               Int     @default(18)
+  /// Whole percent. Georgia's VAT is 18; zero — the default — means the
+  /// shop has not said it is registered, and no tax line is shown anywhere.
+  vatRate               Int     @default(0)
   /// Whether a shopper may collect an order instead of having it sent.
   pickupEnabled         Boolean @default(false)
   /// Where they collect it. Empty means the contact address above.

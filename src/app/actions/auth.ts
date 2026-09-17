@@ -7,6 +7,7 @@ import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/auth-emails
 import { mailConfigured } from "@/lib/mail";
 import { getLocale } from "@/lib/locale";
 import { clientIp, consume, reset } from "@/lib/rate-limit";
+import { normalizePhone } from "@/lib/phone";
 import {
   createSession,
   revokeSessions,
@@ -21,6 +22,8 @@ export type AuthState = {
   error?:
     | "invalid"
     | "taken"
+    | "phone"
+    | "phone-taken"
     | "weak"
     | "failed"
     | "mismatch"
@@ -45,22 +48,30 @@ const MIN_PASSWORD_LENGTH = 8;
  * the message inline, and never reveals which of the two fields was wrong.
  */
 export async function login(_previous: AuthState, formData: FormData): Promise<AuthState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  // The address, or the phone: whichever was typed. A phone is normalised
+  // to the one shape the shop stores before it is looked up, so "555 12 34
+  // 56", "+995555123456" and "0555123456" all find the same account.
+  const identifier = String(formData.get("email") ?? formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const email = identifier.includes("@") ? identifier.toLowerCase() : "";
+  const phone = email ? null : normalizePhone(identifier);
 
-  if (!email || !password) return { error: "invalid" };
+  if ((!email && !phone) || !password) return { error: "invalid" };
 
-  // Per IP *and* per email: the first stops one host spraying many accounts,
-  // the second stops a botnet grinding one account.
+  // Per IP *and* per account: the first stops one host spraying many
+  // accounts, the second stops a botnet grinding one account.
   const ip = await clientIp();
-  for (const key of [`login:ip:${ip}`, `login:email:${email}`]) {
+  const who = email || phone!;
+  for (const key of [`login:ip:${ip}`, `login:email:${who}`]) {
     const limit = await consume(key, 5, 15 * 60);
     if (!limit.ok) {
       return { error: "rate-limited", retryMinutes: Math.ceil(limit.retryAfter / 60) };
     }
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = email
+    ? await prisma.user.findUnique({ where: { email } })
+    : await prisma.user.findFirst({ where: { phone: phone!, role: "customer" } });
   if (!user || !verifyPassword(password, user.password)) {
     return { error: "invalid" };
   }
@@ -74,7 +85,7 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
 
   // A correct password clears the counters, so yesterday's typos don't count.
   await reset(`login:ip:${ip}`);
-  await reset(`login:email:${email}`);
+  await reset(`login:email:${who}`);
 
   await createSession(user.id, user.sessionVersion);
   redirect(safeNext(formData.get("next")) ?? homeFor(user.role));
@@ -102,16 +113,22 @@ export async function register(_previous: AuthState, formData: FormData): Promis
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const name = String(formData.get("name") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
+  // Required, and a Georgian mobile: it is how the courier calls, and it
+  // is a way to sign in. Kept in the one shape every number is kept in.
+  const phone = normalizePhone(String(formData.get("phone") ?? ""));
 
   const confirm = String(formData.get("confirmPassword") ?? "");
 
   if (!email || !email.includes("@") || !name) return { error: "invalid" };
+  if (!phone) return { error: "phone" };
   if (password.length < MIN_PASSWORD_LENGTH) return { error: "weak" };
   if (password !== confirm) return { error: "mismatch" };
 
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existing) return { error: "taken" };
+  // One account per number, or a login by phone could not know which.
+  const samePhone = await prisma.user.findFirst({ where: { phone, role: "customer" }, select: { id: true } });
+  if (samePhone) return { error: "phone-taken" };
 
   let user;
   try {
@@ -296,13 +313,17 @@ export async function updateProfile(
 
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "invalid" };
+  // The one shape every number is kept in; an emptied field stays empty.
+  const rawPhone = String(formData.get("phone") ?? "").trim();
+  const phone = rawPhone ? normalizePhone(rawPhone) : "";
+  if (phone === null) return { error: "phone" };
 
   try {
     await prisma.user.update({
       where: { id: user.id },
       data: {
         name,
-        phone: String(formData.get("phone") ?? "").trim(),
+        phone,
         city: String(formData.get("city") ?? "").trim(),
         address: String(formData.get("address") ?? "").trim(),
       },

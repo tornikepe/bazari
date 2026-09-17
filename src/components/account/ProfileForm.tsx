@@ -6,6 +6,7 @@ import { updateProfile, type AuthState } from "@/app/actions/auth";
 import { CheckIcon } from "@/components/ui/icons";
 import type { SessionUser } from "@/lib/auth";
 import { Busy, Swap } from "@/components/ui/Swap";
+import { PhoneField } from "@/components/ui/PhoneField";
 
 export function ProfileForm({
   user,
@@ -50,14 +51,7 @@ export function ProfileForm({
           <label className="field-label" htmlFor="phone">
             {t.auth.phone}
           </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            defaultValue={user.phone}
-            autoComplete="tel"
-            className="field"
-          />
+          <PhoneField id="phone" name="phone" defaultValue={user.phone} />
         </div>
 
         <div>

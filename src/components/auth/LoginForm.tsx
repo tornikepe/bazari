@@ -7,6 +7,8 @@ import { fill } from "@/lib/i18n";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { login, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { PasswordField } from "@/components/ui/PasswordField";
+import { looksLikePhone, localDigits } from "@/lib/phone";
 
 export function LoginForm({
   next,
@@ -40,11 +42,12 @@ export function LoginForm({
     const password = String(data.get("password") ?? "");
 
     const found: { email?: string; password?: string } = {};
-    if (!email) found.email = t.auth.emailRequired;
-    // Deliberately loose. The server is the authority on whether an address
-    // exists; this only catches "no @ anywhere", which is a typo rather than a
-    // judgement about what a valid address looks like.
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) found.email = t.auth.emailInvalid;
+    if (!email) found.email = t.auth.identifierRequired;
+    // Deliberately loose. The server is the authority on whether an account
+    // exists; this only catches what cannot be either an address or a
+    // Georgian mobile — a typo rather than a judgement.
+    else if (looksLikePhone(email) ? !localDigits(email) : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      found.email = t.auth.identifierInvalid;
 
     if (!password) found.password = t.auth.passwordRequired;
 
@@ -80,13 +83,14 @@ export function LoginForm({
 
         <div>
           <label className="field-label" htmlFor="email">
-            {t.auth.email}
+            {t.auth.identifier}
           </label>
           <input
             ref={emailRef}
             id="email"
             name="email"
-            type="email"
+            type="text"
+            inputMode="email"
             autoComplete="username"
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? "email-error" : undefined}
@@ -113,18 +117,16 @@ export function LoginForm({
               {t.auth.forgot}
             </Link>
           </div>
-          <input
+          <PasswordField
             ref={passwordRef}
             id="password"
             name="password"
-            type="password"
             autoComplete="current-password"
-            aria-invalid={Boolean(errors.password)}
+            invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? "password-error" : undefined}
             onChange={() =>
               errors.password && setErrors((current) => ({ ...current, password: undefined }))
             }
-            className="field"
           />
           {errors.password && (
             <p id="password-error" className="mt-1.5 flex items-center gap-1.5 text-xs text-danger">

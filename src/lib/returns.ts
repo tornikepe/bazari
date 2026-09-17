@@ -8,11 +8,15 @@ import type { ReturnReason, ReturnStatus } from "@/generated/prisma/enums";
  * pulling the generated client into the browser bundle.
  */
 
+/**
+ * The reasons a customer may pick. "Changed my mind" stays in the enum for
+ * the rows that carry it and is offered no longer — the shop does not take
+ * a return for it.
+ */
 export const RETURN_REASONS = [
   "damaged",
   "wrong_item",
   "not_as_described",
-  "changed_mind",
   "other",
 ] as const satisfies readonly ReturnReason[];
 

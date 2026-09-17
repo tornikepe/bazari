@@ -40,6 +40,8 @@ export default async function CheckoutPage() {
         city: true,
         street: true,
         note: true,
+        lat: true,
+        lng: true,
         isDefault: true,
       },
     }),

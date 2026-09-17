@@ -20,6 +20,11 @@ import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/ord
 import { lineKey } from "@/lib/cart-store";
 import { PAYMENT_METHODS, isGatewayMethod, type PaymentMethod } from "@/lib/payment";
 import { PaymentMark } from "@/components/checkout/PaymentMark";
+import { PhoneField } from "@/components/ui/PhoneField";
+import { SuggestField } from "@/components/ui/SuggestField";
+import { MapPicker, type Pin } from "@/components/checkout/MapPicker";
+import { findCity, GEORGIAN_CITIES, suggestCities } from "@/lib/georgian-cities";
+import { localDigits } from "@/lib/phone";
 import { Busy, Swap } from "@/components/ui/Swap";
 
 /** Maps a rejection reason to the matching translated message. */
@@ -56,6 +61,8 @@ export type CheckoutAddress = {
   city: string;
   street: string;
   note: string;
+  lat: number | null;
+  lng: number | null;
   isDefault: boolean;
 };
 
@@ -109,6 +116,8 @@ export function CheckoutForm({
   // Prefilled from the account. Requiring people to sign in and then making
   // them retype the address they already gave us would be the worst of both.
   const [form, setForm] = useState({ ...defaults });
+  // The pin on the map, when the shopper placed one; nothing otherwise.
+  const [pin, setPin] = useState<Pin | null>(null);
   // What the shop offers, as the page decided: the gateways it switched on
   // and the two that need none. Cash on delivery is a switch in the
   // settings, and a switch nothing reads is a lie in the dashboard — the
@@ -177,9 +186,8 @@ export function CheckoutForm({
       if (zones.length > 0 && !zone) next.zone = t.checkout.deliveryZoneRequired;
     }
 
-    const digits = form.phone.replace(/\D/g, "");
     if (!form.phone.trim()) next.phone = t.checkout.required;
-    else if (digits.length < 9) next.phone = t.checkout.invalidPhone;
+    else if (!localDigits(form.phone)) next.phone = t.checkout.invalidPhone;
 
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -212,6 +220,8 @@ export function CheckoutForm({
         paymentMethod: payment,
         deliveryMethod: delivery.method,
         deliveryZoneId: delivery.method === "courier" ? (zone?.id ?? undefined) : undefined,
+        lat: pin?.lat,
+        lng: pin?.lng,
       });
 
       if (!result.ok) {
@@ -317,7 +327,13 @@ export function CheckoutForm({
                         type="radio"
                         name="savedAddress"
                         checked={inUse}
-                        onChange={() =>
+                        onChange={() => {
+                          // The pin the address was saved with comes with it.
+                          setPin(
+                            address.lat !== null && address.lng !== null
+                              ? { lat: address.lat, lng: address.lng }
+                              : null,
+                          );
                           setForm((current) => ({
                             ...current,
                             customerName: address.fullName,
@@ -325,8 +341,8 @@ export function CheckoutForm({
                             city: address.city,
                             address: address.street,
                             note: address.note || current.note,
-                          }))
-                        }
+                          }));
+                        }}
                         className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
                       />
 
@@ -366,16 +382,24 @@ export function CheckoutForm({
                 required
                 autoComplete="name"
               />
-              <Field
-                label={t.checkout.phone}
-                value={form.phone}
-                onChange={(value) => update("phone", value)}
-                error={errors.phone}
-                required
-                type="tel"
-                placeholder="+995 5XX XX XX XX"
-                autoComplete="tel"
-              />
+              <div>
+                <label className="field-label" htmlFor="checkout-phone">
+                  {t.checkout.phone}
+                  <span className="ml-0.5 text-brand-600">*</span>
+                </label>
+                <PhoneField
+                  id="checkout-phone"
+                  value={form.phone}
+                  onChange={(value) => update("phone", value)}
+                  invalid={Boolean(errors.phone)}
+                  describedBy={errors.phone ? "checkout-phone-error" : undefined}
+                />
+                {errors.phone && (
+                  <p id="checkout-phone-error" className="mt-1 text-xs text-danger">
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
               <div className="sm:col-span-2">
                 <Field
                   label={t.checkout.emailOptional}
@@ -475,22 +499,78 @@ export function CheckoutForm({
                 </div>
               )}
 
-              <Field
-                label={t.checkout.city}
-                value={form.city}
-                onChange={(value) => update("city", value)}
-                error={errors.city}
-                required
-                autoComplete="address-level2"
-              />
-              <Field
-                label={t.checkout.address}
-                value={form.address}
-                onChange={(value) => update("address", value)}
-                error={errors.address}
-                required
-                autoComplete="street-address"
-              />
+              {/* The city, offered as it is typed: "თ" brings Tbilisi,
+                  Telavi, Tkibuli. */}
+              <div>
+                <label className="field-label" htmlFor="checkout-city">
+                  {t.checkout.city}
+                  <span className="ml-0.5 text-brand-600">*</span>
+                </label>
+                <SuggestField
+                  id="checkout-city"
+                  value={form.city}
+                  onChange={(value) => update("city", value)}
+                  suggestions={suggestCities(form.city, locale).map((city) => ({
+                    key: city.en,
+                    label: locale === "ka" ? city.ka : city.en,
+                    hint: locale === "ka" ? city.en : city.ka,
+                  }))}
+                  autoComplete="address-level2"
+                  invalid={Boolean(errors.city)}
+                  describedBy={errors.city ? "checkout-city-error" : undefined}
+                />
+                {errors.city && (
+                  <p id="checkout-city-error" className="mt-1 text-xs text-danger">
+                    {errors.city}
+                  </p>
+                )}
+              </div>
+
+              {/* The street, with the addresses already saved offered as
+                  it is typed, and a pin on the map under it for the door
+                  the words do not find. */}
+              <div>
+                <label className="field-label" htmlFor="checkout-address">
+                  {t.checkout.address}
+                  <span className="ml-0.5 text-brand-600">*</span>
+                </label>
+                <SuggestField
+                  id="checkout-address"
+                  value={form.address}
+                  onChange={(value) => update("address", value)}
+                  suggestions={saved
+                    .filter(
+                      (address) =>
+                        address.street !== form.address &&
+                        address.street.toLowerCase().includes(form.address.trim().toLowerCase()),
+                    )
+                    .slice(0, 5)
+                    .map((address) => ({
+                      key: address.id,
+                      label: address.street,
+                      hint: address.city,
+                    }))}
+                  autoComplete="street-address"
+                  invalid={Boolean(errors.address)}
+                  describedBy={errors.address ? "checkout-address-error" : undefined}
+                />
+                {errors.address && (
+                  <p id="checkout-address-error" className="mt-1 text-xs text-danger">
+                    {errors.address}
+                  </p>
+                )}
+                <MapPicker
+                  centre={findCity(form.city) ?? GEORGIAN_CITIES[0]!}
+                  pin={pin}
+                  onPick={(next, found) => {
+                    setPin(next);
+                    // The map's own reading of the spot fills an empty box;
+                    // what was typed is not overwritten.
+                    if (found && !form.address.trim()) update("address", found);
+                  }}
+                  onClear={() => setPin(null)}
+                />
+              </div>
             </div>
 
             {/* Outside the address grid: a note is as useful to somebody
