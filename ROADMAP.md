@@ -1,80 +1,42 @@
 # Bazari — რა დარჩა
 
-კოდი `main`-ზეა და Vercel-ზე ცოცხალია (`https://bazari-tornikepes-projects.vercel.app`).
-გაკეთებულია და შემოწმებულია: Vercel-ის ცვლადები, Sentry (`peit` / `javascript-nextjs-ok`),
-Google-ით შესვლა (Google Cloud `bazari-508917`), UptimeRobot `/api/health`-ზე, ტელეფონზე
-შემოწმება. ბაზა 2026-09-17-ს განულდა — ბექაპი `backups/bazari-2026-09-17T00-10.json`
-(`npm run db:restore`); Neon-ის „Restore from history" 6 საათს ფარავს. ყოველი მიგრაციის წინ
-`npm run db:backup`.
+საიტი ცოცხალია: `https://bazari-tornikepes-projects.vercel.app`. Vercel, Sentry, Google-ით
+შესვლა, UptimeRobot — მუშაობს. ბაზა ცარიელია, ბექაპები `backups/`-შია.
 
-Vercel-ის ცვლადი ასე იწერება: **Vercel → `bazari` → Settings → Environment Variables → Add**
-(Production) → Save → **Deployments → ბოლო → ⋯ → Redeploy**.
+Vercel-ის ცვლადი: Vercel → bazari → Settings → Environment Variables → Add → Save →
+Deployments → ბოლო → ⋯ → Redeploy.
 
----
+## 1. პროდუქტები — როცა გექნება
+Dashboard → პროდუქტები: ფოტო, აღწერა (ქარ/ინგ), ფასი, თვითღირებულება, მარაგი.
+40 სატესტო პროდუქტი წაშალე.
 
-## 1. ბიზნესის რეგისტრაცია — პირველი რეალური შეკვეთის წინ
+## 2. რეკვიზიტები
+Dashboard → პარამეტრები: ტელეფონი, ელფოსტა, მისამართი, სამუშაო საათები, მიწოდების
+ფასები. Dashboard → გვერდები: ტექსტები, თუ რამე შესაცვლელია.
 
-*იურისტი/ბუღალტერი არ ვარ; ბუღალტერთან ერთი საათი ღირს, სანამ პირველ ლარს მიიღებ.*
+## 3. დომენი — როცა იყიდი
+1. Vercel → Settings → Domains → დაამატე, DNS ჩაწერე.
+2. Vercel ცვლადი `NEXT_PUBLIC_SITE_URL` = `https://დომენი`.
+3. Google Cloud (`bazari-508917`) → Clients → redirect URI `https://დომენი/api/auth/google/callback`.
+4. UptimeRobot-ში URL შეცვალე.
 
-- სანამ საიტი არაფერს ყიდის, ეს პორტფოლიო-პროექტია — რეგისტრაცია არ სჭირდება.
-- ფულის მიღებამდე: **ინდ. მეწარმე** (იუსტიციის სახლი / my.gov.ge, ერთ დღეში, ~20–50 ₾) ან შპს.
-  საგადასახადოში (rs.ge) ავტომატურად ხვდები.
-- გადასახადი: **მცირე ბიზნესის სტატუსი** — ბრუნვის 1% (500 000 ₾-მდე), ყოველთვიური დეკლარაცია.
-  დღგ მხოლოდ 12 თვეში 100 000 ₾-ის შემდეგ — Dashboard-ში დღგ 0-ზეა და სწორია.
-- საიტზე სავალდებულო: გამყიდველის სახელი, საიდენტიფიკაციო კოდი, მისამართი, კონტაქტი,
-  14-დღიანი დაბრუნება — ეს ყველაფერი Dashboard → პარამეტრებში იწერება (პ. 2).
-- ბანკები და PayPal რეგისტრირებულ ბიზნესს ითხოვენ — ამიტომ პ. 5 ამის შემდეგაა.
+## 4. ელფოსტა (Resend) — დომენის შემდეგ
+ამის გარეშე შეკვეთის წერილი, კოდი და პაროლის აღდგენა არ იგზავნება.
+resend.com → Domains → Add → 3 DNS ჩანაწერი → Verify → API Keys → Create →
+Vercel: `RESEND_API_KEY`, `MAIL_FROM` = `Bazari <noreply@დომენი>`.
 
-## 2. რეკვიზიტები — რეგისტრაციის შემდეგ, Dashboard → პარამეტრები
+## 5. ონლაინ გადახდა — რეგისტრაციის შემდეგ (პ. 7)
+Dashboard → გადახდები, თითო პროვაიდერს თავისი ბარათი და ტესტ-რეჟიმი აქვს.
+PayPal: developer.paypal.com → Create App. Coinbase: commerce.coinbase.com → API keys.
+TBC/BOG: ხელშეკრულება ბანკთან. პირველი ნამდვილი გადახდა ერთად ვნახოთ ტესტ-რეჟიმში.
 
-მისამართი, ტელეფონი, ელფოსტა, სამუშაო საათები, tagline (footer-ში ჩანს), მიწოდების ზონები და
-ფასები, დაბრუნების ვადა (14 დღე დგას). ინვოისზე, კონტაქტზე და footer-ში მხოლოდ შევსებული
-ველები ჩნდება. საინფორმაციო გვერდები (ჩვენ შესახებ, კონტაქტი, წესები, კონფიდენციალურობა…)
-ნამდვილი მაღაზიის ტექსტით არის დაწერილი — Dashboard → გვერდებში სწორდება. ინვოისი ფისკალური რომ გახდეს — ბუღალტერთან ნუმერაციის შეთანხმება, მერე ერთი
-ველი ჩემი ნაწილია.
+## 6. სურვილისამებრ
+Facebook-ით შესვლა: developers.facebook.com → App → Facebook Login → redirect
+`https://დომენი/api/auth/facebook/callback` → Vercel `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET`.
 
-## 3. პროდუქტები — როცა გექნება, Dashboard → პროდუქტები
-
-ფოტო (JPEG/PNG/WebP/AVIF, ბაზაში ინახება), აღწერა ორივე ენაზე, ფასი, თვითღირებულება (ანალიტიკის
-მოგებისთვის), მარაგი. ახლა 40 სატესტო პროდუქტია placeholder-ით — ნამდვილების შემდეგ წაშალე.
-
-## 4. დომენი — როცა იყიდი
-
-1. Vercel → Settings → Domains → დაამატე; DNS-ში Vercel-ის ჩანაწერები.
-2. Vercel-ის ცვლადი `NEXT_PUBLIC_SITE_URL` = `https://შენი-დომენი`.
-3. Google Cloud (`bazari-508917`) → Clients → Bazari → redirect URI
-   `https://შენი-დომენი/api/auth/google/callback`; Branding → Authorized domains.
-4. UptimeRobot-ში მონიტორის URL.
-5. **ელფოსტა (Resend)** — ამის გარეშე შეკვეთის დადასტურება, ვერიფიკაციის კოდი და პაროლის
-   აღდგენა არ იგზავნება: [resend.com](https://resend.com) → Domains → Add → 3 DNS ჩანაწერი →
-   Verify → API Keys → Create (`re_…`) → Vercel: `RESEND_API_KEY`, `MAIL_FROM` =
-   `Bazari <noreply@შენი-დომენი>`. მერე README-ს „Notes and known limits" — ჩემი ნაწილია.
-
-## 5. ონლაინ გადახდა — რეგისტრაციის შემდეგ, Dashboard → გადახდები
-
-გასაღებები Dashboard → გადახდებში იწერება (არა Vercel-ზე); თითო პროვაიდერს თავისი ბარათი,
-ტესტ-რეჟიმი და Callback მისამართი აქვს, რომელიც პროვაიდერის პორტალში უნდა ჩაწერო.
-
-- **PayPal**: developer.paypal.com → Apps & Credentials → Create App → Client ID + Secret.
-  ლარს არ იღებს — ვალუტა USD/EUR და კურსი ბარათშივე.
-- **კრიპტო (Coinbase Commerce)**: commerce.coinbase.com → Settings → API keys; Webhook
-  subscriptions → Callback მისამართი → shared secret.
-- **TBC (TPAY)**: ხელშეკრულება tbcbank.ge-ზე (კვირები); developers.tbcbank.ge → Applications →
-  API Key; ბანკიდან Client ID/Secret.
-- **საქართველოს ბანკი (iPay)**: ხელშეკრულება bog.ge-ზე; ბიზნეს-ინტერნეტბანკი → iPay → API.
-
-ადაპტერები ცოცხალ მერჩანტ-ანგარიშზე ჯერ არ გაშვებულა — პირველი ნამდვილი გადახდა თითოეულზე
-ერთად ვნახოთ ტესტ-რეჟიმში; გასასწორებელი ერთ ფაილშია: `src/lib/payments/<პროვაიდერი>.ts`.
-
-## 6. ბოლოს
-
-- Facebook-ით შესვლა (სურვილისამებრ): developers.facebook.com → Create App → Facebook Login →
-  Valid OAuth Redirect URI `https://დომენი/api/auth/facebook/callback` → App ID/Secret → Vercel
-  `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET` → App Mode: Live.
-- README-ს სქრინშოტები — პროდუქტების ფოტოების შემდეგ.
-- ყოველდღიური ავტომატური ბექაპი — თუ დაგჭირდება, ერთი cron-ია.
+## 7. რეგისტრაცია — ონლაინ გადახდის ჩართვამდე, ან როცა გაყიდვები რამდენიმე ათეულს გადააჭარბებს
+ინდ. მეწარმე (იუსტიციის სახლი / my.gov.ge, ერთი დღე, ~20–50 ₾) + მცირე ბიზნესის სტატუსი
+(ბრუნვის 1%). ბანკები და PayPal ამის გარეშე მერჩანტ-ანგარიშს არ აძლევენ.
 
 ---
-
-**რიგი:** 1 → 2 → 3 → 4 → 5 → 6. ახლა არაფერია, რაც ჩემ მხარესაა — ყოველი პუნქტი შენს
-ნაბიჯს ელოდება (რეგისტრაცია, პროდუქტი, დომენი). რაც გაკეთდება, აქედან წაიშლება.
+რიგი: 1 → 2 → 3 → 4 → 5. ყველა პუნქტი შენს ნაბიჯს ელოდება. რაც გაკეთდება, აქედან წაიშლება.
