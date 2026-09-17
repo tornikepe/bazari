@@ -12,6 +12,11 @@ Vercel-ზე შემოწმებულია: `CRON_SECRET` დგას (
 placeholder არ არის, `NEXT_PUBLIC_SITE_URL` დაყენებულია, `PAYMENT_SANDBOX` სიაში არ არის.
 **Sentry ჩართულია** (2026-09-17): ორგანიზაცია `peit`, პროექტი `javascript-nextjs-ok`; ცოცხალი
 საიტიდან გაშვებული სატესტო შეცდომა Issues-ში ჩანს. ახალი შეცდომა — peit.sentry.io → Issues.
+**Google-ით შესვლა ჩართულია** (2026-09-17): Google Cloud პროექტი `bazari` (bazari-508917), აპი
+გამოქვეყნებულია (In production), OAuth client „Bazari" ორივე vercel.app + localhost redirect-ით;
+ცოცხალი `/api/auth/google` Google-ის შესვლის გვერდზე გადადის და Google client-ს იღებს. დომენის
+დამატებისას: Google Cloud → Clients → Bazari → redirect URI `https://დომენი/api/auth/google/callback`,
+და Branding → Authorized domains.
 
 ბაზა 2026-09-17-ს განულდა: შეკვეთები, მომხმარებლები (სატესტოც), შეფასებები, ვიზიტები,
 ჟურნალები წაშლილია; კატალოგი, მარაგი, ზონები, კუპონები, თანამშრომლები, პარამეტრები,
@@ -50,22 +55,6 @@ Variables → Add** (Key / Value, Environment: Production) → **Save**. ბო�
 4. Vercel-ზე ორი ცვლადი:
    - `RESEND_API_KEY` = `re_…`
    - `MAIL_FROM` = `Bazari <noreply@bazari.ge>` (დომენი — ის, რაც მე-2 ნაბიჯში დაადასტურე)
-
-### A1 — Google-ით შესვლა
-
-1. [console.cloud.google.com](https://console.cloud.google.com) → ზედა ზოლში პროექტი →
-   **New Project** → სახელი `Bazari` → **Create** → აირჩიე.
-2. **APIs & Services → OAuth consent screen** → **External** → App name `Bazari`, User support
-   email და Developer contact email — შენი → **Save and Continue** ბოლომდე → **Publish App**.
-3. **APIs & Services → Credentials → Create Credentials → OAuth client ID** →
-   Application type **Web application** → Name `Bazari` → **Authorized redirect URIs → Add URI**
-   — ორივე, სიმბოლო-სიმბოლო:
-   - `https://bazari-git-main-tornikepes-projects.vercel.app/api/auth/google/callback`
-   - `http://localhost:3000/api/auth/google/callback`
-   (როცა დომენი გექნება — `https://შენი-დომენი/api/auth/google/callback`-იც)
-   → **Create**.
-4. ფანჯარაში გამოჩნდება **Client ID** (`…apps.googleusercontent.com`) და **Client secret** →
-   Vercel: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. ღილაკი საიტზე მაშინვე გამოჩნდება.
 
 ### A1 — Facebook-ით შესვლა (სურვილისამებრ)
 
@@ -197,8 +186,8 @@ Dashboard → Settings: მისამართი, ტელეფონი, �
 
 **ახლა, არაფრის მოლოდინში:**
 1. ~~A8 — Sentry~~ გაკეთებულია
-2. **A1** — Google-ით შესვლა (10 წუთი): vercel.app მისამართით მუშაობს, დომენი არ სჭირდება — **შემდეგი**
-3. **§4** — uptime მონიტორი `/api/health`-ზე, Neon-ის retention-ის შემოწმება
+2. ~~A1 — Google-ით შესვლა~~ გაკეთებულია (Facebook სურვილისამებრ დარჩა, §2)
+3. **§4** — uptime მონიტორი `/api/health`-ზე, Neon-ის retention-ის შემოწმება — **შემდეგი**
 4. **§5** — ტელეფონზე ცოცხალი შემოწმება (vercel.app-ზე)
 
 **როცა ბიზნესი დარეგისტრირდება (§8):**
