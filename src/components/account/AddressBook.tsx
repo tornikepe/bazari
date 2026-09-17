@@ -18,8 +18,6 @@ import {
 } from "@/app/actions/addresses";
 import { MAX_ADDRESSES } from "@/lib/addresses";
 import { PhoneField } from "@/components/ui/PhoneField";
-import { MapPicker, type Pin } from "@/components/checkout/MapPicker";
-import { findCity, GEORGIAN_CITIES } from "@/lib/georgian-cities";
 
 export type SavedAddress = {
   id: string;
@@ -29,8 +27,6 @@ export type SavedAddress = {
   city: string;
   street: string;
   note: string;
-  lat: number | null;
-  lng: number | null;
   isDefault: boolean;
 };
 
@@ -53,10 +49,6 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
 
   /** `null` when closed, `"new"` when adding, otherwise the id being edited. */
   const [editing, setEditing] = useState<string | null>(null);
-  // The pin on the map for the address being written, and the city typed
-  // so far, so the map can open on the right town.
-  const [pin, setPin] = useState<Pin | null>(null);
-  const [city, setCity] = useState("");
   const [failed, setFailed] = useState(false);
 
   const current = addresses.find((address) => address.id === editing);
@@ -138,11 +130,7 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
                 <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => {
-                      setEditing(address.id);
-                      setCity(address.city);
-                      setPin(address.lat !== null && address.lng !== null ? { lat: address.lat, lng: address.lng } : null);
-                    }}
+                    onClick={() => setEditing(address.id)}
                     aria-label={`${t.account.addressEdit} — ${address.label || address.city}`}
                     className="btn btn-ghost h-9 w-9 rounded-control p-0"
                   >
@@ -219,23 +207,11 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
                   name={name}
                   required={required}
                   defaultValue={current?.[name] ?? ""}
-                  onChange={name === "city" ? (event) => setCity(event.target.value) : undefined}
                   className="field"
-                />
-              )}
-              {/* The pin, under the street: for the door the words do not find. */}
-              {name === "street" && (
-                <MapPicker
-                  centre={findCity(city) ?? GEORGIAN_CITIES[0]!}
-                  pin={pin}
-                  onPick={(next) => setPin(next)}
-                  onClear={() => setPin(null)}
                 />
               )}
             </div>
           ))}
-          <input type="hidden" name="lat" value={pin?.lat ?? ""} />
-          <input type="hidden" name="lng" value={pin?.lng ?? ""} />
 
           {/* Offered only when it would change something: the first address
               saved becomes the default on its own, and re-offering the choice
@@ -274,11 +250,7 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
       ) : (
         <button
           type="button"
-          onClick={() => {
-            setEditing("new");
-            setCity("");
-            setPin(null);
-          }}
+          onClick={() => setEditing("new")}
           className="btn btn-outline btn-sm mt-4"
         >
           <PlusIcon size={15} />

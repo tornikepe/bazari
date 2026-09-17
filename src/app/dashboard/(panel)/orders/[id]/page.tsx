@@ -253,19 +253,6 @@ export default async function AdminOrderDetailPage({
               ))}
             </ul>
 
-            {/* The pin, when the customer placed one: the door the words do
-                not find, for whoever is driving. */}
-            {order.lat !== null && order.lng !== null && (
-              <a
-                href={`https://www.google.com/maps?q=${order.lat},${order.lng}`}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="btn btn-outline btn-sm mt-3 gap-1.5"
-              >
-                <MapPinIcon size={14} />
-                {t.checkout.mapOpen}
-              </a>
-            )}
 
             {order.note && (
               <div className="mt-4 rounded-control bg-accent-50 p-3">

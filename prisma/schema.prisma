@@ -378,10 +378,6 @@ model Order {
   city         String
   address      String
   note         String  @default("")
-  /// Where the pin was put on the map at checkout, when it was — the
-  /// courier's exact spot. Absent for an order typed as an address alone.
-  lat          Float?
-  lng          Float?
 
   /// How it leaves the shop. For `pickup` the address columns above may be
   /// empty — there is nowhere to send anything.
@@ -676,9 +672,6 @@ model Address {
   city      String
   street    String
   note      String   @default("")
-  /// The pin, when the address was saved with one.
-  lat       Float?
-  lng       Float?
   /// The one checkout offers first. At most one per user, enforced in the
   /// action that sets it rather than by a constraint, because "exactly one"
   /// is false the moment a customer has none.

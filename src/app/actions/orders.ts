@@ -39,9 +39,6 @@ export type PlaceOrderInput = {
   deliveryMethod?: string;
   /** Required for a courier when the shop has zones; ignored otherwise. */
   deliveryZoneId?: string;
-  /** The pin placed on the map, when one was. */
-  lat?: number;
-  lng?: number;
 };
 
 export type PlaceOrderResult =
@@ -73,17 +70,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const customerName = input.customerName?.trim() ?? "";
   // The one shape every number is kept in; anything else is refused below.
   const phone = normalizePhone(input.phone ?? "") ?? "";
-  // A pin is two finite numbers on the globe, or nothing — never one of the
-  // two, and never a string that happened to parse.
-  const pin =
-    typeof input.lat === "number" &&
-    typeof input.lng === "number" &&
-    Number.isFinite(input.lat) &&
-    Number.isFinite(input.lng) &&
-    Math.abs(input.lat) <= 90 &&
-    Math.abs(input.lng) <= 180
-      ? { lat: input.lat, lng: input.lng }
-      : null;
+
   const city = input.city?.trim() ?? "";
   const address = input.address?.trim() ?? "";
 
@@ -287,8 +274,6 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             city,
             address,
             note: input.note?.trim() ?? "",
-            lat: pickup ? null : pin?.lat,
-            lng: pickup ? null : pin?.lng,
             deliveryMethod: pickup ? "pickup" : "courier",
             deliveryZoneId: zone?.id ?? null,
             // The zone's name as it is today, so a rename or a deletion later

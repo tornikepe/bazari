@@ -22,8 +22,7 @@ import { PAYMENT_METHODS, isGatewayMethod, type PaymentMethod } from "@/lib/paym
 import { PaymentMark } from "@/components/checkout/PaymentMark";
 import { PhoneField } from "@/components/ui/PhoneField";
 import { SuggestField } from "@/components/ui/SuggestField";
-import { MapPicker, type Pin } from "@/components/checkout/MapPicker";
-import { findCity, GEORGIAN_CITIES, suggestCities } from "@/lib/georgian-cities";
+import { suggestCities } from "@/lib/georgian-cities";
 import { localDigits } from "@/lib/phone";
 import { Busy, Swap } from "@/components/ui/Swap";
 
@@ -61,8 +60,6 @@ export type CheckoutAddress = {
   city: string;
   street: string;
   note: string;
-  lat: number | null;
-  lng: number | null;
   isDefault: boolean;
 };
 
@@ -116,8 +113,6 @@ export function CheckoutForm({
   // Prefilled from the account. Requiring people to sign in and then making
   // them retype the address they already gave us would be the worst of both.
   const [form, setForm] = useState({ ...defaults });
-  // The pin on the map, when the shopper placed one; nothing otherwise.
-  const [pin, setPin] = useState<Pin | null>(null);
   // What the shop offers, as the page decided: the gateways it switched on
   // and the two that need none. Cash on delivery is a switch in the
   // settings, and a switch nothing reads is a lie in the dashboard — the
@@ -220,8 +215,6 @@ export function CheckoutForm({
         paymentMethod: payment,
         deliveryMethod: delivery.method,
         deliveryZoneId: delivery.method === "courier" ? (zone?.id ?? undefined) : undefined,
-        lat: pin?.lat,
-        lng: pin?.lng,
       });
 
       if (!result.ok) {
@@ -327,13 +320,7 @@ export function CheckoutForm({
                         type="radio"
                         name="savedAddress"
                         checked={inUse}
-                        onChange={() => {
-                          // The pin the address was saved with comes with it.
-                          setPin(
-                            address.lat !== null && address.lng !== null
-                              ? { lat: address.lat, lng: address.lng }
-                              : null,
-                          );
+                        onChange={() =>
                           setForm((current) => ({
                             ...current,
                             customerName: address.fullName,
@@ -341,8 +328,8 @@ export function CheckoutForm({
                             city: address.city,
                             address: address.street,
                             note: address.note || current.note,
-                          }));
-                        }}
+                          }))
+                        }
                         className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
                       />
 
@@ -527,8 +514,7 @@ export function CheckoutForm({
               </div>
 
               {/* The street, with the addresses already saved offered as
-                  it is typed, and a pin on the map under it for the door
-                  the words do not find. */}
+                  it is typed. */}
               <div>
                 <label className="field-label" htmlFor="checkout-address">
                   {t.checkout.address}
@@ -559,17 +545,6 @@ export function CheckoutForm({
                     {errors.address}
                   </p>
                 )}
-                <MapPicker
-                  centre={findCity(form.city) ?? GEORGIAN_CITIES[0]!}
-                  pin={pin}
-                  onPick={(next, found) => {
-                    setPin(next);
-                    // The map's own reading of the spot fills an empty box;
-                    // what was typed is not overwritten.
-                    if (found && !form.address.trim()) update("address", found);
-                  }}
-                  onClear={() => setPin(null)}
-                />
               </div>
             </div>
 
