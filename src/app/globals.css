@@ -2301,6 +2301,104 @@
   transform: scaleX(1);
 }
 
+/* ------------------------------------------------------------------ */
+/* Checkout                                                            */
+/* ------------------------------------------------------------------ */
+
+/* The title, centred — the page header lays its title left, for the
+   action that can sit beside it; the checkout has none. */
+.checkout-head > div {
+  justify-content: center;
+  text-align: center;
+}
+
+/* Three stops: a numbered disc and a word each, a short rule between.
+   The one behind is filled, the one this page is has the brand edge, the
+   one ahead is quiet. */
+.checkout-steps li:not(.rule) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-ink-400);
+  white-space: nowrap;
+}
+
+.checkout-steps li span {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-line);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-500);
+  background: var(--color-surface);
+}
+
+.checkout-steps li.is-done {
+  color: var(--color-ink-700);
+}
+
+.checkout-steps li.is-done span {
+  background: var(--color-brand-solid);
+  border-color: var(--color-brand-solid);
+  color: var(--color-brand-on-solid);
+}
+
+.checkout-steps li.is-current {
+  color: var(--color-ink-900);
+}
+
+.checkout-steps li.is-current span {
+  border-color: var(--color-brand-solid);
+  color: var(--color-brand-600);
+  box-shadow: 0 0 0 3px var(--color-brand-100);
+}
+
+.checkout-steps li.rule {
+  flex: 1 1 1.5rem;
+  max-width: 4rem;
+  height: 1.5px;
+  background: var(--color-line);
+}
+
+/* The phone's foot bar: the total and the button, fixed above the home
+   indicator, over the chat launcher's corner so the two do not collide. */
+.checkout-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-line);
+  box-shadow: 0 -8px 24px rgb(9 11 16 / 0.08);
+}
+
+@media (min-width: 1024px) {
+  .checkout-bar {
+    display: none;
+  }
+}
+
+/* Room under the form for the bar, so the last field is not under it;
+   and the chat launcher steps over it the way it steps over the product
+   page's buy bar — through the same variable. */
+@media (max-width: 1023px) {
+  .page:has(.checkout-bar) {
+    padding-bottom: 5.5rem;
+  }
+  :root:has(.checkout-bar) {
+    --buy-bar-h: 4.25rem;
+  }
+}
+
 /* Index rows round their hover tint so it reads as a selection, not a stripe. */
 .index-row {
   border-radius: var(--radius-control);

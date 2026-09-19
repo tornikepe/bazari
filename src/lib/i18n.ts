@@ -214,6 +214,10 @@ const ka = {
 
   checkout: {
     title: "შეკვეთის გაფორმება",
+    stepCart: "კალათა",
+    stepDetails: "მონაცემები",
+    stepDone: "დადასტურება",
+    secureNote: "მონაცემები დაცულია · დაბრუნება {days} დღეში",
     contact: "საკონტაქტო ინფორმაცია",
     name: "სახელი და გვარი",
     phone: "ტელეფონი",
@@ -1506,6 +1510,10 @@ const en: Dictionary = {
 
   checkout: {
     title: "Checkout",
+    stepCart: "Cart",
+    stepDetails: "Details",
+    stepDone: "Confirmation",
+    secureNote: "Your details are protected · returns within {days} days",
     contact: "Contact details",
     name: "Full name",
     phone: "Phone",

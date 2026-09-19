@@ -9,7 +9,7 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 import { TaxNote } from "@/components/ui/TaxNote";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Price } from "@/components/ui/Price";
-import { MapPinIcon, SpinnerIcon } from "@/components/ui/icons";
+import { MapPinIcon, SpinnerIcon, ShieldIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { formatPrice } from "@/lib/format";
@@ -277,25 +277,55 @@ export function CheckoutForm({
     );
   }
 
+  /* The three sections, numbered, so the page reads as three steps and
+     not as a form that goes on. */
+  let step = 0;
+  const legend = (title: string) => {
+    step += 1;
+    return (
+      <legend className="flex items-center gap-3 px-1 text-base font-bold text-ink-900">
+        <span
+          aria-hidden="true"
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-solid text-xs font-extrabold text-brand-on-solid tabular-nums"
+        >
+          {step}
+        </span>
+        {title}
+      </legend>
+    );
+  };
+
   return (
     <div className="page">
-      <PageHeader title={t.checkout.title} />
+      {/* Narrower than the catalogue and centred: a form is read down the
+          middle, and stretched across the width of a product grid it read
+          as two unrelated columns. */}
+      <div className="mx-auto max-w-5xl">
+        <PageHeader title={t.checkout.title} className="checkout-head" />
+
+        {/* Where this is in the buying: the cart is behind, the order page
+            ahead. Three stops, the middle one lit. */}
+        <ol className="checkout-steps mx-auto mt-2 flex max-w-md items-center justify-center gap-2 text-xs font-semibold">
+          <li className="is-done"><span>1</span>{t.checkout.stepCart}</li>
+          <li aria-hidden="true" className="rule" />
+          <li className="is-current" aria-current="step"><span>2</span>{t.checkout.stepDetails}</li>
+          <li aria-hidden="true" className="rule" />
+          <li><span>3</span>{t.checkout.stepDone}</li>
+        </ol>
 
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-start"
+        className="mt-8 grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-start"
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           {/* -------------------------- saved addresses ---------------------- */}
           {/* Only when there is a choice to make. One saved address has already
               been used to fill the fields below, and a picker offering the
               thing that is already selected is a control with no purpose. */}
           {saved.length > 1 && (
             <fieldset className="card card-pad">
-              <legend className="px-1 text-sm font-bold text-ink-900">
-                {t.account.addressPick}
-              </legend>
+              <legend className="px-1 text-sm font-bold text-ink-900">{t.account.addressPick}</legend>
 
               <div className="mt-3 flex flex-col gap-2">
                 {saved.map((address) => {
@@ -358,7 +388,7 @@ export function CheckoutForm({
 
           {/* ---------------------------- contact --------------------------- */}
           <fieldset className="card card-pad">
-            <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.contact}</legend>
+            {legend(t.checkout.contact)}
 
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <Field
@@ -401,11 +431,11 @@ export function CheckoutForm({
 
           {/* ---------------------------- delivery -------------------------- */}
           <fieldset className="card card-pad">
-            <legend className="px-1 text-sm font-bold text-ink-900">
-              {settings.pickupEnabled || zones.length > 0
+            {legend(
+              settings.pickupEnabled || zones.length > 0
                 ? t.checkout.delivery
-                : t.checkout.deliveryAddress}
-            </legend>
+                : t.checkout.deliveryAddress,
+            )}
 
             {/* Courier or collection — only when there is a choice to make. */}
             {settings.pickupEnabled && (
@@ -566,7 +596,7 @@ export function CheckoutForm({
 
           {/* ---------------------------- payment --------------------------- */}
           <fieldset className="card card-pad">
-            <legend className="px-1 text-sm font-bold text-ink-900">{t.checkout.payment}</legend>
+            {legend(t.checkout.payment)}
 
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               {methods.map((method) => (
@@ -606,8 +636,13 @@ export function CheckoutForm({
         </div>
 
         {/* ----------------------------- summary ---------------------------- */}
-        <aside className="card sticky top-[var(--header-h)] card-pad">
-          <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
+        <aside className="card lg:sticky lg:top-[calc(var(--header-h)+1rem)] card-pad">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
+            <span className="text-xs text-ink-500 tabular-nums">
+              {fill(t.favorites.count, { count: items.reduce((sum, item) => sum + item.quantity, 0) })}
+            </span>
+          </div>
 
           {/* Keyed by the product *and* the combination: two sizes of one
               shirt are two lines, and keying on the product alone made React
@@ -776,8 +811,28 @@ export function CheckoutForm({
             {submitting && <SpinnerIcon size={17} />}
             {submitting ? t.checkout.placing : t.checkout.placeOrder}
           </button>
+
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-400">
+            <ShieldIcon size={13} className="shrink-0" />
+            {fill(t.checkout.secureNote, { days: settings.returnWindowDays })}
+          </p>
         </aside>
+
+        {/* On a phone the summary is below the form and the button with it,
+            out of sight while the fields are being filled. This bar sits at
+            the foot of the screen with the total and the same button. */}
+        <div className="checkout-bar">
+          <div className="min-w-0">
+            <span className="block text-[11px] font-semibold text-ink-500">{t.cart.total}</span>
+            <Price value={payable} size="md" />
+          </div>
+          <button type="submit" disabled={submitting} className="btn btn-primary btn-md shrink-0">
+            {submitting && <SpinnerIcon size={16} />}
+            {submitting ? t.checkout.placing : t.checkout.placeOrder}
+          </button>
+        </div>
       </form>
+      </div>
     </div>
   );
 }
