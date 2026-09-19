@@ -14,7 +14,7 @@ export const PAGE_SIZE = 12;
  * less relevant, it is just a catalogue. `parseFilters` falls back to `newest`
  * when it is asked for on an unsearched page.
  */
-export const SORT_OPTIONS = ["relevance", "newest", "price-asc", "price-desc", "name"] as const;
+export const SORT_OPTIONS = ["relevance", "recommended", "newest", "price-asc", "price-desc"] as const;
 export type Sort = (typeof SORT_OPTIONS)[number];
 
 export type CatalogFilters = {

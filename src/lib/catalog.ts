@@ -45,8 +45,10 @@ function buildOrderBy(sort: Sort): Prisma.ProductOrderByWithRelationInput[] {
       return [{ price: "asc" }, { id: "asc" }];
     case "price-desc":
       return [{ price: "desc" }, { id: "asc" }];
-    case "name":
-      return [{ nameKa: "asc" }, { id: "asc" }];
+    case "recommended":
+      /* What the shop put forward first, then what customers have rated,
+         then the newest — the order a shop assistant would show things in. */
+      return [{ isFeatured: "desc" }, { ratingSum: "desc" }, { createdAt: "desc" }, { id: "asc" }];
     default:
       return [{ createdAt: "desc" }, { id: "asc" }];
   }

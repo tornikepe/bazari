@@ -1528,18 +1528,11 @@
    asked for the page to come in gently as it is scrolled — and quick
    enough that nothing is waited for. Siblings inside `.stagger` arrive one
    after another. */
-.reveal {
+/* Hidden only once the observer is running (`data-reveal` on the root),
+   so a page without JavaScript shows everything. The showing is an
+   animation the observer runs on the node — see `ScrollReveal`. */
+html[data-reveal] .reveal {
   opacity: 0;
-  transform: translateY(1.5rem);
-  transition:
-    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: var(--reveal-delay, 0s);
-}
-
-.reveal[data-shown="true"] {
-  opacity: 1;
-  transform: none;
 }
 
 .stagger > .reveal:nth-child(2) { --reveal-delay: 0.08s; }
@@ -1550,21 +1543,9 @@
 .stagger > .reveal:nth-child(n + 7) { --reveal-delay: 0.48s; }
 
 /* A card grid without scroll-driven animation support (Firefox) still
-   arrives: the same rise, driven by the observer instead of the scroll. */
-@supports not (animation-timeline: view()) {
-  .reveal-view {
-    opacity: 0;
-    transform: translateY(1.5rem);
-    transition:
-      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: var(--reveal-delay, 0s);
-  }
-
-  .reveal-view[data-shown="true"] {
-    opacity: 1;
-    transform: none;
-  }
+   arrives: the same rise, run by the observer instead of the scroll. */
+html[data-reveal="all"] .reveal-view {
+  opacity: 0;
 }
 
 /* Interactive lift, shared by product and category cards.
@@ -2299,6 +2280,97 @@
 .header-nav-link:hover::after,
 .header-nav-link.is-current::after {
   transform: scaleX(1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Catalogue filters                                                   */
+/* ------------------------------------------------------------------ */
+
+/* Two thumbs on one track: two native range inputs laid over each other,
+   both tracks hidden, and the filled span between the thumbs drawn on the
+   box under them from the two positions the rail writes as `--lo`/`--hi`.
+   `pointer-events` on the inputs is off and on their thumbs on, so each
+   thumb is the only thing of its input that can be grabbed. */
+.price-range {
+  position: relative;
+  height: 1.5rem;
+  margin-inline: 0.5rem;
+}
+
+.price-range::before,
+.price-range::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  border-radius: 2px;
+  transform: translateY(-50%);
+}
+
+.price-range::before {
+  inset-inline: 0;
+  background: var(--color-ink-200);
+}
+
+.price-range::after {
+  left: var(--lo, 0%);
+  right: calc(100% - var(--hi, 100%));
+  background: var(--color-brand-solid);
+}
+
+.price-range input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: none;
+  outline: none;
+}
+
+.price-range input[type="range"]::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 100%;
+}
+
+.price-range input[type="range"]::-moz-range-track {
+  background: transparent;
+}
+
+.price-range input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  border-radius: 999px;
+  border: 2px solid var(--color-brand-solid);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  cursor: grab;
+}
+
+.price-range input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid var(--color-brand-solid);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  cursor: grab;
+}
+
+.price-range input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--color-brand-100);
+}
+
+.price-range input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px var(--color-brand-100);
 }
 
 /* ------------------------------------------------------------------ */

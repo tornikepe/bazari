@@ -30,10 +30,10 @@ export function SortSelect({ filters }: { filters: CatalogFilters }) {
 
   const labels: Record<Sort, string> = {
     relevance: t.catalog.sortRelevance,
+    recommended: t.catalog.sortRecommended,
     newest: t.catalog.sortNewest,
     "price-asc": t.catalog.sortPriceAsc,
     "price-desc": t.catalog.sortPriceDesc,
-    name: t.catalog.sortName,
   };
 
   /* Relevance is not offered on an unsearched catalogue: "sorted by how well
