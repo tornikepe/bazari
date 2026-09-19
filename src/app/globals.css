@@ -865,10 +865,38 @@
     background: var(--color-brand-50);
   }
 
-  /* The card's button fills a column that, on a phone, is a hundred and
-     forty pixels wide. Its padding is what gives, not its label. */
+  /* The card's two buttons share a column that, on a phone, is a hundred
+     and forty pixels wide. Their padding is what gives, not their labels. */
   .product-card .btn-sm {
     padding-inline: 0.5rem;
+    gap: 0.35rem;
+  }
+
+  /* The sizes, on the card: a sheet that rises over the foot of the card
+     when a product sold in sizes is put in the cart, and goes when a size
+     is tapped or the sheet is dismissed. It is the card's own, so it never
+     covers a neighbour. */
+  .card-sheet {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 20;
+    padding: 0.75rem 0.875rem 0.875rem;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-line);
+    box-shadow: 0 -12px 28px rgb(9 11 16 / 0.12);
+    animation: card-sheet-in 0.26s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  @keyframes card-sheet-in {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   /* The body of the header's cart and wishlist panels: four rows tall,
@@ -2000,10 +2028,10 @@
 
 .index-row {
   display: grid;
-  grid-template-columns: 2rem 1fr auto;
+  grid-template-columns: 2.25rem 1fr auto;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.875rem 0.25rem 0.875rem 0;
+  padding: 0.75rem 0.25rem 0.75rem 0;
   /* Rows draw the rule below them; the top edge of each column is drawn by
      the first row in that column, so both columns close symmetrically
      however many categories there are. */
@@ -2028,9 +2056,9 @@
    up a size, and the rule gets air above and below. */
 @media (min-width: 640px) {
   .index-row {
-    grid-template-columns: 2.75rem 1fr auto;
-    gap: 0.875rem;
-    padding: 1.125rem 0.5rem 1.125rem 0;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: 1rem;
+    padding: 1rem 0.5rem 1rem 0;
   }
 
   .index-name {
@@ -2072,32 +2100,63 @@
   }
 }
 
+/* The number is a square chip with the figure centred in it — it was a
+   loose grey "01" at the start of the row, small enough to be missed and
+   sitting at the baseline rather than in the middle of a two-line name. */
 .index-num {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-control);
+  background: var(--color-ink-50);
+  border: 1px solid var(--color-line);
   font-size: var(--text-xs);
-  font-weight: 700;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: var(--color-ink-400);
+  letter-spacing: 0.02em;
+  color: var(--color-ink-700);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-/* The count is a small pill, so on a phone it reads as "how many" and not
-   as a stray digit at the end of the name. Wide enough for two digits, so
-   the column is one width whether the count is 4 or 30. */
+@media (min-width: 640px) {
+  .index-num {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: var(--text-sm);
+  }
+}
+
+/* The count says what it counts — "30 პროდუქტი", not a bare digit at the
+   end of the name — in a pill that keeps to one line and one height. */
 .index-count {
-  display: inline-grid;
-  place-items: center;
-  min-width: 2.25rem;
-  height: 1.5rem;
-  padding-inline: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  padding-inline: 0.625rem;
   border-radius: 999px;
   background: var(--color-ink-100);
   font-size: var(--text-xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   color: var(--color-ink-600);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 @media (hover: hover) {
+  .index-row:hover .index-num {
+    background: var(--color-brand-solid);
+    border-color: var(--color-brand-solid);
+    color: var(--color-brand-on-solid);
+  }
+
   .index-row:hover .index-count {
     background: var(--color-brand-50);
     color: var(--color-brand-700);

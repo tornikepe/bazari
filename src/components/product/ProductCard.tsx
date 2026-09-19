@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { AddToCartButton } from "@/components/product/AddToCartButton";
+import { CardActions } from "@/components/product/CardActions";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
 import { Price } from "@/components/ui/Price";
 import { TruckIcon } from "@/components/ui/icons";
@@ -116,41 +116,20 @@ export function ProductCard({
             </span>
           )}
 
-          {needsChoice ? (
-            /* Sold in sizes or colours: the card cannot pick one, so its
-               button is the way to the page that can. */
-            <Link
-              href={`/product/${product.slug}`}
-              className="btn btn-outline btn-sm w-full"
-            >
-              {t.product.variantChoose}
-            </Link>
-          ) : (
-            /* One of it, in one press; how many is the product page's
-               question, where there is a stepper and the room to answer it.
-               The card had a quantity select beside the button for a while,
-               and a page of twelve of them read as twelve small forms. */
-            <AddToCartButton
-              product={{
-                productId: product.id,
-                slug: product.slug,
-                nameKa: product.nameKa,
-                nameEn: product.nameEn,
-                image: product.image,
-                price: product.price,
-                stock: product.stock,
-              }}
-              short
-              fullWidth
-              /* Outlined on the card, filled on the product page. Twelve solid
-                 red buttons on a catalogue page were twelve claims on the eye,
-                 and the deals banner was meant to be the one place the red
-                 fills a region. The card you are over fills its button — see
-                 `.hover-lift:hover .btn-outline` — so the offer is still made,
-                 one at a time. */
-              variant="outline"
-            />
-          )}
+          {/* Into the cart, or straight to the checkout. A product sold in
+              sizes opens its sizes on the card — see `CardActions`. */}
+          <CardActions
+            needsChoice={needsChoice}
+            product={{
+              productId: product.id,
+              slug: product.slug,
+              nameKa: product.nameKa,
+              nameEn: product.nameEn,
+              image: product.image,
+              price: product.price,
+              stock: product.stock,
+            }}
+          />
         </div>
       </div>
     </article>

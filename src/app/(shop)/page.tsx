@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
+import { fill } from "@/lib/i18n";
 import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
@@ -187,7 +188,11 @@ export default async function HomePage() {
             >
               <span className="index-num">{String(index + 1).padStart(2, "0")}</span>
               <span className="index-name">{name(category)}</span>
-              <span className="index-count">{category._count.products}</span>
+              <span className="index-count">
+                {category._count.products === 1
+                  ? t.home.indexCountOne
+                  : fill(t.home.indexCount, { count: category._count.products })}
+              </span>
             </Link>
           ))}
         </div>

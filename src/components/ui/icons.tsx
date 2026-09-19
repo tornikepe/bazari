@@ -397,6 +397,13 @@ export const ChatIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A bolt: buy it now, in one go. */
+export const ZapIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M13 2 4.5 13.5H11l-1 8.5L20 10.5h-6.5L13 2z" />
+  </Icon>
+);
+
 export const SendIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M4.5 12h7" />
