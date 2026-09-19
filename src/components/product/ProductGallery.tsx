@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { altOf, type Photo } from "@/lib/product-photos";
-import { ZoomIcon } from "@/components/ui/icons";
 import { Lightbox } from "@/components/product/Lightbox";
 
 /**
@@ -42,7 +41,20 @@ export function ProductGallery({
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const strip = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLButtonElement>(null);
   const many = photos.length > 1;
+
+  /* Under a pointer the picture grows around the point the pointer is on
+     and follows it — a magnifier, in effect — so the stitching can be looked
+     at without opening anything. The point is written as two custom
+     properties the stylesheet reads for `transform-origin`; only a mouse
+     does this, since a finger resting on the picture is a tap. */
+  function follow(event: React.PointerEvent<HTMLButtonElement>) {
+    if (event.pointerType !== "mouse" || !stage.current) return;
+    const box = stage.current.getBoundingClientRect();
+    stage.current.style.setProperty("--zx", `${((event.clientX - box.left) / box.width) * 100}%`);
+    stage.current.style.setProperty("--zy", `${((event.clientY - box.top) / box.height) * 100}%`);
+  }
 
   /**
    * Arrow keys move the selection *and* the focus, because in this pattern the
@@ -80,15 +92,22 @@ export function ProductGallery({
       {/* One panel that changes its photo, rather than one panel per photo:
           seven `<Image fill>` boxes stacked with six hidden is seven downloads
           for a page most people never scroll. */}
+      {/* No card around the picture and no margin inside it: a photo on
+          the shop's white inside a bordered white box with a white border
+          of padding read as a frame around a frame, and the placeholder a
+          new product starts with drew a third. The rounded corners are the
+          picture's own. */}
       <div
         role="tabpanel"
         id="gallery-panel"
         aria-labelledby={`gallery-tab-${active}`}
-        className="gallery-stage card relative aspect-square overflow-hidden bg-surface"
+        className="gallery-stage relative aspect-square overflow-hidden rounded-card bg-surface"
       >
         <button
+          ref={stage}
           type="button"
           onClick={() => setOpen(true)}
+          onPointerMove={follow}
           aria-label={t.product.zoomIn}
           className="group absolute inset-0 cursor-zoom-in"
         >
@@ -101,17 +120,13 @@ export function ProductGallery({
                product's name, not its index. */
             alt={altOf(photos[active], locale, name)}
             fill
-            sizes="(max-width: 1024px) 100vw, 600px"
-            className="gallery-photo object-contain p-4 sm:p-6"
+            /* Twice the box on a desktop, since the box shows the picture
+               at twice its size under the pointer. */
+            sizes="(max-width: 1024px) 100vw, 1200px"
+            quality={85}
+            className="gallery-photo object-contain"
             priority={active === 0}
           />
-          {/* The hint sits in the corner and says what a tap does; it steps
-              forward under the pointer, so on a desktop the picture reads as
-              something that opens. */}
-          <span className="gallery-zoom pointer-events-none absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-surface/90 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-card backdrop-blur">
-            <ZoomIcon size={14} />
-            <span className="hidden sm:inline">{t.product.zoomHint}</span>
-          </span>
         </button>
         {badge}
         {many && (
@@ -143,10 +158,14 @@ export function ProductGallery({
               tabIndex={index === active ? 0 : -1}
               onClick={() => setActive(index)}
               aria-label={fill(t.product.photoNumber, { index: index + 1, total: photos.length })}
-              className={`relative h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-control border-2 bg-surface transition-all ${
+              /* The chosen one is ringed in the brand colour; the rest are
+                 plain, without a border of their own or a dimming — a row
+                 of small framed pictures under a large one was more frame
+                 than picture. */
+              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-control bg-surface ring-2 ring-offset-2 ring-offset-canvas transition-[box-shadow,transform] ${
                 index === active
-                  ? "border-brand-600 shadow-card"
-                  : "border-line opacity-80 hover:border-ink-300 hover:opacity-100"
+                  ? "ring-brand-600"
+                  : "ring-transparent hover:ring-ink-300"
               }`}
             >
               {/* Decorative: the button around it is already labelled, and a

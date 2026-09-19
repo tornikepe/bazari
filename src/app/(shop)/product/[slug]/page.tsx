@@ -439,7 +439,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           {/* specifications, when the shop has written any */}
           {specs.length > 0 && (
-            <div className="mt-6">
+            <div className="reveal mt-6">
               <h2 className="mb-3 text-sm font-bold text-ink-900">{t.product.specs}</h2>
               <dl className="overflow-hidden rounded-card border border-line">
                 {specs.map((spec, index) => (
@@ -461,7 +461,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
 
           {/* details */}
-          <div className="mt-6">
+          <div className="reveal mt-6">
             <h2 className="mb-3 text-sm font-bold text-ink-900">{t.product.details}</h2>
             <dl className="overflow-hidden rounded-card border border-line">
               {details.map((detail, index) => (
@@ -484,7 +484,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {/* Above the recommendations, because it is about *this* product and
           they are about others. Drawn even when empty — the empty state is
           where the rule is stated, and the rule is the point. */}
-      <section id="reviews" className="mt-12 scroll-mt-[calc(var(--header-h)+1rem)]">
+      <section id="reviews" className="reveal mt-12 scroll-mt-[calc(var(--header-h)+1rem)]">
         <SectionHeading title={t.product.reviews} />
 
         {/* The figures first: the average, large, with the count under it;
@@ -629,7 +629,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           alongside this product — a "customers also bought" row filled with
           whatever shares a shelf is a recommendation nobody made. */}
       {boughtTogether.length > 0 && (
-        <section className="mt-12">
+        <section className="reveal mt-12">
           <SectionHeading title={t.product.boughtTogether} />
           <div className={PRODUCT_GRID_WIDE}>
             {boughtTogether.map((item) => (
@@ -641,7 +641,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       {/* ------------------------------ related ------------------------------ */}
       {related.length > 0 && (
-        <section className="mt-12">
+        <section className="reveal mt-12">
           <SectionHeading title={t.product.related} />
           <div className={PRODUCT_GRID_WIDE}>
             {related.map((item) => (
@@ -658,7 +658,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <RecordView productId={product.id} />
 
       {/* Follows the visitor down the page once the panel above is gone. */}
-      <StickyBuyBar watchId="buy-panel" product={line} needsChoice={options.length > 0} />
+      <StickyBuyBar
+        watchId="buy-panel"
+        product={line}
+        needsChoice={options.length > 0}
+        choiceName={options.map((option) => option.name).join(" / ")}
+      />
     </div>
   );
 }

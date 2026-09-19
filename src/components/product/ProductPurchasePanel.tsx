@@ -72,15 +72,18 @@ export function ProductPurchasePanel({
   return (
     <div className="flex flex-col gap-3">
       {(!soldOut || keepShape) && (
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-ink-700">
-            {t.product.quantity}
-          </span>
+        /* The label above; the stepper, the count and the heart on the line
+           under it. All four shared one line, and on a phone they shared
+           330px by shrinking — the stepper to a third of its width, its
+           buttons to slivers. Nothing on the line shrinks now. */
+        <div>
+          <span className="field-label">{t.product.quantity}</span>
+          <div className="flex items-center gap-3">
 
           {/* A stepper: minus, the number, plus, as one control the height
               of the buttons under it. The number is a field, so it can also
               be typed; the stock is the ceiling on both. */}
-          <div className="stepper">
+          <div className="stepper shrink-0">
             <button
               type="button"
               onClick={() => setQuantity(quantity - 1)}
@@ -113,17 +116,18 @@ export function ProductPurchasePanel({
             </button>
           </div>
 
+          {/* The product's own heart, at the end of the quantity row rather
+              than as a third button: beside two wide buttons it squeezed
+              the first until its label broke across two lines. */}
           {/* How many there are to have, so "+" stopping is explained. */}
           {!soldOut && (
-            <span className="text-xs text-ink-400 tabular-nums">
+            <span className="min-w-0 text-xs text-ink-400 tabular-nums">
               {fill(t.product.inStockCount, { count: product.stock })}
             </span>
           )}
 
-          {/* The product's own heart, at the end of the quantity row rather
-              than as a third button: beside two wide buttons it squeezed
-              the first until its label broke across two lines. */}
           <FavoriteButton productId={product.productId} size="control" className="ml-auto" />
+          </div>
         </div>
       )}
 

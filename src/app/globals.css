@@ -2401,29 +2401,16 @@
 }
 
 .gallery-photo {
-  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  transform-origin: var(--zx, 50%) var(--zy, 50%);
 }
 
-@media (hover: hover) {
+/* Under a mouse the picture is brought to twice its size around the point
+   the pointer is on, and the point moves with the pointer — the gallery
+   writes it as `--zx`/`--zy` on every move. A magnifier without a lens. */
+@media (hover: hover) and (pointer: fine) {
   .gallery-stage .group:hover .gallery-photo {
-    transform: scale(1.04);
-  }
-}
-
-.gallery-zoom {
-  opacity: 0.9;
-  transform: translateY(0);
-  transition:
-    opacity 0.2s ease,
-    transform 0.25s cubic-bezier(0.32, 0.72, 0, 1),
-    background-color 0.2s ease;
-}
-
-@media (hover: hover) {
-  .gallery-stage .group:hover .gallery-zoom {
-    opacity: 1;
-    transform: translateY(-2px);
-    background: var(--color-surface);
+    transform: scale(2);
   }
 }
 

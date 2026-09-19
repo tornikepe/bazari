@@ -144,7 +144,13 @@ export function Lightbox({
             src={photo.url}
             alt={altOf(photo, locale, name)}
             fill
-            sizes="100vw"
+            /* Twice the screen on a phone, because the picture is brought to
+               twice its size with a tap and the file that fitted the screen
+               went soft the moment it was. `sizes` is what the optimiser
+               reads to choose a width; the screen's own width was too small
+               for the one thing this box is for. */
+            sizes="(max-width: 640px) 200vw, 1800px"
+            quality={88}
             className="object-contain"
             priority
           />

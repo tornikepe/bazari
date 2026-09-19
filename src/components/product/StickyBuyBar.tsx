@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Price } from "@/components/ui/Price";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { fill } from "@/lib/i18n";
 import type { CartItem } from "@/components/providers/CartProvider";
 
 /**
@@ -37,10 +38,13 @@ export function StickyBuyBar({
    * instead — which is what they were going to have to do regardless.
    */
   needsChoice = false,
+  choiceName,
 }: {
   product: Omit<CartItem, "quantity">;
   watchId: string;
   needsChoice?: boolean;
+  /** What is still to be chosen — "size" — so the bar can say so. */
+  choiceName?: string;
 }) {
   const { locale, t } = useI18n();
   const [shown, setShown] = useState(false);
@@ -110,7 +114,7 @@ export function StickyBuyBar({
             aria-hidden={!shown}
             className="btn btn-primary btn-md shrink-0"
           >
-            {t.product.variantChoose}
+            {choiceName ? fill(t.product.chooseOption, { name: choiceName.toLowerCase() }) : t.product.variantChoose}
           </a>
         ) : (
           <AddToCartButton

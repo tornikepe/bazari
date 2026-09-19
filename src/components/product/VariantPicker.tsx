@@ -40,6 +40,11 @@ export function VariantPicker({
   const { t } = useI18n();
   const [chosen, setChosen] = useState<Record<string, string | undefined>>({});
 
+  /* "Choose a size", naming the thing still to be chosen, rather than
+     "choose a variant" — nobody buying shoes thinks of a size as a variant. */
+  const missing = options.filter((option) => !chosen[option.id]).map((option) => option.name);
+  const prompt = fill(t.product.chooseOption, { name: missing.join(" / ").toLowerCase() || options[0]?.name || "" });
+
   const variant = variantFor(variants, chosen);
   const complete = isComplete(options, chosen);
   const price = priceOf(product.price, variant);
@@ -129,7 +134,7 @@ export function VariantPicker({
         }`}
       >
         {!complete ? (
-          t.product.variantChoose
+          prompt
         ) : stock > 0 ? (
           <span className="inline-flex items-center gap-1.5">
             <CheckIcon size={14} />
@@ -147,7 +152,7 @@ export function VariantPicker({
         /* A sold-out size must not fold the stepper and "buy now" away:
            the panel would change shape with every choice. */
         keepShape
-        prompt={complete ? undefined : t.product.variantChoose}
+        prompt={complete ? undefined : prompt}
         product={{
           ...product,
           price,
