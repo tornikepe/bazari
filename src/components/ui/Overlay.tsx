@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { createPortal } from "react-dom";
 import { useOverlay } from "@/lib/use-overlay";
 
 /**
@@ -59,10 +60,13 @@ export function Overlay({
           ? "inset-y-0 left-0"
           : "top-1/2 left-1/2";
 
-  return (
+  return createPortal(
     // Above everything that is fixed on a page — the buy bar at 50, the chat
     // button and the progress line at 60 — since a thing that is modal is
-    // modal over those too.
+    // modal over those too. Portalled to the body for that to hold: rendered
+    // where it is used, inside the sticky header, its z-index only counted
+    // within the header's own stacking context, and the chat launcher sat on
+    // top of the open menu.
     <div ref={containerRef} className="fixed inset-0 z-[70]">
       <button
         type="button"
@@ -85,7 +89,8 @@ export function Overlay({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

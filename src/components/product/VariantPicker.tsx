@@ -68,13 +68,17 @@ export function VariantPicker({
           point rather than an answer. The row is always laid out and only
           shown when the price differs: appearing on demand, it pushed the
           option buttons down by its own height the moment a size was
-          chosen, under the finger that chose it. */}
+          chosen, under the finger that chose it. When no variant is priced
+          on its own there is nothing to appear, and the row is not laid out
+          at all — an empty line at the top of the buy card otherwise. */}
+      {variants.some((candidate) => candidate.price != null && candidate.price !== product.price) && (
       <div
         className={complete && variant && price !== product.price ? "" : "invisible"}
         aria-hidden={!(complete && variant && price !== product.price)}
       >
         <Price value={price} size="lg" />
       </div>
+      )}
 
       {options.map((option) => (
         <fieldset key={option.id}>

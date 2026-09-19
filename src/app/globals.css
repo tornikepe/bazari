@@ -276,6 +276,15 @@
     min-inline-size: 0;
   }
 
+  /* A sideways-scrolling box is also the containing block of what it
+     scrolls. Without this, Chrome credited the form controls inside the
+     variants table to the page rather than to the box that scrolls them,
+     and the product editor could be dragged 200px to the right into empty
+     space on a phone. */
+  .overflow-x-auto {
+    position: relative;
+  }
+
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
@@ -1991,10 +2000,10 @@
 
 .index-row {
   display: grid;
-  grid-template-columns: 2.75rem 1fr auto;
-  align-items: baseline;
-  gap: 0.875rem;
-  padding: 1.125rem 0.5rem 1.125rem 0;
+  grid-template-columns: 2rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 0.25rem 0.875rem 0;
   /* Rows draw the rule below them; the top edge of each column is drawn by
      the first row in that column, so both columns close symmetrically
      however many categories there are. */
@@ -2005,11 +2014,28 @@
 }
 
 .index-name {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   line-height: 1.25;
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--color-ink-900);
+  /* Long names wrap on a phone; the two figures beside them stay put
+     because the row centres, and a wrapped name is still one row. */
+  text-wrap: balance;
+}
+
+/* From tablet up the row has room: the index column widens, the name goes
+   up a size, and the rule gets air above and below. */
+@media (min-width: 640px) {
+  .index-row {
+    grid-template-columns: 2.75rem 1fr auto;
+    gap: 0.875rem;
+    padding: 1.125rem 0.5rem 1.125rem 0;
+  }
+
+  .index-name {
+    font-size: var(--text-xl);
+  }
 }
 
 @media (hover: hover) {
@@ -2053,11 +2079,29 @@
   color: var(--color-ink-400);
 }
 
+/* The count is a small pill, so on a phone it reads as "how many" and not
+   as a stray digit at the end of the name. Wide enough for two digits, so
+   the column is one width whether the count is 4 or 30. */
 .index-count {
-  font-size: var(--text-sm);
-  font-weight: 600;
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.25rem;
+  height: 1.5rem;
+  padding-inline: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-ink-100);
+  font-size: var(--text-xs);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--color-ink-500);
+  color: var(--color-ink-600);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .index-row:hover .index-count {
+    background: var(--color-brand-50);
+    color: var(--color-brand-700);
+  }
 }
 
 
@@ -2216,6 +2260,156 @@
 /* mobile browser collapsing its address bar doesn't leave the panel    */
 /* hanging off the bottom of the screen.                                */
 /* ------------------------------------------------------------------ */
+
+/* ---------------------------------------------------------------------- */
+/* Product gallery and lightbox                                            */
+/* ---------------------------------------------------------------------- */
+
+/* The stage the photo sits on: plain white, the same white most product
+   shots are taken on, so the photo's own edge never shows as a rectangle. */
+.gallery-stage {
+  background: var(--color-surface);
+}
+
+.gallery-photo {
+  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (hover: hover) {
+  .gallery-stage .group:hover .gallery-photo {
+    transform: scale(1.04);
+  }
+}
+
+.gallery-zoom {
+  opacity: 0.9;
+  transform: translateY(0);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .gallery-stage .group:hover .gallery-zoom {
+    opacity: 1;
+    transform: translateY(-2px);
+    background: var(--color-surface);
+  }
+}
+
+/* The thumbnail strip scrolls sideways on a phone without a visible bar. */
+.gallery-strip {
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.gallery-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-strip > * {
+  scroll-snap-align: start;
+}
+
+/* The lightbox fades up and the picture settles from a touch smaller; on
+   the way out both go quicker, since a dismissal should feel immediate. */
+.lightbox {
+  /* Near-black, whatever the theme: the photo is the only light thing. */
+  background: rgb(12 12 14);
+  opacity: 1;
+  transition: opacity 0.26s ease-out;
+}
+
+.lightbox[data-state="closed"] {
+  opacity: 0;
+  transition: opacity 0.18s ease-in;
+}
+
+.lightbox-stage {
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.lightbox[data-state="closed"] .lightbox-stage {
+  transform: scale(0.96) !important;
+}
+
+@starting-style {
+  .lightbox {
+    opacity: 0;
+  }
+
+  .lightbox .lightbox-stage {
+    transform: scale(0.96);
+  }
+}
+
+.lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  height: 3rem;
+  width: 3rem;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  color: white;
+  transform: translateY(-50%);
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.lightbox-arrow:hover {
+  background: rgb(255 255 255 / 0.24);
+}
+
+.lightbox-arrow:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+/* The phone menu's category list folds. A grid row from 1fr to 0fr is
+   how a box animates to a height nobody has measured; the inner box clips,
+   and its opacity goes a beat ahead so the rows fade before the space is
+   gone rather than being cut off mid-line. The chevron turns with it. */
+.menu-fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.menu-fold[data-folded="true"] {
+  grid-template-rows: 0fr;
+}
+
+.menu-fold-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.28s ease 0.06s,
+    transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.menu-fold[data-folded="true"] .menu-fold-inner {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.menu-chevron {
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Rows slide a touch to the right under a finger — enough to feel the tap
+   land, not enough to look like they are leaving. */
+.menu-row:active {
+  transform: translateX(2px);
+}
 
 .chat-root {
   position: fixed;

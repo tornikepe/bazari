@@ -105,7 +105,7 @@ export default async function AdminProductsPage({
 
   const products = await prisma.product.findMany({
     where,
-    include: { category: true },
+    include: { category: true, _count: { select: { variants: true } } },
     orderBy: buildOrderBy(sort),
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
@@ -267,6 +267,11 @@ export default async function AdminProductsPage({
                       {formatPrice(product.price, locale)}
                     </span>
                     <span className={`badge ${stockTone(product.stock)}`}>{product.stock}</span>
+                    {product._count.variants > 0 && (
+                      <span className="text-xs text-ink-400">
+                        {fill(t.admin.variantsCount, { count: product._count.variants })}
+                      </span>
+                    )}
                     {product.isFeatured && (
                       <span className="badge bg-brand-50 text-brand-700">{t.admin.featured}</span>
                     )}
@@ -379,17 +384,33 @@ export default async function AdminProductsPage({
                     </td>
 
                     <td className="figures">
-                      <EditableNumber
-                        id={product.id}
-                        field="stock"
-                        value={product.stock}
-                        name={locale === "ka" ? product.nameKa : product.nameEn}
-                        display={
-                          <span className={`badge ${stockTone(product.stock)}`}>
-                            {product.stock}
+                      {/* Per size, the figure is the sizes' sum and is set in
+                          the editor, size by size; only a product sold in one
+                          form has a stock figure to type here. */}
+                      {product._count.variants > 0 ? (
+                        <Link
+                          href={`/dashboard/products/${product.id}#variants`}
+                          className="inline-flex flex-col items-end gap-0.5"
+                          title={fill(t.admin.variantsCount, { count: product._count.variants })}
+                        >
+                          <span className={`badge ${stockTone(product.stock)}`}>{product.stock}</span>
+                          <span className="text-[11px] whitespace-nowrap text-ink-400">
+                            {fill(t.admin.variantsCount, { count: product._count.variants })}
                           </span>
-                        }
-                      />
+                        </Link>
+                      ) : (
+                        <EditableNumber
+                          id={product.id}
+                          field="stock"
+                          value={product.stock}
+                          name={locale === "ka" ? product.nameKa : product.nameEn}
+                          display={
+                            <span className={`badge ${stockTone(product.stock)}`}>
+                              {product.stock}
+                            </span>
+                          }
+                        />
+                      )}
                     </td>
 
                     <td>

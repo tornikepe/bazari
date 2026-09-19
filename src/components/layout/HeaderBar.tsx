@@ -6,32 +6,28 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
-import { LOCALES, type Locale } from "@/lib/i18n";
 import { isStaff, type Role } from "@/lib/auth-roles";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LocaleToggle } from "@/components/ui/LocaleToggle";
 import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import { useSettings } from "@/components/providers/SettingsProvider";
-import { Overlay } from "@/components/ui/Overlay";
 import { SearchSuggestions } from "@/components/layout/SearchSuggestions";
 import { isCurrentPage } from "@/lib/current-page";
 import { useOverlay } from "@/lib/use-overlay";
 import { AccountMenu } from "@/components/layout/AccountMenu";
-import { logout } from "@/app/actions/auth";
 import {
   CartIcon,
   CloseIcon,
   HeartIcon,
-  LogoutIcon,
   MenuIcon,
   SearchIcon,
-  UserIcon,
 } from "@/components/ui/icons";
 import { useChangeKey } from "@/components/ui/useChangeKey";
 import { useScrolled } from "@/components/layout/useScrolled";
 import { HoverPanel } from "@/components/layout/HoverPanel";
 import { MiniCart } from "@/components/layout/MiniCart";
 import { MiniFavorites } from "@/components/layout/MiniFavorites";
+import { MobileMenu, type MenuLink } from "@/components/layout/MobileMenu";
 
 export type HeaderCategory = {
   slug: string;
@@ -111,13 +107,13 @@ export function HeaderBar({
   const categoryName = (category: HeaderCategory) =>
     locale === "ka" ? category.nameKa : category.nameEn;
 
-  const navLinks = [
-    { href: "/catalog", label: t.nav.catalog },
-    { href: "/catalog?sale=1", label: t.nav.deals },
-    { href: "/favorites", label: t.favorites.title },
-    { href: "/track", label: t.orderDone.trackHint },
-    { href: "/about", label: t.nav.about },
-    { href: "/contact", label: t.nav.contact },
+  const navLinks: MenuLink[] = [
+    { href: "/catalog", label: t.nav.catalog, icon: "catalog" },
+    { href: "/catalog?sale=1", label: t.nav.deals, icon: "deals" },
+    { href: "/favorites", label: t.favorites.title, icon: "favorites" },
+    { href: "/track", label: t.track.title, icon: "track" },
+    { href: "/about", label: t.nav.about, icon: "about" },
+    { href: "/contact", label: t.nav.contact, icon: "contact" },
   ];
 
   return (
@@ -316,120 +312,25 @@ export function HeaderBar({
         </div>
       )}
 
-      {/* Mobile drawer */}
-      <div className="lg:hidden">
-        <Overlay
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          side="left"
-          closeLabel={t.nav.close}
-          label={t.nav.menu}
-          className="w-[19rem] max-w-[85vw] bg-surface shadow-pop"
-        >
-            <div className="flex h-16 items-center justify-between border-b border-line px-4">
-              <span className="flex items-center gap-2.5">
-                <LogoMark size={30} />
-                <Wordmark name={settings.name} className="text-base" />
-              </span>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(false)}
-                aria-label={t.nav.close}
-                className="btn btn-ghost h-9 w-9 rounded-control p-0"
-              >
-                <CloseIcon size={20} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto overscroll-contain p-4">
-              <p className="mb-2 px-1 text-xs font-bold tracking-wider text-ink-400 uppercase">
-                {t.nav.categories}
-              </p>
-              <ul className="mb-5 flex flex-col gap-0.5">
-                {categories.map((category) => {
-                  const href = `/catalog?category=${category.slug}`;
-                  const current = isCurrentPage(href, pathname, searchParams.toString());
-                  return (
-                  <li key={category.slug}>
-                    <Link
-                      href={href}
-                      aria-current={current ? "page" : undefined}
-                      className={`flex items-center gap-2.5 rounded-control px-2.5 py-2.5 text-sm font-medium transition-colors hover:bg-ink-100 ${
-                        current ? "bg-ink-100 text-ink-900" : "text-ink-700"
-                      }`}
-                    >
-                      <span className="text-base" aria-hidden="true">
-                        {category.icon}
-                      </span>
-                      {categoryName(category)}
-                    </Link>
-                  </li>
-                  );
-                })}
-              </ul>
-
-              <div className="h-px bg-line" />
-
-              <ul className="mt-4 flex flex-col gap-0.5">
-                {navLinks.map((link) => {
-                  const current = isCurrentPage(link.href, pathname, searchParams.toString());
-                  return (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        aria-current={current ? "page" : undefined}
-                        className={`block rounded-control px-2.5 py-2.5 text-sm font-medium transition-colors hover:bg-ink-100 ${
-                          current ? "bg-ink-100 text-ink-900" : "text-ink-700"
-                        }`}
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-                <li>
-                  <Link
-                    href={accountHref}
-                    className="flex items-center gap-2 rounded-control px-2.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100"
-                  >
-                    <UserIcon size={16} />
-                    {accountLabel}
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="flex flex-col gap-3 border-t border-line p-4">
-              {user && (
-                <form action={logout}>
-                  <button
-                    type="submit"
-                    className="btn btn-outline btn-sm w-full hover:border-danger hover:text-danger"
-                  >
-                    <LogoutIcon size={15} />
-                    {t.auth.signOut}
-                  </button>
-                </form>
-              )}
-
-              <div className="flex items-center gap-1.5">
-                {LOCALES.map((code: Locale) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => setLocale(code)}
-                    aria-pressed={locale === code}
-                    className={`btn btn-sm flex-1 ${
-                      locale === code ? "btn-secondary" : "btn-outline"
-                    }`}
-                  >
-                    {code === "ka" ? "ქართული" : "English"}
-                  </button>
-                ))}
-              </div>
-            </div>
-        </Overlay>
-      </div>
+      <MobileMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        shopName={settings.name}
+        categories={categories}
+        categoryName={categoryName}
+        links={navLinks}
+        isCurrent={(href) => isCurrentPage(href, pathname, searchParams.toString())}
+        account={{ href: accountHref, label: accountLabel }}
+        signedIn={Boolean(user)}
+        locale={locale}
+        setLocale={setLocale}
+        t={{
+          menu: t.nav.menu,
+          close: t.nav.close,
+          categories: t.nav.categories,
+          signOut: t.auth.signOut,
+        }}
+      />
     </header>
   );
 }

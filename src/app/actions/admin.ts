@@ -356,9 +356,14 @@ export async function setProductNumber(
 
   const before = await prisma.product.findUnique({
     where: { id },
-    select: { stock: true, price: true, nameEn: true, nameKa: true },
+    select: { stock: true, price: true, nameEn: true, nameKa: true, _count: { select: { variants: true } } },
   });
   if (!before) return { ok: false, error: "invalid" };
+  /* A product sold in sizes keeps its stock per size, and the figure on the
+     product is their sum. Setting the sum by hand would leave the sizes
+     saying one thing and the total another; the table does not offer it,
+     and this is the refusal behind that. */
+  if (field === "stock" && before._count.variants > 0) return { ok: false, error: "invalid" };
 
   try {
     await prisma.$transaction(async (tx) => {

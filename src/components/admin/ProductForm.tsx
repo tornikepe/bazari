@@ -183,7 +183,7 @@ export function ProductForm({
 
       {error && <ErrorNote className="mt-4" title={error.title} hint={error.hint} />}
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_18rem] lg:items-start">
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
         <div className="flex flex-col gap-4">
           {/* ------------------------------ basics --------------------------- */}
           <section className="card card-pad">

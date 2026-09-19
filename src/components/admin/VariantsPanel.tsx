@@ -151,7 +151,7 @@ export function VariantsPanel({
   }
 
   return (
-    <section className="card card-pad mt-4">
+    <section id="variants" className="card card-pad mt-4 scroll-mt-20">
       <h2 className="text-sm font-bold text-ink-900">{t.admin.variantsTitle}</h2>
       <p className="mt-1 text-xs text-ink-500">{t.admin.variantsHint}</p>
 

@@ -119,6 +119,11 @@ export function ProductPurchasePanel({
               {fill(t.product.inStockCount, { count: product.stock })}
             </span>
           )}
+
+          {/* The product's own heart, at the end of the quantity row rather
+              than as a third button: beside two wide buttons it squeezed
+              the first until its label broke across two lines. */}
+          <FavoriteButton productId={product.productId} size="control" className="ml-auto" />
         </div>
       )}
 
@@ -141,12 +146,6 @@ export function ProductPurchasePanel({
             {t.product.buyNow}
           </button>
         )}
-
-        {/* The product's own heart. Every card in the shop had one and the
-            product's own page did not, so the one place a shopper had read
-            enough to decide was the one place they could not save it. Sized
-            to the buttons beside it rather than to the chip on a card. */}
-        <FavoriteButton productId={product.productId} size="control" />
       </div>
     </div>
   );

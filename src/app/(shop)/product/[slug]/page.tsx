@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
@@ -26,7 +26,7 @@ import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { RecordView } from "@/components/product/RecordView";
 import { WatchStock } from "@/components/product/WatchStock";
 import { VariantPicker } from "@/components/product/VariantPicker";
-import { parsePhotos, altOf } from "@/lib/product-photos";
+import { parsePhotos } from "@/lib/product-photos";
 import { Stars } from "@/components/product/Stars";
 import { ReviewForm } from "@/components/product/ReviewForm";
 import { ReviewPhotos } from "@/components/product/ReviewPhotos";
@@ -168,6 +168,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
      rather than the database's, and a page that parsed it twice would be two
      places to get that wrong. */
   const photos = parsePhotos(product.photos);
+  /* A product with no photo list of its own still has its `image` — the
+     placeholder, or a single upload made before the list existed. */
+  const gallery = photos.length > 0 ? photos : [{ url: product.image, altKa: "", altEn: "" }];
 
   /* The cart line as it would be without variants. The picker overrides the
      price and the stock once a combination is chosen; everything else on a
@@ -324,51 +327,60 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         ]}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,11fr)_minmax(0,10fr)] lg:gap-12">
         {/* ------------------------------ gallery ---------------------------- */}
         {/* The picture scrolls with the page, as the words beside it do. It
             was pinned while the column beside it moved, and to a reader that
             read as the picture lagging behind the page rather than staying
             put on purpose. `lg:self-start` keeps the box its own height
             rather than the row's. */}
-        {photos.length > 1 ? (
-          <ProductGallery photos={photos} name={name} badge={saleBadge} />
-        ) : (
-          <div className="card relative aspect-square overflow-hidden bg-ink-50 lg:self-start">
-            <Image
-              src={product.image}
-              // The written description when there is one, the name when not.
-              alt={altOf(photos[0], locale, name)}
-              fill
-              sizes="(max-width: 1024px) 100vw, 560px"
-              className="object-cover"
-              priority
-            />
-            {saleBadge}
-          </div>
-        )}
+        <ProductGallery photos={gallery} name={name} badge={saleBadge} />
 
         {/* ------------------------------- info ------------------------------ */}
-        <div>
-          {product.brand && (
-            <span className="text-xs font-bold tracking-wider text-ink-400 uppercase">
-              {product.brand}
-            </span>
-          )}
+        {/* Read top to bottom the way a shopper decides: what it is, what it
+            costs, whether it is there, then how to buy it — the buy panel in
+            its own card so the eye lands on it — and only then the details. */}
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {product.brand && (
+              <Link
+                href={`/catalog?brand=${encodeURIComponent(product.brand)}`}
+                className="text-xs font-bold tracking-wider text-ink-500 uppercase transition-colors hover:text-brand-600"
+              >
+                {product.brand}
+              </Link>
+            )}
+            {product.brand && <span className="text-ink-300" aria-hidden="true">·</span>}
+            <Link
+              href={`/catalog?category=${product.category.slug}`}
+              className="text-xs font-semibold text-ink-500 transition-colors hover:text-brand-600"
+            >
+              {categoryName}
+            </Link>
+          </div>
 
-          <h1 className="mt-1.5 text-2xl leading-tight font-extrabold tracking-tight text-ink-900">
+          <h1 className="mt-2 text-2xl leading-tight font-extrabold tracking-tight text-balance text-ink-900 sm:text-3xl">
             {name}
           </h1>
 
           {/* Nothing here until somebody real has written something. */}
           {product.ratingCount > 0 && (
-            <div className="mt-2">
+            <div className="mt-2.5">
               <Stars sum={product.ratingSum} count={product.ratingCount} t={t} size="md" href="#reviews" />
             </div>
           )}
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-5 flex flex-wrap items-end gap-x-3 gap-y-2">
             <Price value={product.price} oldValue={product.oldPrice} size="xl" />
+            {/* What the reduction is worth in money, beside the percentage on
+                the photo: "−30%" is a claim, "you save ₾120" is a fact. */}
+            {discount > 0 && product.oldPrice && (
+              <span className="badge mb-1 bg-success-soft text-success">
+                {fill(t.product.youSave, {
+                  amount: formatPrice(product.oldPrice - product.price, locale),
+                })}
+              </span>
+            )}
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -392,14 +404,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {description && (
-            <p className="mt-5 text-base leading-relaxed text-ink-600">{description}</p>
+            <p className="mt-5 text-[15px] leading-relaxed text-ink-600">{description}</p>
           )}
 
           {/* Offered where the disappointment happens, above the buy panel
               that has nothing to offer. */}
           {soldOut && <WatchStock productId={product.id} />}
 
-          <div className="mt-6" id="buy-panel">
+          <div className="card mt-6 card-pad" id="buy-panel">
             {/* A product with no options is exactly what it was before any of
                 this existed: one price, one stock figure, one button. */}
             {options.length > 0 ? (
@@ -409,11 +421,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
 
-          {/* guarantees */}
-          <ul className="card card-pad-tight mt-6 flex flex-col gap-2.5">
+          {/* The three promises as tiles — icon over a line of text, each
+              centred — rather than a list that read as small print. */}
+          <ul className="mt-4 grid grid-cols-3 gap-2">
             {guarantees.map((item) => (
-              <li key={item.text} className="flex items-center gap-2.5 text-xs text-ink-600">
-                <item.icon size={16} className="shrink-0 text-brand-600" />
+              <li
+                key={item.text}
+                className="card flex flex-col items-center gap-2 px-2 py-3 text-center text-[11px] leading-snug font-medium text-ink-600 sm:text-xs"
+              >
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-50 text-brand-600">
+                  <item.icon size={18} />
+                </span>
                 {item.text}
               </li>
             ))}
@@ -430,11 +448,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     /* Zebra striping by row, which is what makes a long table
                        scannable across — the same rule the derived rows below
                        already used, applied to the table that matters more. */
-                    className={`flex items-start justify-between gap-4 px-4 py-2.5 text-xs ${
+                    className={`grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-4 px-4 py-2.5 text-xs ${
                       index % 2 === 0 ? "bg-surface" : "bg-ink-50"
                     }`}
                   >
-                    <dt className="shrink-0 text-ink-500">{spec.label}</dt>
+                    <dt className="text-ink-500">{spec.label}</dt>
                     <dd className="text-right font-semibold text-ink-800">{spec.value}</dd>
                   </div>
                 ))}
@@ -449,7 +467,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {details.map((detail, index) => (
                 <div
                   key={detail.label}
-                  className={`flex items-center justify-between gap-4 px-4 py-2.5 text-xs ${
+                  className={`grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-center gap-4 px-4 py-2.5 text-xs ${
                     index % 2 === 0 ? "bg-surface" : "bg-ink-50"
                   }`}
                 >
