@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { acceptInvite, type AuthState } from "@/app/actions/auth";
-import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { SpinnerIcon } from "@/components/ui/icons";
+import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 
 /**
  * Accepting a staff invitation.
@@ -18,6 +19,9 @@ function InviteForm() {
   const { t } = useI18n();
   const token = useSearchParams().get("token") ?? "";
   const [state, formAction, pending] = useActionState<AuthState, FormData>(acceptInvite, {});
+
+  const bad = Boolean(state.error);
+  useFieldShake(state, bad, ["password", "confirmPassword"]);
 
   const message =
     state.error === "weak"
@@ -45,6 +49,7 @@ function InviteForm() {
             required
             minLength={8}
             autoFocus
+            aria-invalid={bad || undefined}
             className="field"
           />
           <p className="mt-1 text-xs text-ink-400">{t.auth.passwordHint}</p>
@@ -60,19 +65,12 @@ function InviteForm() {
             type="password"
             autoComplete="new-password"
             required
+            aria-invalid={bad || undefined}
             className="field"
           />
         </div>
 
-        {state.error && (
-          <p
-            role="alert"
-            className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
-          >
-            <AlertIcon size={15} className="shrink-0" />
-            {message}
-          </p>
-        )}
+        <FormFault message={state.error ? message : null} />
 
         <button
           type="submit"

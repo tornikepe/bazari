@@ -7,6 +7,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { resendVerification, verifyEmail, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 import { fill } from "@/lib/i18n";
 
 function VerifyForm() {
@@ -24,6 +25,8 @@ function VerifyForm() {
     resendVerification,
     {},
   );
+
+  useFieldShake(state, Boolean(state.error), ["code"]);
 
   const message =
     state.error === "expired"
@@ -77,20 +80,13 @@ function VerifyForm() {
             maxLength={6}
             required
             autoFocus
+            aria-invalid={Boolean(state.error) || undefined}
             className="field text-center font-mono text-lg tracking-[0.4em]"
           />
           <p className="mt-1 text-xs text-ink-400">{t.auth.codeHint}</p>
         </div>
 
-        {state.error && (
-          <p
-            role="alert"
-            className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
-          >
-            <AlertIcon size={15} className="shrink-0" />
-            {message}
-          </p>
-        )}
+        <FormFault message={state.error ? message : null} />
 
         <button type="submit" disabled={pending} className="btn btn-primary btn-md w-full">
           {pending && <SpinnerIcon size={16} />}

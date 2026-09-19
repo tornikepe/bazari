@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { AlertIcon, SearchIcon, SpinnerIcon } from "@/components/ui/icons";
+import { SearchIcon, SpinnerIcon } from "@/components/ui/icons";
+import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 import Image from "next/image";
 import { formatDate, formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
@@ -34,6 +35,9 @@ function TrackOrderForm() {
 
   const found = result?.ok ? result : null;
   const errorKey = result && !result.ok ? result.error : null;
+  /* Not found, or not a valid pair: both boxes turn red and shake, since
+     the site does not say which of the two did not match. */
+  useFieldShake(result, Boolean(errorKey), ["orderNumber", "phone"]);
 
   return (
     <div className="page">
@@ -167,6 +171,7 @@ function TrackOrderForm() {
                   value={orderNumber}
                   onChange={(event) => setOrderNumber(event.target.value)}
                   placeholder={t.track.orderNumberPlaceholder}
+                  aria-invalid={Boolean(errorKey) || undefined}
                   className="field font-mono"
                   required
                 />
@@ -182,20 +187,17 @@ function TrackOrderForm() {
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
                   placeholder="+995 5XX XX XX XX"
+                  aria-invalid={Boolean(errorKey) || undefined}
                   className="field"
                   required
                 />
               </div>
 
-              {errorKey && (
-                <p
-                  role="alert"
-                  className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
-                >
-                  <AlertIcon size={15} className="shrink-0" />
-                  {errorKey === "invalid" ? t.track.invalid : t.track.notFound}
-                </p>
-              )}
+              <FormFault
+                message={
+                  errorKey ? (errorKey === "invalid" ? t.track.invalid : t.track.notFound) : null
+                }
+              />
 
               <button type="submit" disabled={isPending} className="btn btn-primary btn-md w-full">
                 {isPending ? <SpinnerIcon size={16} /> : <SearchIcon size={16} />}

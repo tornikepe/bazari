@@ -8,6 +8,7 @@ import { AuthCard } from "@/components/auth/AuthCard";
 import { login, type AuthState } from "@/app/actions/auth";
 import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 import { looksLikePhone, localDigits } from "@/lib/phone";
 
 export function LoginForm({
@@ -35,6 +36,17 @@ export function LoginForm({
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  /* The server's answer — wrong credentials, or too many tries — is shown
+     on the two fields, not in a box: both turn red and shake, together,
+     because the site does not say which of the two was wrong. */
+  const refused = Boolean(state.error);
+  useFieldShake(state, refused, ["email", "password"]);
+  const fault = refused
+    ? state.error === "rate-limited"
+      ? fill(t.auth.rateLimited, { minutes: String(state.retryMinutes ?? 15) })
+      : t.auth.invalid
+    : null;
 
   function validate(event: React.FormEvent<HTMLFormElement>) {
     const data = new FormData(event.currentTarget);
@@ -92,7 +104,7 @@ export function LoginForm({
             type="text"
             inputMode="email"
             autoComplete="username"
-            aria-invalid={Boolean(errors.email)}
+            aria-invalid={Boolean(errors.email) || refused}
             aria-describedby={errors.email ? "email-error" : undefined}
             onChange={() => errors.email && setErrors((current) => ({ ...current, email: undefined }))}
             className="field"
@@ -122,7 +134,7 @@ export function LoginForm({
             id="password"
             name="password"
             autoComplete="current-password"
-            invalid={Boolean(errors.password)}
+            invalid={Boolean(errors.password) || refused}
             aria-describedby={errors.password ? "password-error" : undefined}
             onChange={() =>
               errors.password && setErrors((current) => ({ ...current, password: undefined }))
@@ -136,17 +148,7 @@ export function LoginForm({
           )}
         </div>
 
-        {state.error && (
-          <p
-            role="alert"
-            className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
-          >
-            <AlertIcon size={15} className="shrink-0" />
-            {state.error === "rate-limited"
-              ? fill(t.auth.rateLimited, { minutes: String(state.retryMinutes ?? 15) })
-              : t.auth.invalid}
-          </p>
-        )}
+        <FormFault message={fault} />
 
         <button type="submit" disabled={pending} className="btn btn-primary btn-md w-full">
           {pending && <SpinnerIcon size={16} />}

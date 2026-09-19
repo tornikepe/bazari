@@ -1,32 +1,71 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { register, type AuthState } from "@/app/actions/auth";
-import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { SpinnerIcon } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { PhoneField } from "@/components/ui/PhoneField";
+import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 
 export function RegisterForm({ social }: { social: React.ReactNode }) {
   const { t } = useI18n();
   const [state, formAction, pending] = useActionState<AuthState, FormData>(register, {});
 
-  const message =
-    state.error === "taken"
+  /* Whether the two passwords differ is known before the form leaves the
+     browser, so it is answered there: the second box turns red and shakes,
+     and nothing is sent. Counted, not a boolean, so a second mismatch in a
+     row shakes again. */
+  const [mismatches, setMismatches] = useState(0);
+  const [mismatch, setMismatch] = useState(false);
+
+  function checkPasswords(event: React.FormEvent<HTMLFormElement>) {
+    const data = new FormData(event.currentTarget);
+    if (data.get("password") !== data.get("confirmPassword")) {
+      event.preventDefault();
+      setMismatch(true);
+      setMismatches((count) => count + 1);
+      event.currentTarget.querySelector<HTMLInputElement>("#confirmPassword")?.focus();
+    }
+  }
+
+  /* Each thing the server can refuse is shown on the field it is about. */
+  const error = state.error;
+  const bad = {
+    name: error === "failed" || error === "invalid",
+    email: error === "taken" || error === "failed" || error === "invalid",
+    phone: error === "phone" || error === "phone-taken" || error === "failed",
+    password: error === "weak" || error === "failed" || error === "invalid",
+    confirm: error === "mismatch" || error === "failed" || mismatch,
+  };
+  useFieldShake(
+    state,
+    Boolean(error),
+    Object.entries(bad)
+      .filter(([, is]) => is)
+      .map(([key]) => (key === "confirm" ? "confirmPassword" : key)),
+  );
+  useFieldShake(mismatches, mismatch, ["confirmPassword"]);
+
+  const fault = mismatch
+    ? t.auth.mismatch
+    : error === "taken"
       ? t.auth.taken
-      : state.error === "phone"
+      : error === "phone"
         ? t.auth.phoneInvalid
-        : state.error === "phone-taken"
+        : error === "phone-taken"
           ? t.auth.phoneTaken
-      : state.error === "weak"
-        ? t.auth.weak
-        : state.error === "mismatch"
-          ? t.auth.mismatch
-          : state.error === "failed"
-            ? t.auth.failed
-            : t.auth.invalid;
+          : error === "weak"
+            ? t.auth.weak
+            : error === "mismatch"
+              ? t.auth.mismatch
+              : error === "failed"
+                ? t.auth.failed
+                : error
+                  ? t.auth.invalid
+                  : null;
 
   return (
     <AuthCard
@@ -43,12 +82,19 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
     >
       {social}
 
-      <form action={formAction} className="mt-5 flex flex-col gap-4">
+      <form action={formAction} onSubmit={checkPasswords} className="mt-5 flex flex-col gap-4">
         <div>
           <label className="field-label" htmlFor="name">
             {t.auth.name}
           </label>
-          <input id="name" name="name" required autoComplete="name" className="field" />
+          <input
+            id="name"
+            name="name"
+            required
+            autoComplete="name"
+            aria-invalid={bad.name || undefined}
+            className="field"
+          />
         </div>
 
         <div>
@@ -61,6 +107,7 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
             type="email"
             required
             autoComplete="username"
+            aria-invalid={bad.email || undefined}
             className="field"
           />
         </div>
@@ -70,7 +117,7 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
             {t.auth.phone}
             <span className="ml-0.5 text-brand-600">*</span>
           </label>
-          <PhoneField id="phone" name="phone" required invalid={state.error === "phone" || state.error === "phone-taken"} />
+          <PhoneField id="phone" name="phone" required invalid={bad.phone} />
         </div>
 
         <div>
@@ -83,6 +130,7 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
             required
             minLength={8}
             autoComplete="new-password"
+            invalid={bad.password}
           />
           <p className="mt-1 text-xs text-ink-400">{t.auth.passwordHint}</p>
         </div>
@@ -97,18 +145,12 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
             required
             minLength={8}
             autoComplete="new-password"
+            invalid={bad.confirm}
+            onChange={() => mismatch && setMismatch(false)}
           />
         </div>
 
-        {state.error && (
-          <p
-            role="alert"
-            className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
-          >
-            <AlertIcon size={15} className="shrink-0" />
-            {message}
-          </p>
-        )}
+        <FormFault message={fault} />
 
         <button type="submit" disabled={pending} className="btn btn-primary btn-md w-full">
           {pending && <SpinnerIcon size={16} />}

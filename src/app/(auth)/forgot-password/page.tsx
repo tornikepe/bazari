@@ -6,7 +6,8 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { requestPasswordReset, resetPassword, type AuthState } from "@/app/actions/auth";
-import { AlertIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
+import { CheckIcon, SpinnerIcon } from "@/components/ui/icons";
+import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 
 export default function ForgotPasswordPage() {
   const { t } = useI18n();
@@ -24,6 +25,23 @@ export default function ForgotPasswordPage() {
   // Once a code has been requested the form switches to the code + new
   // password step; the address is carried over in a hidden field.
   const codeSent = Boolean(requestState.sent);
+
+  /* A refused address shakes the address; a refused reset shakes the code,
+     or the two passwords when it is the passwords that were wrong. */
+  const resetBad = {
+    code:
+      resetState.error === "expired" ||
+      resetState.error === "too-many-attempts" ||
+      resetState.error === "invalid" ||
+      resetState.error === "rate-limited",
+    password: resetState.error === "weak" || resetState.error === "mismatch",
+  };
+  useFieldShake(requestState, Boolean(requestState.error), ["email"]);
+  useFieldShake(
+    resetState,
+    Boolean(resetState.error),
+    resetBad.password ? ["password", "confirmPassword"] : ["code"],
+  );
 
   const message = (state: AuthState) =>
     state.error === "mail-unavailable"
@@ -64,19 +82,12 @@ export default function ForgotPasswordPage() {
               autoComplete="username"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              aria-invalid={Boolean(requestState.error) || undefined}
               className="field"
             />
           </div>
 
-          {requestState.error && (
-            <p
-              role="alert"
-              className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
-            >
-              <AlertIcon size={15} className="shrink-0" />
-              {message(requestState)}
-            </p>
-          )}
+          <FormFault message={requestState.error ? message(requestState) : null} />
 
           <button type="submit" disabled={requesting} className="btn btn-primary btn-md w-full">
             {requesting && <SpinnerIcon size={16} />}
@@ -104,6 +115,7 @@ export default function ForgotPasswordPage() {
               autoComplete="one-time-code"
               maxLength={6}
               required
+              aria-invalid={resetBad.code || undefined}
               className="field text-center font-mono text-lg tracking-[0.4em]"
             />
           </div>
@@ -119,6 +131,7 @@ export default function ForgotPasswordPage() {
               required
               minLength={8}
               autoComplete="new-password"
+              aria-invalid={resetBad.password || undefined}
               className="field"
             />
           </div>
@@ -134,19 +147,12 @@ export default function ForgotPasswordPage() {
               required
               minLength={8}
               autoComplete="new-password"
+              aria-invalid={resetBad.password || undefined}
               className="field"
             />
           </div>
 
-          {resetState.error && (
-            <p
-              role="alert"
-              className="flex items-center gap-2 rounded-control bg-danger-soft p-3 text-xs text-danger"
-            >
-              <AlertIcon size={15} className="shrink-0" />
-              {message(resetState)}
-            </p>
-          )}
+          <FormFault message={resetState.error ? message(resetState) : null} />
 
           <button type="submit" disabled={resetting} className="btn btn-primary btn-md w-full">
             {resetting && <SpinnerIcon size={16} />}
