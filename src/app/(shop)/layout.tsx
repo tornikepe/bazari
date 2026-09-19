@@ -7,6 +7,7 @@ import { isChatConfigured } from "@/lib/chat/providers";
 import { TrafficBeacon } from "@/components/layout/TrafficBeacon";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { ScrollReveal } from "@/components/layout/ScrollReveal";
 
 /** Storefront chrome. The admin section deliberately sits outside this group. */
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,8 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
     <>
       <SkipLink />
       <ScrollProgress />
+      {/* Fades `.reveal` blocks up as they come into view, storefront-wide. */}
+      <ScrollReveal />
       {/* One live region for the whole storefront. It has to outlive any single
           page, because a cart change on the product page and a removal on the
           cart page are the same event to somebody listening. */}

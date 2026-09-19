@@ -1523,18 +1523,48 @@
   animation: page-in 0.5s var(--ease-out);
 }
 
-/* Revealed by an IntersectionObserver as the section scrolls into view. */
+/* Revealed by `ScrollReveal` as the block scrolls into view: it starts a
+   little lower and clear, and settles. Slow enough to be seen — the owner
+   asked for the page to come in gently as it is scrolled — and quick
+   enough that nothing is waited for. Siblings inside `.stagger` arrive one
+   after another. */
 .reveal {
   opacity: 0;
-  transform: translateY(1.25rem);
+  transform: translateY(1.5rem);
   transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0s);
 }
 
 .reveal[data-shown="true"] {
   opacity: 1;
   transform: none;
+}
+
+.stagger > .reveal:nth-child(2) { --reveal-delay: 0.08s; }
+.stagger > .reveal:nth-child(3) { --reveal-delay: 0.16s; }
+.stagger > .reveal:nth-child(4) { --reveal-delay: 0.24s; }
+.stagger > .reveal:nth-child(5) { --reveal-delay: 0.32s; }
+.stagger > .reveal:nth-child(6) { --reveal-delay: 0.4s; }
+.stagger > .reveal:nth-child(n + 7) { --reveal-delay: 0.48s; }
+
+/* A card grid without scroll-driven animation support (Firefox) still
+   arrives: the same rise, driven by the observer instead of the scroll. */
+@supports not (animation-timeline: view()) {
+  .reveal-view {
+    opacity: 0;
+    transform: translateY(1.5rem);
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0s);
+  }
+
+  .reveal-view[data-shown="true"] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Interactive lift, shared by product and category cards.
@@ -2229,6 +2259,46 @@
     ),
     linear-gradient(135deg, var(--color-brand-solid) 0%, var(--color-brand-700) 100%);
   box-shadow: var(--shadow-card);
+}
+
+/* The desktop header's second row: plain links with a short rule under
+   the current one, in the brand colour. Quiet by design — the bar above
+   has the colour, this row has the words. */
+.header-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.75rem;
+  padding-inline: 0.75rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink-700);
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.header-nav-link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0.75rem;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--color-brand-solid);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.header-nav-link:hover,
+.header-nav-link.is-current {
+  color: var(--color-brand-600);
+}
+
+.header-nav-link:hover::after,
+.header-nav-link.is-current::after {
+  transform: scaleX(1);
 }
 
 /* Index rows round their hover tint so it reads as a selection, not a stripe. */

@@ -28,6 +28,7 @@ import { HoverPanel } from "@/components/layout/HoverPanel";
 import { MiniCart } from "@/components/layout/MiniCart";
 import { MiniFavorites } from "@/components/layout/MiniFavorites";
 import { MobileMenu, type MenuLink } from "@/components/layout/MobileMenu";
+import { HeaderNav } from "@/components/layout/HeaderNav";
 
 export type HeaderCategory = {
   slug: string;
@@ -263,6 +264,15 @@ export function HeaderBar({
           </HoverPanel>
         </div>
       </div>
+
+      {/* The categories and the site's pages, on a desktop: the drawer,
+          laid flat under the bar. Everything but the wishlist, which has
+          its own panel in the bar above. */}
+      <HeaderNav
+        categories={categories}
+        categoryName={categoryName}
+        links={navLinks.filter((item) => item.icon !== "favorites")}
+      />
 
       {/* Mobile search overlay. Slides down over the bar rather than
           replacing it in one frame — it covers the control that opened it, so

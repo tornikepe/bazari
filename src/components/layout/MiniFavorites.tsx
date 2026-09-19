@@ -58,21 +58,8 @@ export function MiniFavorites() {
   /* One height whatever the list holds — see `.mini-list` — so a line
      taken off does not pull the button under it up, and every line can
      be scrolled to. */
-  if (favorites.length === 0) {
-    return (
-      <div className="mini-list grid place-items-center px-5 text-center">
-        <div>
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-pill bg-ink-100 text-ink-400">
-            <HeartIcon size={22} />
-          </span>
-          <p className="mt-3 text-sm font-bold text-ink-900">{t.favorites.empty}</p>
-          <p className="mt-1 text-xs text-ink-500">{t.favorites.emptyHint}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const rows = products ?? null;
+  const empty = favorites.length === 0;
+  const rows = empty ? [] : (products ?? null);
 
   return (
     <>
@@ -85,7 +72,19 @@ export function MiniFavorites() {
         </p>
       </div>
 
-      {rows === null ? (
+      {empty ? (
+        /* Same head, box and foot as a list with something in it, so the
+           panel is one size empty or full — and the same size as the cart's. */
+        <div className="mini-list grid place-items-center px-5 text-center">
+          <div>
+            <span className="mx-auto grid h-12 w-12 place-items-center rounded-pill bg-ink-100 text-ink-400">
+              <HeartIcon size={22} />
+            </span>
+            <p className="mt-3 text-sm font-bold text-ink-900">{t.favorites.empty}</p>
+            <p className="mt-1 text-xs text-ink-500">{t.favorites.emptyHint}</p>
+          </div>
+        </div>
+      ) : rows === null ? (
         /* The same rows, as shapes, so the panel is its final height while
            the names arrive and nothing under it jumps. */
         <ul className="mini-list divide-y divide-line" aria-busy>

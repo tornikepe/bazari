@@ -174,7 +174,7 @@ export default async function HomePage() {
         every product still shares one placeholder.
       */}
       <section className="page-container py-12 lg:py-16">
-        <div className="flex items-center justify-between gap-4">
+        <div className="reveal flex items-center justify-between gap-4">
           <h2 className="label">{t.home.shopByCategory}</h2>
           <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
         </div>
@@ -201,7 +201,7 @@ export default async function HomePage() {
       {/* ------------------------------ featured --------------------------- */}
       {featured.length > 0 && (
         <section className="page-container rule pt-12 pb-12 lg:pt-16">
-          <div className="flex items-center justify-between gap-4">
+          <div className="reveal flex items-center justify-between gap-4">
             <h2 className="label">{t.home.featured}</h2>
             <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
           </div>
@@ -250,7 +250,7 @@ export default async function HomePage() {
         // Named so the screenshot suite can paint over it: these four cards
         // are whatever was added last, and the suite adds products.
         <section id="new-arrivals" className="page-container rule py-12 lg:py-16">
-          <div className="flex items-center justify-between gap-4">
+          <div className="reveal flex items-center justify-between gap-4">
             <h2 className="label">{t.home.newArrivals}</h2>
             <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
           </div>
@@ -270,7 +270,7 @@ export default async function HomePage() {
       {/* -------------------------------- why ------------------------------ */}
       <section className="border-t border-line bg-surface">
         <div className="page-container py-12 lg:py-16">
-          <h2 className="label">{t.home.whyTitle}</h2>
+          <h2 className="reveal label">{t.home.whyTitle}</h2>
 
           <div className="mt-6 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {perks.map((perk) => (

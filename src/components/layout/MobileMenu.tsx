@@ -43,9 +43,9 @@ const LINK_ICONS = {
  * is the one way CSS animates a height it does not know, and it eases
  * rather than snaps.
  *
- * Every row is one line: a long category name is cut with an ellipsis
- * instead of wrapping to two, so the list reads as a list. The name is
- * still complete for a screen reader and in the `title`.
+ * A long category name wraps to a second line rather than being cut: an
+ * ellipsis in a menu of nine reads as a fault, and two lines still read
+ * as one row because the icon and the chevron are centred on it.
  */
 export function MobileMenu({
   open,
@@ -78,7 +78,7 @@ export function MobileMenu({
   const listId = useId();
 
   const row = (current: boolean) =>
-    `menu-row flex min-h-11 items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors ${
+    `menu-row flex min-h-11 items-center gap-3 rounded-control px-3 py-1.5 text-sm font-medium transition-colors ${
       current ? "bg-brand-50 text-brand-700" : "text-ink-800 hover:bg-ink-100"
     }`;
 
@@ -148,7 +148,10 @@ export function MobileMenu({
                       >
                         {category.icon}
                       </span>
-                      <span className="min-w-0 flex-1 truncate">{name}</span>
+                      {/* Two lines at most, rather than an ellipsis: "ტელეფონები
+                          და აქსესუარები" cut to "ტელეფონები და აქსესუ…" read as
+                          a mistake, not a list. */}
+                      <span className="clamp-2 min-w-0 flex-1 leading-snug">{name}</span>
                       <ChevronRightIcon size={14} className="shrink-0 text-ink-300" />
                     </Link>
                   </li>

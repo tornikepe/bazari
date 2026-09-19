@@ -26,6 +26,7 @@ export function HoverPanel({
   label,
   className = "",
   width = "w-[22rem]",
+  align = "right",
   children,
 }: {
   trigger: ReactNode;
@@ -34,6 +35,9 @@ export function HoverPanel({
   className?: string;
   /** The panel's width class: a list of orders wants more than a list of links. */
   width?: string;
+  /** Which edge of the control the panel hangs from. Right, for the icons
+      at the end of the bar; left, for a link at the start of a row. */
+  align?: "left" | "right";
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -98,6 +102,7 @@ export function HoverPanel({
       {trigger}
       <Popover
         open={open}
+        align={align}
         role="region"
         aria-label={label}
         className={`mt-2 ${width} max-w-[calc(100vw-2rem)] overflow-hidden rounded-card border border-line bg-surface shadow-pop`}

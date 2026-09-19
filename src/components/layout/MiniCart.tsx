@@ -26,22 +26,7 @@ export function MiniCart() {
      when there are fewer, so taking a line out does not pull the buttons
      under it up by a row, and every line can be reached. The empty state
      fills the same box. */
-  if (items.length === 0) {
-    return (
-      <div className="mini-list grid place-items-center px-5 text-center">
-        <div>
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-pill bg-ink-100 text-ink-400">
-            <CartIcon size={22} />
-          </span>
-          <p className="mt-3 text-sm font-bold text-ink-900">{t.cart.empty}</p>
-          <p className="mt-1 text-xs text-ink-500">{t.cart.emptyHint}</p>
-          <Link href="/catalog" className="btn btn-outline btn-sm mt-4">
-            {t.cart.continueShopping}
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const empty = items.length === 0;
 
   return (
     <>
@@ -52,6 +37,20 @@ export function MiniCart() {
         </p>
       </div>
 
+      {empty ? (
+        /* The same head, box and foot as a cart with something in it, so
+           the panel is one size empty or full — it used to lose its head
+           and foot when empty and come up a third shorter. */
+        <div className="mini-list grid place-items-center px-5 text-center">
+          <div>
+            <span className="mx-auto grid h-12 w-12 place-items-center rounded-pill bg-ink-100 text-ink-400">
+              <CartIcon size={22} />
+            </span>
+            <p className="mt-3 text-sm font-bold text-ink-900">{t.cart.empty}</p>
+            <p className="mt-1 text-xs text-ink-500">{t.cart.emptyHint}</p>
+          </div>
+        </div>
+      ) : (
       <ul className="mini-list divide-y divide-line">
         {items.map((item) => {
           const key = lineKey(item);
@@ -122,6 +121,7 @@ export function MiniCart() {
           );
         })}
       </ul>
+      )}
 
       <div className="border-t border-line bg-canvas px-4 py-3">
         <div className="flex items-baseline justify-between">
@@ -134,9 +134,15 @@ export function MiniCart() {
           <Link href="/cart" className="btn btn-outline btn-sm">
             {t.nav.cart}
           </Link>
-          <Link href="/checkout" className="btn btn-primary btn-sm">
-            {t.cart.checkout}
-          </Link>
+          {empty ? (
+            <Link href="/catalog" className="btn btn-primary btn-sm">
+              {t.cart.continueShopping}
+            </Link>
+          ) : (
+            <Link href="/checkout" className="btn btn-primary btn-sm">
+              {t.cart.checkout}
+            </Link>
+          )}
         </div>
       </div>
     </>
