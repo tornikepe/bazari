@@ -86,7 +86,7 @@ export async function Footer() {
     // separation is now the footer's own top rule plus its internal padding,
     // which is surface-coloured and therefore invisible as a seam.
     <footer className="site-footer border-t border-line bg-surface">
-      <div className="page-container grid gap-6 py-10 text-center sm:gap-8 sm:py-12 sm:text-left lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12 lg:py-16">
+      <div className="page-container grid gap-6 py-8 text-center sm:gap-8 sm:py-10 sm:text-left lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
         <div className="flex flex-col items-center sm:items-start">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <LogoMark size={32} />
@@ -134,21 +134,22 @@ export async function Footer() {
         </div>
       </div>
 
-      {/* The name, set the width of the page and nearly the colour of the
-          paper — the last thing on every page, as a signature. */}
-      <div className="page-container overflow-hidden" aria-hidden="true">
-        <p className="footer-wordmark -mb-[0.12em] text-center sm:text-left">{settings.name}</p>
-      </div>
-
+      {/* The name, set large in the serif, with the copyright beside it —
+          the last thing on every page, as a signature. Extra room at the
+          foot on a phone: the chat launcher is fixed to the bottom-right
+          corner, and with the page scrolled to its end it sat on the last
+          word of the copyright line. */}
       <div className="border-t border-line">
-        {/* Extra room at the foot on a phone: the chat launcher is fixed to
-            the bottom-right corner, and with the page scrolled to its end it
-            sat on the last word of the copyright line. */}
-        <div className="page-container flex flex-col items-center justify-between gap-1.5 pt-3 pb-[4.25rem] text-center sm:flex-row sm:pb-3 sm:text-left">
-          <p className="text-xs text-ink-400">
-            © {new Date().getFullYear()} {settings.name}. {t.footer.rights}
+        <div className="page-container flex flex-col items-center gap-3 pt-6 pb-[4.25rem] text-center sm:flex-row sm:items-end sm:justify-between sm:pb-6 sm:text-left">
+          <p className="footer-wordmark -mb-[0.1em]" aria-hidden="true">
+            {settings.name}
           </p>
-          <InstallPrompt />
+          <div className="flex flex-col items-center gap-1.5 sm:items-end">
+            <InstallPrompt />
+            <p className="text-xs text-ink-400">
+              © {new Date().getFullYear()} {settings.name}. {t.footer.rights}
+            </p>
+          </div>
         </div>
       </div>
     </footer>

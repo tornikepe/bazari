@@ -17,13 +17,10 @@ import {
 } from "@/components/ui/icons";
 import { SectionLink } from "@/components/ui/SectionLink";
 import { SplitWords } from "@/components/editorial/SplitWords";
-import { Marquee } from "@/components/editorial/Marquee";
-import { getSettings } from "@/lib/settings";
-import { formatPrice } from "@/lib/format";
+
 
 export default async function HomePage() {
   const { locale, t } = await getI18n();
-  const settings = await getSettings();
 
   const [categories, featured, newArrivals, productCount, brands] = await Promise.all([
     prisma.category.findMany({
@@ -147,20 +144,6 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="border-t border-line py-3">
-          <Marquee
-            className="eyebrow text-ink-700"
-            items={[
-              settings.freeShippingThreshold > 0
-                ? fill(t.topbar.shipping, { amount: formatPrice(settings.freeShippingThreshold, locale) })
-                : t.topbar.shippingAlways,
-              t.home.why3Title,
-              t.home.why4Title,
-              t.topbar.delivery,
-              `${productCount} ${t.home.statProducts}`,
-            ]}
-          />
-        </div>
       </section>
 
       {/* --------------------------- categories ---------------------------- */}

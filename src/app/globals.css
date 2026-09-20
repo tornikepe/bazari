@@ -3551,8 +3551,8 @@ h3,
    two stops, and the line is tight enough that two lines read as one
    block. */
 .display-xl {
-  font-size: clamp(2.75rem, 7.5vw, 7rem);
-  line-height: 0.98;
+  font-size: clamp(2.25rem, 6vw, 5.5rem);
+  line-height: 1.06;
   letter-spacing: -0.03em;
 }
 
@@ -3821,11 +3821,24 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 
 /* On a touch screen the card's two buttons sit under the picture rather
    than over it: there is no pointer to rise for, and two pills over the
-   foot of a small photograph hid the shoe. */
+   foot of a small photograph hid the shoe. And nothing on a phone waits
+   to be scrolled into view: the cards and the sections are simply there.
+   A thumb flicks faster than a reveal can follow, and a page that keeps
+   arriving a moment after it is looked at reads as a page that is slow. */
 @media (hover: none) {
   .product-card .card-actions {
     position: static;
     margin-top: 0.5rem;
+  }
+
+  .reveal-view {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  html[data-reveal] .reveal {
+    opacity: 1;
   }
 }
 
@@ -4018,11 +4031,10 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 
 .footer-wordmark {
   font-family: var(--font-display);
-  font-size: clamp(4rem, 16vw, 15rem);
+  font-size: clamp(3rem, 9vw, 7.5rem);
   line-height: 0.9;
   letter-spacing: -0.04em;
   color: var(--color-ink-900);
-  opacity: 0.08;
   user-select: none;
   pointer-events: none;
 }
@@ -4032,12 +4044,15 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 /* A headline whose words rise one after another out of a clipped line.
    Each word is wrapped by `SplitWords`; the wrapper clips, the word
    moves. */
+/* The clip is padded top and bottom and the padding taken back with a
+   margin: Georgian letters rise and fall past the line box, and a tight
+   clip cut the top of ბ and the tail of ქ. */
 .split-line {
   display: inline-block;
   overflow: hidden;
   vertical-align: bottom;
-  padding-bottom: 0.08em;
-  margin-bottom: -0.08em;
+  padding: 0.18em 0.06em 0.22em;
+  margin: -0.18em -0.06em -0.22em;
 }
 
 .split-word {

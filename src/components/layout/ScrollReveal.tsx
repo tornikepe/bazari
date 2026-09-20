@@ -32,7 +32,10 @@ export function ScrollReveal() {
   useEffect(() => {
     const root = document.documentElement;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (still || typeof IntersectionObserver === "undefined") return;
+    // Not on a touch screen either — see the stylesheet: a thumb flicks
+    // faster than a reveal can follow.
+    const touch = window.matchMedia("(hover: none)").matches;
+    if (still || touch || typeof IntersectionObserver === "undefined") return;
 
     // Scroll-driven cards animate themselves where the browser can; only
     // where it cannot does the observer take them too.
