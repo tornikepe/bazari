@@ -155,15 +155,18 @@ export function CardActions({ product, needsChoice }: { product: Line; needsChoi
 
   return (
     <>
-      {/* Side by side from `sm`; one above the other on a phone, where two
-          cards share the width and each button had room for one letter. */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {/* Two pills over the foot of the picture: the cart one white, the
+          buy one black. Side by side from `sm`; stacked on a phone, where
+          two cards share the width. */}
+      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => press("cart")}
           disabled={soldOut}
           aria-pressed={inCart}
-          className={`btn btn-sm min-w-0 px-2 ${inCart ? "btn-secondary" : "btn-outline"}`}
+          className={`btn btn-sm min-w-0 px-2 shadow-pop ${
+            inCart ? "btn-secondary" : "bg-surface text-ink-900 hover:bg-ink-900 hover:text-surface"
+          }`}
         >
           {inCart ? <CheckIcon size={15} className="shrink-0" /> : <CartIcon size={15} className="shrink-0" />}
           <span className="truncate">{inCart ? t.product.inCart : t.product.addToCartShort}</span>
@@ -172,7 +175,7 @@ export function CardActions({ product, needsChoice }: { product: Line; needsChoi
           type="button"
           onClick={() => press("buy")}
           disabled={soldOut}
-          className="btn btn-primary btn-sm min-w-0 px-2"
+          className="btn btn-primary btn-sm min-w-0 px-2 shadow-pop"
         >
           <ZapIcon size={15} className="shrink-0" />
           <span className="truncate">{soldOut ? t.product.outOfStock : t.product.buyShort}</span>

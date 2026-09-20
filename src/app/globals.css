@@ -46,16 +46,18 @@
      the cost of the ramp doubling as a text scale.
 
      50 through 300 are backgrounds and borders, never text. */
-  --color-ink-50: #f7f8fa;
-  --color-ink-100: #eef0f4;
-  --color-ink-200: #dfe3ea;
-  --color-ink-300: #c6ccd8;
-  --color-ink-400: #6a707d; /* 4.55 on canvas */
-  --color-ink-500: #5f6675; /* 5.28 on canvas */
-  --color-ink-600: #4d5567; /* 6.85 on canvas */
-  --color-ink-700: #3b4252;
-  --color-ink-800: #262c39;
-  --color-ink-900: #161a23;
+  /* Warm: the paper of a printed catalogue rather than the blue-white of
+     a screen. Every text shade still clears AA on both grounds. */
+  --color-ink-50: #f6f4ef;
+  --color-ink-100: #ece8e0;
+  --color-ink-200: #ddd7cc;
+  --color-ink-300: #c3bbad;
+  --color-ink-400: #6b665e; /* 4.6 on canvas */
+  --color-ink-500: #5b564e;
+  --color-ink-600: #46423b;
+  --color-ink-700: #33302a;
+  --color-ink-800: #201e1a;
+  --color-ink-900: #121110;
 
   /* Semantic.
      The `-soft` shades are badge backgrounds and the solid shade is the
@@ -71,20 +73,20 @@
   --color-info: #245fe2;
   --color-info-soft: #dbeafe;
 
-  --color-surface: #ffffff;
-  /* A shade cooler than the surface, so a white card reads as a card on
-     it and a page with no cards still has a ground. */
-  --color-canvas: #f4f5f8;
+  --color-surface: #fbfaf7;
+  /* Paper. A shade warmer and darker than the surface, so a card reads as
+     a card on it and a page with no cards still has a ground. */
+  --color-canvas: #f2efe9;
   /* Soft enough that a card's edge is felt more than seen — the shadow
      under it does the rest — and still 1.3:1 against the surface, which is
      all a decorative rule needs. Form fields draw a darker edge of their
      own (`field-border`), because theirs is not decorative. */
-  --color-line: #e3e6ec;
+  --color-line: #e0dbd1;
 
   /* A form field's border is the only thing saying "you can type here", so
      it is held to the 3:1 that WCAG asks of a UI component's boundary —
      unlike `line`, which merely separates cards and is decorative. */
-  --color-field-border: #939599;
+  --color-field-border: #8f8a80;
 
   /* Solid brand surfaces: the button background and the text on it.
      --------------------------------------------------------------------
@@ -100,10 +102,10 @@
      secondary button are dark panels by design. They can't use `ink-900`,
      because the ink ramp inverts under the dark theme and would turn them
      white-on-white. `scrim` is the modal backdrop, for the same reason. */
-  --color-panel: #161a23;
-  --color-panel-fg: #ffffff;
-  --color-panel-muted: #98a1b3;
-  --color-scrim: rgb(9 11 16 / 0.55);
+  --color-panel: #121110;
+  --color-panel-fg: #fbfaf7;
+  --color-panel-muted: #9d978c;
+  --color-scrim: rgb(12 11 10 / 0.6);
 
   /* Radii.
      --------------------------------------------------------------------
@@ -113,8 +115,11 @@
      hairlines — and it read as constructed but cold; a shop is a place
      people are meant to pick things up in. `pill` is for the things that
      are genuinely round: badges, the count on the cart, the chat launcher. */
-  --radius-card: 1rem;
-  --radius-control: 0.75rem;
+  /* Near-square. The storefront is set like a printed catalogue — rules,
+     type, photographs — and a soft corner reads as an app on that page.
+     Controls that are genuinely round (buttons, badges) use `pill`. */
+  --radius-card: 0.375rem;
+  --radius-control: 0.25rem;
   --radius-pill: 999px;
 
   /* Shadows.
@@ -125,9 +130,11 @@
      tinted with the ink rather than black, so they sit in the page's own
      colour. `pop` is for what genuinely floats over the content: the chat
      panel, the buy bar, a popover. */
-  --shadow-card: 0 1px 2px rgb(22 26 35 / 0.04), 0 2px 8px -2px rgb(22 26 35 / 0.06);
-  --shadow-lift: 0 2px 4px rgb(22 26 35 / 0.05), 0 16px 32px -12px rgb(22 26 35 / 0.18);
-  --shadow-pop: 0 1px 2px rgb(22 26 35 / 0.12), 0 12px 32px -8px rgb(22 26 35 / 0.22);
+  /* Flat. Depth on this page is a rule and a change of ground, not a
+     shadow; only what genuinely floats — a panel, a sheet — casts one. */
+  --shadow-card: none;
+  --shadow-lift: 0 18px 40px -20px rgb(18 17 16 / 0.28);
+  --shadow-pop: 0 1px 2px rgb(18 17 16 / 0.1), 0 18px 48px -12px rgb(18 17 16 / 0.28);
 
   /* Motion.
      --------------------------------------------------------------------
@@ -145,6 +152,8 @@
   --font-sans: var(--font-geist-sans), var(--font-noto-georgian), system-ui, -apple-system,
     "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* The headline face — see `layout.tsx`. */
+  --font-display: var(--font-display), "Noto Serif Georgian", Georgia, serif;
 
   /* Type scale.
      --------------------------------------------------------------------
@@ -199,23 +208,24 @@
    ========================================================================== */
 
 [data-theme="dark"] {
-  --color-surface: #14171d;
-  --color-canvas: #0d0f13;
-  --color-line: #262c38;
+  --color-surface: #161513;
+  --color-canvas: #0d0c0b;
+  --color-line: #2b2823;
 
-  --color-ink-50: #1c212a;
-  --color-ink-100: #232936;
-  --color-ink-200: #2f3644;
-  --color-ink-300: #454d5e;
-  --color-ink-400: #7a8396; /* 4.57 on surface — was 4.16, just under AA */
-  --color-ink-500: #949cad;
-  --color-ink-600: #b3bac7;
-  --color-ink-700: #ccd2dd;
-  --color-ink-800: #e3e7ee;
-  --color-ink-900: #f4f6fa;
+  --color-ink-50: #1d1b18;
+  --color-ink-100: #262320;
+  --color-ink-200: #333029;
+  --color-ink-300: #4a463f;
+  --color-ink-400: #8a8479;
+  --color-ink-500: #a29b8f;
+  --color-ink-600: #bdb6aa;
+  --color-ink-700: #d3cdc2;
+  --color-ink-800: #e8e3da;
+  --color-ink-900: #f5f2ec;
 
   /* Slightly lifted off the canvas so dark panels stay distinguishable. */
-  --color-panel: #1c212b;
+  --color-panel: #1d1b18;
+  --color-panel-fg: #f5f2ec;
 
   /* Brand and semantics are brightened a step: the light-mode shades don't
      carry enough contrast against a dark canvas. */
@@ -235,7 +245,7 @@
   --color-brand-solid: #d34246;
   --color-brand-solid-hover: #c4262b;
 
-  --color-field-border: #62666f;
+  --color-field-border: #6a655c;
 
   --color-accent-50: #2a1f0c;
   --color-accent-800: #ffca6a;
@@ -259,7 +269,8 @@
 
 @media (min-width: 1024px) {
   :root {
-    --header-h: 7.75rem;
+    /* One row again — the pages sit in the bar beside the logo. */
+    --header-h: 4.75rem;
   }
 }
 
@@ -3491,5 +3502,568 @@ a:focus-visible > .logo-mark {
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
+  }
+}
+
+
+/* ==========================================================================
+   Editorial redesign
+   --------------------------------------------------------------------------
+   The storefront set like a printed catalogue: a serif for every headline,
+   hairlines for structure, warm paper for a ground, photographs shown
+   large and unframed, and one colour — the brand's red — spent sparingly.
+   The rules below sit after everything above and win by order; where a
+   component's own markup changed to fit, the change is in the component.
+   ========================================================================== */
+
+/* ---- Type ----------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+.display,
+.serif {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+/* The dashboard keeps its sans headlines: a ledger is not a catalogue. */
+.admin-panel h1,
+.admin-panel h2,
+.admin-panel h3 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.label,
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-500);
+}
+
+/* A headline that spans the page: the size follows the viewport between
+   two stops, and the line is tight enough that two lines read as one
+   block. */
+.display-xl {
+  font-size: clamp(2.75rem, 7.5vw, 7rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+
+.display-lg {
+  font-size: clamp(2rem, 4.5vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+.display-md {
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+/* Outlined type: the word drawn by its edge only, the way a poster does
+   it — for a word that is a shape as much as a word. */
+.outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1px currentColor;
+}
+
+/* ---- Controls ------------------------------------------------------- */
+
+@layer components {
+  .btn {
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* Black, and red under the pointer. The page spends its one colour on
+     what is about to happen, not on what is merely available. */
+  .btn-primary {
+    background: var(--color-panel);
+    color: var(--color-panel-fg);
+    box-shadow: none;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-brand-solid);
+    color: var(--color-brand-on-solid);
+    box-shadow: none;
+    translate: 0;
+  }
+
+  .btn-secondary {
+    background: var(--color-brand-solid);
+    color: var(--color-brand-on-solid);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--color-panel);
+    color: var(--color-panel-fg);
+    box-shadow: none;
+    translate: 0;
+  }
+
+  .btn-outline {
+    border-color: var(--color-ink-900);
+    color: var(--color-ink-900);
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    background: var(--color-ink-900);
+    border-color: var(--color-ink-900);
+    color: var(--color-surface);
+  }
+
+  .hover-lift:hover .btn-outline:not(:disabled) {
+    background: var(--color-ink-900);
+    border-color: var(--color-ink-900);
+    color: var(--color-surface);
+  }
+
+  .field {
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+  }
+
+  .card {
+    box-shadow: none;
+  }
+
+  .badge {
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.04em;
+  }
+
+  /* The hover lift is a lift no longer: a card under the pointer stays
+     where it is and its picture moves instead — see `.product-card`. */
+  .hover-lift:hover {
+    translate: 0;
+    box-shadow: none;
+  }
+}
+
+/* The chat launcher is a pill like every other button here. */
+.chat-launcher {
+  border-radius: var(--radius-pill);
+}
+
+/* ---- Marquee -------------------------------------------------------- */
+
+/* A line of words moving across the page: the strip under the hero, the
+   foot of the page. Two copies of the words side by side and the pair
+   slid by exactly one copy's width, so the seam never shows. Pauses
+   under the pointer, and stands still for anyone who asked for less
+   motion. */
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.marquee-track {
+  display: inline-flex;
+  gap: 3rem;
+  padding-inline-end: 3rem;
+  animation: marquee var(--marquee-speed, 40s) linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---- Inertial scroll ------------------------------------------------ */
+
+/* Lenis marks the root while it runs; the browser's own smoothing has to
+   stand down or the two fight over every wheel tick. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ---- The cursor ----------------------------------------------------- */
+
+/* A dot that follows the pointer and grows over anything that can be
+   pressed — the one flourish every site of this kind has, and the reason
+   is that it makes the page feel like a surface rather than a document.
+   Only under a fine pointer; a finger has no cursor. */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 999px;
+  background: var(--color-ink-900);
+  pointer-events: none;
+  mix-blend-mode: difference;
+  transform: translate3d(var(--cx, -100px), var(--cy, -100px), 0) scale(var(--cs, 1));
+  transition:
+    transform 0.08s linear,
+    opacity 0.2s ease;
+  opacity: 0;
+}
+
+html[data-cursor] .cursor-dot {
+  opacity: 1;
+}
+
+html[data-cursor] .cursor-dot[data-over="link"] {
+  --cs: 4;
+  background: #ffffff;
+}
+
+/* ---- Product card --------------------------------------------------- */
+
+/* The picture is the card. No border, no lift: a 4:5 photograph on the
+   paper with the name and the price set under it in two lines, the way
+   a lookbook does it. Under the pointer the picture eases in a little
+   and the actions rise over its foot. */
+.product-card {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.product-card .card-media {
+  border-radius: var(--radius-card);
+  background: var(--color-ink-50);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
+.product-card .card-media img {
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .product-card:hover .card-media img {
+    transform: scale(1.06);
+  }
+}
+
+.product-card .card-body {
+  padding: 0.875rem 0.125rem 0;
+}
+
+.product-card .card-name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+/* The two buttons live at the foot of the picture and rise under the
+   pointer; on a touch screen they are always there, because there is no
+   pointer to rise for. */
+.product-card .card-actions {
+  position: absolute;
+  inset-inline: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 5;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .product-card .card-actions {
+    opacity: 0;
+    transform: translateY(0.5rem);
+    transition:
+      opacity 0.25s ease,
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .product-card:hover .card-actions,
+  .product-card:focus-within .card-actions {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card .card-sheet {
+  border-radius: var(--radius-card);
+  inset-inline: 0;
+  bottom: 0;
+}
+
+/* ---- Product page --------------------------------------------------- */
+
+/* The stage takes the photographs' own proportion, 4:5, so a picture on
+   white does not stand in a square of the paper with two bands beside it. */
+.gallery-stage {
+  aspect-ratio: 4 / 5;
+}
+
+/* On a touch screen the card's two buttons sit under the picture rather
+   than over it: there is no pointer to rise for, and two pills over the
+   foot of a small photograph hid the shoe. */
+@media (hover: none) {
+  .product-card .card-actions {
+    position: static;
+    margin-top: 0.5rem;
+  }
+}
+
+/* ---- Header --------------------------------------------------------- */
+
+.site-header {
+  box-shadow: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.site-header[data-scrolled="true"] {
+  border-bottom-color: var(--color-line);
+}
+
+/* Over the home page's hero the bar is glass until the page moves. */
+.site-header[data-glass="true"]:not([data-scrolled="true"]) {
+  background: color-mix(in oklab, var(--color-surface) 70%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.nav-link {
+  position: relative;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-700);
+  padding: 0.5rem 0.75rem;
+  transition: color 0.15s ease;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.25rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-link:hover,
+.nav-link.is-current {
+  color: var(--color-ink-900);
+}
+
+.nav-link:hover::after,
+.nav-link.is-current::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ---- Home ----------------------------------------------------------- */
+
+.hero-editorial {
+  position: relative;
+  overflow: hidden;
+}
+
+/* The cube's ground: a soft disc of the brand's light behind it. */
+.hero-editorial::before {
+  content: "";
+  position: absolute;
+  right: -10%;
+  top: 5%;
+  width: 60vw;
+  height: 60vw;
+  max-width: 48rem;
+  max-height: 48rem;
+  border-radius: 999px;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-brand-500) 18%, transparent), transparent 70%);
+  pointer-events: none;
+}
+
+/* Section titles across the page: a hairline, the label at the left, a
+   link at the right, and the serif title under. */
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-line);
+}
+
+/* A band of black with the deals in it and the word drawn by its edge
+   behind them. */
+.deals-editorial {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-panel);
+  color: var(--color-panel-fg);
+}
+
+.deals-editorial .ghost {
+  position: absolute;
+  right: -2%;
+  bottom: -18%;
+  font-family: var(--font-display);
+  font-size: clamp(6rem, 22vw, 20rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(255 255 255 / 0.18);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The category strip: a row of tall tiles that scrolls sideways and
+   snaps, each a number, a name and a count, filling black under the
+   pointer. */
+.cat-strip {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 0.25rem;
+}
+
+.cat-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-tile {
+  flex: 0 0 auto;
+  width: 15rem;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 15rem;
+  padding: 1.125rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  transition:
+    background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+@media (min-width: 1024px) {
+  .cat-tile {
+    width: 18rem;
+    min-height: 17rem;
+  }
+}
+
+/* The name in the tile: the serif at a size a Georgian compound —
+   "ტელეფონები და აქსესუარები" — fits on two lines without breaking
+   inside a word. */
+.cat-tile .cat-name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  overflow-wrap: normal;
+}
+
+.cat-tile .cat-icon {
+  font-size: 2rem;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cat-tile:hover {
+  background: var(--color-panel);
+  color: var(--color-panel-fg);
+  border-color: var(--color-panel);
+}
+
+.cat-tile:hover .cat-icon {
+  transform: translateY(-4px) rotate(-6deg);
+}
+
+.cat-tile:hover .label {
+  color: var(--color-panel-muted);
+}
+
+/* ---- Footer --------------------------------------------------------- */
+
+.footer-wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 16vw, 15rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--color-ink-900);
+  opacity: 0.08;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ---- Split-text reveal ---------------------------------------------- */
+
+/* A headline whose words rise one after another out of a clipped line.
+   Each word is wrapped by `SplitWords`; the wrapper clips, the word
+   moves. */
+.split-line {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.split-word {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: word-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 60ms + 120ms);
+}
+
+@keyframes word-up {
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .split-word {
+    transform: none;
+    animation: none;
+  }
+
+  .marquee-track {
+    animation: none;
+  }
+
+  .cursor-dot {
+    display: none;
   }
 }

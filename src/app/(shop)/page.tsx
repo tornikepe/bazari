@@ -16,9 +16,14 @@ import {
   TruckIcon,
 } from "@/components/ui/icons";
 import { SectionLink } from "@/components/ui/SectionLink";
+import { SplitWords } from "@/components/editorial/SplitWords";
+import { Marquee } from "@/components/editorial/Marquee";
+import { getSettings } from "@/lib/settings";
+import { formatPrice } from "@/lib/format";
 
 export default async function HomePage() {
   const { locale, t } = await getI18n();
+  const settings = await getSettings();
 
   const [categories, featured, newArrivals, productCount, brands] = await Promise.all([
     prisma.category.findMany({
@@ -97,101 +102,99 @@ export default async function HomePage() {
       <JsonLd data={websiteSchema} />
 
       {/* ------------------------------- hero ------------------------------ */}
-      {/*
-        Built on the grid rather than on a background. The old hero leaned on
-        two blurred orbs, a masked grid and a sheen sweeping the headline —
-        effects doing the work that structure should do. What carries this one
-        is the rule set behind it, the alignment, and one line of red.
-      */}
-      <section className="grid-field relative overflow-hidden border-b border-line bg-surface">
-        {/* A wash of the brand colour behind the object, so the hero has a
-            light source and the cube something to sit in. */}
-        <div aria-hidden className="hero-glow parallax-back" />
-        <div className="page-container relative py-14 lg:py-24">
-          <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
-            <div className="parallax-fore lg:col-span-7">
-              <p className="label">{t.home.heroBadge}</p>
-
-              <h1 className="display mt-5 max-w-2xl text-ink-900">{t.home.heroTitle}</h1>
-
-              <p className="mt-6 max-w-lg text-base leading-relaxed text-ink-600">
-                {t.home.heroSubtitle}
-              </p>
-
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link href="/catalog" className="btn btn-primary btn-lg w-full sm:w-auto">
-                  {t.home.heroCta}
-                  <ArrowRightIcon size={17} />
-                </Link>
-                <Link href="/about" className="btn btn-outline btn-lg w-full sm:w-auto">
-                  {t.home.heroSecondary}
-                </Link>
-              </div>
+      {/* The whole first screen: the headline in the serif, set large and
+          low, the object standing in the brand's light at the right, and a
+          line of the shop's promises running under it all. */}
+      <section className="hero-editorial border-b border-line">
+        <div className="page-container relative grid gap-10 pt-10 pb-12 lg:grid-cols-12 lg:gap-8 lg:pt-16 lg:pb-16">
+          <div className="lg:col-span-8">
+            <p className="eyebrow">{t.home.heroBadge}</p>
+            <h1 className="display-xl mt-6 max-w-[14ch] text-ink-900">
+              <SplitWords text={t.home.heroTitle} />
+            </h1>
+            <p className="reveal mt-8 max-w-md text-base leading-relaxed text-ink-600 lg:text-lg">
+              {t.home.heroSubtitle}
+            </p>
+            <div className="reveal mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/catalog" className="btn btn-primary btn-lg w-full sm:w-auto">
+                {t.home.heroCta}
+                <ArrowRightIcon size={17} />
+              </Link>
+              <Link href="/about" className="btn btn-outline btn-lg w-full sm:w-auto">
+                {t.home.heroSecondary}
+              </Link>
             </div>
+          </div>
 
-            {/*
-              The counts, set as figures against the rules. Every one is
-              counted from the database — the shop has exactly this many
-              products, categories and brands, and nothing here is rounded up
-              to look better.
-            */}
-            {/* The object sits in the column the grid already left empty,
-                above the figures rather than beside the headline — the words
-                keep the reading position and this keeps the space that was
-                doing nothing. */}
-            {/* Drifts up more slowly than the page as it scrolls — the one
-                thing in the hero that is behind the page rather than on it. */}
-            <div className="parallax-back lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-start">
+          {/* The counts, under the object, each a real figure from the
+              database and none rounded up to look better. */}
+          <div className="lg:col-span-4 lg:flex lg:flex-col lg:items-end lg:justify-between">
+            <div className="parallax-back mx-auto w-56 lg:mx-0 lg:w-64">
               <BrandCube />
             </div>
-
-            <dl className="lg:col-span-4 lg:col-start-9 lg:self-end">
+            <dl className="mt-8 grid grid-cols-3 gap-4 lg:mt-0 lg:w-full">
               {[
                 { value: String(productCount), label: t.home.statProducts },
                 { value: String(categories.length), label: t.home.statCategories },
                 { value: String(brands.length), label: t.home.statBrands },
-              ].map((stat, index) => (
-                <div
-                  key={stat.label}
-                  className={`flex items-baseline justify-between gap-4 border-line py-4 ${
-                    index === 0 ? "border-t" : "border-t"
-                  } ${index === 2 ? "border-b" : ""}`}
-                >
-                  <dt className="label">{stat.label}</dt>
-                  <dd className="figure text-ink-900">{stat.value}</dd>
+              ].map((stat) => (
+                <div key={stat.label} className="border-t border-ink-900 pt-3">
+                  <dd className="display-md text-ink-900 tabular-nums">{stat.value}</dd>
+                  <dt className="eyebrow mt-1">{stat.label}</dt>
                 </div>
               ))}
             </dl>
           </div>
         </div>
+
+        <div className="border-t border-line py-3">
+          <Marquee
+            className="eyebrow text-ink-700"
+            items={[
+              settings.freeShippingThreshold > 0
+                ? fill(t.topbar.shipping, { amount: formatPrice(settings.freeShippingThreshold, locale) })
+                : t.topbar.shippingAlways,
+              t.home.why3Title,
+              t.home.why4Title,
+              t.topbar.delivery,
+              `${productCount} ${t.home.statProducts}`,
+            ]}
+          />
+        </div>
       </section>
 
-      {/* --------------------------- category index ------------------------ */}
-      {/*
-        A numbered index rather than a wall of tiles. It reads top to bottom
-        like a contents page, the counts line up in their own column because
-        the figures are tabular, and it costs no images — which matters while
-        every product still shares one placeholder.
-      */}
-      <section className="page-container py-12 lg:py-16">
-        <div className="reveal flex items-center justify-between gap-4">
-          <h2 className="label">{t.home.shopByCategory}</h2>
+      {/* --------------------------- categories ---------------------------- */}
+      {/* A strip of tall tiles that scrolls sideways: a number, the name
+          in the serif, the count, and the icon standing in the corner. */}
+      <section className="page-container pt-12 lg:pt-16">
+        <div className="section-head reveal">
+          <div>
+            <p className="eyebrow">{t.home.shopByCategory}</p>
+            <h2 className="display-md mt-2 text-ink-900">{t.home.shopByCategoryHint}</h2>
+          </div>
           <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
         </div>
 
-        <div className="index-list mt-5">
+        <div className="cat-strip mt-8">
           {categories.map((category, index) => (
             <Link
               key={category.slug}
               href={`/catalog?category=${category.slug}`}
-              className="index-row reveal-view"
+              className="cat-tile reveal"
             >
-              <span className="index-num">{String(index + 1).padStart(2, "0")}</span>
-              <span className="index-name">{name(category)}</span>
-              <span className="index-count">
-                {category._count.products === 1
-                  ? t.home.indexCountOne
-                  : fill(t.home.indexCount, { count: category._count.products })}
+              <span className="flex items-start justify-between">
+                <span className="label">{String(index + 1).padStart(2, "0")}</span>
+                <span className="cat-icon" aria-hidden="true">
+                  {category.icon}
+                </span>
+              </span>
+              <span>
+                <span className="cat-name block text-balance">{name(category)}</span>
+                <span className="label mt-2 block">
+                  {category._count.products === 1
+                    ? t.home.indexCountOne
+                    : fill(t.home.indexCount, { count: category._count.products })}
+                </span>
               </span>
             </Link>
           ))}
@@ -199,45 +202,42 @@ export default async function HomePage() {
       </section>
 
       {/* ------------------------------ featured --------------------------- */}
+      {/* An editorial grid: the first product large, the rest beside and
+          under it. */}
       {featured.length > 0 && (
-        <section className="page-container rule pt-12 pb-12 lg:pt-16">
-          <div className="reveal flex items-center justify-between gap-4">
-            <h2 className="label">{t.home.featured}</h2>
+        <section className="page-container pt-14 lg:pt-20">
+          <div className="section-head reveal">
+            <div>
+              <p className="eyebrow">{t.home.featured}</p>
+              <h2 className="display-md mt-2 text-ink-900">{t.home.featuredHint}</h2>
+            </div>
             <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
           </div>
-          <p className="mt-1.5 text-sm text-ink-500">{t.home.featuredHint}</p>
 
-          <div className={`mt-6 ${PRODUCT_GRID_WIDE}`}>
-            {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
+          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
+            {featured.map((product, index) => (
+              <div key={product.id} className={index === 0 ? "col-span-2 row-span-2" : ""}>
+                <ProductCard product={product} priority={index < 3} />
+              </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* ---------------------------- deals banner ------------------------- */}
-      {/*
-        The one place the red is allowed to fill a whole region. A quiet
-        gradient across it and a ring of light in the corner give it depth;
-        hierarchy inside it is still size and weight.
-      */}
-      <section className="page-container pb-12 lg:pb-16">
-        <div className="deals-band reveal-view flex flex-col justify-between gap-6 px-6 py-10 text-brand-on-solid sm:flex-row sm:items-end sm:px-10">
-          {/* Full opacity throughout. White on the brand red clears AA by a
-              hair (4.6:1), and dimming a line to 80% put it under. Hierarchy
-              here is size and weight, not transparency — the same rule the
-              cube follows. */}
-          <div>
-            <p className="label text-brand-on-solid">{t.nav.deals}</p>
-            <h2 className="mt-3 max-w-lg text-2xl leading-tight font-extrabold tracking-tight">
-              {t.home.dealsTitle}
-            </h2>
-            <p className="mt-2 max-w-md text-sm">{t.home.dealsText}</p>
+      {/* ------------------------------- deals ----------------------------- */}
+      <section className="page-container pt-14 lg:pt-20">
+        <div className="deals-editorial reveal flex flex-col justify-between gap-8 px-6 py-12 sm:px-12 sm:py-16 lg:flex-row lg:items-end">
+          <span className="ghost" aria-hidden="true">
+            −%
+          </span>
+          <div className="relative">
+            <p className="eyebrow text-panel-muted">{t.nav.deals}</p>
+            <h2 className="display-lg mt-4 max-w-xl">{t.home.dealsTitle}</h2>
+            <p className="mt-4 max-w-md text-sm text-panel-muted sm:text-base">{t.home.dealsText}</p>
           </div>
-
           <Link
             href="/catalog?sale=1"
-            className="btn btn-lg shrink-0 bg-surface text-ink-900 hover:bg-ink-100"
+            className="btn btn-lg relative shrink-0 bg-surface text-ink-900 hover:bg-brand-solid hover:text-brand-on-solid"
           >
             {t.home.viewAll}
             <ArrowRightIcon size={17} />
@@ -249,17 +249,16 @@ export default async function HomePage() {
       {newArrivals.length > 0 && (
         // Named so the screenshot suite can paint over it: these four cards
         // are whatever was added last, and the suite adds products.
-        <section id="new-arrivals" className="page-container rule py-12 lg:py-16">
-          <div className="reveal flex items-center justify-between gap-4">
-            <h2 className="label">{t.home.newArrivals}</h2>
+        <section id="new-arrivals" className="page-container pt-14 lg:pt-20">
+          <div className="section-head reveal">
+            <div>
+              <p className="eyebrow">{t.home.newArrivals}</p>
+              <h2 className="display-md mt-2 text-ink-900">{t.home.newArrivalsHint}</h2>
+            </div>
             <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
           </div>
-          <p className="mt-1.5 text-sm text-ink-500">{t.home.newArrivalsHint}</p>
 
-          {/* A one-pixel gap over a line-coloured background: the cards are
-              separated by the same rule that runs everywhere else, rather
-              than by floating apart on shadows. */}
-          <div className={`mt-6 ${PRODUCT_GRID_WIDE}`}>
+          <div className={`mt-8 ${PRODUCT_GRID_WIDE}`}>
             {newArrivals.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -268,25 +267,24 @@ export default async function HomePage() {
       )}
 
       {/* -------------------------------- why ------------------------------ */}
-      <section className="border-t border-line bg-surface">
-        <div className="page-container py-12 lg:py-16">
-          <h2 className="reveal label">{t.home.whyTitle}</h2>
+      <section className="page-container pt-14 pb-16 lg:pt-20 lg:pb-24">
+        <div className="section-head reveal">
+          <p className="eyebrow">{t.home.whyTitle}</p>
+        </div>
 
-          <div className="mt-6 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-            {perks.map((perk) => (
-              <div key={perk.title} className="reveal-view bg-surface p-5 lg:p-6">
-                {/* The icon sits on the title's line, in a tinted chip, rather
-                    than floating above it: one row reads as one claim. */}
-                <h3 className="flex items-center gap-2.5 text-sm font-bold text-ink-900">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600">
-                    <perk.icon size={17} />
-                  </span>
-                  {perk.title}
-                </h3>
-                <p className="mt-2 text-xs leading-relaxed text-ink-500">{perk.text}</p>
-              </div>
-            ))}
-          </div>
+        {/* Four claims as four columns, each numbered in the serif, the
+            icon small beside the title. */}
+        <div className="mt-8 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          {perks.map((perk, index) => (
+            <div key={perk.title} className="reveal">
+              <span className="display-md block text-ink-300">{String(index + 1).padStart(2, "0")}</span>
+              <h3 className="mt-4 flex items-center gap-2.5 text-lg text-ink-900">
+                <perk.icon size={18} className="shrink-0 text-brand-600" />
+                {perk.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-500">{perk.text}</p>
+            </div>
+          ))}
         </div>
       </section>
     </>

@@ -1,5 +1,13 @@
 # The rules
 
+> **Editorial redesign (branch `redesign-editorial`).** The storefront is set like a printed
+> catalogue: a serif (Noto Serif Georgian, `--font-display`) for every headline, warm paper
+> for the ground, hairlines for structure, near-square corners, flat cards, black pill buttons
+> that turn red under the pointer, photographs 4:5 and unframed with the actions rising over
+> them, a one-row header with the pages inline, a giant wordmark in the footer, a marquee under
+> the hero, inertial scrolling (Lenis) and a cursor dot under a fine pointer. The rules below
+> still hold; the layer that restyles them is the last section of `globals.css`.
+
 One page. Every rule here is a decision made once; a page that invents a ninth way to do one
 of these eight things is wrong by this document, not by taste.
 

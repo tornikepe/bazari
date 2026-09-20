@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Georgian } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Georgian, Noto_Serif_Georgian } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { I18nProvider } from "@/components/providers/I18nProvider";
@@ -29,6 +29,17 @@ const geistMono = Geist_Mono({
 const notoGeorgian = Noto_Sans_Georgian({
   variable: "--font-noto-georgian",
   subsets: ["georgian"],
+  display: "swap",
+});
+
+// The display face: a serif with Georgian and Latin in one family, for the
+// headlines. The editorial register the storefront is set in — a big serif
+// title over a plain sans — needs both scripts in the same voice, and this
+// is the one serif on Google Fonts that draws Georgian properly.
+const notoSerifGeorgian = Noto_Serif_Georgian({
+  variable: "--font-display",
+  subsets: ["georgian", "latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -111,7 +122,7 @@ export default async function RootLayout({
       // Opts smooth scrolling out of route transitions, which would otherwise
       // animate the jump to the top of each new page.
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} ${notoSerifGeorgian.variable} h-full antialiased`}
     >
       <head>
         {/* Runs before paint: falls back to the OS preference for a visitor

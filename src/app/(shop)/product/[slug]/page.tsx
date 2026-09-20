@@ -359,9 +359,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </Link>
           </div>
 
-          <h1 className="mt-2 text-2xl leading-tight font-extrabold tracking-tight text-balance text-ink-900 sm:text-3xl">
-            {name}
-          </h1>
+          <h1 className="display-lg mt-3 text-balance text-ink-900">{name}</h1>
 
           {/* Nothing here until somebody real has written something. */}
           {product.ratingCount > 0 && (

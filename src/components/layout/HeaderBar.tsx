@@ -61,9 +61,6 @@ export function HeaderBar({
   const scrolled = useScrolled();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
-  // The phone sheet is a second input, so it needs its own handle — one ref
-  // across both would point at whichever mounted last.
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const { mounted: searchMounted, state: searchState } = useOverlay(searchOpen, {
     duration: 220,
@@ -93,7 +90,7 @@ export function HeaderBar({
     event.preventDefault();
     const trimmed = query.trim();
     router.push(trimmed ? `/catalog?q=${encodeURIComponent(trimmed)}` : "/catalog");
-    searchRef.current?.blur();
+    mobileSearchRef.current?.blur();
     setSearchOpen(false);
   }
 
@@ -120,10 +117,14 @@ export function HeaderBar({
   return (
     <header
       data-scrolled={scrolled}
-      className="site-header sticky top-0 z-40 bg-surface shadow-[0_1px_0_var(--color-line)]"
+      data-glass={pathname === "/"}
+      className="site-header sticky top-0 z-40 bg-surface"
     >
-      {/* Main bar */}
-      <div className="page-container flex h-16 items-center gap-2 sm:gap-3 lg:h-20 lg:gap-6">
+      {/* One bar: the menu button and the logo, the pages in the middle
+          from `lg`, the icons at the end. The search is an icon on every
+          width and opens a sheet over the bar — a box in the bar was the
+          one thing pulling the composition off centre. */}
+      <div className="page-container flex h-16 items-center gap-2 sm:gap-3 lg:h-[4.75rem] lg:gap-8">
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
@@ -135,51 +136,27 @@ export function HeaderBar({
         </button>
 
         <Link href="/" aria-label={t.nav.home} className="flex shrink-0 items-center gap-2.5">
-          <LogoMark size={36} />
+          <LogoMark size={34} />
           <Wordmark name={settings.name} className="hidden text-lg sm:block" />
         </Link>
 
-        {/* Below `md` the bar is replaced by a single icon that opens a
-            full-width overlay — a cramped input squeezed between the logo and
-            four action buttons was unusable on a phone. */}
-        <form onSubmit={submitSearch} className="relative hidden flex-1 md:block" role="search">
-          <SearchIcon
-            size={17}
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-400"
-          />
-          <input
-            ref={searchRef}
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t.nav.searchPlaceholder}
-            aria-label={t.nav.search}
-            className="field h-11 pl-10 pr-24"
-          />
-          {/* `min-h-0` is doing real work: `.btn-sm` sets `min-height: 2.25rem`,
-              which silently beat the `h-8` here — the button rendered 36px tall
-              inside a 44px field, so it sat 4px from the top and bottom but 6px
-              from the right. Symmetric now, 6px on every side. */}
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm absolute top-1/2 right-1.5 h-8 min-h-0 w-20 -translate-y-1/2 px-0"
-          >
-            {t.nav.search}
-          </button>
+        {/* The shop's pages only: about and contact live in the footer
+            and the drawer, and six links beside the icons overran 1280px. */}
+        <HeaderNav
+          categories={categories}
+          categoryName={categoryName}
+          links={navLinks.filter((item) => ["catalog", "deals", "track"].includes(item.icon))}
+        />
 
-          <SearchSuggestions query={query} inputRef={searchRef} onNavigate={() => setSearchOpen(false)} />
-        </form>
+        <div className="flex-1" />
 
-        {/* Pushes the actions to the right where the bar is hidden. */}
-        <div className="flex-1 md:hidden" />
-
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
             aria-label={t.nav.search}
             title={t.nav.search}
-            className="btn btn-ghost h-11 w-11 rounded-control p-0 md:hidden"
+            className="btn btn-ghost h-11 w-11 rounded-control p-0"
           >
             <SearchIcon size={19} />
           </button>
@@ -265,24 +242,19 @@ export function HeaderBar({
         </div>
       </div>
 
-      {/* The categories and the site's pages, on a desktop: the drawer,
-          laid flat under the bar. Everything but the wishlist, which has
-          its own panel in the bar above. */}
-      <HeaderNav
-        categories={categories}
-        categoryName={categoryName}
-        links={navLinks.filter((item) => item.icon !== "favorites")}
-      />
-
-      {/* Mobile search overlay. Slides down over the bar rather than
-          replacing it in one frame — it covers the control that opened it, so
-          an instant swap leaves no clue where the bar went. */}
+      {/* The search: a sheet that slides down over the bar rather than
+          replacing it in one frame — it covers the control that opened it,
+          so an instant swap leaves no clue where the bar went. */}
       {searchMounted && (
         <div
           data-state={searchState}
-          className="search-sheet absolute inset-x-0 top-0 z-50 bg-surface p-3 shadow-card md:hidden"
+          className="search-sheet absolute inset-x-0 top-0 z-50 border-b border-line bg-surface p-3 shadow-pop"
         >
-          <form onSubmit={submitSearch} className="flex items-center gap-2" role="search">
+          <form
+            onSubmit={submitSearch}
+            className="page-container flex items-center gap-2"
+            role="search"
+          >
             <div className="relative min-w-0 flex-1">
               <SearchIcon
                 size={17}
@@ -296,7 +268,7 @@ export function HeaderBar({
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={t.nav.searchPlaceholder}
                 aria-label={t.nav.search}
-                className="field h-11 pl-10"
+                className="field h-12 pl-10 text-base"
               />
 
               <SearchSuggestions

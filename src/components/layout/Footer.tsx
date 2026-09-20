@@ -86,7 +86,7 @@ export async function Footer() {
     // separation is now the footer's own top rule plus its internal padding,
     // which is surface-coloured and therefore invisible as a seam.
     <footer className="site-footer border-t border-line bg-surface">
-      <div className="page-container grid gap-6 py-7 text-center sm:gap-8 sm:py-8 sm:text-left lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12 lg:py-10">
+      <div className="page-container grid gap-6 py-10 text-center sm:gap-8 sm:py-12 sm:text-left lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12 lg:py-16">
         <div className="flex flex-col items-center sm:items-start">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <LogoMark size={32} />
@@ -132,6 +132,12 @@ export async function Footer() {
             </nav>
           ))}
         </div>
+      </div>
+
+      {/* The name, set the width of the page and nearly the colour of the
+          paper — the last thing on every page, as a signature. */}
+      <div className="page-container overflow-hidden" aria-hidden="true">
+        <p className="footer-wordmark -mb-[0.12em] text-center sm:text-left">{settings.name}</p>
       </div>
 
       <div className="border-t border-line">

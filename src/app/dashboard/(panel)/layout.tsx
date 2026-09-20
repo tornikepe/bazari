@@ -24,7 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     // Stacks on mobile (top bar above content), splits into a rail on desktop.
     <StaffRoleProvider role={user.role}>
-      <div className="flex min-h-screen flex-col bg-canvas lg:flex-row">
+      <div className="admin-panel flex min-h-screen flex-col bg-canvas lg:flex-row">
         <AdminSidebar admin={user} />
         {/* The same entrance the shop's pages make: half a second of rise,
             replayed on every navigation, once. */}
