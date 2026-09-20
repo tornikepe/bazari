@@ -87,7 +87,7 @@ export function MiniFavorites() {
       ) : rows === null ? (
         /* The same rows, as shapes, so the panel is its final height while
            the names arrive and nothing under it jumps. */
-        <ul className="mini-list divide-y divide-line" aria-busy>
+        <ul className="mini-list divide-y divide-line" aria-busy data-lenis-prevent>
           {wanted.map((id) => (
             <li key={id} className="flex gap-3 px-4 py-3">
               <span className="skeleton h-14 w-14 shrink-0 rounded-control" />
@@ -99,7 +99,7 @@ export function MiniFavorites() {
           ))}
         </ul>
       ) : (
-        <ul className="mini-list divide-y divide-line">
+        <ul className="mini-list divide-y divide-line" data-lenis-prevent>
           {rows.map((product) => {
             const name = locale === "ka" ? product.nameKa : product.nameEn;
             return (

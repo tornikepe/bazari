@@ -91,10 +91,14 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
     });
   }
 
-  /** The deferred draft, sent. */
+  /** The deferred draft, sent — with whatever is in the price boxes, since
+      the blur that would have written them and the press that sends them
+      land in the same tick and the press would otherwise read the draft
+      from before the blur. */
   function commit() {
+    const final = { ...draft, minPrice: parse(minPrice), maxPrice: parse(maxPrice) };
     startTransition(() => {
-      router.push(`/catalog${buildQuery(draft)}`, { scroll: false });
+      router.push(`/catalog${buildQuery(final)}`, { scroll: false });
       onApplied?.();
     });
   }
@@ -172,7 +176,7 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
         badge={priceActive ? `${filters.minPrice ?? bounds.min}–${filters.maxPrice ?? bounds.max} ₾` : undefined}
       >
         <form onSubmit={submitPrice} className="flex flex-col gap-3">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div className="price-boxes">
             <PriceBox
               value={minPrice}
               placeholder={String(bounds.min)}
@@ -180,7 +184,9 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
               onChange={setMinPrice}
               onBlur={() => deferred && submitPrice()}
             />
-            <span className="text-ink-300">–</span>
+            <span className="text-ink-300" aria-hidden="true">
+              —
+            </span>
             <PriceBox
               value={maxPrice}
               placeholder={String(bounds.max)}
@@ -413,21 +419,25 @@ function PriceBox({
   onChange: (value: string) => void;
   onBlur?: () => void;
 }) {
+  /* A small box with its label over it in small capitals and the lari
+     sign inside at the right; the two sit centred with a dash between. */
   return (
-    <label className="relative block">
-      <input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onBlur={onBlur}
-        placeholder={placeholder}
-        aria-label={label}
-        className="field h-9 pr-6 pl-2.5 text-sm tabular-nums"
-      />
-      <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-ink-400">
-        ₾
+    <label className="price-box">
+      <span className="eyebrow">{label}</span>
+      <span className="relative block">
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          className="field h-10 w-full pr-7 pl-3 text-center text-sm font-semibold tabular-nums"
+        />
+        <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-ink-400">
+          ₾
+        </span>
       </span>
     </label>
   );

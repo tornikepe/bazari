@@ -80,6 +80,8 @@ export function Overlay({
         role="dialog"
         aria-modal="true"
         aria-label={label}
+        /* A sheet scrolls on its own; the page's inertial scroll must let it. */
+        data-lenis-prevent
         // Focus lands here when the drawer has nothing focusable of its own,
         // which is what keeps the keyboard from staying out on the page behind.
         tabIndex={-1}

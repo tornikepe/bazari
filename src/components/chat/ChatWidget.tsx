@@ -184,6 +184,7 @@ export function ChatWidget({ available }: { available: boolean }) {
             role="log"
             aria-live="polite"
             aria-atomic="false"
+            data-lenis-prevent
             className="flex flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain bg-canvas px-3.5 py-3.5"
           >
             {/* The greeting is markup, not a model turn: it costs nothing and

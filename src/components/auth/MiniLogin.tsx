@@ -63,12 +63,22 @@ export function MiniLogin() {
         {pending ? t.auth.signingIn : t.auth.signIn}
       </button>
 
-      <div className="flex items-center justify-between gap-3 text-xs">
-        <Link href="/register" className="font-semibold whitespace-nowrap text-brand-600 hover:underline">
+      {/* Two rows with a hairline between, not two words at either end of
+          one line — in a 19rem panel the two ran into each other. */}
+      <div className="flex flex-col text-xs">
+        <Link
+          href="/register"
+          className="flex min-h-10 items-center justify-between gap-3 border-t border-line font-semibold text-ink-900 hover:text-brand-600"
+        >
           {t.auth.createAccount}
+          <span aria-hidden="true">→</span>
         </Link>
-        <Link href="/forgot-password" className="whitespace-nowrap text-ink-500 hover:text-ink-900 hover:underline">
+        <Link
+          href="/forgot-password"
+          className="flex min-h-10 items-center justify-between gap-3 border-t border-line text-ink-500 hover:text-ink-900"
+        >
           {t.auth.forgot}
+          <span aria-hidden="true">→</span>
         </Link>
       </div>
     </form>

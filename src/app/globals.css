@@ -2521,6 +2521,44 @@ html[data-reveal="all"] .reveal-view {
   box-shadow: 0 0 0 4px var(--color-brand-100);
 }
 
+/* The two price boxes, centred with a dash between. */
+.price-boxes {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  justify-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+}
+
+.price-boxes > span {
+  padding-bottom: 0.7rem;
+}
+
+.price-box {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.price-box > .eyebrow {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 10px;
+}
+
+/* No spinner arrows: the range under the boxes is the slider. */
+.price-box input::-webkit-outer-spin-button,
+.price-box input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.price-box input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* The drawer's foot: apply and clear, stuck to the bottom of the sheet. */
 .filter-foot {
   position: sticky;
@@ -3758,6 +3796,49 @@ h3,
 /* The chat launcher is a pill like every other button here. */
 .chat-launcher {
   border-radius: var(--radius-pill);
+}
+
+/* ---- Mini stepper --------------------------------------------------- */
+
+/* The header cart's stepper: a pill, the number centred between two
+   round marks. */
+.mini-stepper {
+  display: inline-flex;
+  align-items: center;
+  height: 1.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+.mini-stepper > button {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 100%;
+  border-radius: 999px;
+  color: var(--color-ink-600);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.mini-stepper > button:hover:not(:disabled) {
+  background: var(--color-ink-900);
+  color: var(--color-surface);
+}
+
+.mini-stepper > button:disabled {
+  color: var(--color-ink-300);
+}
+
+.mini-stepper > span {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-900);
 }
 
 /* ---- Form bar ------------------------------------------------------- */

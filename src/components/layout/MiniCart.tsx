@@ -51,7 +51,7 @@ export function MiniCart() {
           </div>
         </div>
       ) : (
-      <ul className="mini-list divide-y divide-line">
+      <ul className="mini-list divide-y divide-line" data-lenis-prevent>
         {items.map((item) => {
           const key = lineKey(item);
           const name = locale === "ka" ? item.nameKa : item.nameEn;
@@ -77,29 +77,26 @@ export function MiniCart() {
                   <p className="mt-0.5 truncate text-xs text-ink-500">{item.variantLabel}</p>
                 )}
 
-                <div className="mt-1.5 flex items-center justify-between gap-2">
-                  {/* A small stepper, the cart page's in miniature. */}
-                  <span className="flex items-center rounded-control border border-line">
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  {/* A small stepper: a pill with the number centred between
+                      two round marks, the cart page's in miniature. */}
+                  <span className="mini-stepper">
                     <button
                       type="button"
                       onClick={() => setQuantity(key, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                       aria-label="-"
-                      className="btn btn-ghost h-7 w-7 min-h-0 rounded-none rounded-l-control p-0"
                     >
-                      <MinusIcon size={12} />
+                      <MinusIcon size={12} strokeWidth={2.5} />
                     </button>
-                    <span className="w-7 text-center text-xs font-bold tabular-nums">
-                      {item.quantity}
-                    </span>
+                    <span>{item.quantity}</span>
                     <button
                       type="button"
                       onClick={() => setQuantity(key, item.quantity + 1)}
                       disabled={item.quantity >= max}
                       aria-label="+"
-                      className="btn btn-ghost h-7 w-7 min-h-0 rounded-none rounded-r-control p-0"
                     >
-                      <PlusIcon size={12} />
+                      <PlusIcon size={12} strokeWidth={2.5} />
                     </button>
                   </span>
 

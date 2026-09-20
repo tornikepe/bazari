@@ -51,7 +51,10 @@ export function Rail({
 
   return (
     <div className={`rail ${className}`}>
-      <div ref={track} className="rail-track" data-lenis-prevent>
+      {/* No `data-lenis-prevent` here: the rail scrolls sideways only, and
+          a vertical wheel over it must still move the page — with the
+          attribute the page stood still whenever the pointer crossed it. */}
+      <div ref={track} className="rail-track">
         {children}
       </div>
       <div className="rail-arrows">

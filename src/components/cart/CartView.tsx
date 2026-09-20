@@ -211,15 +211,10 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
             );
           })}
 
-          {/* Wraps rather than overflowing — both labels are long in Georgian. */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <Link href="/catalog" className="btn btn-ghost btn-sm">
+          <div className="flex items-center justify-between gap-2 p-3 sm:p-4">
+            <Link href="/catalog" className="btn btn-outline btn-sm">
               {t.cart.continueShopping}
             </Link>
-            <button type="button" onClick={clear} className="btn btn-ghost btn-sm hover:text-danger">
-              <TrashIcon size={15} />
-              {t.cart.clear}
-            </button>
           </div>
         </div>
 
@@ -277,6 +272,17 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
               {t.auth.signInToOrder}
             </p>
           )}
+
+          {/* Emptying the cart, at the foot of the summary as a quiet line:
+              it undoes everything above and should not look like a step. */}
+          <button
+            type="button"
+            onClick={clear}
+            className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-line pt-3 text-xs text-ink-400 transition-colors hover:text-danger"
+          >
+            <TrashIcon size={13} />
+            {t.cart.clear}
+          </button>
         </aside>
       </div>
     </div>

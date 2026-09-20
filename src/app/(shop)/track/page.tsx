@@ -40,8 +40,8 @@ function TrackOrderForm() {
   useFieldShake(result, Boolean(errorKey), ["orderNumber", "phone"]);
 
   return (
-    <div className="page">
-      <div className="mx-auto max-w-lg">
+    <div className="page flex min-h-[calc(100svh-var(--header-h))] flex-col justify-center">
+      <div className="mx-auto w-full max-w-lg">
         {/* The chip with a parcel in it used to sit above a centred title.
             It was the only page that introduced itself that way, and the icon
             said nothing the word "track" did not. */}
