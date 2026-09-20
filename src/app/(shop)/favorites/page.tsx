@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { ProductCard } from "@/components/product/ProductCard";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { ProductGridSkeleton, PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { HeartIcon, TrashIcon } from "@/components/ui/icons";
 import { clearFavorites } from "@/lib/favorites-store";
@@ -74,21 +75,25 @@ export default function FavoritesPage() {
                 : `${countText(t.favorites.countOne, t.favorites.count, products.length)} · ${t.favorites.worth} ${formatPrice(worth, locale)}`
           }
           aside={
-            !isLoading && products.length > 0 ? (
+            /* The catalogue is always a step away; emptying the list only
+               when there is one. The same two as the cart's banner. */
+            isLoading ? undefined : (
               <>
                 <Link href="/catalog" className="btn btn-outline btn-sm">
                   {t.catalog.title}
                 </Link>
-                <button
-                  type="button"
-                  onClick={clearFavorites}
-                  className="btn btn-ghost btn-sm hover:text-danger"
-                >
-                  <TrashIcon size={15} />
-                  {t.favorites.clear}
-                </button>
+                {products.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearFavorites}
+                    className="btn btn-ghost btn-sm hover:text-danger"
+                  >
+                    <TrashIcon size={15} />
+                    {t.favorites.clear}
+                  </button>
+                )}
               </>
-            ) : undefined
+            )
           }
         />
       </div>
@@ -97,17 +102,22 @@ export default function FavoritesPage() {
         {isLoading ? (
           <ProductGridSkeleton count={4} />
         ) : products.length === 0 ? (
-          <EmptyState
-            className="card mx-auto max-w-md"
-            art={<EmptyHeartArt size={96} />}
-            title={t.favorites.empty}
-            text={t.favorites.emptyHint}
-            action={
-              <Link href="/catalog" className="btn btn-primary btn-md">
-                {t.cart.continueShopping}
-              </Link>
-            }
-          />
+          <>
+            {/* The cart's empty page, with a heart: the card in the middle,
+                and what was looked at under it. */}
+            <EmptyState
+              className="card mx-auto max-w-md"
+              art={<EmptyHeartArt size={96} />}
+              title={t.favorites.empty}
+              text={t.favorites.emptyHint}
+              action={
+                <Link href="/catalog" className="btn btn-primary btn-md">
+                  {t.cart.continueShopping}
+                </Link>
+              }
+            />
+            <RecentlyViewed take={4} />
+          </>
         ) : (
           <div className={PRODUCT_GRID_WIDE}>
             {products.map((product) => (

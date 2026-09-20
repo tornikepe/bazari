@@ -58,8 +58,10 @@ export function ActiveFilterChips({
   }
 
   if (filters.minPrice !== null || filters.maxPrice !== null) {
-    const from = filters.minPrice !== null ? formatPrice(filters.minPrice, locale) : "…";
-    const to = filters.maxPrice !== null ? formatPrice(filters.maxPrice, locale) : "…";
+    /* The filters hold lari, `formatPrice` takes tetri: a chip for
+       "22–100 ₾" read "0,22 ₾ – 1,00 ₾" until the two were reconciled. */
+    const from = filters.minPrice !== null ? formatPrice(filters.minPrice * 100, locale) : "…";
+    const to = filters.maxPrice !== null ? formatPrice(filters.maxPrice * 100, locale) : "…";
     chips.push({
       key: "price",
       label: `${from} – ${to}`,
@@ -83,26 +85,24 @@ export function ActiveFilterChips({
     });
   }
 
+  /* A row of black pills, each with a cross that turns red under the
+     pointer, and "clear" as an outlined pill at the end — the same
+     family as the buttons, a size down. */
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
-      <span className="text-xs font-semibold text-ink-500">{t.catalog.activeFilters}:</span>
+    <div className="mb-5 flex flex-wrap items-center gap-2">
+      <span className="eyebrow mr-1">{t.catalog.activeFilters}</span>
 
       {chips.map((chip) => (
-        <button
-          key={chip.key}
-          type="button"
-          onClick={chip.onRemove}
-          className="badge group border border-line bg-surface text-ink-700 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-        >
+        <button key={chip.key} type="button" onClick={chip.onRemove} className="filter-chip">
           <span className="max-w-[14rem] truncate">{chip.label}</span>
-          <CloseIcon size={12} className="text-ink-400 group-hover:text-brand-600" />
+          <CloseIcon size={13} strokeWidth={2.5} />
         </button>
       ))}
 
       <button
         type="button"
         onClick={() => remove({ ...filters, q: "", category: "", brands: [], minPrice: null, maxPrice: null, inStock: false, onSale: false })}
-        className="text-xs font-semibold text-brand-600 underline-offset-2 hover:underline"
+        className="btn btn-outline btn-sm"
       >
         {t.catalog.clear}
       </button>

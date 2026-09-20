@@ -222,24 +222,11 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
             />
           </div>
 
-          {/* In the drawer the price goes with everything else, from the
-              button at the foot; the rail applies it here. */}
-          {!deferred && (
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <button type="submit" className="btn btn-outline btn-sm">
-                {t.catalog.apply}
-              </button>
-              {priceActive && (
-                <button
-                  type="button"
-                  onClick={() => apply({ minPrice: null, maxPrice: null })}
-                  className="btn btn-ghost btn-sm"
-                >
-                  {t.catalog.priceReset}
-                </button>
-              )}
-            </div>
-          )}
+          {/* Enter in a box applies the price; the button for it is the
+              one at the foot of the rail. */}
+          <button type="submit" className="sr-only">
+            {t.catalog.apply}
+          </button>
         </form>
       </FilterGroup>
 
@@ -318,42 +305,43 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
         </div>
       </FilterGroup>
 
-      {deferred ? (
-        /* The foot of the drawer: apply, and clear beside it. Sticks to
-           the bottom of the sheet while the groups above scroll. */
-        <div className="filter-foot">
-          <button
-            type="button"
-            onClick={() => setDraft({ ...EMPTY_FILTERS, q: live.q })}
-            className="btn btn-ghost btn-md"
-          >
-            <CloseIcon size={15} />
-            {t.catalog.clear}
-          </button>
-          <button type="button" onClick={commit} disabled={isPending} className="btn btn-primary btn-md flex-1">
-            {isPending ? <SpinnerIcon size={15} /> : null}
-            {t.catalog.apply}
-          </button>
-        </div>
-      ) : (
+      {/* The foot, on both: apply and reset. In the drawer apply sends the
+          draft; in the rail, where everything else applies as it is
+          touched, it sends the price boxes. Sticks to the bottom of the
+          sheet while the groups above scroll. */}
+      <div className="filter-foot">
         <button
           type="button"
-          onClick={() =>
+          onClick={() => {
+            if (deferred) {
+              setDraft({ ...EMPTY_FILTERS, q: live.q });
+              setMinPrice("");
+              setMaxPrice("");
+              return;
+            }
             startTransition(() => {
               // `q` survives a filter reset — clearing facets shouldn't throw
               // away what the shopper searched for.
-              router.push(`/catalog${filters.q ? `?q=${encodeURIComponent(filters.q)}` : ""}`, {
+              router.push(`/catalog${live.q ? `?q=${encodeURIComponent(live.q)}` : ""}`, {
                 scroll: false,
               });
               onApplied?.();
-            })
-          }
-          className="btn btn-ghost btn-sm mt-3 w-full"
+            });
+          }}
+          className="btn btn-outline btn-md"
         >
-          {isPending ? <SpinnerIcon size={15} /> : <CloseIcon size={15} />}
-          {t.catalog.clear}
+          {t.catalog.priceReset}
         </button>
-      )}
+        <button
+          type="button"
+          onClick={() => (deferred ? commit() : submitPrice())}
+          disabled={isPending}
+          className="btn btn-primary btn-md flex-1"
+        >
+          {isPending ? <SpinnerIcon size={15} /> : null}
+          {t.catalog.apply}
+        </button>
+      </div>
     </div>
   );
 }
@@ -386,7 +374,7 @@ function FilterGroup({
         aria-controls={id}
         className="flex min-h-9 w-full items-center gap-2 text-left"
       >
-        <span className="text-xs font-bold tracking-wide text-ink-900">{title}</span>
+        <span className="text-sm font-bold text-ink-900">{title}</span>
         {badge && (
           <span className="badge max-w-[10rem] truncate bg-brand-50 text-[11px] text-brand-700">
             {badge}
@@ -457,36 +445,24 @@ function RadioRow({
   onSelect: () => void;
 }) {
   return (
+    /* A row: the icon, the name, and the count at the far right as a plain
+       figure. The chosen one is black with paper type, the way the site's
+       primary button is — one row lit, the rest quiet. */
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={checked}
-      className={`flex w-full items-center gap-2.5 rounded-control px-2 py-1.5 text-left text-xs transition-colors ${
-        checked ? "bg-brand-50 font-semibold text-brand-700" : "text-ink-600 hover:bg-ink-50"
-      }`}
+      className={`filter-row ${checked ? "is-on" : ""}`}
     >
       {icon && (
-        <span
-          className={`grid h-7 w-7 shrink-0 place-items-center rounded-control text-sm ${
-            checked ? "bg-surface" : "bg-ink-50"
-          }`}
-          aria-hidden="true"
-        >
+        <span className="filter-row-icon" aria-hidden="true">
           {icon}
         </span>
       )}
       {/* Wraps rather than truncates: "ტელეფონები და აქსესუარები" cut to
           "ტელეფონები და აქსესუ…" is a category nobody can read. */}
       <span className="min-w-0 flex-1 leading-snug">{label}</span>
-      {typeof count === "number" && (
-        <span
-          className={`shrink-0 rounded-pill px-1.5 py-0.5 text-[11px] tabular-nums ${
-            checked ? "bg-surface text-brand-700" : "bg-ink-100 text-ink-500"
-          }`}
-        >
-          {count}
-        </span>
-      )}
+      {typeof count === "number" && <span className="filter-row-count">{count}</span>}
     </button>
   );
 }
@@ -501,19 +477,17 @@ function CheckboxRow({
   onToggle: () => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2.5 rounded-control px-2 py-1.5 transition-colors hover:bg-ink-50">
+    <label className={`filter-row cursor-pointer ${checked ? "is-on" : ""}`}>
       <input type="checkbox" checked={checked} onChange={onToggle} className="sr-only" />
       <span
         aria-hidden="true"
         className={`grid h-4 w-4 shrink-0 place-items-center rounded-[4px] border transition-colors ${
-          checked ? "border-brand-solid bg-brand-solid text-brand-on-solid" : "border-ink-300 bg-surface"
+          checked ? "border-surface bg-surface text-ink-900" : "border-ink-300 bg-surface"
         }`}
       >
         {checked && <CheckIcon size={11} strokeWidth={3.5} />}
       </span>
-      <span className={`flex-1 truncate text-xs ${checked ? "font-semibold text-ink-900" : "text-ink-600"}`}>
-        {label}
-      </span>
+      <span className="flex-1 truncate">{label}</span>
     </label>
   );
 }
@@ -529,8 +503,8 @@ function SwitchRow({
   onToggle: () => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-control px-2 py-1.5 transition-colors hover:bg-ink-50">
-      <span className={`text-xs ${checked ? "font-semibold text-ink-900" : "text-ink-600"}`}>{label}</span>
+    <label className="filter-row cursor-pointer justify-between">
+      <span className={checked ? "font-semibold text-ink-900" : ""}>{label}</span>
       <input type="checkbox" role="switch" checked={checked} onChange={onToggle} className="sr-only" />
       <span
         aria-hidden="true"

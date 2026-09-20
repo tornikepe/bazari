@@ -38,6 +38,18 @@ export function Motion() {
     };
     frame = requestAnimationFrame(raf);
 
+    /* A new page starts at its top. The router scrolls there itself, but
+       the previous page's inertia was still running through the change —
+       a wheel flick followed by "buy now" carried the checkout 200px down
+       before this instance had even been made — so the arrival is said
+       again here, at once. Not on back and forward, where the browser is
+       restoring where the reader was. */
+    const arrived = sessionStorage.getItem("bz-nav") !== "pop";
+    sessionStorage.removeItem("bz-nav");
+    if (arrived && !location.hash) lenis.scrollTo(0, { immediate: true, force: true });
+    const pop = () => sessionStorage.setItem("bz-nav", "pop");
+    window.addEventListener("popstate", pop);
+
     let move: ((event: PointerEvent) => void) | null = null;
     let leave: (() => void) | null = null;
     if (fine) {
@@ -55,8 +67,12 @@ export function Motion() {
     }
 
     return () => {
+      /* Stopped before the next page renders, so nothing from this one is
+         still writing the scroll position while the router moves it. */
       cancelAnimationFrame(frame);
+      lenis.stop();
       lenis.destroy();
+      window.removeEventListener("popstate", pop);
       if (move) window.removeEventListener("pointermove", move);
       if (leave) document.removeEventListener("mouseleave", leave);
       delete root.dataset.cursor;

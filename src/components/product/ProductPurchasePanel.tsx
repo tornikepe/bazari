@@ -7,7 +7,6 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
 import { lineKey } from "@/lib/cart-store";
-import { fill } from "@/lib/i18n";
 import { MinusIcon, PlusIcon } from "@/components/ui/icons";
 
 /**
@@ -119,13 +118,6 @@ export function ProductPurchasePanel({
           {/* The product's own heart, at the end of the quantity row rather
               than as a third button: beside two wide buttons it squeezed
               the first until its label broke across two lines. */}
-          {/* How many there are to have, so "+" stopping is explained. */}
-          {!soldOut && (
-            <span className="min-w-0 text-xs text-ink-400 tabular-nums">
-              {fill(t.product.inStockCount, { count: product.stock })}
-            </span>
-          )}
-
           <FavoriteButton productId={product.productId} size="control" />
           </div>
         </div>
