@@ -540,6 +540,14 @@ model User {
   /// since an account has one and it is read with the account.
   avatar         Bytes?
   avatarType     String              @default("")
+  /// The rest of the profile as the account page asks for it: sex, date of
+  /// birth, the personal number an invoice can carry, and whether the
+  /// customer wants news by text and by mail. All optional; all theirs.
+  gender         String              @default("")
+  birthDate      DateTime?
+  personalId     String              @default("")
+  smsOptIn       Boolean             @default(false)
+  emailOptIn     Boolean             @default(false)
   /// What the customer chose on their payment page: the method the checkout
   /// preselects, an account to refund cash and transfer orders to, and the
   /// company line an invoice should carry. All optional; all theirs.

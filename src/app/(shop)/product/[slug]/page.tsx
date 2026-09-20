@@ -29,7 +29,7 @@ import { parsePhotos } from "@/lib/product-photos";
 import { Stars } from "@/components/product/Stars";
 import { ReviewForm } from "@/components/product/ReviewForm";
 import { ReviewPhotos } from "@/components/product/ReviewPhotos";
-import { initialsOf } from "@/components/account/AccountIdentity";
+import { initialsOf } from "@/components/account/initials";
 import { getCurrentUser } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { averageRating, mayReview } from "@/lib/review-rules";

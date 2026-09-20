@@ -83,9 +83,10 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
   }
 
   return (
-    <section className="card card-pad">
-      <h2 className="text-sm font-bold text-ink-900">{t.account.addresses}</h2>
-      <p className="mt-1 text-xs text-ink-400">{t.account.addressesHint}</p>
+    /* No card and no title of its own: it sits in the account card, whose
+       head already names the page. */
+    <section>
+      <p className="text-sm text-ink-500">{t.account.addressesHint}</p>
 
       {failed && (
         <ErrorNote

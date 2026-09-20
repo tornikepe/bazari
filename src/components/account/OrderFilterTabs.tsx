@@ -31,7 +31,7 @@ export function OrderFilterTabs({
   const choose = (value: OrderStatus | null) => {
     if (value === current) return;
     startTransition(() => {
-      router.push(value ? `/account?status=${value}` : "/account", { scroll: false });
+      router.push(value ? `/account/orders?status=${value}` : "/account/orders", { scroll: false });
     });
   };
 

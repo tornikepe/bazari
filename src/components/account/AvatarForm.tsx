@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { removeAvatar, updateAvatar } from "@/app/actions/account";
-import { initialsOf } from "@/components/account/AccountIdentity";
+import { initialsOf } from "@/components/account/initials";
 import { Busy, Swap } from "@/components/ui/Swap";
 import { CameraIcon, CheckIcon, TrashIcon } from "@/components/ui/icons";
 import { MAX_BYTES } from "@/lib/image-upload";
@@ -83,7 +83,7 @@ export function AvatarForm({
   }
 
   return (
-    <section className="card card-pad">
+    <section className="border-t border-line pt-6">
       {/* One row: the picture, what the card is for, and the buttons at the
           far end. The picture is the subject, so it comes first and the
           heading stands beside it rather than above a card that is mostly

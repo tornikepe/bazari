@@ -5,7 +5,7 @@ import { getI18n } from "@/lib/locale";
 import { getSettings } from "@/lib/settings";
 import { cardGateway } from "@/lib/payments";
 import { enabledGateways } from "@/lib/payments/gateways";
-import { AccountShell } from "@/components/account/AccountShell";
+import { AccountShell, AccountCardHead } from "@/components/account/AccountShell";
 import { PaymentPrefsForm } from "@/components/account/PaymentPrefsForm";
 import type { PaymentMethod } from "@/lib/payment";
 
@@ -45,7 +45,8 @@ export default async function AccountPaymentsPage() {
 
   return (
     <AccountShell user={user} t={t}>
-      <div className="mt-4">
+      <AccountCardHead title={t.account.menuPayments} />
+      <div className="account-card-body">
         <PaymentPrefsForm
           methods={methods}
           prefs={{

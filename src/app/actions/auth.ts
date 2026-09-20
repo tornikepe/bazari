@@ -311,12 +311,21 @@ export async function updateProfile(
   const user = await getCurrentUser();
   if (!user) return { error: "invalid" };
 
-  const name = String(formData.get("name") ?? "").trim();
+  /* One name in the row, asked for as two on the page: joined here with a
+     space, split again on the first space when shown. */
+  const first = String(formData.get("firstName") ?? formData.get("name") ?? "").trim();
+  const last = String(formData.get("lastName") ?? "").trim();
+  const name = [first, last].filter(Boolean).join(" ");
   if (!name) return { error: "invalid" };
   // The one shape every number is kept in; an emptied field stays empty.
   const rawPhone = String(formData.get("phone") ?? "").trim();
   const phone = rawPhone ? normalizePhone(rawPhone) : "";
   if (phone === null) return { error: "phone" };
+
+  const gender = String(formData.get("gender") ?? "");
+  const birthRaw = String(formData.get("birthDate") ?? "").trim();
+  const birthDate = birthRaw ? new Date(`${birthRaw}T00:00:00Z`) : null;
+  if (birthDate && Number.isNaN(birthDate.getTime())) return { error: "invalid" };
 
   try {
     await prisma.user.update({
@@ -326,6 +335,11 @@ export async function updateProfile(
         phone,
         city: String(formData.get("city") ?? "").trim(),
         address: String(formData.get("address") ?? "").trim(),
+        gender: gender === "female" || gender === "male" ? gender : "",
+        birthDate,
+        personalId: String(formData.get("personalId") ?? "").trim().slice(0, 20),
+        smsOptIn: formData.get("smsOptIn") === "on",
+        emailOptIn: formData.get("emailOptIn") === "on",
       },
     });
   } catch (error) {
@@ -333,7 +347,7 @@ export async function updateProfile(
     return { error: "failed" };
   }
 
-  redirect("/account/settings?saved=1");
+  redirect("/account?saved=1");
 }
 
 /**

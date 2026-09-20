@@ -17,7 +17,7 @@ import { SalesTable } from "@/components/admin/SalesTable";
 import { countText, fill } from "@/lib/i18n";
 import type { RawSearchParams } from "@/lib/filters";
 import { getCurrentUser } from "@/lib/auth";
-import { initialsOf } from "@/components/account/AccountIdentity";
+import { initialsOf } from "@/components/account/initials";
 import { CountUp } from "@/components/ui/CountUp";
 import { Delta } from "@/components/ui/Delta";
 import {

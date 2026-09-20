@@ -1,47 +1,39 @@
-import { AccountIdentity } from "@/components/account/AccountIdentity";
-import { AccountNav } from "@/components/account/AccountNav";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import type { SessionUser } from "@/lib/auth";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
- * What every account page opens with: who this is, the three tabs along
- * the foot of that card, and the note if their address is unconfirmed.
- * The page's own content follows.
- *
- * Held to `max-w-4xl` and centred, on every one of the three pages. Left to
- * the full container the settings sat in the left half of a wide screen
- * with the right half empty, while the payment page centred its form under
- * a header that did not — three pages, three widths.
+ * What every account page is: the menu at the left, the page's own card
+ * at the right — the way the reference shop lays its account out. The
+ * menu is a column of rows on a desktop and a strip that scrolls
+ * sideways on a phone; the card is the page's business, opened with
+ * `AccountCardHead`.
  */
 export function AccountShell({
   user,
   t,
-  aside,
   children,
 }: {
   user: SessionUser;
   t: Dictionary;
-  /** Chips beside the name on the identity card. */
-  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="page">
-      {/* `stagger`: the card, the tabs and each block of the page rise into
-          place one after another rather than landing as one. */}
-      <div className="stagger mx-auto w-full max-w-4xl">
-        <AccountIdentity
-          name={user.name}
-          email={user.email}
-          verified={user.emailVerified}
-          avatarUrl={user.avatarUrl}
-          t={t}
-          aside={aside}
-        >
-          <AccountNav />
-        </AccountIdentity>
-        {children}
+      <div className="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
+        <AccountMenu user={user} signOutLabel={t.auth.signOut} />
+        <section className="account-card">{children}</section>
       </div>
+    </div>
+  );
+}
+
+/** The card's head: the title at the left, a control at the right, a rule under. */
+export function AccountCardHead({ title, action }: { title: string; action?: React.ReactNode }) {
+  return (
+    <div className="account-card-head">
+      <h1 className="text-lg font-semibold text-ink-900 sm:text-2xl">{title}</h1>
+      {action}
     </div>
   );
 }
