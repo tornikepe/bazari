@@ -98,7 +98,7 @@ export function ProductPurchasePanel({
           {choice}
           <div>
             <span className="field-label">{t.product.quantity}</span>
-            <div className="stepper w-full">
+            <div className="stepper pick-shell w-full">
               <button
                 type="button"
                 onClick={() => setQuantity(quantity - 1)}

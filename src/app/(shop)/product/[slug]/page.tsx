@@ -14,7 +14,7 @@ import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { BagCheckIcon, CheckIcon, CloseIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
+import { BagCheckIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -331,12 +331,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           beside it, the model code, the price, the size and the quantity,
           the wide dark button with the heart, and the rest folded under
           two rows. */}
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:gap-12">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-10">
         {/* ------------------------------ gallery ---------------------------- */}
         <ProductGallery photos={gallery} name={name} badge={saleBadge} />
 
         {/* ------------------------------- info ------------------------------ */}
-        <div className="min-w-0 lg:pt-1">
+        {/* Spans both rows at the right, so the reviews under the photo at
+            the left never move when a row here is folded or unfolded. */}
+        <div className="min-w-0 lg:row-span-2 lg:pt-1">
           {/* The name at the left, the brand's mark at the right — the mark
               is the way to everything the brand sells. */}
           <div className="flex items-start justify-between gap-4">
@@ -357,34 +359,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {t.product.modelCode}: <span className="font-mono text-ink-700">{product.sku}</span>
           </p>
 
-          <div className="mt-4 flex flex-wrap items-end gap-x-3 gap-y-2">
+          {/* One line: the price, what the reduction is worth beside it, and
+              at the end whether it is there — a dot and two words rather
+              than a badge, since the badge is the saving's. */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
             <Price value={product.price} oldValue={product.oldPrice} size="xl" />
             {discount > 0 && product.oldPrice && (
-              <span className="badge mb-1 bg-success-soft text-success">
+              <span className="badge bg-success-soft text-success">
                 {fill(t.product.youSave, {
                   amount: formatPrice(product.oldPrice - product.price, locale),
                 })}
               </span>
             )}
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {soldOut ? (
-              <span className="badge bg-danger-soft text-danger">
-                <CloseIcon size={13} />
-                {t.product.outOfStock}
-              </span>
-            ) : (
-              <span className="badge bg-success-soft text-success">
-                <CheckIcon size={13} />
-                {t.product.inStock}
-              </span>
-            )}
-            {!soldOut && product.stock <= LOW_STOCK_THRESHOLD && (
-              <span className="badge bg-warning-soft text-warning">
-                {fill(t.product.lowStock, { count: product.stock })}
-              </span>
-            )}
+            <span
+              className={`stock-mark ${soldOut ? "is-out" : product.stock <= LOW_STOCK_THRESHOLD ? "is-low" : ""}`}
+            >
+              {soldOut
+                ? t.product.outOfStock
+                : product.stock <= LOW_STOCK_THRESHOLD
+                  ? fill(t.product.lowStock, { count: product.stock })
+                  : t.product.inStock}
+            </span>
           </div>
 
           {/* Nothing here until somebody real has written something. */}
@@ -460,20 +455,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </details>
           </div>
         </div>
-      </div>
-
       {/* ------------------------------ reviews ------------------------------ */}
-      {/* Above the recommendations, because it is about *this* product and
-          they are about others. Drawn even when empty — the empty state is
+      {/* Under the photo, in the left column, where the folding rows at the
+          right cannot move it. Drawn even when empty — the empty state is
           where the rule is stated, and the rule is the point. */}
-      <section id="reviews" className="reveal mt-12 scroll-mt-[calc(var(--header-h)+1rem)]">
+      <section id="reviews" className="min-w-0 scroll-mt-[calc(var(--header-h)+1rem)] lg:col-start-1 lg:row-start-2">
         <SectionHeading title={t.product.reviews} />
 
         {/* The figures first: the average, large, with the count under it;
             how the stars fall, as five bars; and the way to add one, when
             this reader may. One card, three cells, centred on a phone. */}
-        <div className="card grid gap-6 card-pad sm:grid-cols-[auto_1fr] lg:grid-cols-[auto_1fr_auto] lg:items-center">
-          <div className="text-center sm:pr-6 sm:text-left lg:border-r lg:border-line">
+        <div className="card grid gap-6 card-pad sm:grid-cols-[auto_1fr] sm:items-center">
+          <div className="text-center sm:pr-6 sm:text-left sm:border-r sm:border-line">
             <p className="text-4xl font-extrabold tracking-tight text-ink-900 tabular-nums">
               {product.ratingCount > 0 ? averageRating(product.ratingSum, product.ratingCount).toFixed(1) : "–"}
             </p>
@@ -509,7 +502,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             ))}
           </ol>
 
-          <div className="flex flex-col items-center gap-2 text-center lg:items-end lg:text-right">
+          <div className="flex flex-col items-center gap-2 text-center sm:col-span-2 sm:items-start sm:text-left">
             {reviewAllowed.ok ? (
               <>
                 {ownReview && !ownReview.isPublished && (
@@ -541,7 +534,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
 
         {reviews.length > 0 && (
-          <ol className="mt-4 grid gap-4 lg:grid-cols-2">
+          <ol className="mt-4 grid gap-4">
             {reviews.map((review) => (
               <li key={review.id} className="card card-pad-tight">
                 <div className="flex items-center gap-3">
@@ -603,6 +596,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </ol>
         )}
       </section>
+
+      </div>
 
       {/* -------------------------- bought together -------------------------- */}
       {/* Above "related", because it is the stronger claim: this row is

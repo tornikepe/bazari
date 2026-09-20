@@ -511,6 +511,8 @@ const ka = {
     countOne: "{count} პროდუქტი",
     worth: "ჯამური ღირებულება",
     clear: "სიის გასუფთავება",
+    summary: "სიის შეჯამება",
+    chooseOnPage: "აირჩიე ზომა",
   },
 
   track: {
@@ -1815,6 +1817,8 @@ const en: Dictionary = {
     count: "{count} products",
     countOne: "{count} product",
     worth: "Worth in all",
+    summary: "List summary",
+    chooseOnPage: "Choose a size",
     clear: "Clear wishlist",
   },
 

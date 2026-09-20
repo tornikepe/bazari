@@ -102,13 +102,13 @@ export async function Footer() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-6 sm:gap-x-8 lg:justify-items-center">
+        <div className="grid grid-cols-2 gap-6 text-center sm:gap-x-8">
           {groups.map((group) => (
             <nav key={group.id} aria-labelledby={group.id}>
               <h2 id={group.id} className="label mb-2 text-ink-400">
                 {group.title}
               </h2>
-              <ul className="flex flex-col">
+              <ul className="flex flex-col items-center">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <FooterLink href={link.href}>{link.label}</FooterLink>

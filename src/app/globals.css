@@ -2668,13 +2668,14 @@ html[data-reveal="all"] .reveal-view {
   padding-bottom: 0.75rem;
 }
 
-/* Dark: the picture's hairline a step lighter, or the photographs on
-   white sit on the page with no edge at all — and a ring of the paper
-   colour inside it, so a white photograph reads as a card with an edge
-   rather than a white square dropped on black. */
-[data-theme="dark"] .product-card .card-media {
+/* Dark: the card's edge a step lighter, or the photographs on white sit
+   on the page with no edge at all. */
+[data-theme="dark"] .product-card {
   border-color: var(--color-ink-300);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+[data-theme="dark"] .product-card:hover {
+  border-color: var(--color-ink-600);
 }
 
 /* ------------------------------------------------------------------ */
@@ -4093,19 +4094,27 @@ html[data-cursor] .cursor-dot[data-over="link"] {
    paper with the name and the price set under it in two lines, the way
    a lookbook does it. Under the pointer the picture eases in a little
    and the actions rise over its foot. */
+/* One box around the whole card — the picture and, under it, the name
+   and the price — so each product is a thing with an edge, on the paper
+   and in the dark. The picture's own edge is the box's top; the body sits
+   inside with a little padding. */
 .product-card {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-ink-200);
+  border-radius: var(--radius-card);
   box-shadow: none;
-  overflow: visible;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
 }
 
-/* A hairline around the picture: the photographs are on white and the
-   paper is nearly white, and without the line a card had no edge. */
+.product-card:hover {
+  border-color: var(--color-ink-900);
+}
+
 .product-card .card-media {
-  border-radius: var(--radius-card);
-  border: 1px solid var(--color-ink-200);
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-line);
   background: var(--color-ink-50);
   aspect-ratio: 4 / 5;
   overflow: hidden;
@@ -4122,7 +4131,7 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 }
 
 .product-card .card-body {
-  padding: 0.875rem 0.125rem 0;
+  padding: 0.75rem 0.875rem 0.875rem;
 }
 
 .product-card .card-name {
@@ -4160,7 +4169,7 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 }
 
 .product-card .card-sheet {
-  border-radius: var(--radius-card);
+  border-radius: 0;
   inset-inline: 0;
   bottom: 0;
 }
@@ -4331,6 +4340,82 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   background: var(--color-ink-900);
   border-color: var(--color-ink-900);
   color: var(--color-canvas);
+}
+
+/* The select and the stepper in one shell: 3.25rem tall, the site's
+   corner, an ink edge that goes black under the pointer, and for the
+   select the chevron drawn by the page rather than the platform. */
+.pick {
+  position: relative;
+  display: block;
+}
+
+.pick > select {
+  width: 100%;
+  height: 3.25rem;
+  padding: 0 2.75rem 0 1rem;
+  border: 1px solid var(--color-ink-300);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink-900);
+  font-size: var(--text-base);
+  font-weight: 600;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.pick > select:hover,
+.pick-shell:hover {
+  border-color: var(--color-ink-900);
+}
+
+.pick > select:focus-visible {
+  outline: none;
+  border-color: var(--color-ink-900);
+  box-shadow: 0 0 0 3px var(--color-ink-100);
+}
+
+.pick-chevron {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-ink-500);
+}
+
+.pick-shell {
+  transition: border-color 0.15s ease;
+}
+
+/* Whether it is there, at the end of the price line: a dot and two
+   words, green, amber for the last few, red for none. */
+.stock-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.stock-mark::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 18%, transparent);
+}
+
+.stock-mark.is-low {
+  color: var(--color-warning);
+}
+
+.stock-mark.is-out {
+  color: var(--color-danger);
 }
 
 /* The folded rows under the buy panel: a title with a plus at the end,

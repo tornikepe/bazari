@@ -131,7 +131,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
               >
                 <Link
                   href={`/product/${item.slug}`}
-                  className="relative h-24 w-24 shrink-0 overflow-hidden bg-ink-50 sm:h-28 sm:w-28"
+                  className="relative h-24 w-24 shrink-0 overflow-hidden rounded-control border border-line bg-ink-50 sm:h-28 sm:w-28"
                 >
                   <Image src={item.image} alt={name} fill sizes="112px" className="object-cover" />
                 </Link>

@@ -6,7 +6,7 @@ import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel"
 import type { CartItem } from "@/components/providers/CartProvider";
 import { isComplete, labelFor, priceOf, variantFor, type Option, type Variant } from "@/lib/variants";
 import { Price } from "@/components/ui/Price";
-import { CheckIcon, CloseIcon } from "@/components/ui/icons";
+import { ChevronDownIcon, CloseIcon } from "@/components/ui/icons";
 import { fill } from "@/lib/i18n";
 
 /**
@@ -38,7 +38,18 @@ export function VariantPicker({
   variants: Variant[];
 }) {
   const { t } = useI18n();
-  const [chosen, setChosen] = useState<Record<string, string | undefined>>({});
+  /* A size from the start — the first that can be bought — the way the
+     reference shop opens on "S". A blank "choose a size" was one more
+     press before every purchase, and a thing a shopper could pick. */
+  const [chosen, setChosen] = useState<Record<string, string | undefined>>(() => {
+    const first: Record<string, string | undefined> = {};
+    for (const option of options) {
+      first[option.id] = option.values.find((value) =>
+        variants.some((candidate) => candidate.isActive && candidate.stock > 0 && candidate.valueIds.includes(value.id)),
+      )?.id ?? option.values[0]?.id;
+    }
+    return first;
+  });
 
   /* "Choose a size", naming the thing still to be chosen, rather than
      "choose a variant" — nobody buying shoes thinks of a size as a variant. */
@@ -75,22 +86,26 @@ export function VariantPicker({
       <label className="field-label" htmlFor={`option-${option.id}`}>
         {option.name}
       </label>
-      <select
-        id={`option-${option.id}`}
-        value={chosen[option.id] ?? ""}
-        onChange={(event) =>
-          setChosen((current) => ({ ...current, [option.id]: event.target.value || undefined }))
-        }
-        className="field h-[3.25rem] text-base font-semibold"
-      >
-        <option value="">{fill(t.product.chooseOption, { name: option.name.toLowerCase() })}</option>
-        {option.values.map((value) => (
-          <option key={value.id} value={value.id} disabled={!reachable(option.id, value.id)}>
-            {value.label}
-            {reachable(option.id, value.id) ? "" : ` — ${t.product.outOfStock}`}
-          </option>
-        ))}
-      </select>
+      {/* The native select inside a shell of the site's own — the box, the
+          chevron — since a bare select draws itself in the platform's
+          style and matched nothing on the page. */}
+      <span className="pick">
+        <select
+          id={`option-${option.id}`}
+          value={chosen[option.id] ?? ""}
+          onChange={(event) =>
+            setChosen((current) => ({ ...current, [option.id]: event.target.value || undefined }))
+          }
+        >
+          {option.values.map((value) => (
+            <option key={value.id} value={value.id} disabled={!reachable(option.id, value.id)}>
+              {value.label}
+              {reachable(option.id, value.id) ? "" : ` — ${t.product.outOfStock}`}
+            </option>
+          ))}
+        </select>
+        <ChevronDownIcon size={18} className="pick-chevron" aria-hidden="true" />
+      </span>
     </div>
   ));
 
@@ -122,14 +137,12 @@ export function VariantPicker({
         }}
       />
 
-      {/* What the choice adds up to, said once. */}
-      {complete && (
-        <p
-          role="status"
-          className={`flex items-center gap-1.5 text-sm font-semibold ${stock > 0 ? "text-success" : "text-danger"}`}
-        >
-          {stock > 0 ? <CheckIcon size={14} /> : <CloseIcon size={14} />}
-          {stock > 0 ? fill(t.product.variantPicked, { label: labelFor(options, variant!) }) : t.product.variantGone}
+      {/* Only when the pair chosen cannot be bought: the select already
+          says what was chosen. */}
+      {complete && stock <= 0 && (
+        <p role="status" className="flex items-center gap-1.5 text-sm font-semibold text-danger">
+          <CloseIcon size={14} />
+          {t.product.variantGone}
         </p>
       )}
     </div>
