@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/icons";
 import { CountUp } from "@/components/ui/CountUp";
 import { AccountShell } from "@/components/account/AccountShell";
+import { OrderFilterTabs } from "@/components/account/OrderFilterTabs";
+import Image from "next/image";
 import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyOrdersArt } from "@/components/ui/illustrations";
@@ -49,7 +51,12 @@ export default async function AccountPage({
     prisma.order.findMany({
       where: { userId: user.id, ...(status ? { status } : {}) },
       orderBy: { createdAt: "desc" },
-      include: { _count: { select: { items: true } } },
+      include: {
+        _count: { select: { items: true } },
+        // The first three pictures, for the row to be recognised by —
+        // an order number is a fact, a shoe is a memory.
+        items: { take: 3, select: { id: true, image: true } },
+      },
       take: RECENT,
     }),
     prisma.order.count({ where: { userId: user.id, ...(status ? { status } : {}) } }),
@@ -108,14 +115,25 @@ export default async function AccountPage({
       href: "/favorites",
     },
     {
-      icon: UserIcon,
-      label: t.account.memberSince,
-      value: account ? formatDate(account.createdAt) : "—",
+      icon: TruckIcon,
+      label: t.account.onTheWay,
+      value: <CountUp value={countFor("pending") + countFor("confirmed") + countFor("shipped")} locale={locale} />,
     },
   ];
 
   return (
-    <AccountShell user={user} t={t}>
+    <AccountShell
+      user={user}
+      t={t}
+      aside={
+        account && (
+          <span className="badge bg-ink-100 text-ink-600">
+            <UserIcon size={12} />
+            {t.account.memberSince} {formatDate(account.createdAt)}
+          </span>
+        )
+      }
+    >
       {/* -------------------------------- stats ------------------------------ */}
       {/* One strip divided by hairlines rather than four floating cards: the
           figures belong to each other, and the rule between them is the same
@@ -251,39 +269,20 @@ export default async function AccountPage({
               button behaves. Only the statuses this account has actually
               reached are offered — a tab reading "cancelled 0" invites a click
               that leads nowhere. */}
-          {orderCount > 0 && (
-            <nav
-              aria-label={t.account.orderFilter}
-              /* No negative margin. The card hides its own overflow, so a
-                 strip pulled wider than its padding makes the *card* scroll —
-                 which it cannot, so the tabs were clipped at 320px instead.
-                 The strip scrolls inside its own box, where it can. */
-              className="flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5 no-scrollbar"
-            >
-              {[null, ...ORDER_STATUSES.filter((value) => countFor(value) > 0)].map((value) => {
-                const active = status === value;
-                return (
-                  <Link
-                    key={value ?? "all"}
-                    href={value ? `/account?status=${value}#orders` : "/account#orders"}
-                    aria-current={active ? "page" : undefined}
-                    className={`flex min-h-9 shrink-0 items-center gap-1.5 rounded-control px-3 text-sm transition-colors ${
-                      active
-                        ? "bg-panel font-semibold text-panel-fg"
-                        : "border border-line text-ink-600 hover:bg-ink-50"
-                    }`}
-                  >
-                    {value ? t.status[value] : t.account.orderFilterAll}
-                    {/* `panel-muted`, the token for quiet text on the dark
-                        panel in both themes — `ink-300` is a light grey in
-                        one theme and a near-panel grey in the other. */}
-                    <span className={active ? "text-panel-muted" : "text-ink-400"}>
-                      {value ? countFor(value) : total}
-                    </span>
-                  </Link>
-                );
-              })}
-            </nav>
+          {/* Only the statuses this account has actually reached are
+              offered — a tab reading "cancelled 0" invites a click that
+              leads nowhere. Switches in place: see `OrderFilterTabs`. */}
+          {total > 0 && (
+            <OrderFilterTabs
+              current={status}
+              options={[
+                { value: null, count: total },
+                ...ORDER_STATUSES.filter((value) => countFor(value) > 0).map((value) => ({
+                  value,
+                  count: countFor(value),
+                })),
+              ]}
+            />
           )}
 
           {orders.length === 0 ? (
@@ -309,13 +308,26 @@ export default async function AccountPage({
                       which is the only thing this list is for. */}
                   <Link
                     href={`/order/${order.number}`}
-                    className="row-lean grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 hover:bg-ink-50 sm:grid-cols-[1fr_6.5rem_auto_1rem]"
+                    className="row-lean grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-5 py-3.5 hover:bg-ink-50 sm:grid-cols-[auto_1fr_6.5rem_auto_1rem] sm:gap-x-4"
                   >
+                    {/* The first pictures, fanned: up to three, the ones
+                        behind stepped to the right and dimmed. */}
+                    <span className="order-fan" aria-hidden="true">
+                      {order.items.map((item) => (
+                        <span key={item.id}>
+                          <Image src={item.image} alt="" fill sizes="44px" className="object-cover" />
+                        </span>
+                      ))}
+                      {order._count.items > 3 && (
+                        <span className="order-fan-more">+{order._count.items - 3}</span>
+                      )}
+                    </span>
+
                     <div className="min-w-0">
                       <p className="truncate font-mono text-sm font-bold text-ink-900">
                         {order.number}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-ink-400">
+                      <p className="mt-0.5 text-xs text-ink-400 sm:truncate">
                         {formatDate(order.createdAt)} ·{" "}
                         {countText(
                           t.admin.productCountOne,
@@ -333,7 +345,7 @@ export default async function AccountPage({
                         rather than starting wherever the price happened to end.
                         Sized by its widest badge: at a fixed 7.5rem the Georgian
                         "confirmed" overran the column and covered the price. */}
-                    <span className="col-span-2 justify-self-start sm:col-span-1 sm:justify-self-end">
+                    <span className="col-span-3 justify-self-start pl-[3.75rem] sm:col-span-1 sm:justify-self-end sm:pl-0">
                       <StatusBadge status={order.status} t={t} />
                     </span>
 

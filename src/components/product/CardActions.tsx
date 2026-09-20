@@ -155,7 +155,9 @@ export function CardActions({ product, needsChoice }: { product: Line; needsChoi
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2">
+      {/* Side by side from `sm`; one above the other on a phone, where two
+          cards share the width and each button had room for one letter. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => press("cart")}

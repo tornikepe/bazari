@@ -17,10 +17,13 @@ import type { Dictionary } from "@/lib/i18n";
 export function AccountShell({
   user,
   t,
+  aside,
   children,
 }: {
   user: SessionUser;
   t: Dictionary;
+  /** Chips beside the name on the identity card. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -34,6 +37,7 @@ export function AccountShell({
           verified={user.emailVerified}
           avatarUrl={user.avatarUrl}
           t={t}
+          aside={aside}
         >
           <AccountNav />
         </AccountIdentity>

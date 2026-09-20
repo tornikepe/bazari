@@ -2220,9 +2220,65 @@ html[data-reveal="all"] .reveal-view {
 /* The account's identity card: a wash of the brand colour from the corner
    the picture sits in, fading into the surface — a profile, not a row. */
 .account-identity {
+  background: var(--color-surface);
+}
+
+/* The banner across the top of the identity card: the brand's tint with
+   a faint grid of the site's rule colour and a soft light at the right,
+   the way the home page's hero is lit. The picture sits on its lower
+   edge — the card's padding pulls it up by half its height. */
+.identity-band {
+  height: 6rem;
   background:
-    linear-gradient(135deg, color-mix(in oklab, var(--color-brand-500) 12%, var(--color-surface)) 0%, var(--color-surface) 55%),
-    var(--color-surface);
+    radial-gradient(28rem 10rem at 85% 0%, color-mix(in oklab, var(--color-brand-500) 26%, transparent), transparent 70%),
+    linear-gradient(to right, var(--color-line) 1px, transparent 1px) 0 0 / 2rem 2rem,
+    linear-gradient(to bottom, var(--color-line) 1px, transparent 1px) 0 0 / 2rem 2rem,
+    linear-gradient(135deg, color-mix(in oklab, var(--color-brand-500) 14%, var(--color-surface)), var(--color-surface));
+}
+
+@media (min-width: 640px) {
+  .identity-band {
+    height: 7rem;
+  }
+}
+
+/* An order's first pictures, fanned: three tiles that overlap, each one
+   behind stepped to the right and a shade lower, a count on the last
+   when there are more. Reads as "a few things" at a glance. */
+.order-fan {
+  position: relative;
+  display: block;
+  width: 4.25rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+}
+
+.order-fan > span {
+  position: absolute;
+  top: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+  border: 2px solid var(--color-surface);
+  background: var(--color-ink-50);
+  box-shadow: var(--shadow-card);
+}
+
+.order-fan > span:nth-child(1) { left: 0; z-index: 3; }
+.order-fan > span:nth-child(2) { left: 0.75rem; z-index: 2; opacity: 0.9; }
+.order-fan > span:nth-child(3) { left: 1.5rem; z-index: 1; opacity: 0.8; }
+
+.order-fan > .order-fan-more {
+  display: grid;
+  place-items: center;
+  left: 1.5rem;
+  z-index: 4;
+  background: var(--color-panel);
+  color: var(--color-panel-fg);
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 1;
 }
 
 /* The deals band: the brand red across a whole region, with a slow

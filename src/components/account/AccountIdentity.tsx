@@ -26,9 +26,11 @@ export function initialsOf(name: string, email: string): string {
 /**
  * Who is signed in, at the top of their own page.
  *
- * The page opened with "Hi, name" and nothing else — no address, no sense of
- * whether the account was confirmed, nothing that made it feel like *an
- * account* rather than a list of orders that happened to be filtered.
+ * A banner in the brand's tint across the top of the card, the picture
+ * sitting on its lower edge, the name and the address under it, and the
+ * three tabs along the foot as a row of pills. The same card heads the
+ * wishlist, with a heart where the picture goes — the two pages that are
+ * *yours* open the same way.
  *
  * The mark is the customer's own picture when they have set one on the
  * settings page, and their initials in a square until then — never a grey
@@ -40,6 +42,7 @@ export function AccountIdentity({
   verified,
   avatarUrl,
   t,
+  aside,
   children,
 }: {
   name: string;
@@ -48,45 +51,45 @@ export function AccountIdentity({
   /** The customer's own picture, when they have set one; initials until then. */
   avatarUrl: string | null;
   t: Dictionary;
+  /** Chips at the right of the name — "with us since", a count. */
+  aside?: React.ReactNode;
   /** The tab row along the foot of the card. */
   children?: React.ReactNode;
 }) {
   return (
     <div className="card account-identity shine-once overflow-hidden">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 card-pad">
+      <div className="identity-band" aria-hidden="true" />
+
+      <div className="card-pad -mt-10 flex flex-wrap items-end gap-x-4 gap-y-3 pt-0">
         {/* The picture in a ring of the brand colour that turns under the
-            pointer — see `.avatar-ring`. */}
-        <span className="avatar-ring shrink-0">
+            pointer — see `.avatar-ring` — on the banner's lower edge. */}
+        <span className="avatar-ring shrink-0 ring-4 ring-surface">
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatarUrl}
               alt=""
-              width={64}
-              height={64}
-              className="h-14 w-14 rounded-[calc(var(--radius-card)-3px)] object-cover sm:h-16 sm:w-16"
+              width={80}
+              height={80}
+              className="h-18 w-18 rounded-[calc(var(--radius-card)-3px)] object-cover sm:h-20 sm:w-20"
             />
           ) : (
             <span
               aria-hidden="true"
-              className="grid h-14 w-14 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-lg font-extrabold tracking-tight text-brand-on-solid sm:h-16 sm:w-16 sm:text-xl"
+              className="grid h-18 w-18 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-xl font-extrabold tracking-tight text-brand-on-solid sm:h-20 sm:w-20 sm:text-2xl"
             >
               {initialsOf(name, email)}
             </span>
           )}
         </span>
 
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold tracking-wider text-ink-400 uppercase">
-            {t.account.title}
-          </p>
+        <div className="min-w-0 flex-1 pb-0.5">
           <h1 className="truncate text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
             {name || email}
           </h1>
           {/* The address, with its state as a small mark beside it — a
-              dot and three words in 11px, not a badge on a line of its
-              own. The state, not a call to action: confirming is offered
-              by the banner below, which is where the code entry lives. */}
+              dot and three words in 11px. The state, not a call to action:
+              confirming is offered by the banner below. */}
           <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-ink-500">
             <span className="truncate">{email}</span>
             <span
@@ -99,6 +102,10 @@ export function AccountIdentity({
             </span>
           </p>
         </div>
+
+        {/* Its own row on a phone: beside the name it took the name's room
+            and left "D" and "u…". */}
+        {aside && <div className="flex w-full flex-wrap items-center gap-2 pb-1 sm:w-auto">{aside}</div>}
       </div>
 
       {children}
