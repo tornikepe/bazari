@@ -6,7 +6,6 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { CardActions } from "@/components/product/CardActions";
 import { FavoriteButton } from "@/components/product/FavoriteButton";
 import { Price } from "@/components/ui/Price";
-import { TruckIcon } from "@/components/ui/icons";
 import { Stars } from "@/components/product/Stars";
 import { discountPercent } from "@/lib/format";
 import { fill } from "@/lib/i18n";
@@ -109,12 +108,8 @@ export function ProductCard({
           </Link>
         </h3>
 
-        <div className="mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 pt-1">
+        <div className="mt-auto pt-1">
           <Price value={product.price} oldValue={product.oldPrice} size="md" />
-          <span className="flex items-center gap-1 text-[11px] text-ink-400">
-            <TruckIcon size={12} className="shrink-0" />
-            {fill(t.product.shippingDays, { count: product.shippingDays })}
-          </span>
         </div>
 
         {lowStock && (

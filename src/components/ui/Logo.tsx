@@ -1,16 +1,16 @@
 /**
- * The Bazari mark.
+ * The Bazari mark: a bag.
  *
- * A black field carrying a 2×2 grid with one cell in brand red — the same
- * module grid the rest of the site is built on, reduced to its smallest
- * statement. Drawn as rectangles rather than set as a letter on purpose: the
- * mark also ships as the browser tab icon, where an SVG `<text>` would depend
- * on the viewer's machine having a Georgian font installed and would fall back
- * to a blank square on the ones that don't.
+ * A black rounded field carrying a white shopping bag with its handle, and
+ * one dot of the brand's red on the bag where a label would be. It says
+ * what the site is for at a glance — a shop — where the module grid it
+ * replaced said only "a brand". Drawn as paths rather than set as a letter
+ * on purpose: the mark also ships as the browser tab icon, where an SVG
+ * `<text>` would depend on the viewer's machine having a Georgian font.
  *
  * The field stays black in both themes. It is the constant the rest of the
- * palette moves around, and a mark that inverts with the theme is a different
- * mark twice rather than one brand.
+ * palette moves around, and a mark that inverts with the theme is a
+ * different mark twice rather than one brand.
  */
 export function LogoMark({ size = 36, className = "" }: { size?: number; className?: string }) {
   return (
@@ -22,11 +22,19 @@ export function LogoMark({ size = 36, className = "" }: { size?: number; classNa
       aria-hidden="true"
       className={`logo-mark shrink-0 ${className}`}
     >
-      <rect width="64" height="64" fill="#101216" />
-      <rect x="12" y="12" width="18" height="18" fill="#dc1f24" />
-      <rect x="34" y="12" width="18" height="18" fill="#ffffff" />
-      <rect x="12" y="34" width="18" height="18" fill="#ffffff" />
-      <rect x="34" y="34" width="18" height="18" fill="#ffffff" />
+      <rect width="64" height="64" rx="16" fill="#101216" />
+      {/* The handle, then the bag, then the label. */}
+      <path
+        d="M23 27v-4.5a9 9 0 0 1 18 0V27"
+        stroke="#ffffff"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M17.5 26.5h29a2 2 0 0 1 2 2.2l-2 20.4a4 4 0 0 1-4 3.6H21.5a4 4 0 0 1-4-3.6l-2-20.4a2 2 0 0 1 2-2.2z"
+        fill="#ffffff"
+      />
+      <circle cx="39.5" cy="38" r="4.5" fill="#dc1f24" />
     </svg>
   );
 }

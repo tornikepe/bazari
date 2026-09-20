@@ -85,7 +85,7 @@ export async function Footer() {
     // page that read as a black stripe above the footer in dark mode. The
     // separation is now the footer's own top rule plus its internal padding,
     // which is surface-coloured and therefore invisible as a seam.
-    <footer className="site-footer border-t border-line bg-surface">
+    <footer className="site-footer border-t border-line bg-surface" data-snap>
       <div className="page-container grid gap-6 py-8 text-center sm:gap-8 sm:py-10 sm:text-left lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
         <div className="flex flex-col items-center sm:items-start">
           <Link href="/" className="inline-flex items-center gap-2.5">

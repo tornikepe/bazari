@@ -1,4 +1,5 @@
 import { AlertIcon, CheckIcon } from "@/components/ui/icons";
+import { PageBanner } from "@/components/account/PageBanner";
 import type { Dictionary } from "@/lib/i18n";
 
 /**
@@ -57,58 +58,48 @@ export function AccountIdentity({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="card account-identity shine-once overflow-hidden">
-      <div className="identity-band" aria-hidden="true" />
-
-      <div className="card-pad -mt-10 flex flex-wrap items-end gap-x-4 gap-y-3 pt-0">
-        {/* The picture in a ring of the brand colour that turns under the
-            pointer — see `.avatar-ring` — on the banner's lower edge. */}
-        <span className="avatar-ring shrink-0 ring-4 ring-surface">
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt=""
-              width={80}
-              height={80}
-              className="h-18 w-18 rounded-[calc(var(--radius-card)-3px)] object-cover sm:h-20 sm:w-20"
-            />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="grid h-18 w-18 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-xl font-extrabold tracking-tight text-brand-on-solid sm:h-20 sm:w-20 sm:text-2xl"
-            >
-              {initialsOf(name, email)}
-            </span>
-          )}
-        </span>
-
-        <div className="min-w-0 flex-1 pb-0.5">
-          <h1 className="truncate text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
-            {name || email}
-          </h1>
-          {/* The address, with its state as a small mark beside it — a
-              dot and three words in 11px. The state, not a call to action:
-              confirming is offered by the banner below. */}
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-ink-500">
-            <span className="truncate">{email}</span>
-            <span
-              className={`inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap ${
-                verified ? "text-success" : "text-warning"
-              }`}
-            >
-              {verified ? <CheckIcon size={11} /> : <AlertIcon size={11} />}
-              {verified ? t.account.emailVerified : t.account.emailUnverified}
-            </span>
-          </p>
-        </div>
-
-        {/* Its own row on a phone: beside the name it took the name's room
-            and left "D" and "u…". */}
-        {aside && <div className="flex w-full flex-wrap items-center gap-2 pb-1 sm:w-auto">{aside}</div>}
-      </div>
-
+    <PageBanner
+      className="account-identity"
+      eyebrow={t.account.title}
+      title={name || email}
+      line={
+        /* The address, with its state as a small mark beside it — a dot
+           and three words in 11px. The state, not a call to action:
+           confirming is offered by the note along the foot of the card. */
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="truncate">{email}</span>
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap ${
+              verified ? "text-success" : "text-warning"
+            }`}
+          >
+            {verified ? <CheckIcon size={11} /> : <AlertIcon size={11} />}
+            {verified ? t.account.emailVerified : t.account.emailUnverified}
+          </span>
+        </p>
+      }
+      mark={
+        avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatarUrl}
+            alt=""
+            width={80}
+            height={80}
+            className="h-18 w-18 rounded-[calc(var(--radius-card)-3px)] object-cover sm:h-20 sm:w-20"
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="grid h-18 w-18 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-xl font-extrabold tracking-tight text-brand-on-solid sm:h-20 sm:w-20 sm:text-2xl"
+          >
+            {initialsOf(name, email)}
+          </span>
+        )
+      }
+      aside={aside}
+    >
       {children}
-    </div>
+    </PageBanner>
   );
 }

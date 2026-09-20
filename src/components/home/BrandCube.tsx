@@ -42,11 +42,21 @@ export function BrandCube() {
         <div className="cube">
           {faces.map((face) => (
             <div key={face} className="cube-face" data-face={face}>
-              {/* The mark: four modules, the first of them red. */}
-              <span className="cube-module cube-module--brand" />
-              <span className="cube-module" />
-              <span className="cube-module" />
-              <span className="cube-module" />
+              {/* The mark: the bag, on every side. */}
+              <svg viewBox="0 0 64 64" className="cube-mark" aria-hidden="true">
+                <path
+                  d="M23 27v-4.5a9 9 0 0 1 18 0V27"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+                <path
+                  d="M17.5 26.5h29a2 2 0 0 1 2 2.2l-2 20.4a4 4 0 0 1-4 3.6H21.5a4 4 0 0 1-4-3.6l-2-20.4a2 2 0 0 1 2-2.2z"
+                  fill="currentColor"
+                />
+                <circle cx="39.5" cy="38" r="4.5" className="cube-mark-dot" />
+              </svg>
             </div>
           ))}
         </div>

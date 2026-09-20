@@ -15,7 +15,7 @@ import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel"
 import { StickyBuyBar } from "@/components/product/StickyBuyBar";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { CheckIcon, CloseIcon, RefreshIcon, ShieldIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
+import { BagCheckIcon, CheckIcon, CloseIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -234,7 +234,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           : t.topbar.shippingAlways,
     },
     { icon: RefreshIcon, text: t.home.why3Title },
-    { icon: ShieldIcon, text: t.home.why4Title },
+    { icon: BagCheckIcon, text: t.home.why4Title },
   ];
 
   // Structured data. Only facts already on the page: no rating or review
@@ -409,7 +409,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               that has nothing to offer. */}
           {soldOut && <WatchStock productId={product.id} />}
 
-          <div className="card mt-6 card-pad" id="buy-panel">
+          {/* Centred: the sizes, the count and the two buttons read as
+              one column down the middle of the card, not as a form
+              hugging its left edge. */}
+          <div className="card buy-panel mt-6 card-pad text-center" id="buy-panel">
             {/* A product with no options is exactly what it was before any of
                 this existed: one price, one stock figure, one button. */}
             {options.length > 0 ? (

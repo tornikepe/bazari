@@ -176,11 +176,28 @@ export function PaymentPrefsForm({
         </div>
       </section>
 
-      <div className="flex flex-wrap items-center gap-3">
+      {/* The save bar: sticks to the foot of the screen while the form is
+          longer than it, so the button is at hand wherever the change was
+          made — the status beside it, the button at the right. */}
+      <div className="form-bar">
+        <div className="min-w-0 flex-1 text-sm">
+          {status === "saved" ? (
+            <span role="status" className="flex items-center gap-1.5 font-semibold text-success">
+              <CheckIcon size={16} />
+              {t.account.paymentsSaved}
+            </span>
+          ) : status === "invalid" ? (
+            <span role="alert" className="font-semibold text-danger">
+              {t.account.refundIbanInvalid}
+            </span>
+          ) : (
+            <span className="text-ink-500">{t.account.preferredPaymentHint}</span>
+          )}
+        </div>
         <button
           type="submit"
           disabled={isPending}
-          className="btn btn-primary btn-md"
+          className="btn btn-primary btn-md shrink-0"
         >
           <Swap
             show={
@@ -193,27 +210,10 @@ export function PaymentPrefsForm({
             of={[t.account.saveProfile]}
           />
         </button>
-        {status === "saved" && (
-          <span
-            role="status"
-            className="flex items-center gap-1.5 text-sm font-semibold text-success"
-          >
-            <CheckIcon size={16} />
-            {t.account.paymentsSaved}
-          </span>
-        )}
-        {status === "invalid" && (
-          <span role="alert" className="text-sm font-semibold text-danger">
-            {t.account.refundIbanInvalid}
-          </span>
-        )}
-        {status === "failed" && (
-          <ErrorNote
-            title={t.account.paymentsFailed}
-            hint={t.common.errorHint}
-          />
-        )}
       </div>
+      {status === "failed" && (
+        <ErrorNote title={t.account.paymentsFailed} hint={t.common.errorHint} />
+      )}
     </form>
   );
 }

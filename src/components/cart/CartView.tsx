@@ -14,13 +14,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyCartArt } from "@/components/ui/illustrations";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { useChangeKey } from "@/components/ui/useChangeKey";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { PageBanner } from "@/components/account/PageBanner";
+import { CartIcon } from "@/components/ui/icons";
 import { lineKey } from "@/lib/cart-store";
 
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
   const settings = useSettings();
-  const { items, hydrated, subtotal, shipping, total, setQuantity, remove, clear } = useCart();
+  const { items, count, hydrated, subtotal, shipping, total, setQuantity, remove, clear } = useCart();
 
   // The server can't know the cart, so render a stable skeleton until the
   // client has read localStorage.
@@ -30,11 +31,19 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   // hydration — no title for a screen reader, and none ever for a reader
   // without JavaScript. It showed on a machine slow enough to look before
   // React ran.
+  const mark = (
+    <span
+      aria-hidden="true"
+      className="grid h-18 w-18 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-brand-on-solid sm:h-20 sm:w-20"
+    >
+      <CartIcon size={30} />
+    </span>
+  );
+
   if (!hydrated) {
     return (
       <div className="page">
-        <PageHeader title={t.cart.title} />
-        <div className="mt-6" />
+        <PageBanner eyebrow={t.account.title} title={t.cart.title} mark={mark} line="…" />
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
           <div className="flex flex-col gap-3">
             {[0, 1, 2].map((index) => (
@@ -50,7 +59,17 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   if (items.length === 0) {
     return (
       <div className="page">
-        <PageHeader title={t.cart.title} />
+        <PageBanner
+          eyebrow={t.account.title}
+          title={t.cart.title}
+          mark={mark}
+          line={t.cart.emptyHint}
+          aside={
+            <Link href="/catalog" className="btn btn-outline btn-sm">
+              {t.catalog.title}
+            </Link>
+          }
+        />
 
         <EmptyState
           className="card mx-auto mt-6 max-w-md"
@@ -77,7 +96,18 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
 
   return (
     <div className="page">
-      <PageHeader title={t.cart.title} />
+      {/* The same card the account and the wishlist open with. */}
+      <PageBanner
+        eyebrow={t.account.title}
+        title={t.cart.title}
+        mark={mark}
+        line={`${fill(t.favorites.count, { count })} · ${t.cart.subtotal} ${formatPrice(subtotal, locale)}`}
+        aside={
+          <Link href="/checkout" className="btn btn-primary btn-sm">
+            {t.cart.checkout}
+          </Link>
+        }
+      />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}

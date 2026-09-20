@@ -208,14 +208,17 @@
    ========================================================================== */
 
 [data-theme="dark"] {
-  --color-surface: #161513;
-  --color-canvas: #0d0c0b;
-  --color-line: #2b2823;
+  /* Three grounds a step apart — canvas, surface, panel — so a card is
+     seen on the page and the black band is seen on the card. They were a
+     hair apart and the dark page read as one flat black. */
+  --color-surface: #1a1815;
+  --color-canvas: #100f0d;
+  --color-line: #322e28;
 
-  --color-ink-50: #1d1b18;
-  --color-ink-100: #262320;
-  --color-ink-200: #333029;
-  --color-ink-300: #4a463f;
+  --color-ink-50: #221f1b;
+  --color-ink-100: #2b2823;
+  --color-ink-200: #38342d;
+  --color-ink-300: #504a42;
   --color-ink-400: #8a8479;
   --color-ink-500: #a29b8f;
   --color-ink-600: #bdb6aa;
@@ -223,8 +226,8 @@
   --color-ink-800: #e8e3da;
   --color-ink-900: #f5f2ec;
 
-  /* Slightly lifted off the canvas so dark panels stay distinguishable. */
-  --color-panel: #1d1b18;
+  /* Lifted off the surface so a dark panel is still a panel on it. */
+  --color-panel: #26221d;
   --color-panel-fg: #f5f2ec;
 
   /* Brand and semantics are brightened a step: the light-mode shades don't
@@ -2239,17 +2242,94 @@ html[data-reveal="all"] .reveal-view {
    the way the home page's hero is lit. The picture sits on its lower
    edge — the card's padding pulls it up by half its height. */
 .identity-band {
-  height: 6rem;
+  position: relative;
+  height: 6.5rem;
+  overflow: hidden;
   background:
-    radial-gradient(28rem 10rem at 85% 0%, color-mix(in oklab, var(--color-brand-500) 26%, transparent), transparent 70%),
     linear-gradient(to right, var(--color-line) 1px, transparent 1px) 0 0 / 2rem 2rem,
     linear-gradient(to bottom, var(--color-line) 1px, transparent 1px) 0 0 / 2rem 2rem,
-    linear-gradient(135deg, color-mix(in oklab, var(--color-brand-500) 14%, var(--color-surface)), var(--color-surface));
+    linear-gradient(135deg, color-mix(in oklab, var(--color-brand-500) 12%, var(--color-surface)), var(--color-surface));
+}
+
+/* Two soft lights drifting across the band, one of the brand's red and
+   one of the accent's amber, slowly enough to be felt rather than
+   watched — the band breathes. Still for anyone who asked for less. */
+.identity-band::before,
+.identity-band::after {
+  content: "";
+  position: absolute;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 999px;
+  filter: blur(40px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.identity-band::before {
+  top: -16rem;
+  right: -4rem;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-brand-500) 55%, transparent), transparent 70%);
+  animation: band-drift-a 14s ease-in-out infinite alternate;
+}
+
+.identity-band::after {
+  top: -18rem;
+  left: 10%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-accent-400) 45%, transparent), transparent 70%);
+  animation: band-drift-b 18s ease-in-out infinite alternate;
+}
+
+@keyframes band-drift-a {
+  to {
+    transform: translate(-14rem, 3rem) scale(1.15);
+  }
+}
+
+@keyframes band-drift-b {
+  to {
+    transform: translate(16rem, 2rem) scale(0.9);
+  }
 }
 
 @media (min-width: 640px) {
   .identity-band {
-    height: 7rem;
+    height: 7.5rem;
+  }
+}
+
+/* The block under the band: the picture on the band's lower edge, the
+   name in the serif beside it, the chips at the end of the row. */
+.identity-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1.25rem;
+  padding: 0.875rem 1.25rem 1.25rem;
+}
+
+/* Only the picture rides up onto the band; the words start under it. */
+.identity-body > .avatar-ring {
+  margin-top: -3.5rem;
+}
+
+@media (min-width: 640px) {
+  .identity-body {
+    padding: 1rem 1.5rem 1.5rem;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .identity-body > .avatar-ring {
+    margin-top: -4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .identity-band::before,
+  .identity-band::after {
+    animation: none;
   }
 }
 
@@ -3210,6 +3290,18 @@ html[data-reveal="all"] .reveal-view {
   background: var(--color-brand-solid);
 }
 
+/* The bag on each face, filling the face's padding box. */
+.cube-mark {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 100%;
+  color: var(--color-panel-fg);
+}
+
+.cube-mark-dot {
+  fill: var(--color-brand-solid);
+}
+
 .cube-face[data-face="front"] {
   transform: translateZ(var(--cube-half));
 }
@@ -3655,6 +3747,65 @@ h3,
   border-radius: var(--radius-pill);
 }
 
+/* ---- Form bar ------------------------------------------------------- */
+
+/* A row that sticks to the foot of the screen while a long form is being
+   filled: the status at the left, the button at the right, the paper
+   showing through a little. */
+.form-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-inline: -0.5rem;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-line);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+@media (min-width: 640px) {
+  .form-bar {
+    margin-inline: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    bottom: 1rem;
+  }
+}
+
+/* In the dark theme the primary button is paper on black — a black pill
+   on a black page was the one control that could not be seen — and the
+   red one stays red. */
+[data-theme="dark"] .btn-primary {
+  background: var(--color-ink-900);
+  color: var(--color-canvas);
+}
+
+[data-theme="dark"] .btn-primary:hover:not(:disabled) {
+  background: var(--color-brand-solid);
+  color: var(--color-brand-on-solid);
+}
+
+[data-theme="dark"] .btn-outline:hover:not(:disabled),
+[data-theme="dark"] .hover-lift:hover .btn-outline:not(:disabled) {
+  background: var(--color-ink-900);
+  color: var(--color-canvas);
+}
+
+[data-theme="dark"] .rail-arrow:hover:not(:disabled) {
+  background: var(--color-ink-900);
+  color: var(--color-canvas);
+}
+
+/* The black bands keep a hairline in the dark, where black on black is
+   only a change of texture. */
+[data-theme="dark"] .deals-editorial {
+  border: 1px solid var(--color-line);
+}
+
 /* ---- Marquee -------------------------------------------------------- */
 
 /* A line of words moving across the page: the strip under the hero, the
@@ -3750,8 +3901,11 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   overflow: visible;
 }
 
+/* A hairline around the picture: the photographs are on white and the
+   paper is nearly white, and without the line a card had no edge. */
 .product-card .card-media {
   border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
   background: var(--color-ink-50);
   aspect-ratio: 4 / 5;
   overflow: hidden;
@@ -3831,15 +3985,17 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     margin-top: 0.5rem;
   }
 
+  /* The cards still rise, but over the first fifth of their entry rather
+     than a third, and without the stagger — visible almost at once. */
   .reveal-view {
-    animation: none !important;
-    opacity: 1;
-    transform: none;
+    animation-range: entry 0% entry 18% !important;
   }
+}
 
-  html[data-reveal] .reveal {
-    opacity: 1;
-  }
+/* The buy panel's labels sit over their controls, centred. */
+.buy-panel .field-label {
+  display: block;
+  text-align: center;
 }
 
 /* ---- Header --------------------------------------------------------- */
@@ -4008,23 +4164,112 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   overflow-wrap: normal;
 }
 
+.cat-tile {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.cat-tile .cat-photo {
+  object-fit: cover;
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Dark at the foot so the words read on any photograph, clear at the top
+   so the photograph does. */
+.cat-tile .cat-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(10 9 8 / 0.82) 0%, rgb(10 9 8 / 0.35) 45%, rgb(10 9 8 / 0.1) 100%);
+  transition: background 0.4s ease;
+}
+
 .cat-tile .cat-icon {
-  font-size: 2rem;
+  font-size: 1.75rem;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.cat-tile:hover {
-  background: var(--color-panel);
-  color: var(--color-panel-fg);
-  border-color: var(--color-panel);
+@media (hover: hover) {
+  .cat-tile:hover .cat-photo {
+    transform: scale(1.06);
+  }
+
+  .cat-tile:hover .cat-icon {
+    transform: translateY(-4px) rotate(-6deg);
+  }
 }
 
-.cat-tile:hover .cat-icon {
-  transform: translateY(-4px) rotate(-6deg);
+/* ---- Rail ------------------------------------------------------------ */
+
+/* The featured row: cards end to end, a little of the next one showing
+   past the edge, and a pair of arrows above at the right. */
+.rail {
+  position: relative;
 }
 
-.cat-tile:hover .label {
-  color: var(--color-panel-muted);
+.rail-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: 0.25rem;
+  scroll-behavior: smooth;
+}
+
+.rail-track::-webkit-scrollbar {
+  display: none;
+}
+
+.rail-item {
+  flex: 0 0 68%;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 640px) {
+  .rail-item {
+    flex-basis: 38%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rail-item {
+    flex-basis: 23.5%;
+  }
+}
+
+.rail-arrows {
+  position: absolute;
+  right: 0;
+  top: -4.25rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rail-arrow {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-ink-900);
+  color: var(--color-ink-900);
+  background: var(--color-surface);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.rail-arrow:hover:not(:disabled) {
+  background: var(--color-ink-900);
+  color: var(--color-surface);
+}
+
+.rail-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* ---- Footer --------------------------------------------------------- */

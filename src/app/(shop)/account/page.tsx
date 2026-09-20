@@ -13,7 +13,6 @@ import {
   HeartIcon,
   TagIcon,
   TruckIcon,
-  UserIcon,
 } from "@/components/ui/icons";
 import { CountUp } from "@/components/ui/CountUp";
 import { AccountShell } from "@/components/account/AccountShell";
@@ -44,10 +43,7 @@ export default async function AccountPage({
   const statusRaw = Array.isArray(params.status) ? params.status[0] : params.status;
   const status = isOrderStatus(statusRaw) ? statusRaw : null;
 
-  /* The session carries what every page needs; "member since" is wanted by
-     this one page only, so it is read here rather than added to the cookie
-     that every request in the shop parses. */
-  const [orders, orderCount, byStatus, account, spending, favoriteCount, active] = await Promise.all([
+  const [orders, orderCount, byStatus, spending, favoriteCount, active] = await Promise.all([
     prisma.order.findMany({
       where: { userId: user.id, ...(status ? { status } : {}) },
       orderBy: { createdAt: "desc" },
@@ -64,7 +60,6 @@ export default async function AccountPage({
        five round trips to label five links is five times the work for the
        same page. */
     prisma.order.groupBy({ by: ["status"], where: { userId: user.id }, _count: { _all: true } }),
-    prisma.user.findUnique({ where: { id: user.id }, select: { createdAt: true } }),
     /* Summed in the database over *every* order, not over the twenty rows
        drawn below. Counting the page rather than the account is how a figure
        ends up saying "106 orders, ₾2,125 spent" — two true numbers that
@@ -122,18 +117,7 @@ export default async function AccountPage({
   ];
 
   return (
-    <AccountShell
-      user={user}
-      t={t}
-      aside={
-        account && (
-          <span className="badge bg-ink-100 text-ink-600">
-            <UserIcon size={12} />
-            {t.account.memberSince} {formatDate(account.createdAt)}
-          </span>
-        )
-      }
-    >
+    <AccountShell user={user} t={t}>
       {/* -------------------------------- stats ------------------------------ */}
       {/* One strip divided by hairlines rather than four floating cards: the
           figures belong to each other, and the rule between them is the same

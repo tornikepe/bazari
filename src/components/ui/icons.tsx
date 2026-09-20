@@ -397,6 +397,15 @@ export const ChatIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A bag with a check: chosen, and sure of it. */
+export const BagCheckIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6 8h12l1 12.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20.5L6 8z" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+    <path d="m9.5 15 2 2 3.5-4" />
+  </Icon>
+);
+
 /** A bolt: buy it now, in one go. */
 export const ZapIcon = (p: IconProps) => (
   <Icon {...p}>

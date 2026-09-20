@@ -40,8 +40,8 @@ export function AccountShell({
           aside={aside}
         >
           <AccountNav />
+          {!user.emailVerified && <VerifyBanner email={user.email} />}
         </AccountIdentity>
-        {!user.emailVerified && <VerifyBanner email={user.email} />}
         {children}
       </div>
     </div>

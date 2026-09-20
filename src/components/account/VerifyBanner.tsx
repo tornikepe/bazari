@@ -11,18 +11,20 @@ import { getI18n } from "@/lib/locale";
 export async function VerifyBanner({ email }: { email: string }) {
   const { t } = await getI18n();
 
+  /* A line, not a box: it sits along the foot of the identity card, in
+     the brand's tint, small — a reminder rather than a warning. The
+     verify page issues the code, so this is only a link. */
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-warning/30 bg-warning-soft px-4 py-3">
-      <AlertIcon size={16} className="shrink-0 text-warning" />
-      <p className="min-w-0 flex-1 text-sm leading-snug text-ink-800">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-line bg-brand-50/60 px-5 py-2 text-xs">
+      <p className="flex min-w-0 items-center gap-2 text-ink-700">
+        <AlertIcon size={13} className="shrink-0 text-brand-600" />
         {t.auth.unverified}
       </p>
-
       <Link
         href={`/verify?email=${encodeURIComponent(email)}`}
-        className="btn btn-primary btn-sm shrink-0"
+        className="font-bold text-brand-600 underline-offset-4 hover:underline"
       >
-        {t.auth.verifyNow}
+        {t.auth.verifyNow} →
       </Link>
     </div>
   );

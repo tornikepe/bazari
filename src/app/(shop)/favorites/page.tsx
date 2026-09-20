@@ -11,6 +11,7 @@ import { clearFavorites } from "@/lib/favorites-store";
 import { getProductsByIds } from "@/app/actions/products";
 import type { ProductCardData } from "@/lib/catalog";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { PageBanner } from "@/components/account/PageBanner";
 import { countText } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -50,35 +51,31 @@ export default function FavoritesPage() {
           items={[{ label: t.nav.home, href: "/" }, { label: t.favorites.title }]}
         />
 
-        {/* The same card the account opens with — the banner, a mark on
-            its lower edge, the name beside it — with a heart for the mark:
-            the wishlist is the other page that is *yours*. What the list
-            holds is said under the title, not as a figure beside it. */}
-        <div className="card shine-once overflow-hidden">
-          <div className="identity-band" aria-hidden="true" />
-          <div className="card-pad -mt-10 flex flex-wrap items-end gap-x-4 gap-y-3 pt-0">
-            <span className="avatar-ring shrink-0 ring-4 ring-surface">
-              <span
-                aria-hidden="true"
-                className="grid h-18 w-18 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-brand-on-solid sm:h-20 sm:w-20"
-              >
-                <HeartIcon size={30} filled />
-              </span>
+        {/* The same card the account and the cart open with — a heart
+            for the mark: the wishlist is the other page that is *yours*.
+            What the list holds is said under the title, not as a figure
+            beside it. */}
+        <PageBanner
+          eyebrow={t.account.title}
+          title={t.favorites.title}
+          mark={
+            <span
+              aria-hidden="true"
+              className="grid h-18 w-18 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-brand-on-solid sm:h-20 sm:w-20"
+            >
+              <HeartIcon size={30} filled />
             </span>
-            <div className="min-w-0 flex-1 pb-0.5">
-              <h1 className="text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
-                {t.favorites.title}
-              </h1>
-              <p className="text-sm text-ink-500">
-                {isLoading
-                  ? "…"
-                  : products.length === 0
-                    ? t.favorites.emptyHint
-                    : `${countText(t.favorites.countOne, t.favorites.count, products.length)} · ${t.favorites.worth} ${formatPrice(worth, locale)}`}
-              </p>
-            </div>
-            {!isLoading && products.length > 0 && (
-              <div className="flex w-full flex-wrap items-center gap-2 pb-1 sm:w-auto">
+          }
+          line={
+            isLoading
+              ? "…"
+              : products.length === 0
+                ? t.favorites.emptyHint
+                : `${countText(t.favorites.countOne, t.favorites.count, products.length)} · ${t.favorites.worth} ${formatPrice(worth, locale)}`
+          }
+          aside={
+            !isLoading && products.length > 0 ? (
+              <>
                 <Link href="/catalog" className="btn btn-outline btn-sm">
                   {t.catalog.title}
                 </Link>
@@ -90,10 +87,10 @@ export default function FavoritesPage() {
                   <TrashIcon size={15} />
                   {t.favorites.clear}
                 </button>
-              </div>
-            )}
-          </div>
-        </div>
+              </>
+            ) : undefined
+          }
+        />
       </div>
 
       <div className="mt-6">

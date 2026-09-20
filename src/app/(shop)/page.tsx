@@ -12,11 +12,13 @@ import {
   ArrowRightIcon,
   PackageIcon,
   RefreshIcon,
-  ShieldIcon,
+  BagCheckIcon,
   TruckIcon,
 } from "@/components/ui/icons";
 import { SectionLink } from "@/components/ui/SectionLink";
 import { SplitWords } from "@/components/editorial/SplitWords";
+import { Rail } from "@/components/editorial/Rail";
+import Image from "next/image";
 
 
 export default async function HomePage() {
@@ -25,7 +27,19 @@ export default async function HomePage() {
   const [categories, featured, newArrivals, productCount, brands] = await Promise.all([
     prisma.category.findMany({
       orderBy: [{ sortOrder: "asc" }],
-      include: { _count: { select: { products: { where: { isActive: true } } } } },
+      include: {
+        _count: { select: { products: { where: { isActive: true } } } },
+        /* One picture for the tile. Real photographs sort before the
+           placeholder because their path does ("/api/…" before
+           "/products/…"), so a category with any of its own comes up with
+           one of its own, and the rest show the sample picture. */
+        products: {
+          where: { isActive: true },
+          orderBy: [{ image: "asc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
+          take: 1,
+          select: { image: true },
+        },
+      },
     }),
     prisma.product.findMany({
       where: { isActive: true, isFeatured: true },
@@ -52,7 +66,7 @@ export default async function HomePage() {
     locale === "ka" ? row.nameKa : row.nameEn;
 
   const perks = [
-    { icon: ShieldIcon, title: t.home.why1Title, text: t.home.why1Text },
+    { icon: BagCheckIcon, title: t.home.why1Title, text: t.home.why1Text },
     { icon: PackageIcon, title: t.home.why2Title, text: t.home.why2Text },
     { icon: RefreshIcon, title: t.home.why3Title, text: t.home.why3Text },
     { icon: TruckIcon, title: t.home.why4Title, text: t.home.why4Text },
@@ -149,7 +163,7 @@ export default async function HomePage() {
       {/* --------------------------- categories ---------------------------- */}
       {/* A strip of tall tiles that scrolls sideways: a number, the name
           in the serif, the count, and the icon standing in the corner. */}
-      <section className="page-container pt-12 lg:pt-16">
+      <section className="page-container pt-12 lg:pt-16" data-snap>
         <div className="section-head reveal">
           <div>
             <p className="eyebrow">{t.home.shopByCategory}</p>
@@ -165,15 +179,25 @@ export default async function HomePage() {
               href={`/catalog?category=${category.slug}`}
               className="cat-tile reveal"
             >
-              <span className="flex items-start justify-between">
-                <span className="label">{String(index + 1).padStart(2, "0")}</span>
+              {/* The tile is a photograph of something in the category —
+                  a shoe for the shoes — with the words set over its foot. */}
+              <Image
+                src={category.products[0]?.image ?? "/products/placeholder.svg"}
+                alt=""
+                fill
+                sizes="(max-width: 640px) 60vw, 300px"
+                className="cat-photo"
+              />
+              <span className="cat-veil" aria-hidden="true" />
+              <span className="relative flex items-start justify-between">
+                <span className="label text-white/80">{String(index + 1).padStart(2, "0")}</span>
                 <span className="cat-icon" aria-hidden="true">
                   {category.icon}
                 </span>
               </span>
-              <span>
-                <span className="cat-name block text-balance">{name(category)}</span>
-                <span className="label mt-2 block">
+              <span className="relative">
+                <span className="cat-name block text-balance text-white">{name(category)}</span>
+                <span className="label mt-2 block text-white/75">
                   {category._count.products === 1
                     ? t.home.indexCountOne
                     : fill(t.home.indexCount, { count: category._count.products })}
@@ -188,27 +212,35 @@ export default async function HomePage() {
       {/* An editorial grid: the first product large, the rest beside and
           under it. */}
       {featured.length > 0 && (
-        <section className="page-container pt-14 lg:pt-20">
-          <div className="section-head reveal">
+        <section className="page-container pt-14 lg:pt-20" data-snap>
+          {/* The arrows sit at the right of this head — the rail draws
+              them there — so the head keeps only the words. */}
+          <div className="section-head reveal pr-24">
             <div>
               <p className="eyebrow">{t.home.featured}</p>
               <h2 className="display-md mt-2 text-ink-900">{t.home.featuredHint}</h2>
             </div>
-            <SectionLink href="/catalog">{t.home.viewAll}</SectionLink>
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
+          <Rail className="mt-8" label={{ previous: t.common.previous, next: t.common.next }}>
             {featured.map((product, index) => (
-              <div key={product.id} className={index === 0 ? "col-span-2 row-span-2" : ""}>
+              <div key={product.id} className="rail-item">
                 <ProductCard product={product} priority={index < 3} />
               </div>
             ))}
+          </Rail>
+
+          <div className="mt-8 flex justify-center">
+            <Link href="/catalog" className="btn btn-outline btn-md">
+              {t.home.viewAll}
+              <ArrowRightIcon size={16} />
+            </Link>
           </div>
         </section>
       )}
 
       {/* ------------------------------- deals ----------------------------- */}
-      <section className="page-container pt-14 lg:pt-20">
+      <section className="page-container pt-14 lg:pt-20" data-snap>
         <div className="deals-editorial reveal flex flex-col justify-between gap-8 px-6 py-12 sm:px-12 sm:py-16 lg:flex-row lg:items-end">
           <span className="ghost" aria-hidden="true">
             −%
@@ -232,7 +264,7 @@ export default async function HomePage() {
       {newArrivals.length > 0 && (
         // Named so the screenshot suite can paint over it: these four cards
         // are whatever was added last, and the suite adds products.
-        <section id="new-arrivals" className="page-container pt-14 lg:pt-20">
+        <section id="new-arrivals" className="page-container pt-14 lg:pt-20" data-snap>
           <div className="section-head reveal">
             <div>
               <p className="eyebrow">{t.home.newArrivals}</p>
@@ -250,7 +282,7 @@ export default async function HomePage() {
       )}
 
       {/* -------------------------------- why ------------------------------ */}
-      <section className="page-container pt-14 pb-16 lg:pt-20 lg:pb-24">
+      <section className="page-container pt-14 pb-16 lg:pt-20 lg:pb-24" data-snap>
         <div className="section-head reveal">
           <p className="eyebrow">{t.home.whyTitle}</p>
         </div>

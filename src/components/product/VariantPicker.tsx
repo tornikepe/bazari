@@ -87,9 +87,9 @@ export function VariantPicker({
 
       {options.map((option) => (
         <fieldset key={option.id}>
-          <legend className="field-label">{option.name}</legend>
+          <legend className="field-label mx-auto">{option.name}</legend>
 
-          <div className="mt-1.5 flex flex-wrap gap-2">
+          <div className="mt-1.5 flex flex-wrap justify-center gap-2">
             {option.values.map((value) => {
               const picked = chosen[option.id] === value.id;
               const possible = reachable(option.id, value.id);
@@ -129,7 +129,7 @@ export function VariantPicker({
         /* A flex row of one fixed height: as a plain paragraph it was two
            pixels taller once the icon sat in it, and the panel below moved
            by two pixels on the first choice. */
-        className={`flex min-h-5 items-center text-sm font-semibold ${
+        className={`flex min-h-5 items-center justify-center text-sm font-semibold ${
           !complete ? "text-ink-500" : stock > 0 ? "text-success" : "text-danger"
         }`}
       >

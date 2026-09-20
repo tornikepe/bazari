@@ -32,10 +32,10 @@ export function ScrollReveal() {
   useEffect(() => {
     const root = document.documentElement;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // Not on a touch screen either — see the stylesheet: a thumb flicks
-    // faster than a reveal can follow.
+    if (still || typeof IntersectionObserver === "undefined") return;
+    // On a touch screen the motion is shorter and starts the moment the
+    // block's edge appears: a thumb flicks faster than a slow reveal.
     const touch = window.matchMedia("(hover: none)").matches;
-    if (still || touch || typeof IntersectionObserver === "undefined") return;
 
     // Scroll-driven cards animate themselves where the browser can; only
     // where it cannot does the observer take them too.
@@ -52,7 +52,7 @@ export function ScrollReveal() {
           { opacity: 0, transform: "translateY(1.5rem)" },
           { opacity: 1, transform: "none" },
         ],
-        { duration: 800, delay: delay * 1000, easing: EASE, fill: "both" },
+        { duration: touch ? 450 : 800, delay: touch ? 0 : delay * 1000, easing: EASE, fill: "both" },
       );
     };
 
@@ -66,7 +66,7 @@ export function ScrollReveal() {
       },
       // A little before the fold, so the motion has finished by the time
       // the block is fully in view rather than starting then.
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.01 },
+      { rootMargin: touch ? "0px 0px 0px 0px" : "0px 0px -8% 0px", threshold: 0.01 },
     );
 
     const wants = (el: Element) =>

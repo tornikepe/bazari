@@ -130,7 +130,7 @@ export function ProductGallery({
         </button>
         {badge}
         {many && (
-          <span className="pointer-events-none absolute top-3 right-3 rounded-full bg-ink-900/70 px-2.5 py-1 text-[11px] font-bold text-white tabular-nums">
+          <span className="pointer-events-none absolute top-3 right-3 rounded-full bg-panel/80 px-2.5 py-1 text-[11px] font-bold text-panel-fg tabular-nums">
             {active + 1} / {photos.length}
           </span>
         )}

@@ -78,7 +78,7 @@ export function ProductPurchasePanel({
            buttons to slivers. Nothing on the line shrinks now. */
         <div>
           <span className="field-label">{t.product.quantity}</span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center gap-3">
 
           {/* A stepper: minus, the number, plus, as one control the height
               of the buttons under it. The number is a field, so it can also
@@ -126,7 +126,7 @@ export function ProductPurchasePanel({
             </span>
           )}
 
-          <FavoriteButton productId={product.productId} size="control" className="ml-auto" />
+          <FavoriteButton productId={product.productId} size="control" />
           </div>
         </div>
       )}
