@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, type CartItem } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
@@ -10,138 +10,144 @@ import { lineKey } from "@/lib/cart-store";
 import { MinusIcon, PlusIcon } from "@/components/ui/icons";
 
 /**
- * Quantity stepper plus the two purchase buttons.
+ * The buying controls, laid out as the reference shop lays them: the
+ * choice (a size, passed in as `choice`) and the quantity on one row, the
+ * wide dark "add to cart" with the heart square beside it under that, and
+ * "buy now" as a quiet line under those.
+ *
+ * On a phone the two buttons are also a bar fixed to the foot of the
+ * screen, always — the same buttons, the same state, drawn twice; the
+ * inline pair is hidden there. The bar reports its height as
+ * `--buy-bar-h` so the chat launcher lifts clear of it.
  *
  * The stepper is the cart's own quantity once the product is in the cart,
- * and the quantity to add until then. The add button is a toggle now — in
- * the cart, a press takes the product out — so the only other way to buy
- * three instead of one from this page is for the stepper to edit the line
- * itself, which is what a shopper pressing "+" beside a button that says
- * "in the cart" expects it to do.
+ * and the quantity to add until then.
  */
 export function ProductPurchasePanel({
   product,
   keepShape = false,
   prompt,
+  choice,
 }: {
   product: Omit<CartItem, "quantity">;
-  /**
-   * Keep the stepper and "buy now" in place, disabled, when the product is
-   * sold out. A product sold in one form that is out of stock simply has
-   * less to offer and the panel says so; a product sold in sizes changes
-   * `product` with every choice, and a panel that folded two controls away
-   * for a sold-out size and unfolded them for the next moved everything
-   * under it each time.
-   */
+  /** Keep the stepper in place, disabled, when a size is sold out. */
   keepShape?: boolean;
   /** Passed through to the add button: what it says while there is no choice yet. */
   prompt?: string;
+  /** The size selector, when the product is sold in sizes. */
+  choice?: React.ReactNode;
 }) {
   const { t } = useI18n();
   const { items, hydrated, add, setQuantity: setLineQuantity } = useCart();
   const router = useRouter();
   const [pending, setPending] = useState(1);
+  const bar = useRef<HTMLDivElement>(null);
 
   const key = lineKey(product);
-  const line =
-    hydrated && !prompt
-      ? items.find((entry) => lineKey(entry) === key)
-      : undefined;
+  const line = hydrated && !prompt ? items.find((entry) => lineKey(entry) === key) : undefined;
   const quantity = line ? line.quantity : pending;
 
   const soldOut = product.stock <= 0;
   const max = Math.max(1, product.stock);
 
-  function clamp(next: number) {
-    return Math.min(Math.max(1, next), max);
-  }
-
   function setQuantity(next: number) {
-    const value = clamp(next);
+    const value = Math.min(Math.max(1, next), max);
     if (line) setLineQuantity(key, value);
     else setPending(value);
   }
 
   function buyNow() {
-    if (soldOut) return;
+    if (soldOut || prompt) return;
     if (!line) add(product, quantity);
     router.push("/checkout");
   }
 
+  /* The bar's height, for the chat launcher — measured, since the button
+     wraps on the narrowest phones. */
+  useEffect(() => {
+    const el = bar.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const write = () => {
+      if (getComputedStyle(el).display === "none") root.style.removeProperty("--buy-bar-h");
+      else root.style.setProperty("--buy-bar-h", `${el.offsetHeight}px`);
+    };
+    write();
+    const ro = new ResizeObserver(write);
+    ro.observe(el);
+    window.addEventListener("resize", write);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", write);
+      root.style.removeProperty("--buy-bar-h");
+    };
+  }, []);
+
+  const buttons = (
+    <div className="flex items-stretch gap-2">
+      <AddToCartButton product={product} quantity={quantity} size="lg" fullWidth prompt={prompt} />
+      <FavoriteButton productId={product.productId} size="control" />
+    </div>
+  );
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
+      {/* The choice and the quantity on one row. */}
       {(!soldOut || keepShape) && (
-        /* The label above; the stepper, the count and the heart on the line
-           under it. All four shared one line, and on a phone they shared
-           330px by shrinking — the stepper to a third of its width, its
-           buttons to slivers. Nothing on the line shrinks now. */
-        <div>
-          <span className="field-label">{t.product.quantity}</span>
-          <div className="flex items-center justify-center gap-3">
-
-          {/* A stepper: minus, the number, plus, as one control the height
-              of the buttons under it. The number is a field, so it can also
-              be typed; the stock is the ceiling on both. */}
-          <div className="stepper shrink-0">
-            <button
-              type="button"
-              onClick={() => setQuantity(quantity - 1)}
-              disabled={soldOut || quantity <= 1}
-              aria-label="-"
-              className="stepper-button"
-            >
-              <MinusIcon size={16} strokeWidth={2.5} />
-            </button>
-
-            <input
-              type="number"
-              value={quantity}
-              min={1}
-              max={max}
-              disabled={soldOut}
-              onChange={(event) => setQuantity(Number(event.target.value) || 1)}
-              aria-label={t.product.quantity}
-              className="stepper-value"
-            />
-
-            <button
-              type="button"
-              onClick={() => setQuantity(quantity + 1)}
-              disabled={soldOut || quantity >= max}
-              aria-label="+"
-              className="stepper-button"
-            >
-              <PlusIcon size={16} strokeWidth={2.5} />
-            </button>
-          </div>
-
-          {/* The product's own heart, at the end of the quantity row rather
-              than as a third button: beside two wide buttons it squeezed
-              the first until its label broke across two lines. */}
-          <FavoriteButton productId={product.productId} size="control" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {choice}
+          <div>
+            <span className="field-label">{t.product.quantity}</span>
+            <div className="stepper w-full">
+              <button
+                type="button"
+                onClick={() => setQuantity(quantity - 1)}
+                disabled={soldOut || quantity <= 1}
+                aria-label="-"
+                className="stepper-button"
+              >
+                <MinusIcon size={16} strokeWidth={2.5} />
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                min={1}
+                max={max}
+                disabled={soldOut}
+                onChange={(event) => setQuantity(Number(event.target.value) || 1)}
+                aria-label={t.product.quantity}
+                className="stepper-value flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => setQuantity(quantity + 1)}
+                disabled={soldOut || quantity >= max}
+                aria-label="+"
+                className="stepper-button"
+              >
+                <PlusIcon size={16} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="flex flex-col gap-2.5 sm:flex-row">
-        <AddToCartButton
-          product={product}
-          quantity={quantity}
-          size="lg"
-          fullWidth
-          prompt={prompt}
-        />
+      <div className="hidden lg:block">{buttons}</div>
 
-        {(!soldOut || keepShape) && (
-          <button
-            type="button"
-            onClick={buyNow}
-            disabled={soldOut}
-            className="btn btn-secondary btn-lg w-full"
-          >
-            {t.product.buyNow}
-          </button>
-        )}
+      {(!soldOut || keepShape) && (
+        <button
+          type="button"
+          onClick={buyNow}
+          disabled={soldOut || Boolean(prompt)}
+          className="btn btn-outline btn-lg w-full"
+        >
+          {t.product.buyNow}
+        </button>
+      )}
+
+      {/* The phone's foot bar: the same two buttons, fixed. */}
+      <div ref={bar} className="buy-foot lg:hidden">
+        {buttons}
       </div>
     </div>
   );

@@ -4167,10 +4167,230 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 
 /* ---- Product page --------------------------------------------------- */
 
-/* The stage takes the photographs' own proportion, 4:5, so a picture on
-   white does not stand in a square of the paper with two bands beside it. */
+/* The stage takes the photographs' own proportion, 3:4 — the shop's
+   pictures are 2096×2794 — so a picture on white does not stand in a box
+   with two bands beside it. */
 .gallery-stage {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+/* The desktop's thumbnail column at the left of the stage: small 3:4
+   tiles, the chosen one edged in black, scrolling inside its own box
+   when there are more than fit. */
+.gallery-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 5.5rem;
+  flex-shrink: 0;
+  max-height: 44rem;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.gallery-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-thumb {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  opacity: 0.7;
+  transition:
+    opacity 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.gallery-thumb:hover {
+  opacity: 1;
+}
+
+.gallery-thumb.is-on {
+  opacity: 1;
+  border-color: var(--color-ink-900);
+  box-shadow: inset 0 0 0 1px var(--color-ink-900);
+}
+
+/* An arrow at either side of the stage, round, on the paper. */
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-surface) 85%, transparent);
+  color: var(--color-ink-900);
+  box-shadow: var(--shadow-pop);
+  backdrop-filter: blur(6px);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.gallery-arrow:hover {
+  background: var(--color-ink-900);
+  color: var(--color-canvas);
+}
+
+/* The phone's gallery: the photos edge to edge in a strip that swipes
+   and snaps, a dot for each under it. */
+.gallery-phone {
+  position: relative;
+  /* Edge to edge: out past the page's gutter, which is 1rem and 1.5rem
+     from `sm`. */
+  margin-inline: -1rem;
+}
+
+@media (min-width: 640px) {
+  .gallery-phone {
+    margin-inline: -1.5rem;
+  }
+}
+
+.gallery-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+
+.gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-slide {
+  position: relative;
+  flex: 0 0 100%;
+  aspect-ratio: 3 / 4;
+  scroll-snap-align: start;
+}
+
+.gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0 0.25rem;
+}
+
+.gallery-dots > button {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-ink-300);
+  transition:
+    background-color 0.2s ease,
+    width 0.2s ease;
+}
+
+.gallery-dots > button.is-on {
+  width: 1.25rem;
+  background: var(--color-ink-900);
+}
+
+/* The brand's mark beside the name: its name set large in the serif on a
+   tile, the way the reference shows the brand's logo — and the way to
+   everything the brand sells. */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  min-width: 6rem;
+  max-width: 9rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  color: var(--color-ink-900);
+  overflow-wrap: anywhere;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.brand-mark:hover {
+  background: var(--color-ink-900);
+  border-color: var(--color-ink-900);
+  color: var(--color-canvas);
+}
+
+/* The folded rows under the buy panel: a title with a plus at the end,
+   which turns to a cross when the row is open. */
+.fold {
+  border-bottom: 1px solid var(--color-line);
+}
+
+.fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.5rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-ink-900);
+}
+
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary::after {
+  content: "+";
+  font-size: 1.5rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--color-ink-500);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fold[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+.fold-body {
+  padding: 0 0 1.25rem;
+}
+
+/* The phone's buy bar: the two buttons fixed to the foot of the screen,
+   over the home indicator, on the paper with a hairline above. Its own
+   name — `.buy-bar` is the older bar that hides until it is shown. */
+.buy-foot {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 0.625rem 1rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-line);
+}
+
+/* Room under the page for it. */
+@media (max-width: 1023px) {
+  .page:has(.buy-foot) {
+    padding-bottom: 5.5rem;
+  }
 }
 
 /* On a touch screen the card's two buttons sit under the picture rather
@@ -4190,12 +4410,6 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   .reveal-view {
     animation-range: entry 0% entry 18% !important;
   }
-}
-
-/* The buy panel's labels sit over their controls, centred. */
-.buy-panel .field-label {
-  display: block;
-  text-align: center;
 }
 
 /* ---- Header --------------------------------------------------------- */

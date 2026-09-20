@@ -1,30 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { altOf, type Photo } from "@/lib/product-photos";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { Lightbox } from "@/components/product/Lightbox";
 
 /**
- * The product's photos.
+ * The product's photos, laid out the way the reference shop lays them.
  *
- * The big picture is shown whole — `object-contain` on the shop's white —
- * rather than cropped to the square: a photo of a shoe taken tall lost its
- * sole and its collar to the crop, and the one image on the site people
- * look at closely is not the one to trim. A tap on it opens the lightbox,
- * where it fills the screen and can be brought to twice its size.
+ * On a desktop: a column of thumbnails at the left and the picture beside
+ * it, 3:4, with an arrow at either side of the picture. On a phone: the
+ * photos edge to edge in a strip that swipes and snaps, with a dot for
+ * each under it — no thumbnails, the way every shop's phone page does it.
+ * A tap on the picture opens the lightbox on either.
  *
- * The thumbnails are tabs rather than a row of buttons, and the reason is
- * the tab order: seven photos as seven buttons is seven stops between the
- * price and the buy button, on the one page where the buy button matters
- * most. The tabs pattern gives one stop for the whole strip and arrow keys
- * inside it — which is also how a keyboard reader expects a gallery to
- * behave.
- *
- * There is no fade or slide between photos. A cross-fade on a product photo
- * reads as the image loading rather than as the reader choosing.
+ * The thumbnails are tabs rather than a row of buttons, for the tab
+ * order: seven photos as seven buttons is seven stops between the price
+ * and the buy button. The tabs pattern gives one stop for the strip and
+ * arrow keys inside it.
  */
 export function ProductGallery({
   photos,
@@ -41,14 +37,13 @@ export function ProductGallery({
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const strip = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLButtonElement>(null);
   const many = photos.length > 1;
+  const last = photos.length - 1;
 
   /* Under a pointer the picture grows around the point the pointer is on
-     and follows it — a magnifier, in effect — so the stitching can be looked
-     at without opening anything. The point is written as two custom
-     properties the stylesheet reads for `transform-origin`; only a mouse
-     does this, since a finger resting on the picture is a tap. */
+     and follows it — a magnifier, in effect. Only a mouse does this. */
   function follow(event: React.PointerEvent<HTMLButtonElement>) {
     if (event.pointerType !== "mouse" || !stage.current) return;
     const box = stage.current.getBoundingClientRect();
@@ -56,13 +51,23 @@ export function ProductGallery({
     stage.current.style.setProperty("--zy", `${((event.clientY - box.top) / box.height) * 100}%`);
   }
 
-  /**
-   * Arrow keys move the selection *and* the focus, because in this pattern the
-   * two are the same thing: a reader arrowing along a strip of photos is
-   * asking to see each one, not to land on it and press a key.
-   */
+  /* The phone strip: which photo is in view, read from the scroll, so the
+     dots follow a swipe; and a dot pressed scrolls the strip. */
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const read = () => setActive(Math.round(el.scrollLeft / el.clientWidth));
+    el.addEventListener("scroll", read, { passive: true });
+    return () => el.removeEventListener("scroll", read);
+  }, []);
+
+  function go(index: number) {
+    const next = (index + photos.length) % photos.length;
+    setActive(next);
+    track.current?.scrollTo({ left: next * track.current.clientWidth, behavior: "smooth" });
+  }
+
   function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    const last = photos.length - 1;
     const next =
       event.key === "ArrowRight" || event.key === "ArrowDown"
         ? active === last
@@ -77,105 +82,137 @@ export function ProductGallery({
             : event.key === "End"
               ? last
               : -1;
-
     if (next < 0) return;
-
-    // Only now — an unhandled key must keep its default, or Home stops
-    // scrolling the page while the strip happens to hold focus.
     event.preventDefault();
     setActive(next);
     strip.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-3 lg:self-start">
-      {/* One panel that changes its photo, rather than one panel per photo:
-          seven `<Image fill>` boxes stacked with six hidden is seven downloads
-          for a page most people never scroll. */}
-      {/* No card around the picture and no margin inside it: a photo on
-          the shop's white inside a bordered white box with a white border
-          of padding read as a frame around a frame, and the placeholder a
-          new product starts with drew a third. The rounded corners are the
-          picture's own. */}
-      <div
-        role="tabpanel"
-        id="gallery-panel"
-        aria-labelledby={`gallery-tab-${active}`}
-        className="gallery-stage relative aspect-square overflow-hidden rounded-card bg-surface"
-      >
-        <button
-          ref={stage}
-          type="button"
-          onClick={() => setOpen(true)}
-          onPointerMove={follow}
-          aria-label={t.product.zoomIn}
-          className="group absolute inset-0 cursor-zoom-in"
-        >
-          <Image
-            key={active}
-            src={photos[active]!.url}
-            /* What the photo shows, when somebody has said. "Photo 3 of 7" is a
-               position rather than a description, and a listener who hears it
-               has been told nothing about the picture — so the fallback is the
-               product's name, not its index. */
-            alt={altOf(photos[active], locale, name)}
-            fill
-            /* Twice the box on a desktop, since the box shows the picture
-               at twice its size under the pointer. */
-            sizes="(max-width: 1024px) 100vw, 1200px"
-            quality={85}
-            className="gallery-photo object-contain"
-            priority={active === 0}
-          />
-        </button>
-        {badge}
-        {many && (
-          <span className="pointer-events-none absolute top-3 right-3 rounded-full bg-panel/80 px-2.5 py-1 text-[11px] font-bold text-panel-fg tabular-nums">
-            {active + 1} / {photos.length}
-          </span>
-        )}
-      </div>
-
-      {many && (
-        <div
-          ref={strip}
-          role="tablist"
-          aria-label={t.product.photos}
-          aria-orientation="horizontal"
-          onKeyDown={onKeyDown}
-          className="gallery-strip flex gap-2 overflow-x-auto pb-1"
-        >
+    <div className="gallery min-w-0 lg:self-start">
+      {/* ------------------------------ phone ------------------------------ */}
+      <div className="gallery-phone lg:hidden">
+        <div ref={track} className="gallery-track" data-lenis-prevent>
           {photos.map((photo, index) => (
             <button
               key={index}
               type="button"
-              role="tab"
-              id={`gallery-tab-${index}`}
-              aria-selected={index === active}
-              aria-controls="gallery-panel"
-              // One stop for the strip: the unselected thumbnails are reached
-              // with the arrow keys, not with Tab.
-              tabIndex={index === active ? 0 : -1}
-              onClick={() => setActive(index)}
-              aria-label={fill(t.product.photoNumber, { index: index + 1, total: photos.length })}
-              /* The chosen one is ringed in the brand colour; the rest are
-                 plain, without a border of their own or a dimming — a row
-                 of small framed pictures under a large one was more frame
-                 than picture. */
-              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-control bg-surface ring-2 ring-offset-2 ring-offset-canvas transition-[box-shadow,transform] ${
-                index === active
-                  ? "ring-brand-600"
-                  : "ring-transparent hover:ring-ink-300"
-              }`}
+              onClick={() => {
+                setActive(index);
+                setOpen(true);
+              }}
+              aria-label={t.product.zoomIn}
+              className="gallery-slide"
             >
-              {/* Decorative: the button around it is already labelled, and a
-                  screen reader announcing the description twice per thumbnail
-                  would read the whole strip as one long sentence. */}
-              <Image src={photo.url} alt="" fill sizes="72px" className="object-cover" />
+              <Image
+                src={photo.url}
+                alt={altOf(photo, locale, name)}
+                fill
+                sizes="100vw"
+                quality={85}
+                priority={index === 0}
+                className="object-contain"
+              />
             </button>
           ))}
         </div>
-      )}
+        {badge && <div className="absolute top-3 left-3">{badge}</div>}
+        {many && (
+          <div className="gallery-dots" role="tablist" aria-label={t.product.photos}>
+            {photos.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                role="tab"
+                aria-selected={index === active}
+                aria-label={fill(t.product.photoNumber, { index: index + 1, total: photos.length })}
+                onClick={() => go(index)}
+                className={index === active ? "is-on" : ""}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ----------------------------- desktop ----------------------------- */}
+      <div className="hidden gap-3 lg:flex">
+        {many && (
+          <div
+            ref={strip}
+            role="tablist"
+            aria-label={t.product.photos}
+            aria-orientation="vertical"
+            onKeyDown={onKeyDown}
+            className="gallery-thumbs"
+            data-lenis-prevent
+          >
+            {photos.map((photo, index) => (
+              <button
+                key={index}
+                type="button"
+                role="tab"
+                id={`gallery-tab-${index}`}
+                aria-selected={index === active}
+                aria-controls="gallery-panel"
+                tabIndex={index === active ? 0 : -1}
+                onClick={() => setActive(index)}
+                aria-label={fill(t.product.photoNumber, { index: index + 1, total: photos.length })}
+                className={`gallery-thumb ${index === active ? "is-on" : ""}`}
+              >
+                <Image src={photo.url} alt="" fill sizes="88px" className="object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div
+          role="tabpanel"
+          id="gallery-panel"
+          aria-labelledby={`gallery-tab-${active}`}
+          className="gallery-stage relative min-w-0 flex-1"
+        >
+          <button
+            ref={stage}
+            type="button"
+            onClick={() => setOpen(true)}
+            onPointerMove={follow}
+            aria-label={t.product.zoomIn}
+            className="group absolute inset-0 cursor-zoom-in"
+          >
+            <Image
+              key={active}
+              src={photos[active]!.url}
+              alt={altOf(photos[active], locale, name)}
+              fill
+              sizes="(max-width: 1280px) 45vw, 620px"
+              quality={85}
+              className="gallery-photo object-contain"
+              priority={active === 0}
+            />
+          </button>
+          {badge}
+          {many && (
+            <>
+              <button
+                type="button"
+                onClick={() => setActive(active === 0 ? last : active - 1)}
+                aria-label={t.product.previousPhoto}
+                className="gallery-arrow left-3"
+              >
+                <ChevronLeftIcon size={20} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActive(active === last ? 0 : active + 1)}
+                aria-label={t.product.nextPhoto}
+                className="gallery-arrow right-3"
+              >
+                <ChevronRightIcon size={20} />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
       <Lightbox
         photos={photos}

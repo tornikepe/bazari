@@ -34,10 +34,12 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
       : [];
 
   return (
-    <div className="page">
+    /* The screen's height at least, so a short page — the one about the
+       shop is two paragraphs — is a page and not a strip above the footer. */
+    <div className="page flex min-h-[calc(100svh-var(--header-h))] flex-col justify-center">
       {/* The trail sits inside the column rather than above it, so it starts
           where the title starts instead of at the far edge of the screen. */}
-      <article className="mx-auto max-w-3xl">
+      <article className="mx-auto w-full max-w-3xl">
         <PageHeader
           crumbs={[{ label: t.nav.home, href: "/" }, { label: page.title }]}
           title={page.title}

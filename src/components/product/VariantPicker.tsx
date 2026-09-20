@@ -66,93 +66,53 @@ export function VariantPicker({
     );
   }
 
+  /* The choice as a select, one per option, the way the reference shop
+     asks for a size: a control that opens rather than a row of buttons.
+     A combination that was never generated, or is gone, is offered but
+     marked, so a shopper who picks it is told rather than handed another. */
+  const selects = options.map((option) => (
+    <div key={option.id}>
+      <label className="field-label" htmlFor={`option-${option.id}`}>
+        {option.name}
+      </label>
+      <select
+        id={`option-${option.id}`}
+        value={chosen[option.id] ?? ""}
+        onChange={(event) =>
+          setChosen((current) => ({ ...current, [option.id]: event.target.value || undefined }))
+        }
+        className="field h-[3.25rem] text-base font-semibold"
+      >
+        <option value="">{fill(t.product.chooseOption, { name: option.name.toLowerCase() })}</option>
+        {option.values.map((value) => (
+          <option key={value.id} value={value.id} disabled={!reachable(option.id, value.id)}>
+            {value.label}
+            {reachable(option.id, value.id) ? "" : ` — ${t.product.outOfStock}`}
+          </option>
+        ))}
+      </select>
+    </div>
+  ));
+
   return (
     <div className="flex flex-col gap-4">
       {/* The price, restated where the choice is made — it is the thing the
-          choice changes, and the figure beside the title is now a starting
-          point rather than an answer. The row is always laid out and only
-          shown when the price differs: appearing on demand, it pushed the
-          option buttons down by its own height the moment a size was
-          chosen, under the finger that chose it. When no variant is priced
-          on its own there is nothing to appear, and the row is not laid out
-          at all — an empty line at the top of the buy card otherwise. */}
+          choice changes. Only when a variant is priced on its own. */}
       {variants.some((candidate) => candidate.price != null && candidate.price !== product.price) && (
-      <div
-        className={complete && variant && price !== product.price ? "" : "invisible"}
-        aria-hidden={!(complete && variant && price !== product.price)}
-      >
-        <Price value={price} size="lg" />
-      </div>
+        <div
+          className={complete && variant && price !== product.price ? "" : "invisible"}
+          aria-hidden={!(complete && variant && price !== product.price)}
+        >
+          <Price value={price} size="lg" />
+        </div>
       )}
-
-      {options.map((option) => (
-        <fieldset key={option.id}>
-          <legend className="field-label mx-auto">{option.name}</legend>
-
-          <div className="mt-1.5 flex flex-wrap justify-center gap-2">
-            {option.values.map((value) => {
-              const picked = chosen[option.id] === value.id;
-              const possible = reachable(option.id, value.id);
-
-              return (
-                <button
-                  key={value.id}
-                  type="button"
-                  aria-pressed={picked}
-                  disabled={!possible}
-                  onClick={() =>
-                    setChosen((current) => ({
-                      ...current,
-                      [option.id]: current[option.id] === value.id ? undefined : value.id,
-                    }))
-                  }
-                  className={`min-h-10 rounded-control border px-3 text-sm font-semibold transition-colors ${
-                    picked
-                      ? "border-brand-600 bg-brand-50 text-brand-700"
-                      : possible
-                        ? "border-line text-ink-700 hover:border-ink-300"
-                        : "border-line text-ink-300 line-through"
-                  }`}
-                >
-                  {value.label}
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
-      ))}
-
-      {/* What the choice adds up to, said once rather than left to be inferred
-          from a disabled button. */}
-      <p
-        role="status"
-        /* A flex row of one fixed height: as a plain paragraph it was two
-           pixels taller once the icon sat in it, and the panel below moved
-           by two pixels on the first choice. */
-        className={`flex min-h-5 items-center justify-center text-sm font-semibold ${
-          !complete ? "text-ink-500" : stock > 0 ? "text-success" : "text-danger"
-        }`}
-      >
-        {!complete ? (
-          prompt
-        ) : stock > 0 ? (
-          <span className="inline-flex items-center gap-1.5">
-            <CheckIcon size={14} />
-            {fill(t.product.variantPicked, { label: labelFor(options, variant!) })}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5">
-            <CloseIcon size={14} />
-            {t.product.variantGone}
-          </span>
-        )}
-      </p>
 
       <ProductPurchasePanel
         /* A sold-out size must not fold the stepper and "buy now" away:
            the panel would change shape with every choice. */
         keepShape
         prompt={complete ? undefined : prompt}
+        choice={<>{selects}</>}
         product={{
           ...product,
           price,
@@ -161,6 +121,17 @@ export function VariantPicker({
           variantLabel: variant ? labelFor(options, variant) : undefined,
         }}
       />
+
+      {/* What the choice adds up to, said once. */}
+      {complete && (
+        <p
+          role="status"
+          className={`flex items-center gap-1.5 text-sm font-semibold ${stock > 0 ? "text-success" : "text-danger"}`}
+        >
+          {stock > 0 ? <CheckIcon size={14} /> : <CloseIcon size={14} />}
+          {stock > 0 ? fill(t.product.variantPicked, { label: labelFor(options, variant!) }) : t.product.variantGone}
+        </p>
+      )}
     </div>
   );
 }

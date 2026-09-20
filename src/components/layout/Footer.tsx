@@ -5,7 +5,6 @@ import { MailIcon, PhoneIcon } from "@/components/ui/icons";
 import { getSettings } from "@/lib/settings";
 import { getPublishedPages } from "@/lib/info-store";
 import { getI18n } from "@/lib/locale";
-import { prisma } from "@/lib/prisma";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
 
 /**
@@ -24,12 +23,6 @@ export async function Footer() {
   const [{ locale, t }, settings] = await Promise.all([getI18n(), getSettings()]);
   const published = await getPublishedPages(locale);
 
-  const categories = await prisma.category.findMany({
-    orderBy: [{ sortOrder: "asc" }],
-    take: 6,
-    select: { slug: true, nameKa: true, nameEn: true },
-  });
-
   // Built from the pages that actually exist and are published, using each
   // page's own title. A shop that unpublishes its warranty page should stop
   // linking to it — a footer link to a blank page is worse than no link, and
@@ -42,14 +35,6 @@ export async function Footer() {
     });
 
   const groups = [
-    {
-      id: "footer-shop",
-      title: t.footer.shop,
-      links: categories.map((category) => ({
-        href: `/catalog?category=${category.slug}`,
-        label: locale === "ka" ? category.nameKa : category.nameEn,
-      })),
-    },
     {
       id: "footer-company",
       title: t.footer.company,
@@ -86,8 +71,11 @@ export async function Footer() {
     // separation is now the footer's own top rule plus its internal padding,
     // which is surface-coloured and therefore invisible as a seam.
     <footer className="site-footer border-t border-line bg-surface">
-      <div className="page-container grid gap-6 py-8 text-center sm:gap-8 sm:py-10 sm:text-left lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
-        <div className="flex flex-col items-center sm:items-start">
+      {/* The same columns at every width: the shop's block, then the two
+          lists side by side. No category list — the catalogue is one link
+          away in the bar and on the home page. */}
+      <div className="page-container grid gap-8 py-8 sm:py-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
+        <div className="flex flex-col items-start">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <LogoMark size={32} />
             <Wordmark name={settings.name} className="text-base" />
@@ -98,7 +86,7 @@ export async function Footer() {
           {/* The ways to reach the shop, when it has set any: one line each,
               and the line is the link. */}
           {contacts.length > 0 && (
-            <ul className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-sm sm:justify-start">
+            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
               {contacts.map((contact) => (
                 <li key={contact.href}>
                   <a
@@ -114,15 +102,13 @@ export async function Footer() {
           )}
         </div>
 
-        {/* Three columns from `sm` up. On a phone each list is a heading
-            and a wrapped row of pills, centred — see `.footer-pill`. */}
-        <div className="grid gap-5 sm:grid-cols-3 sm:gap-x-6 sm:text-center">
+        <div className="grid grid-cols-2 gap-6 sm:gap-x-8 lg:justify-items-center">
           {groups.map((group) => (
             <nav key={group.id} aria-labelledby={group.id}>
               <h2 id={group.id} className="label mb-2 text-ink-400">
                 {group.title}
               </h2>
-              <ul className="flex flex-wrap justify-center gap-1.5 sm:flex-col sm:items-center sm:gap-0">
+              <ul className="flex flex-col">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <FooterLink href={link.href}>{link.label}</FooterLink>
@@ -140,11 +126,11 @@ export async function Footer() {
           corner, and with the page scrolled to its end it sat on the last
           word of the copyright line. */}
       <div className="border-t border-line">
-        <div className="page-container flex flex-col items-center gap-3 pt-6 pb-[4.25rem] text-center sm:flex-row sm:items-end sm:justify-between sm:pb-6 sm:text-left">
+        <div className="page-container flex flex-col items-start gap-3 pt-6 pb-[4.25rem] sm:flex-row sm:items-end sm:justify-between sm:pb-6">
           <p className="footer-wordmark -mb-[0.1em]" aria-hidden="true">
             {settings.name}
           </p>
-          <div className="flex flex-col items-center gap-1.5 sm:items-end">
+          <div className="flex flex-col items-start gap-1.5 sm:items-end">
             <InstallPrompt />
             <p className="text-xs text-ink-400">
               © {new Date().getFullYear()} {settings.name}. {t.footer.rights}

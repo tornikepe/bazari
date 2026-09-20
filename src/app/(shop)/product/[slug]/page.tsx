@@ -12,7 +12,6 @@ import { ProductCard } from "@/components/product/ProductCard";
 // its button. Chromium hid that by a pixel; Firefox did not.
 import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
-import { StickyBuyBar } from "@/components/product/StickyBuyBar";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { BagCheckIcon, CheckIcon, CloseIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
@@ -327,51 +326,39 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         ]}
       />
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,11fr)_minmax(0,10fr)] lg:gap-12">
+      {/* Laid out as the reference shop lays a product: the pictures at the
+          left, half the width; at the right the name with the brand's mark
+          beside it, the model code, the price, the size and the quantity,
+          the wide dark button with the heart, and the rest folded under
+          two rows. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:gap-12">
         {/* ------------------------------ gallery ---------------------------- */}
-        {/* The picture scrolls with the page, as the words beside it do. It
-            was pinned while the column beside it moved, and to a reader that
-            read as the picture lagging behind the page rather than staying
-            put on purpose. `lg:self-start` keeps the box its own height
-            rather than the row's. */}
         <ProductGallery photos={gallery} name={name} badge={saleBadge} />
 
         {/* ------------------------------- info ------------------------------ */}
-        {/* Read top to bottom the way a shopper decides: what it is, what it
-            costs, whether it is there, then how to buy it — the buy panel in
-            its own card so the eye lands on it — and only then the details. */}
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 lg:pt-1">
+          {/* The name at the left, the brand's mark at the right — the mark
+              is the way to everything the brand sells. */}
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="display-md min-w-0 text-balance text-ink-900">{name}</h1>
             {product.brand && (
               <Link
                 href={`/catalog?brand=${encodeURIComponent(product.brand)}`}
-                className="text-xs font-bold tracking-wider text-ink-500 uppercase transition-colors hover:text-brand-600"
+                title={t.product.brandAll}
+                className="brand-mark"
               >
-                {product.brand}
+                <span aria-hidden="true">{product.brand}</span>
+                <span className="sr-only">{t.product.brandAll}</span>
               </Link>
             )}
-            {product.brand && <span className="text-ink-300" aria-hidden="true">·</span>}
-            <Link
-              href={`/catalog?category=${product.category.slug}`}
-              className="text-xs font-semibold text-ink-500 transition-colors hover:text-brand-600"
-            >
-              {categoryName}
-            </Link>
           </div>
 
-          <h1 className="display-lg mt-3 text-balance text-ink-900">{name}</h1>
+          <p className="mt-3 text-sm text-ink-500">
+            {t.product.modelCode}: <span className="font-mono text-ink-700">{product.sku}</span>
+          </p>
 
-          {/* Nothing here until somebody real has written something. */}
-          {product.ratingCount > 0 && (
-            <div className="mt-2.5">
-              <Stars sum={product.ratingSum} count={product.ratingCount} t={t} size="md" href="#reviews" />
-            </div>
-          )}
-
-          <div className="mt-5 flex flex-wrap items-end gap-x-3 gap-y-2">
+          <div className="mt-4 flex flex-wrap items-end gap-x-3 gap-y-2">
             <Price value={product.price} oldValue={product.oldPrice} size="xl" />
-            {/* What the reduction is worth in money, beside the percentage on
-                the photo: "−30%" is a claim, "you save ₾120" is a fact. */}
             {discount > 0 && product.oldPrice && (
               <span className="badge mb-1 bg-success-soft text-success">
                 {fill(t.product.youSave, {
@@ -381,7 +368,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             {soldOut ? (
               <span className="badge bg-danger-soft text-danger">
                 <CloseIcon size={13} />
@@ -393,7 +380,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 {t.product.inStock}
               </span>
             )}
-
             {!soldOut && product.stock <= LOW_STOCK_THRESHOLD && (
               <span className="badge bg-warning-soft text-warning">
                 {fill(t.product.lowStock, { count: product.stock })}
@@ -401,20 +387,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
 
-          {description && (
-            <p className="mt-5 text-[15px] leading-relaxed text-ink-600">{description}</p>
+          {/* Nothing here until somebody real has written something. */}
+          {product.ratingCount > 0 && (
+            <div className="mt-3">
+              <Stars sum={product.ratingSum} count={product.ratingCount} t={t} size="md" href="#reviews" />
+            </div>
           )}
 
           {/* Offered where the disappointment happens, above the buy panel
               that has nothing to offer. */}
           {soldOut && <WatchStock productId={product.id} />}
 
-          {/* Centred: the sizes, the count and the two buttons read as
-              one column down the middle of the card, not as a form
-              hugging its left edge. */}
-          <div className="card buy-panel mt-6 card-pad text-center" id="buy-panel">
-            {/* A product with no options is exactly what it was before any of
-                this existed: one price, one stock figure, one button. */}
+          <div className="mt-7" id="buy-panel">
             {options.length > 0 ? (
               <VariantPicker product={line} options={options} variants={variants} />
             ) : (
@@ -422,61 +406,58 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
 
-          {/* The three promises as tiles — icon over a line of text, each
-              centred — rather than a list that read as small print. */}
-          <ul className="mt-4 grid grid-cols-3 gap-2">
-            {guarantees.map((item) => (
-              <li
-                key={item.text}
-                className="card flex flex-col items-center gap-2 px-2 py-3 text-center text-[11px] leading-snug font-medium text-ink-600 sm:text-xs"
-              >
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-50 text-brand-600">
-                  <item.icon size={18} />
-                </span>
-                {item.text}
-              </li>
-            ))}
-          </ul>
+          {/* The rest, folded under two rows with a plus at the end, the
+              way the reference keeps its page short: the details — the
+              description, the specifications, the facts — and delivery. */}
+          <div className="mt-7 border-t border-line">
+            <details className="fold" open>
+              <summary>{t.product.detailsAccordion}</summary>
+              <div className="fold-body">
+                {description && <p className="text-[15px] leading-relaxed text-ink-600">{description}</p>}
+                {specs.length > 0 && (
+                  <dl className="mt-4 overflow-hidden rounded-card border border-line">
+                    {specs.map((spec, index) => (
+                      <div
+                        key={`${spec.label}-${index}`}
+                        className={`grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-4 px-4 py-2.5 text-xs ${
+                          index % 2 === 0 ? "bg-surface" : "bg-ink-50"
+                        }`}
+                      >
+                        <dt className="text-ink-500">{spec.label}</dt>
+                        <dd className="text-right font-semibold text-ink-800">{spec.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                <dl className="mt-4 overflow-hidden rounded-card border border-line">
+                  {details.map((detail, index) => (
+                    <div
+                      key={detail.label}
+                      className={`grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-center gap-4 px-4 py-2.5 text-xs ${
+                        index % 2 === 0 ? "bg-surface" : "bg-ink-50"
+                      }`}
+                    >
+                      <dt className="text-ink-500">{detail.label}</dt>
+                      <dd className="text-right font-semibold text-ink-800">{detail.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </details>
 
-          {/* specifications, when the shop has written any */}
-          {specs.length > 0 && (
-            <div className="reveal mt-6">
-              <h2 className="mb-3 text-sm font-bold text-ink-900">{t.product.specs}</h2>
-              <dl className="overflow-hidden rounded-card border border-line">
-                {specs.map((spec, index) => (
-                  <div
-                    key={`${spec.label}-${index}`}
-                    /* Zebra striping by row, which is what makes a long table
-                       scannable across — the same rule the derived rows below
-                       already used, applied to the table that matters more. */
-                    className={`grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-4 px-4 py-2.5 text-xs ${
-                      index % 2 === 0 ? "bg-surface" : "bg-ink-50"
-                    }`}
-                  >
-                    <dt className="text-ink-500">{spec.label}</dt>
-                    <dd className="text-right font-semibold text-ink-800">{spec.value}</dd>
-                  </div>
+            <details className="fold">
+              <summary>{t.product.deliveryAccordion}</summary>
+              <ul className="fold-body flex flex-col gap-2.5">
+                {guarantees.map((item) => (
+                  <li key={item.text} className="flex items-center gap-3 text-sm text-ink-700">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
+                      <item.icon size={16} />
+                    </span>
+                    {item.text}
+                  </li>
                 ))}
-              </dl>
-            </div>
-          )}
-
-          {/* details */}
-          <div className="reveal mt-6">
-            <h2 className="mb-3 text-sm font-bold text-ink-900">{t.product.details}</h2>
-            <dl className="overflow-hidden rounded-card border border-line">
-              {details.map((detail, index) => (
-                <div
-                  key={detail.label}
-                  className={`grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-center gap-4 px-4 py-2.5 text-xs ${
-                    index % 2 === 0 ? "bg-surface" : "bg-ink-50"
-                  }`}
-                >
-                  <dt className="text-ink-500">{detail.label}</dt>
-                  <dd className="text-right font-semibold text-ink-800">{detail.value}</dd>
-                </div>
-              ))}
-            </dl>
+              </ul>
+            </details>
           </div>
         </div>
       </div>
@@ -658,13 +639,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           never reaches the server. */}
       <RecordView productId={product.id} />
 
-      {/* Follows the visitor down the page once the panel above is gone. */}
-      <StickyBuyBar
-        watchId="buy-panel"
-        product={line}
-        needsChoice={options.length > 0}
-        choiceName={options.map((option) => option.name).join(" / ")}
-      />
     </div>
   );
 }
