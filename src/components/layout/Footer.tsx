@@ -102,12 +102,18 @@ export async function Footer() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-6 text-center sm:gap-x-8">
+        {/* The two titles on one line across the block, a rule under them,
+            and each list under its title. The titles are one row of the
+            grid and the lists the next, so the two titles share a
+            baseline whatever the lists' lengths. */}
+        <div className="grid grid-cols-2 gap-x-6 text-center sm:gap-x-8">
           {groups.map((group) => (
-            <nav key={group.id} aria-labelledby={group.id}>
-              <h2 id={group.id} className="label mb-2 text-ink-400">
-                {group.title}
-              </h2>
+            <h2 key={group.id} id={group.id} className="label border-b border-line pb-3 text-ink-400">
+              {group.title}
+            </h2>
+          ))}
+          {groups.map((group) => (
+            <nav key={`${group.id}-links`} aria-labelledby={group.id} className="pt-3">
               <ul className="flex flex-col items-center">
                 {group.links.map((link) => (
                   <li key={link.href}>

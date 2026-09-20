@@ -124,7 +124,7 @@ export default async function CatalogPage({
             </div>
           </div>
 
-          <ActiveFilterChips filters={filters} categories={categories} />
+          <ActiveFilterChips filters={filters} categories={categories} bounds={bounds} />
 
           {items.length === 0 ? (
             <EmptyState

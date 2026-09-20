@@ -173,7 +173,7 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
       {/* ------------------------------- price ----------------------------- */}
       <FilterGroup
         title={t.catalog.price}
-        badge={priceActive ? `${filters.minPrice ?? bounds.min}–${filters.maxPrice ?? bounds.max} ₾` : undefined}
+        badge={priceActive ? `${filters.minPrice ?? bounds.min} – ${filters.maxPrice ?? bounds.max} ₾` : undefined}
       >
         <form onSubmit={submitPrice} className="flex flex-col gap-3">
           <div className="price-boxes">

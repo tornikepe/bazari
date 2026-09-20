@@ -12,9 +12,12 @@ import type { FilterCategory } from "@/components/catalog/FilterSidebar";
 export function ActiveFilterChips({
   filters,
   categories,
+  bounds,
 }: {
   filters: CatalogFilters;
   categories: FilterCategory[];
+  /** The cheapest and dearest in the catalogue, in lari. */
+  bounds: { min: number; max: number };
 }) {
   const { locale, t } = useI18n();
   const router = useRouter();
@@ -59,9 +62,11 @@ export function ActiveFilterChips({
 
   if (filters.minPrice !== null || filters.maxPrice !== null) {
     /* The filters hold lari, `formatPrice` takes tetri: a chip for
-       "22–100 ₾" read "0,22 ₾ – 1,00 ₾" until the two were reconciled. */
-    const from = filters.minPrice !== null ? formatPrice(filters.minPrice * 100, locale) : "…";
-    const to = filters.maxPrice !== null ? formatPrice(filters.maxPrice * 100, locale) : "…";
+       "22–100 ₾" read "0,22 ₾ – 1,00 ₾" until the two were reconciled.
+       An end left open reads as the catalogue's own edge — "22 ₾ – 100 ₾"
+       when only the top was set — rather than as an ellipsis. */
+    const from = formatPrice((filters.minPrice ?? bounds.min) * 100, locale);
+    const to = formatPrice((filters.maxPrice ?? bounds.max) * 100, locale);
     chips.push({
       key: "price",
       label: `${from} – ${to}`,
