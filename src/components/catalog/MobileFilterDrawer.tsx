@@ -75,6 +75,7 @@ export function MobileFilterDrawer({
                 categories={categories}
                 brands={brands}
                 bounds={bounds}
+                deferred
                 onApplied={() => setOpen(false)}
               />
             </div>

@@ -85,7 +85,7 @@ export async function Footer() {
     // page that read as a black stripe above the footer in dark mode. The
     // separation is now the footer's own top rule plus its internal padding,
     // which is surface-coloured and therefore invisible as a seam.
-    <footer className="site-footer border-t border-line bg-surface" data-snap>
+    <footer className="site-footer border-t border-line bg-surface">
       <div className="page-container grid gap-6 py-8 text-center sm:gap-8 sm:py-10 sm:text-left lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
         <div className="flex flex-col items-center sm:items-start">
           <Link href="/" className="inline-flex items-center gap-2.5">
@@ -116,13 +116,13 @@ export async function Footer() {
 
         {/* Three columns from `sm` up. On a phone each list is a heading
             and a wrapped row of pills, centred — see `.footer-pill`. */}
-        <div className="grid gap-5 sm:grid-cols-3 sm:gap-x-6">
+        <div className="grid gap-5 sm:grid-cols-3 sm:gap-x-6 sm:text-center">
           {groups.map((group) => (
             <nav key={group.id} aria-labelledby={group.id}>
-              <h2 id={group.id} className="label mb-2 text-ink-900">
+              <h2 id={group.id} className="label mb-2 text-ink-400">
                 {group.title}
               </h2>
-              <ul className="flex flex-wrap justify-center gap-1.5 sm:flex-col sm:gap-0">
+              <ul className="flex flex-wrap justify-center gap-1.5 sm:flex-col sm:items-center sm:gap-0">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <FooterLink href={link.href}>{link.label}</FooterLink>

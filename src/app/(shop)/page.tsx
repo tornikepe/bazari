@@ -163,7 +163,7 @@ export default async function HomePage() {
       {/* --------------------------- categories ---------------------------- */}
       {/* A strip of tall tiles that scrolls sideways: a number, the name
           in the serif, the count, and the icon standing in the corner. */}
-      <section className="page-container pt-12 lg:pt-16" data-snap>
+      <section className="page-container pt-12 lg:pt-16">
         <div className="section-head reveal">
           <div>
             <p className="eyebrow">{t.home.shopByCategory}</p>
@@ -212,7 +212,7 @@ export default async function HomePage() {
       {/* An editorial grid: the first product large, the rest beside and
           under it. */}
       {featured.length > 0 && (
-        <section className="page-container pt-14 lg:pt-20" data-snap>
+        <section className="page-container pt-14 lg:pt-20">
           {/* The arrows sit at the right of this head — the rail draws
               them there — so the head keeps only the words. */}
           <div className="section-head reveal pr-24">
@@ -240,7 +240,7 @@ export default async function HomePage() {
       )}
 
       {/* ------------------------------- deals ----------------------------- */}
-      <section className="page-container pt-14 lg:pt-20" data-snap>
+      <section className="page-container pt-14 lg:pt-20">
         <div className="deals-editorial reveal flex flex-col justify-between gap-8 px-6 py-12 sm:px-12 sm:py-16 lg:flex-row lg:items-end">
           <span className="ghost" aria-hidden="true">
             −%
@@ -264,7 +264,7 @@ export default async function HomePage() {
       {newArrivals.length > 0 && (
         // Named so the screenshot suite can paint over it: these four cards
         // are whatever was added last, and the suite adds products.
-        <section id="new-arrivals" className="page-container pt-14 lg:pt-20" data-snap>
+        <section id="new-arrivals" className="page-container pt-14 lg:pt-20">
           <div className="section-head reveal">
             <div>
               <p className="eyebrow">{t.home.newArrivals}</p>
@@ -282,7 +282,7 @@ export default async function HomePage() {
       )}
 
       {/* -------------------------------- why ------------------------------ */}
-      <section className="page-container pt-14 pb-16 lg:pt-20 lg:pb-24" data-snap>
+      <section className="page-container pt-14 pb-16 lg:pt-20 lg:pb-24">
         <div className="section-head reveal">
           <p className="eyebrow">{t.home.whyTitle}</p>
         </div>

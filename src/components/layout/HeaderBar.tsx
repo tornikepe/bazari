@@ -142,11 +142,7 @@ export function HeaderBar({
 
         {/* The shop's pages only: about and contact live in the footer
             and the drawer, and six links beside the icons overran 1280px. */}
-        <HeaderNav
-          categories={categories}
-          categoryName={categoryName}
-          links={navLinks.filter((item) => ["catalog", "deals", "track"].includes(item.icon))}
-        />
+        <HeaderNav links={navLinks.filter((item) => ["catalog", "deals", "track"].includes(item.icon))} />
 
         <div className="flex-1" />
 

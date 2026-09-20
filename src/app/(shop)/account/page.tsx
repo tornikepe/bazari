@@ -106,7 +106,7 @@ export default async function AccountPage({
     {
       icon: HeartIcon,
       label: t.favorites.title,
-      value: countText(t.favorites.countOne, t.favorites.count, favoriteCount),
+      value: <CountUp value={favoriteCount} locale={locale} />,
       href: "/favorites",
     },
     {
@@ -133,22 +133,20 @@ export default async function AccountPage({
           /* One row on a wide screen; on a phone the words above and the
              marks below, since a number, a date and four marks do not
              share 340px. */
-          className="card hover-lift mt-4 flex flex-col gap-3 card-pad-tight sm:flex-row sm:items-center sm:gap-5"
+          className="card mt-5 flex flex-col gap-4 card-pad transition-colors hover:border-ink-900 sm:flex-row sm:items-center sm:gap-6"
         >
-          <span className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600">
-              <TruckIcon size={18} />
+          <span className="flex min-w-0 flex-1 items-center gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand-solid text-brand-on-solid">
+              <TruckIcon size={20} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="text-xs font-bold tracking-wider text-ink-400 uppercase">
-                  {t.account.activeOrder}
-                </span>
+              <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <span className="eyebrow">{t.account.activeOrder}</span>
                 <StatusBadge status={active.status} t={t} />
               </span>
-              <span className="mt-0.5 block truncate text-sm">
-                <span className="font-mono font-bold text-ink-900">{active.number}</span>
-                <span className="ml-2 text-xs text-ink-400">
+              <span className="mt-1 block truncate">
+                <span className="font-mono text-base font-bold text-ink-900">{active.number}</span>
+                <span className="ml-2 text-xs text-ink-500">
                   {formatDate(active.createdAt)} ·{" "}
                   {countText(t.admin.productCountOne, t.admin.productCount, active._count.items)} ·{" "}
                   {formatPrice(active.total, locale)}
@@ -156,7 +154,7 @@ export default async function AccountPage({
               </span>
             </span>
           </span>
-          <span className="flex items-center justify-between gap-4 pl-13 sm:justify-end sm:pl-0">
+          <span className="flex items-center justify-between gap-4 pl-16 sm:justify-end sm:pl-0">
             {/* Four steps as four marks, the ones passed filled, the one it
                 is on breathing — the timeline on the order page in a line. */}
             <span aria-hidden="true" className="flex items-center gap-1.5">
@@ -181,72 +179,51 @@ export default async function AccountPage({
         </Link>
       )}
 
-      <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line lg:grid-cols-4">
+      {/* The four figures on four rules, the way the home page sets its
+          counts: the number in the serif, the label under it in small
+          capitals, the icon beside the label. The wishlist's cell is the
+          way to the wishlist. */}
+      <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4">
         {stats.map((stat) => {
           const inner = (
             <>
-              <dt className="flex items-center gap-3 text-xs text-ink-500">
-                {/* Hidden on a phone, where two cells share 390px: the icon
-                    and its gap take 52 of the ~146px a cell has, and
-                    "₾27,892.00" arrived as "₾27,892…". The label already says
-                    which figure this is; the icon is decoration and goes
-                    first. */}
-                <span
-                  aria-hidden="true"
-                  className="hidden h-10 w-10 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-600 sm:grid"
-                >
-                  <stat.icon size={18} />
-                </span>
+              <dd className="display-md text-ink-900 tabular-nums">{stat.value}</dd>
+              <dt className="eyebrow mt-1.5 flex items-center gap-1.5">
+                <stat.icon size={13} className="shrink-0 text-brand-600" />
                 <span className="truncate">{stat.label}</span>
-                {stat.href && (
-                  <ChevronRightIcon
-                    size={14}
-                    aria-hidden="true"
-                    className="ml-auto shrink-0 text-ink-400"
-                  />
-                )}
+                {stat.href && <ChevronRightIcon size={12} aria-hidden="true" className="shrink-0" />}
               </dt>
-              {/* `tabular-nums` so four figures in a row line up by digit — a
-                  strip of numbers that does not is the thing that makes a
-                  dashboard look homemade. */}
-              <dd className="truncate text-base font-extrabold tracking-tight text-ink-900 tabular-nums sm:pl-[3.25rem] sm:text-lg">
-                {stat.value}
-              </dd>
             </>
           );
-          /* The wishlist cell is a link — the whole cell, so the target is
-             the box and not the word. A `<dl>` allows nothing but `div`
-             between it and its terms, so the link goes inside the cell. */
           return stat.href ? (
-            <div key={stat.label} className="bg-surface">
-              <Link
-                href={stat.href}
-                className="block p-4 transition-colors hover:bg-ink-50"
-              >
+            <div key={stat.label} className="border-t border-ink-900">
+              <Link href={stat.href} className="group block pt-3 transition-colors hover:text-brand-600">
                 {inner}
               </Link>
             </div>
           ) : (
-            <div key={stat.label} className="bg-surface p-4">
+            <div key={stat.label} className="border-t border-ink-900 pt-3">
               {inner}
             </div>
           );
         })}
       </dl>
 
-      <div className="mt-4">
+      <div className="mt-10">
         {/* ------------------------------ orders ----------------------------- */}
-        <section id="orders" className="card overflow-hidden scroll-mt-[calc(var(--header-h)+1rem)]">
-          <div className="card-head flex items-center justify-between gap-3">
-            <h2 className="text-sm font-bold text-ink-900">{t.account.myOrders}</h2>
-            {/* Only when the list is not the whole story. A count beside a
-                heading that shows every row is a number for its own sake. */}
-            {orderCount > RECENT && (
-              <p className="text-xs text-ink-400">
-                {fill(t.account.showingLast, { count: RECENT })}
-              </p>
-            )}
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">{t.account.overview}</p>
+            <h2 className="display-md mt-1 text-ink-900">{t.account.myOrders}</h2>
           </div>
+          {/* Only when the list is not the whole story. A count beside a
+              heading that shows every row is a number for its own sake. */}
+          {orderCount > RECENT && (
+            <p className="text-xs text-ink-500">{fill(t.account.showingLast, { count: RECENT })}</p>
+          )}
+        </div>
+
+        <section id="orders" className="card mt-5 overflow-hidden scroll-mt-[calc(var(--header-h)+1rem)]">
 
           {/* Links rather than a `<select>`: the filter is part of the address,
               so a customer can bookmark "my delivered orders" and the back

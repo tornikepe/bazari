@@ -73,10 +73,11 @@
   --color-info: #245fe2;
   --color-info-soft: #dbeafe;
 
-  --color-surface: #fbfaf7;
+  --color-surface: #fcfbf8;
   /* Paper. A shade warmer and darker than the surface, so a card reads as
-     a card on it and a page with no cards still has a ground. */
-  --color-canvas: #f2efe9;
+     a card on it and a page with no cards still has a ground — light
+     enough that a page of photographs is not read against a grey. */
+  --color-canvas: #f5f3ee;
   /* Soft enough that a card's edge is felt more than seen — the shadow
      under it does the rest — and still 1.3:1 against the surface, which is
      all a decorative rule needs. Form fields draw a darker edge of their
@@ -211,14 +212,14 @@
   /* Three grounds a step apart — canvas, surface, panel — so a card is
      seen on the page and the black band is seen on the card. They were a
      hair apart and the dark page read as one flat black. */
-  --color-surface: #1a1815;
-  --color-canvas: #100f0d;
-  --color-line: #322e28;
+  --color-surface: #1e1c19;
+  --color-canvas: #151311;
+  --color-line: #35312a;
 
-  --color-ink-50: #221f1b;
-  --color-ink-100: #2b2823;
-  --color-ink-200: #38342d;
-  --color-ink-300: #504a42;
+  --color-ink-50: #26231f;
+  --color-ink-100: #2f2b26;
+  --color-ink-200: #3d3831;
+  --color-ink-300: #554f46;
   --color-ink-400: #8a8479;
   --color-ink-500: #a29b8f;
   --color-ink-600: #bdb6aa;
@@ -227,7 +228,7 @@
   --color-ink-900: #f5f2ec;
 
   /* Lifted off the surface so a dark panel is still a panel on it. */
-  --color-panel: #26221d;
+  --color-panel: #2a2620;
   --color-panel-fg: #f5f2ec;
 
   /* Brand and semantics are brightened a step: the light-mode shades don't
@@ -2520,6 +2521,18 @@ html[data-reveal="all"] .reveal-view {
   box-shadow: 0 0 0 4px var(--color-brand-100);
 }
 
+/* The drawer's foot: apply and clear, stuck to the bottom of the sheet. */
+.filter-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem -1rem 0;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
 /* ------------------------------------------------------------------ */
 /* Checkout                                                            */
 /* ------------------------------------------------------------------ */
@@ -3905,7 +3918,7 @@ html[data-cursor] .cursor-dot[data-over="link"] {
    paper is nearly white, and without the line a card had no edge. */
 .product-card .card-media {
   border-radius: var(--radius-card);
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-ink-200);
   background: var(--color-ink-50);
   aspect-ratio: 4 / 5;
   overflow: hidden;

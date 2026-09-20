@@ -4,7 +4,7 @@ import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { CheckIcon, ChevronDownIcon, CloseIcon, SearchIcon, SpinnerIcon } from "@/components/ui/icons";
-import { buildQuery, type CatalogFilters } from "@/lib/filters";
+import { buildQuery, EMPTY_FILTERS, type CatalogFilters } from "@/lib/filters";
 import { fill } from "@/lib/i18n";
 
 /** Brands shown before "more". */
@@ -25,6 +25,13 @@ type Props = {
   bounds: { min: number; max: number };
   /** Rendered inside the mobile drawer — closes it after a filter is applied. */
   onApplied?: () => void;
+  /**
+   * Hold every change until the button at the foot is pressed. The drawer
+   * on a phone: applying on each tap re-fetched the page under the sheet
+   * and, with the sheet closing on each, made choosing a brand and a price
+   * three trips. The rail on a desktop applies as it is touched.
+   */
+  deferred?: boolean;
 };
 
 /**
@@ -38,10 +45,21 @@ type Props = {
  * is two switches rather than two checkboxes, because each is a state
  * of the whole catalogue and not a member of a set.
  */
-export function FilterSidebar({ filters, categories, brands, bounds, onApplied }: Props) {
+export function FilterSidebar({ filters: live, categories, brands, bounds, onApplied, deferred = false }: Props) {
   const { locale, t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  /* Deferred: the choices collect in a draft and go to the address in one
+     push. The draft follows the address whenever that changes elsewhere. */
+  const [draft, setDraft] = useState<CatalogFilters>(live);
+  const liveKey = JSON.stringify(live);
+  const [lastLive, setLastLive] = useState(liveKey);
+  if (lastLive !== liveKey) {
+    setLastLive(liveKey);
+    setDraft(live);
+  }
+  const filters = deferred ? draft : live;
 
   // Price is the one filter that shouldn't navigate on every keystroke, so it
   // holds local state until submitted.
@@ -63,8 +81,20 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
   }
 
   function apply(overrides: Partial<CatalogFilters>) {
+    if (deferred) {
+      setDraft((current) => ({ ...current, ...overrides }));
+      return;
+    }
     startTransition(() => {
       router.push(`/catalog${buildQuery(filters, overrides)}`, { scroll: false });
+      onApplied?.();
+    });
+  }
+
+  /** The deferred draft, sent. */
+  function commit() {
+    startTransition(() => {
+      router.push(`/catalog${buildQuery(draft)}`, { scroll: false });
       onApplied?.();
     });
   }
@@ -148,6 +178,7 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
               placeholder={String(bounds.min)}
               label={t.catalog.priceFrom}
               onChange={setMinPrice}
+              onBlur={() => deferred && submitPrice()}
             />
             <span className="text-ink-300">–</span>
             <PriceBox
@@ -155,6 +186,7 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
               placeholder={String(bounds.max)}
               label={t.catalog.priceTo}
               onChange={setMaxPrice}
+              onBlur={() => deferred && submitPrice()}
             />
           </div>
 
@@ -184,20 +216,24 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
             />
           </div>
 
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <button type="submit" className="btn btn-outline btn-sm">
-              {t.catalog.apply}
-            </button>
-            {priceActive && (
-              <button
-                type="button"
-                onClick={() => apply({ minPrice: null, maxPrice: null })}
-                className="btn btn-ghost btn-sm"
-              >
-                {t.catalog.priceReset}
+          {/* In the drawer the price goes with everything else, from the
+              button at the foot; the rail applies it here. */}
+          {!deferred && (
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <button type="submit" className="btn btn-outline btn-sm">
+                {t.catalog.apply}
               </button>
-            )}
-          </div>
+              {priceActive && (
+                <button
+                  type="button"
+                  onClick={() => apply({ minPrice: null, maxPrice: null })}
+                  className="btn btn-ghost btn-sm"
+                >
+                  {t.catalog.priceReset}
+                </button>
+              )}
+            </div>
+          )}
         </form>
       </FilterGroup>
 
@@ -276,23 +312,42 @@ export function FilterSidebar({ filters, categories, brands, bounds, onApplied }
         </div>
       </FilterGroup>
 
-      <button
-        type="button"
-        onClick={() =>
-          startTransition(() => {
-            // `q` survives a filter reset — clearing facets shouldn't throw
-            // away what the shopper searched for.
-            router.push(`/catalog${filters.q ? `?q=${encodeURIComponent(filters.q)}` : ""}`, {
-              scroll: false,
-            });
-            onApplied?.();
-          })
-        }
-        className="btn btn-ghost btn-sm mt-3 w-full"
-      >
-        {isPending ? <SpinnerIcon size={15} /> : <CloseIcon size={15} />}
-        {t.catalog.clear}
-      </button>
+      {deferred ? (
+        /* The foot of the drawer: apply, and clear beside it. Sticks to
+           the bottom of the sheet while the groups above scroll. */
+        <div className="filter-foot">
+          <button
+            type="button"
+            onClick={() => setDraft({ ...EMPTY_FILTERS, q: live.q })}
+            className="btn btn-ghost btn-md"
+          >
+            <CloseIcon size={15} />
+            {t.catalog.clear}
+          </button>
+          <button type="button" onClick={commit} disabled={isPending} className="btn btn-primary btn-md flex-1">
+            {isPending ? <SpinnerIcon size={15} /> : null}
+            {t.catalog.apply}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() =>
+            startTransition(() => {
+              // `q` survives a filter reset — clearing facets shouldn't throw
+              // away what the shopper searched for.
+              router.push(`/catalog${filters.q ? `?q=${encodeURIComponent(filters.q)}` : ""}`, {
+                scroll: false,
+              });
+              onApplied?.();
+            })
+          }
+          className="btn btn-ghost btn-sm mt-3 w-full"
+        >
+          {isPending ? <SpinnerIcon size={15} /> : <CloseIcon size={15} />}
+          {t.catalog.clear}
+        </button>
+      )}
     </div>
   );
 }
@@ -350,11 +405,13 @@ function PriceBox({
   placeholder,
   label,
   onChange,
+  onBlur,
 }: {
   value: string;
   placeholder: string;
   label: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
 }) {
   return (
     <label className="relative block">
@@ -364,6 +421,7 @@ function PriceBox({
         min={0}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
         aria-label={label}
         className="field h-9 pr-6 pl-2.5 text-sm tabular-nums"

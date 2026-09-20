@@ -37,7 +37,7 @@
  * to stop between one product and the next.
  */
 export const PRODUCT_GRID =
-  "grid grid-cols-1 gap-3 min-[340px]:grid-cols-2 sm:gap-4 xl:grid-cols-3";
+  "grid grid-cols-1 gap-x-3 gap-y-7 min-[340px]:grid-cols-2 sm:gap-x-4 sm:gap-y-8 xl:grid-cols-3";
 
 /**
  * The grid without a sidebar — home, wishlist, the product page's rows —
@@ -47,7 +47,7 @@ export const PRODUCT_GRID =
  * the home page running to twelve screens of them.
  */
 export const PRODUCT_GRID_WIDE =
-  "grid grid-cols-1 gap-3 min-[340px]:grid-cols-2 sm:gap-4 xl:grid-cols-4";
+  "grid grid-cols-1 gap-x-3 gap-y-7 min-[340px]:grid-cols-2 sm:gap-x-4 sm:gap-y-8 xl:grid-cols-4";
 
 export function ProductGridSkeleton({
   count = 12,

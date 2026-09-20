@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AlertIcon, CheckIcon } from "@/components/ui/icons";
 import { PageBanner } from "@/components/account/PageBanner";
 import type { Dictionary } from "@/lib/i18n";
@@ -68,14 +69,22 @@ export function AccountIdentity({
            confirming is offered by the note along the foot of the card. */
         <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className="truncate">{email}</span>
-          <span
-            className={`inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap ${
-              verified ? "text-success" : "text-warning"
-            }`}
-          >
-            {verified ? <CheckIcon size={11} /> : <AlertIcon size={11} />}
-            {verified ? t.account.emailVerified : t.account.emailUnverified}
-          </span>
+          {verified ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap text-success">
+              <CheckIcon size={11} />
+              {t.account.emailVerified}
+            </span>
+          ) : (
+            /* The mark is the way to confirm: it links to the verify page,
+               which issues the code. */
+            <Link
+              href={`/verify?email=${encodeURIComponent(email)}`}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap text-warning underline-offset-4 hover:underline"
+            >
+              <AlertIcon size={11} />
+              {t.account.emailUnverified} →
+            </Link>
+          )}
         </p>
       }
       mark={

@@ -1,6 +1,5 @@
 import { AccountIdentity } from "@/components/account/AccountIdentity";
 import { AccountNav } from "@/components/account/AccountNav";
-import { VerifyBanner } from "@/components/account/VerifyBanner";
 import type { SessionUser } from "@/lib/auth";
 import type { Dictionary } from "@/lib/i18n";
 
@@ -40,7 +39,6 @@ export function AccountShell({
           aside={aside}
         >
           <AccountNav />
-          {!user.emailVerified && <VerifyBanner email={user.email} />}
         </AccountIdentity>
         {children}
       </div>
