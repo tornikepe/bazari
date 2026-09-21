@@ -15,9 +15,9 @@ import {
   MapPinIcon,
   TruckIcon,
 } from "@/components/ui/icons";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { STATUS_STYLES } from "@/components/ui/StatusBadge";
 import { OrderProgress } from "@/components/order/OrderProgress";
-import { PaymentBadge } from "@/components/order/PaymentBadge";
+import { paymentWording } from "@/components/order/PaymentBadge";
 import { OrderBeacon } from "@/components/order/OrderBeacon";
 import { orderHistory } from "@/lib/order-status";
 import { getSettings } from "@/lib/settings";
@@ -100,6 +100,7 @@ export default async function OrderConfirmationPage({
   const returnAllowed = owner
     ? mayRequestReturn(order, order.returns, settings.returnWindowDays)
     : ({ ok: false, reason: "off" } as const);
+  const payment = paymentWording(order.paymentMethod, order.paymentStatus, order.status, t);
 
   const sticker = {
     pending: { icon: ClockIcon, className: "bg-warning-soft text-warning" },
@@ -150,22 +151,35 @@ export default async function OrderConfirmationPage({
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-ink-900">
             {t.orderDone.byStatus[order.status].title}
           </h1>
-          <p className="mt-2 max-w-md text-sm text-ink-500">
-            {t.orderDone.byStatus[order.status].subtitle}
-          </p>
 
-          {/* Where it stands and whether it is paid, as two badges: the
-              status is the shop's, the payment the money's, and one does not
-              imply the other. */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <StatusBadge status={order.status} t={t} />
-            <PaymentBadge
-              method={order.paymentMethod}
-              status={order.paymentStatus}
-              orderStatus={order.status}
-              t={t}
-            />
-          </div>
+          {/* The four facts as four tiles: where it stands and what the
+              money is doing — the status is the shop's, the payment the
+              money's, and one does not imply the other — then the number
+              and the sum. Each in its own tone, with a dot of it. */}
+          <dl className="order-facts">
+            <div>
+              <dt>{t.admin.status}</dt>
+              <dd className={STATUS_STYLES[order.status]?.split(" ").pop() ?? "text-ink-700"}>
+                <span aria-hidden="true" className="order-facts-dot" />
+                {t.status[order.status]}
+              </dd>
+            </div>
+            <div>
+              <dt>{t.admin.payment}</dt>
+              <dd className={payment.tone.split(" ").pop()}>
+                <span aria-hidden="true" className="order-facts-dot" />
+                {payment.label}
+              </dd>
+            </div>
+            <div>
+              <dt>{t.orderDone.orderNumber}</dt>
+              <dd className="font-mono text-ink-900">{order.number}</dd>
+            </div>
+            <div>
+              <dt>{t.orderDone.total}</dt>
+              <dd className="text-ink-900">{formatPrice(order.total, locale)}</dd>
+            </div>
+          </dl>
 
           {awaitingCard && (
             <div className="mt-6 w-full max-w-sm rounded-control border border-warning/40 bg-warning-soft p-4 text-center">
@@ -181,21 +195,6 @@ export default async function OrderConfirmationPage({
             </div>
           )}
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <div className="rounded-control border border-line bg-ink-50 px-4 py-2.5">
-              <p className="text-xs text-ink-400">{t.orderDone.orderNumber}</p>
-              <p className="font-mono text-base font-bold text-ink-900">
-                {order.number}
-              </p>
-            </div>
-
-            <div className="rounded-control border border-line bg-ink-50 px-4 py-2.5">
-              <p className="text-xs text-ink-400">{t.orderDone.total}</p>
-              <p className="text-base font-bold text-ink-900">
-                {formatPrice(order.total, locale)}
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Where it has got to, step by step, dated from its own history. */}
@@ -299,38 +298,34 @@ export default async function OrderConfirmationPage({
           {/* Where it is going, or where it is waiting. The zone is the
               snapshotted name, so it reads the same however the shop's list
               changes later. */}
-          {order.deliveryMethod === "pickup" ? (
-            <div className="mt-4 flex items-start gap-2 rounded-control bg-ink-50 p-3 text-xs leading-snug text-ink-600">
-              <MapPinIcon size={15} className="mt-px shrink-0 text-brand-600" />
-              <span>
-                <span className="block font-semibold text-ink-800">
-                  {t.checkout.deliveryPickup} · {t.checkout.deliveryPickupFrom}
-                </span>
-                {settings.pickupAddress ||
-                  settings.contactAddress ||
-                  settings.name}
-                <span className="mt-1 block">
-                  {order.customerName} · {order.phone}
-                </span>
-              </span>
+          {/* Where it is going, or where it is waiting, as a block of its
+              own: the mark in a disc, the way it travels as the title, and
+              each fact on a line of its own. The zone is the snapshotted
+              name, so it reads the same however the shop's list changes
+              later. */}
+          <div className="order-delivery">
+            <span className="order-delivery-mark">
+              {order.deliveryMethod === "pickup" ? <MapPinIcon size={18} /> : <TruckIcon size={18} />}
+            </span>
+            <div className="min-w-0">
+              <p className="eyebrow">{t.checkout.delivery}</p>
+              <p className="mt-1 text-sm font-bold text-ink-900">
+                {order.deliveryMethod === "pickup"
+                  ? `${t.checkout.deliveryPickup} · ${t.checkout.deliveryPickupFrom}`
+                  : [t.checkout.deliveryCourier, locale === "ka" ? order.deliveryZoneKa : order.deliveryZoneEn]
+                      .filter(Boolean)
+                      .join(" · ")}
+              </p>
+              <p className="mt-1.5 text-sm text-ink-700">
+                {order.deliveryMethod === "pickup"
+                  ? settings.pickupAddress || settings.contactAddress || settings.name
+                  : `${order.city}, ${order.address}`}
+              </p>
+              <p className="mt-0.5 text-sm text-ink-500">
+                {order.customerName} · {order.phone}
+              </p>
             </div>
-          ) : (
-            <div className="mt-4 flex items-start gap-2 rounded-control bg-ink-50 p-3 text-xs leading-snug text-ink-600">
-              <TruckIcon size={15} className="mt-px shrink-0 text-brand-600" />
-              <span>
-                {(order.deliveryZoneKa || order.deliveryZoneEn) && (
-                  <span className="block font-semibold text-ink-800">
-                    {t.checkout.deliveryCourier} ·{" "}
-                    {locale === "ka"
-                      ? order.deliveryZoneKa
-                      : order.deliveryZoneEn}
-                  </span>
-                )}
-                {order.customerName} · {order.phone} · {order.city},{" "}
-                {order.address}
-              </span>
-            </div>
-          )}
+          </div>
         </div>
 
         <ReturnPanel

@@ -121,10 +121,19 @@ export function ReturnPanel({
 
   return (
     <section className="returns-panel card mt-4 card-pad">
-      <h2 className="flex items-center gap-2 text-sm font-bold text-ink-900">
-        <RefreshIcon size={16} className="text-brand-600" />
-        {t.returns.title}
-      </h2>
+      <div className="flex items-center gap-3">
+        <span className="order-delivery-mark">
+          <RefreshIcon size={18} />
+        </span>
+        <div>
+          <h2 className="text-sm font-bold text-ink-900">{t.returns.title}</h2>
+          {/* What the window is, said once under the title rather than as a
+              footnote under a rule. */}
+          {allowed.ok || allowed.reason === "not-delivered" ? (
+            <p className="mt-0.5 text-xs text-ink-500">{fill(t.returns.windowHint, { days: windowDays })}</p>
+          ) : null}
+        </div>
+      </div>
 
       {requests.length > 0 && (
         <ol className="mt-3 flex flex-col gap-3">
@@ -278,24 +287,20 @@ export function ReturnPanel({
             </div>
           </form>
         ) : (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-            <p className="text-xs text-ink-500">
-              {fill(t.returns.windowHint, { days: windowDays })}
-            </p>
-            <button type="button" onClick={() => setOpen(true)} className="btn btn-outline btn-sm">
+          <div className="mt-4 border-t border-line pt-4">
+            <button type="button" onClick={() => setOpen(true)} className="btn btn-outline btn-md">
+              <RefreshIcon size={15} />
               {t.returns.request}
             </button>
           </div>
         )
-      ) : (
+      ) : allowed.reason === "not-delivered" ? null : (
         <p className="mt-4 border-t border-line pt-4 text-xs text-ink-500">
           {allowed.reason === "window-closed"
             ? t.returns.windowClosed
-            : allowed.reason === "not-delivered"
-              ? fill(t.returns.windowHint, { days: windowDays })
-              : allowed.reason === "already-open"
-                ? t.returns.alreadyOpen
-                : t.returns.off}
+            : allowed.reason === "already-open"
+              ? t.returns.alreadyOpen
+              : t.returns.off}
         </p>
       )}
     </section>

@@ -83,12 +83,12 @@ export async function Footer() {
             <Wordmark name={settings.name} className="text-base" />
           </Link>
 
-          <p className="mt-3 max-w-sm text-xs leading-relaxed text-ink-500 sm:text-sm">{tagline}</p>
+          <p className="mt-4 max-w-sm text-xs leading-relaxed text-ink-500 sm:text-sm">{tagline}</p>
 
           {/* The ways to reach the shop, when it has set any: one line each,
               and the line is the link. */}
           {contacts.length > 0 && (
-            <ul className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-sm sm:justify-start">
+            <ul className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm sm:justify-start">
               {contacts.map((contact) => (
                 <li key={contact.href}>
                   <a
@@ -125,9 +125,9 @@ export async function Footer() {
             <nav
               key={`${group.id}-links`}
               aria-labelledby={group.id}
-              className={`pt-3 ${index === 0 ? "order-2 pb-7" : "order-4"} sm:order-none sm:pb-0`}
+              className={`pt-4 ${index === 0 ? "order-2 pb-8" : "order-4"} sm:order-none sm:pb-0`}
             >
-              <ul className="flex flex-col items-center">
+              <ul className="flex flex-col items-center gap-0.5">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <FooterLink href={link.href}>{link.label}</FooterLink>

@@ -12,7 +12,6 @@ import {
   ChevronRightIcon,
   ClockIcon,
   DashboardIcon,
-  HeartIcon,
   LogoutIcon,
   MapPinIcon,
   UserIcon,
@@ -197,7 +196,6 @@ function CustomerPanel({ user }: { user: NonNullable<MenuUser> }) {
     { href: "/account", label: t.account.menuProfile, icon: UserIcon },
     { href: "/account/addresses", label: t.account.menuAddresses, icon: MapPinIcon },
     { href: "/account/orders", label: t.account.menuOrders, icon: ClockIcon },
-    { href: "/favorites", label: t.account.menuWishlist, icon: HeartIcon },
     { href: "/account/payments", label: t.account.menuPayments, icon: CardIcon },
   ];
   return (

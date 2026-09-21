@@ -1,6 +1,7 @@
 import type { Dictionary } from "@/lib/i18n";
 
-const STYLES: Record<string, string> = {
+/** The badge's colours per status, for anything drawn in the same tone. */
+export const STATUS_STYLES: Record<string, string> = {
   pending: "bg-warning-soft text-warning",
   confirmed: "bg-info-soft text-info",
   shipped: "bg-brand-100 text-brand-700",
@@ -18,7 +19,7 @@ export function StatusBadge({ status, t }: { status: string; t: Dictionary }) {
   return (
     <span
       className={`badge whitespace-nowrap transition-colors duration-200 ${
-        STYLES[status] ?? "bg-ink-100 text-ink-500"
+        STATUS_STYLES[status] ?? "bg-ink-100 text-ink-500"
       }`}
     >
       {label}

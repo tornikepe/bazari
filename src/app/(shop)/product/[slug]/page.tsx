@@ -14,7 +14,7 @@ import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { BagCheckIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
+import { AlertIcon, BagCheckIcon, CheckIcon, RefreshIcon, StarIcon, TagIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -361,21 +361,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {t.product.modelCode}: <span className="font-mono text-ink-700">{product.sku}</span>
           </p>
 
-          {/* One line: the price, what the reduction is worth beside it, and
-              at the end whether it is there — a dot and two words rather
-              than a badge, since the badge is the saving's. */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+          {/* The price, and under it two marks on a line of their own:
+              what the reduction is worth, and whether it is there — each a
+              small bordered pill in its own tone with a mark before the
+              words, so the two read as facts about the price rather than
+              as more price. */}
+          <div className="mt-4">
             <Price value={product.price} oldValue={product.oldPrice} size="xl" />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             {discount > 0 && product.oldPrice && (
-              <span className="badge bg-success-soft text-success">
+              <span className="price-tag is-save">
+                <TagIcon size={14} />
                 {fill(t.product.youSave, {
                   amount: formatPrice(product.oldPrice - product.price, locale),
                 })}
               </span>
             )}
             <span
-              className={`stock-mark ${soldOut ? "is-out" : product.stock <= LOW_STOCK_THRESHOLD ? "is-low" : ""}`}
+              className={`price-tag ${soldOut ? "is-out" : product.stock <= LOW_STOCK_THRESHOLD ? "is-low" : "is-stock"}`}
             >
+              {soldOut ? <AlertIcon size={14} /> : product.stock <= LOW_STOCK_THRESHOLD ? <AlertIcon size={14} /> : <CheckIcon size={14} strokeWidth={3} />}
               {soldOut
                 ? t.product.outOfStock
                 : product.stock <= LOW_STOCK_THRESHOLD

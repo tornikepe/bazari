@@ -83,7 +83,7 @@ export function AvatarForm({
   }
 
   return (
-    <section className="border-t border-line pt-6">
+    <section className="mb-7 border-b border-line pb-6">
       {/* One row: the picture, what the card is for, and the buttons at the
           far end. The picture is the subject, so it comes first and the
           heading stands beside it rather than above a card that is mostly

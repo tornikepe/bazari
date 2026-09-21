@@ -146,19 +146,17 @@ export function OrderProgress({
                   )}
                 </div>
 
-                {/* The meaning only where the reader is standing. On every row
-                    it becomes a wall of text that says nothing about *them*. */}
-                {current && (
-                  <p className={`mt-1 text-sm ${isCancelRow ? "text-danger" : "text-ink-700"}`}>
-                    {isCancelRow ? t.track.cancelledNote : t.track.meaning[step]}
-                  </p>
+                {/* Only a cancelled order gets a word under its step; the
+                    others say their name, and the time they were reached.
+                    A step ahead says nothing at all — "not yet" under every
+                    coming step was three lines about nothing. */}
+                {current && isCancelRow && (
+                  <p className="mt-1 text-sm text-danger">{t.track.cancelledNote}</p>
                 )}
 
-                {/* No line at all rather than an empty one: a step that
-                    happened without a recorded time says nothing about when. */}
-                {(at || !reached) && (
+                {at && (
                   <p className={`text-xs ${current ? "mt-1.5 text-ink-500" : "mt-0.5 text-ink-400"}`}>
-                    {at ? formatDateTime(at) : t.track.notReached}
+                    {formatDateTime(at)}
                   </p>
                 )}
               </div>

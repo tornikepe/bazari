@@ -25,6 +25,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   return (
     <AccountShell user={user} t={t}>
       <ProfilePanel
+        avatarUrl={user.avatarUrl}
         saved={typeof params.saved === "string" ? params.saved : null}
         profile={{
           name: user.name,
