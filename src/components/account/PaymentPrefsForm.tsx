@@ -90,7 +90,11 @@ export function PaymentPrefsForm({
                 onChange={() => setChoice(method)}
                 className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
               />
-              <PaymentMark method={method} />
+              {/* The mark from `sm` up: in the narrow card of a phone it
+                  left the words a third of the row. */}
+              <span className="hidden sm:contents">
+                <PaymentMark method={method} />
+              </span>
               <span className="min-w-0 leading-snug">
                 {t.payment[method]}
                 <span className="block text-xs font-normal text-ink-500">
@@ -191,7 +195,9 @@ export function PaymentPrefsForm({
               {t.account.refundIbanInvalid}
             </span>
           ) : (
-            <span className="text-ink-500">{t.account.preferredPaymentHint}</span>
+            /* The hint is already over the options; in the bar it is for a
+               wide screen, where the button would otherwise stand alone. */
+            <span className="hidden text-ink-500 sm:inline">{t.account.preferredPaymentHint}</span>
           )}
         </div>
         <button

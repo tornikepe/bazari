@@ -95,7 +95,7 @@ export function ProductCard({
               otherwise pull this card's title up out of line with its
               neighbours. */}
           <span className="eyebrow truncate">{product.brand || " "}</span>
-          {product.ratingCount > 0 && <Stars sum={product.ratingSum} count={product.ratingCount} t={t} />}
+          {product.ratingCount > 0 && <Stars sum={product.ratingSum} count={product.ratingCount} t={t} compact />}
         </div>
 
         <h3 className="card-name text-ink-900">

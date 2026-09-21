@@ -146,9 +146,11 @@ export default async function AccountOrdersPage({
                 <span className="eyebrow">{t.account.activeOrder}</span>
                 <StatusBadge status={active.status} t={t} />
               </span>
-              <span className="mt-1 block truncate">
+              {/* The number, and the facts under it on a phone rather than
+                  cut off beside it. */}
+              <span className="mt-1 block">
                 <span className="font-mono text-base font-bold text-ink-900">{active.number}</span>
-                <span className="ml-2 text-xs text-ink-500">
+                <span className="block text-xs text-ink-500 sm:ml-2 sm:inline">
                   {formatDate(active.createdAt)} ·{" "}
                   {countText(t.admin.productCountOne, t.admin.productCount, active._count.items)} ·{" "}
                   {formatPrice(active.total, locale)}
@@ -270,7 +272,7 @@ export default async function AccountOrdersPage({
                       which is the only thing this list is for. */}
                   <Link
                     href={`/order/${order.number}`}
-                    className="row-lean grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-5 py-3.5 hover:bg-ink-50 sm:grid-cols-[auto_1fr_6.5rem_auto_1rem] sm:gap-x-4"
+                    className="row-lean grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-3.5 hover:bg-ink-50 sm:grid-cols-[auto_1fr_6.5rem_auto_1rem] sm:gap-x-4 sm:px-5"
                   >
                     {/* The first pictures, fanned: up to three, the ones
                         behind stepped to the right and dimmed. */}
@@ -285,21 +287,29 @@ export default async function AccountOrdersPage({
                       )}
                     </span>
 
+                    {/* On a phone the pictures are one picture, the count
+                        stays for the order's own page, and the badge goes
+                        under the number: the row is narrow inside the account
+                        card, and three things on one line cut the number to
+                        "BZ-07773…". */}
                     <div className="min-w-0">
                       <p className="truncate font-mono text-sm font-bold text-ink-900">
                         {order.number}
                       </p>
                       <p className="mt-0.5 text-xs text-ink-400 sm:truncate">
-                        {formatDate(order.createdAt)} ·{" "}
-                        {countText(
-                          t.admin.productCountOne,
-                          t.admin.productCount,
-                          order._count.items,
-                        )}
+                        {formatDate(order.createdAt)}
+                        <span className="hidden sm:inline">
+                          {" "}·{" "}
+                          {countText(
+                            t.admin.productCountOne,
+                            t.admin.productCount,
+                            order._count.items,
+                          )}
+                        </span>
                       </p>
                     </div>
 
-                    <p className="text-right text-sm font-bold text-ink-900 tabular-nums">
+                    <p className="text-right text-sm font-bold whitespace-nowrap text-ink-900 tabular-nums">
                       {formatPrice(order.total, locale)}
                     </p>
 
@@ -307,7 +317,7 @@ export default async function AccountOrdersPage({
                         rather than starting wherever the price happened to end.
                         Sized by its widest badge: at a fixed 7.5rem the Georgian
                         "confirmed" overran the column and covered the price. */}
-                    <span className="col-span-3 justify-self-start pl-[3.75rem] sm:col-span-1 sm:justify-self-end sm:pl-0">
+                    <span className="col-span-2 col-start-2 row-start-2 justify-self-start sm:col-span-1 sm:col-start-auto sm:row-start-auto sm:justify-self-end">
                       <StatusBadge status={order.status} t={t} />
                     </span>
 

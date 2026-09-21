@@ -43,7 +43,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   if (!hydrated) {
     return (
       <div className="page">
-        <PageBanner eyebrow={t.account.title} title={t.cart.title} mark={mark} line="…" />
+        <PageBanner eyebrow={t.nav.cart} title={t.cart.title} mark={mark} line="…" />
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
           <div className="flex flex-col gap-3">
             {[0, 1, 2].map((index) => (
@@ -60,7 +60,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
     return (
       <div className="page">
         <PageBanner
-          eyebrow={t.account.title}
+          eyebrow={t.nav.cart}
           title={t.cart.title}
           mark={mark}
           line={t.cart.emptyHint}
@@ -98,7 +98,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
     <div className="page">
       {/* The same card the account and the wishlist open with. */}
       <PageBanner
-        eyebrow={t.account.title}
+        eyebrow={t.nav.cart}
         title={t.cart.title}
         mark={mark}
         line={`${fill(t.favorites.count, { count })} · ${t.cart.subtotal} ${formatPrice(subtotal, locale)}`}

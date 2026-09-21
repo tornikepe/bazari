@@ -52,7 +52,7 @@ export function PhoneField({
 
   return (
     <div
-      className={`field flex items-center gap-2 px-0 focus-within:border-brand-400 focus-within:shadow-[0_0_0_3px_var(--color-brand-100)] ${
+      className={`field flex items-center gap-2 px-0 focus-within:border-ink-900 focus-within:shadow-[0_0_0_3px_var(--color-ink-100)] ${
         invalid ? "border-danger" : ""
       } ${className}`}
     >

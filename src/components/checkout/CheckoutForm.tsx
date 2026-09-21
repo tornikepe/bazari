@@ -822,13 +822,16 @@ export function CheckoutForm({
             out of sight while the fields are being filled. This bar sits at
             the foot of the screen with the total and the same button. */}
         <div className="checkout-bar">
-          <div className="min-w-0">
-            <span className="block text-[11px] font-semibold text-ink-500">{t.cart.total}</span>
+          {/* The label on one line, whatever its length: with the button
+              beside it, "სულ გადასახდელი" broke over two lines and pushed
+              the figure under the button's foot. */}
+          <div className="min-w-0 shrink-0">
+            <span className="block text-[11px] font-semibold whitespace-nowrap text-ink-500">{t.cart.total}</span>
             <Price value={payable} size="md" />
           </div>
-          <button type="submit" disabled={submitting} className="btn btn-primary btn-md shrink-0">
+          <button type="submit" disabled={submitting} className="btn btn-primary btn-md shrink-0 whitespace-nowrap">
             {submitting && <SpinnerIcon size={16} />}
-            {submitting ? t.checkout.placing : t.checkout.placeOrder}
+            {submitting ? t.checkout.placing : t.checkout.placeOrderShort}
           </button>
         </div>
       </form>

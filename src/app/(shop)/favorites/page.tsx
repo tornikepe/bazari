@@ -59,7 +59,7 @@ export default function FavoritesPage() {
             What the list holds is said under the title, not as a figure
             beside it. */}
         <PageBanner
-          eyebrow={t.account.title}
+          eyebrow={t.account.menuWishlist}
           title={t.favorites.title}
           mark={
             <span

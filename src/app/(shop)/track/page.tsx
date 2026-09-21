@@ -13,6 +13,7 @@ import { fill } from "@/lib/i18n";
 import { OrderProgress } from "@/components/order/OrderProgress";
 import { PaymentBadge } from "@/components/order/PaymentBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PhoneField } from "@/components/ui/PhoneField";
 import { trackOrder, type TrackResult } from "@/app/actions/track";
 
 function TrackOrderForm() {
@@ -181,14 +182,13 @@ function TrackOrderForm() {
                 <label className="field-label" htmlFor="phone">
                   {t.track.phone}
                 </label>
-                <input
+                {/* The same prefixed box as the checkout and the account:
+                    the number is typed the one way everywhere. */}
+                <PhoneField
                   id="phone"
-                  type="tel"
                   value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="+995 5XX XX XX XX"
-                  aria-invalid={Boolean(errorKey) || undefined}
-                  className="field"
+                  onChange={setPhone}
+                  invalid={Boolean(errorKey)}
                   required
                 />
               </div>

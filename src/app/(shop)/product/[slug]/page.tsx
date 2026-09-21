@@ -212,7 +212,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const details = [
     { label: t.product.brand, value: product.brand || "—" },
     { label: t.product.category, value: categoryName },
-    { label: t.product.sku, value: product.slug },
+    /* The SKU, as the line under the title says it: the slug is the
+       address, not a code anyone quotes. */
+    { label: t.product.sku, value: product.sku },
     {
       label: t.product.shipping,
       value: countText(t.product.shippingDaysOne, t.product.shippingDays, product.shippingDays),

@@ -116,7 +116,10 @@ export default async function HomePage() {
       {/* The whole first screen: the headline in the serif, set large and
           low, the object standing in the brand's light at the right, and a
           line of the shop's promises running under it all. */}
-      <section className="hero-editorial border-b border-line">
+      {/* No rule under it on a phone: the next section opens with its own
+          rule, and two rules with a band of nothing between read as a
+          mistake. */}
+      <section className="hero-editorial sm:border-b sm:border-line">
         <div className="page-container relative grid gap-10 pt-10 pb-12 lg:grid-cols-12 lg:gap-8 lg:pt-16 lg:pb-16">
           <div className="lg:col-span-8">
             <p className="eyebrow">{t.home.heroBadge}</p>
@@ -215,7 +218,7 @@ export default async function HomePage() {
         <section className="page-container pt-14 lg:pt-20">
           {/* The arrows sit at the right of this head — the rail draws
               them there — so the head keeps only the words. */}
-          <div className="section-head reveal pr-24">
+          <div className="section-head reveal sm:pr-24">
             <div>
               <p className="eyebrow">{t.home.featured}</p>
               <h2 className="display-md mt-2 text-ink-900">{t.home.featuredHint}</h2>

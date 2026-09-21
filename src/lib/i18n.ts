@@ -246,6 +246,8 @@ const ka = {
     note: "კომენტარი შეკვეთაზე",
     noteOptional: "კომენტარი (არასავალდებულო)",
     placeOrder: "შეკვეთის დადასტურება",
+    /* The same button in the phone's foot bar, beside the total. */
+    placeOrderShort: "დადასტურება",
     placing: "მიმდინარეობს…",
     required: "სავალდებულო ველი",
     invalidPhone: "შეიყვანე სწორი ტელეფონის ნომერი",
@@ -1577,6 +1579,7 @@ const en: Dictionary = {
     note: "Order note",
     noteOptional: "Note (optional)",
     placeOrder: "Place order",
+    placeOrderShort: "Place order",
     placing: "Placing…",
     required: "This field is required",
     invalidPhone: "Enter a valid phone number",

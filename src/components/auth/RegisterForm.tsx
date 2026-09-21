@@ -113,9 +113,10 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
         </div>
 
         <div>
+          {/* No asterisk: every field on this form is required, and a star
+              on one of them said the others were not. */}
           <label className="field-label" htmlFor="phone">
             {t.auth.phone}
-            <span className="ml-0.5 text-brand-600">*</span>
           </label>
           <PhoneField id="phone" name="phone" required invalid={bad.phone} />
         </div>

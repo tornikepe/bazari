@@ -44,7 +44,7 @@ export async function Footer() {
       id: "footer-help",
       title: t.footer.help,
       links: [
-        { href: "/track", label: t.orderDone.trackHint },
+        { href: "/track", label: t.track.title },
         ...byGroup(["faq", "shipping", "returns", "warranty"]),
       ],
     },
@@ -75,7 +75,9 @@ export async function Footer() {
           lists side by side. No category list — the catalogue is one link
           away in the bar and on the home page. */}
       <div className="page-container grid gap-8 py-8 sm:py-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
-        <div className="flex flex-col items-start">
+        {/* Centred on a phone, where the block is read as one column with
+            the lists under it; left-aligned from `sm` up, beside them. */}
+        <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <LogoMark size={32} />
             <Wordmark name={settings.name} className="text-base" />
@@ -86,7 +88,7 @@ export async function Footer() {
           {/* The ways to reach the shop, when it has set any: one line each,
               and the line is the link. */}
           {contacts.length > 0 && (
-            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
+            <ul className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-sm sm:justify-start">
               {contacts.map((contact) => (
                 <li key={contact.href}>
                   <a
@@ -102,18 +104,29 @@ export async function Footer() {
           )}
         </div>
 
-        {/* The two titles on one line across the block, a rule under them,
-            and each list under its title. The titles are one row of the
-            grid and the lists the next, so the two titles share a
-            baseline whatever the lists' lengths. */}
-        <div className="grid grid-cols-2 gap-x-6 text-center sm:gap-x-8">
-          {groups.map((group) => (
-            <h2 key={group.id} id={group.id} className="label border-b border-line pb-3 text-ink-400">
+        {/* From `sm` up the two titles sit on one line across the block, a
+            rule under them, and each list under its title: the titles are
+            one row of the grid and the lists the next, so they share a
+            baseline whatever the lists' lengths. On a phone the two groups
+            stack — a title, its list, the next title, its list — with the
+            column wide enough for every link to keep to one line; the
+            `order` classes put the DOM's two rows back into that sequence. */}
+        <div className="grid grid-cols-1 gap-x-8 text-center sm:grid-cols-2">
+          {groups.map((group, index) => (
+            <h2
+              key={group.id}
+              id={group.id}
+              className={`label border-b border-line pb-3 text-ink-400 ${index === 0 ? "order-1" : "order-3"} sm:order-none`}
+            >
               {group.title}
             </h2>
           ))}
-          {groups.map((group) => (
-            <nav key={`${group.id}-links`} aria-labelledby={group.id} className="pt-3">
+          {groups.map((group, index) => (
+            <nav
+              key={`${group.id}-links`}
+              aria-labelledby={group.id}
+              className={`pt-3 ${index === 0 ? "order-2 pb-7" : "order-4"} sm:order-none sm:pb-0`}
+            >
               <ul className="flex flex-col items-center">
                 {group.links.map((link) => (
                   <li key={link.href}>
@@ -132,11 +145,11 @@ export async function Footer() {
           corner, and with the page scrolled to its end it sat on the last
           word of the copyright line. */}
       <div className="border-t border-line">
-        <div className="page-container flex flex-col items-start gap-3 pt-6 pb-[4.25rem] sm:flex-row sm:items-end sm:justify-between sm:pb-6">
+        <div className="page-container flex flex-col items-center gap-3 pt-6 pb-[4.25rem] sm:flex-row sm:items-end sm:justify-between sm:pb-6">
           <p className="footer-wordmark -mb-[0.1em]" aria-hidden="true">
             {settings.name}
           </p>
-          <div className="flex flex-col items-start gap-1.5 sm:items-end">
+          <div className="flex flex-col items-center gap-1.5 sm:items-end">
             <InstallPrompt />
             <p className="text-xs text-ink-400">
               © {new Date().getFullYear()} {settings.name}. {t.footer.rights}

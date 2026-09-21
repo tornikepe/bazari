@@ -20,6 +20,7 @@ export function Stars({
   t,
   size = "sm",
   href,
+  compact = false,
 }: {
   sum: number;
   count: number;
@@ -28,6 +29,9 @@ export function Stars({
   size?: "sm" | "md";
   /** When set, the whole thing is a link — to the reviews further down. */
   href?: string;
+  /** One lit star and the figures, for a card too narrow for five — beside
+      the brand on a phone, five stars left the brand as "NI…". */
+  compact?: boolean;
 }) {
   if (count <= 0) return null;
 
@@ -39,7 +43,7 @@ export function Stars({
   const inner = (
     <>
       <span aria-hidden="true" className="flex items-center gap-px text-accent-500">
-        {[1, 2, 3, 4, 5].map((star) => (
+        {(compact ? [1] : [1, 2, 3, 4, 5]).map((star) => (
           <StarIcon key={star} size={px} filled={star <= lit} className={star <= lit ? "" : "text-ink-300"} />
         ))}
       </span>

@@ -151,7 +151,7 @@ export function MobileMenu({
                       {/* Two lines at most, rather than an ellipsis: "ტელეფონები
                           და აქსესუარები" cut to "ტელეფონები და აქსესუ…" read as
                           a mistake, not a list. */}
-                      <span className="clamp-2 min-w-0 flex-1 leading-snug">{name}</span>
+                      <span className="line-clamp-2 min-w-0 flex-1 leading-snug">{name}</span>
                       <ChevronRightIcon size={14} className="shrink-0 text-ink-300" />
                     </Link>
                   </li>

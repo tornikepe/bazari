@@ -69,7 +69,10 @@ export function MobileFilterDrawer({
 
             {/* `overscroll-contain`: reaching the end of the filters must not
                 start scrolling the catalogue underneath the sheet. */}
-            <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
+            {/* No padding under the list: the sticky foot can go no lower
+                than its parent's end, and a padded strip below that let
+                the price slider show through under the buttons. */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4">
               <FilterSidebar
                 filters={filters}
                 categories={categories}

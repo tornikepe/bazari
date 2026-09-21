@@ -20,7 +20,9 @@ export function FooterLink({ href, children }: { href: string; children: React.R
       // this is where "you are here" has to be said. A sighted reader gets it
       // from the darker text; `aria-current` is the same fact, said out loud.
       aria-current={current ? "page" : undefined}
-      className={`flex min-h-8 items-center text-sm transition-colors hover:text-brand-600 ${
+      // A size down on a phone, and never wrapped: a link broken over two
+      // lines in a column of one-line links reads as two links.
+      className={`flex min-h-8 items-center justify-center text-[13px] whitespace-nowrap transition-colors hover:text-brand-600 sm:text-sm ${
         current ? "font-semibold text-ink-900" : "text-ink-500"
       }`}
     >
