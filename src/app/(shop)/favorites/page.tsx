@@ -6,9 +6,9 @@ import Image from "next/image";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
-import { AddToCartButton } from "@/components/product/AddToCartButton";
+import { CardActions } from "@/components/product/CardActions";
 import { Price } from "@/components/ui/Price";
-import { TrashIcon } from "@/components/ui/icons";
+import { CloseIcon, TrashIcon } from "@/components/ui/icons";
 import { clearFavorites, toggleFavorite } from "@/lib/favorites-store";
 import { getProductsByIds } from "@/app/actions/products";
 import type { ProductCardData } from "@/lib/catalog";
@@ -98,17 +98,26 @@ export default function FavoritesPage() {
       />
 
       <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
-        <div className="card flex min-w-0 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-col gap-3">
           {products.map((product) => {
             const name = locale === "ka" ? product.nameKa : product.nameEn;
-            const needsChoice = product._count.options > 0;
             return (
-              <article key={product.id} className="line-row">
+              <article key={product.id} className="line-card">
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite(product.id)}
+                  aria-label={t.favorites.remove}
+                  title={t.favorites.remove}
+                  className="line-x"
+                >
+                  <CloseIcon size={14} strokeWidth={2.5} />
+                </button>
+
                 <Link href={`/product/${product.slug}`} className="line-pic">
-                  <Image src={product.image} alt={name} fill sizes="96px" className="object-cover" />
+                  <Image src={product.image} alt={name} fill sizes="(max-width: 640px) 112px, 96px" className="object-cover" />
                 </Link>
 
-                <div className="min-w-0">
+                <div className="line-body">
                   {product.brand && <span className="eyebrow block truncate">{product.brand}</span>}
                   <Link
                     href={`/product/${product.slug}`}
@@ -116,42 +125,27 @@ export default function FavoritesPage() {
                   >
                     {name}
                   </Link>
-                  <div className="mt-1.5">
+                  <div className="line-meta">
                     <Price value={product.price} oldValue={product.oldPrice} size="sm" />
                   </div>
                 </div>
 
-                <div className="line-foot">
-                  {needsChoice ? (
-                    /* Sold in sizes: the page is where the size is chosen,
-                       so the row sends the shopper there. */
-                    <Link href={`/product/${product.slug}`} className="btn btn-outline btn-sm">
-                      {t.favorites.chooseOnPage}
-                    </Link>
-                  ) : (
-                    <AddToCartButton
-                      product={{
-                        productId: product.id,
-                        slug: product.slug,
-                        nameKa: product.nameKa,
-                        nameEn: product.nameEn,
-                        image: product.image,
-                        price: product.price,
-                        stock: product.stock,
-                      }}
-                      size="sm"
-                      variant="outline"
-                      short
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => toggleFavorite(product.id)}
-                    aria-label={t.favorites.remove}
-                    className="btn btn-ghost h-9 w-9 rounded-pill p-0 text-ink-400 hover:text-danger"
-                  >
-                    <TrashIcon size={16} />
-                  </button>
+                {/* Into the cart, as the card does it: a sized product goes
+                    in as its first size, to be changed in the cart. */}
+                <div className="line-foot line-foot-one">
+                  <CardActions
+                    look="plain"
+                    needsChoice={product._count.options > 0}
+                    product={{
+                      productId: product.id,
+                      slug: product.slug,
+                      nameKa: product.nameKa,
+                      nameEn: product.nameEn,
+                      image: product.image,
+                      price: product.price,
+                      stock: product.stock,
+                    }}
+                  />
                 </div>
               </article>
             );
@@ -177,12 +171,8 @@ export default function FavoritesPage() {
             {t.cart.continueShopping}
           </Link>
 
-          <button
-            type="button"
-            onClick={clearFavorites}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-line pt-3.5 text-xs text-ink-400 transition-colors hover:text-danger"
-          >
-            <TrashIcon size={13} />
+          <button type="button" onClick={clearFavorites} className="btn btn-ghost btn-md mt-3 w-full text-ink-600 hover:text-danger">
+            <TrashIcon size={15} />
             {t.favorites.clear}
           </button>
         </aside>

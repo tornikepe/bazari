@@ -152,6 +152,25 @@ export function setItemQuantity(key: string, quantity: number) {
   );
 }
 
+/**
+ * One line becoming another — the size changed on the cart page. The old
+ * line goes; the new one takes its count, folding into a line of the new
+ * size that is already there.
+ */
+export function replaceItem(key: string, item: Omit<CartItem, "quantity">) {
+  const old = items.find((entry) => lineKey(entry) === key);
+  if (!old) return;
+  const cap = Math.max(1, item.stock);
+  const nextKey = lineKey(item);
+  const twin = items.find((entry) => lineKey(entry) === nextKey && entry !== old);
+  const rest = items.filter((entry) => entry !== old && entry !== twin);
+  const quantity = Math.min(old.quantity + (twin?.quantity ?? 0), cap);
+  const index = items.indexOf(old);
+  const next = [...rest];
+  next.splice(Math.min(index, next.length), 0, { ...item, quantity });
+  commit(next);
+}
+
 export function removeItem(key: string) {
   commit(items.filter((entry) => lineKey(entry) !== key));
 }

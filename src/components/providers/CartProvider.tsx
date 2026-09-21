@@ -3,6 +3,7 @@
 import { createContext, use, useMemo, useSyncExternalStore } from "react";
 import {
   addItem,
+  replaceItem,
   cartTotals,
   clearCart,
   getServerSnapshot,
@@ -27,6 +28,8 @@ type CartValue = {
   total: number;
   add: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
   setQuantity: (productId: string, quantity: number) => void;
+  /** The line at `key` becomes `item` — a size changed in the cart. */
+  replace: (key: string, item: Omit<CartItem, "quantity">) => void;
   remove: (productId: string) => void;
   clear: () => void;
 };
@@ -56,6 +59,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         trackProductEvent("cart", [item.productId]);
       },
       setQuantity: setItemQuantity,
+      replace: replaceItem,
       remove: removeItem,
       clear: clearCart,
     };

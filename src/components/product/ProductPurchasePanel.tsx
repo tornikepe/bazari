@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useCart, type CartItem } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
@@ -39,7 +38,6 @@ export function ProductPurchasePanel({
 }) {
   const { t } = useI18n();
   const { items, hydrated, add, setQuantity: setLineQuantity } = useCart();
-  const router = useRouter();
   const [pending, setPending] = useState(1);
   const bar = useRef<HTMLDivElement>(null);
 
@@ -54,12 +52,6 @@ export function ProductPurchasePanel({
     const value = Math.min(Math.max(1, next), max);
     if (line) setLineQuantity(key, value);
     else setPending(value);
-  }
-
-  function buyNow() {
-    if (soldOut || prompt) return;
-    if (!line) add(product, quantity);
-    router.push("/checkout");
   }
 
   /* The bar's height, for the chat launcher — measured, since the button
@@ -133,17 +125,6 @@ export function ProductPurchasePanel({
       )}
 
       <div className="hidden lg:block">{buttons}</div>
-
-      {(!soldOut || keepShape) && (
-        <button
-          type="button"
-          onClick={buyNow}
-          disabled={soldOut || Boolean(prompt)}
-          className="btn btn-outline btn-lg w-full"
-        >
-          {t.product.buyNow}
-        </button>
-      )}
 
       {/* The phone's foot bar: the same two buttons, fixed. */}
       <div ref={bar} className="buy-foot lg:hidden">

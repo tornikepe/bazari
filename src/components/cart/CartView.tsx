@@ -6,7 +6,8 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { Price } from "@/components/ui/Price";
-import { MinusIcon, PlusIcon, TrashIcon, TruckIcon } from "@/components/ui/icons";
+import { CloseIcon, MinusIcon, PlusIcon, TrashIcon, TruckIcon } from "@/components/ui/icons";
+import { LineSizePicker } from "@/components/cart/LineSizePicker";
 import { TaxNote } from "@/components/ui/TaxNote";
 import { formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
@@ -24,7 +25,7 @@ import { lineKey } from "@/lib/cart-store";
  * and the line's sum on one row, so nothing is squeezed beside a 80px
  * picture.
  */
-export function CartView({ signedIn }: { signedIn: boolean }) {
+export function CartView() {
   const { locale, t } = useI18n();
   const settings = useSettings();
   const { items, count, hydrated, subtotal, shipping, total, setQuantity, remove, clear } = useCart();
@@ -88,7 +89,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
         {/* ------------------------------- items ----------------------------- */}
         {/* `min-w-0`: grid children default to `min-width: auto`, which stops
             the rows below from shrinking and overflows narrow phones. */}
-        <div className="card flex min-w-0 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-col gap-3">
           {items.map((item) => {
             const name = locale === "ka" ? item.nameKa : item.nameEn;
             const max = Math.max(1, item.stock);
@@ -98,34 +99,45 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
             const key = lineKey(item);
 
             return (
-              <article key={key} className="line-row">
+              <article key={key} className="line-card">
+                {/* Off the list: a small cross at the card's corner, where a
+                    card is closed everywhere else. */}
+                <button
+                  type="button"
+                  onClick={() => remove(key)}
+                  aria-label={t.cart.remove}
+                  title={t.cart.remove}
+                  className="line-x"
+                >
+                  <CloseIcon size={14} strokeWidth={2.5} />
+                </button>
+
                 <Link href={`/product/${item.slug}`} className="line-pic">
-                  <Image src={item.image} alt={name} fill sizes="96px" className="object-cover" />
+                  <Image src={item.image} alt={name} fill sizes="(max-width: 640px) 112px, 96px" className="object-cover" />
                 </Link>
 
-                <div className="min-w-0">
+                <div className="line-body">
                   <Link
                     href={`/product/${item.slug}`}
                     className="line-clamp-2 text-sm leading-snug font-semibold text-ink-900 transition-colors hover:text-brand-600"
                   >
                     {name}
                   </Link>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                    {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
+                  <div className="line-meta">
+                    {/* Sold in sizes: the size is chosen here, on the line. */}
+                    {item.variantId && <LineSizePicker item={item} />}
                     <span className="text-xs text-ink-500 tabular-nums">
                       {formatPrice(item.price, locale)} / {t.product.unit}
                     </span>
                   </div>
                 </div>
 
-                {/* The count and the line's sum on a row of their own, with
-                    the bin at the end: on a phone this row runs under the
-                    picture, on a wide screen it sits at the right. */}
+                {/* The count and the line's sum. */}
                 <div className="line-foot">
                   <span className="mini-stepper line-stepper">
                     {/* Stops at one, as the product page's does: a thumb
                         reaching for "one fewer" must not delete the row.
-                        The bin is the way out of the cart. */}
+                        The cross is the way out of the cart. */}
                     <button
                       type="button"
                       onClick={() => setQuantity(key, item.quantity - 1)}
@@ -144,20 +156,9 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
                       <PlusIcon size={13} strokeWidth={2.5} />
                     </button>
                   </span>
-
-                  <span className="flex items-center gap-1">
-                    {/* Keyed on the figure, so changing a quantity tints the
-                        line total for a moment. */}
-                    <LineTotal value={item.price * item.quantity} />
-                    <button
-                      type="button"
-                      onClick={() => remove(key)}
-                      aria-label={t.cart.remove}
-                      className="btn btn-ghost h-9 w-9 rounded-pill p-0 text-ink-400 hover:text-danger"
-                    >
-                      <TrashIcon size={16} />
-                    </button>
-                  </span>
+                  {/* Keyed on the figure, so changing a quantity tints the
+                      line total for a moment. */}
+                  <LineTotal value={item.price * item.quantity} />
                 </div>
               </article>
             );
@@ -207,21 +208,10 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
             {t.cart.continueShopping}
           </Link>
 
-          {/* Said before the click, not after the bounce: being sent to a
-              sign-in form you did not ask for is a bad moment to discover
-              the rule. */}
-          {!signedIn && (
-            <p className="mt-3 text-center text-xs leading-relaxed text-ink-500">{t.auth.signInToOrder}</p>
-          )}
-
           {/* Emptying the cart, at the foot of the summary as a quiet line:
               it undoes everything above and should not look like a step. */}
-          <button
-            type="button"
-            onClick={clear}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-line pt-3.5 text-xs text-ink-400 transition-colors hover:text-danger"
-          >
-            <TrashIcon size={13} />
+          <button type="button" onClick={clear} className="btn btn-ghost btn-md mt-3 w-full text-ink-600 hover:text-danger">
+            <TrashIcon size={15} />
             {t.cart.clear}
           </button>
         </aside>

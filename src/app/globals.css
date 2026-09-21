@@ -4124,6 +4124,16 @@ h3,
   background: var(--color-surface);
 }
 
+/* One height for every page of the account on a wide screen — the
+   profile's, the tallest of the short ones — so moving between the rows
+   of the menu does not resize the card. A long list of orders still
+   grows past it. */
+@media (min-width: 1024px) {
+  .account-card {
+    min-height: 57rem;
+  }
+}
+
 .account-card-head {
   display: flex;
   align-items: center;
@@ -5492,30 +5502,72 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   text-align: center;
 }
 
-/* A line of the cart or the wishlist: the picture, the words beside it,
-   and a foot row under both for the count and the sum. From `sm` up the
-   foot sits at the right of the same row. */
-.line-row {
-  display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr);
-  gap: 0.75rem 0.875rem;
-  padding: 1rem;
-  border-top: 1px solid var(--color-line);
+/* A line of the cart or the wishlist. On a phone it is a card of its
+   own with everything down the middle: the picture, the words, the size
+   and the price, then the count and the sum on a row. From `sm` up the
+   same card is a row: the picture at the left, the words beside it, the
+   count and the sum at the right. The cross at the corner takes the
+   line off the list. */
+.line-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem 1.125rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  text-align: center;
 }
 
-.line-row:first-child {
-  border-top: 0;
+.line-x {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink-500);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.line-x:hover {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .line-pic {
   position: relative;
   display: block;
-  width: 5rem;
-  height: 5rem;
+  width: 7rem;
+  height: 7rem;
   overflow: hidden;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
   background: var(--color-ink-50);
+}
+
+.line-body {
+  min-width: 0;
+  width: 100%;
+}
+
+.line-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .line-chip {
@@ -5530,12 +5582,34 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   color: var(--color-ink-700);
 }
 
+/* The size select on a line: the product page's box, a size down. */
+.line-pick > select {
+  height: 2.25rem;
+  padding: 0 2.25rem 0 0.75rem;
+  font-size: 13px;
+}
+
+.line-pick .pick-chevron {
+  right: 0.625rem;
+}
+
 .line-foot {
-  grid-column: 1 / -1;
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.line-foot-one {
+  justify-content: center;
+}
+
+.line-foot-one > * {
+  width: 100%;
+  max-width: 16rem;
 }
 
 .line-stepper {
@@ -5552,10 +5626,18 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 }
 
 @media (min-width: 640px) {
-  .line-row {
+  .line-card {
+    display: grid;
     grid-template-columns: 6rem minmax(0, 1fr) auto;
     align-items: center;
-    padding: 1.125rem 1.25rem;
+    gap: 1rem;
+    padding: 1.125rem 3rem 1.125rem 1.25rem;
+    text-align: left;
+  }
+
+  .line-x {
+    top: 0.75rem;
+    right: 0.75rem;
   }
 
   .line-pic {
@@ -5563,11 +5645,22 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     height: 6rem;
   }
 
+  .line-meta {
+    justify-content: flex-start;
+  }
+
   .line-foot {
-    grid-column: auto;
+    width: auto;
     flex-direction: column;
     align-items: flex-end;
     gap: 0.5rem;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .line-foot-one > * {
+    width: auto;
+    min-width: 11rem;
   }
 }
 
