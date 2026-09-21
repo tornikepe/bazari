@@ -10,7 +10,6 @@ import { isOrderStatus, ORDER_STATUSES } from "@/lib/order-status";
 import {
   BagIcon,
   ChevronRightIcon,
-  HeartIcon,
   TagIcon,
   TruckIcon,
 } from "@/components/ui/icons";
@@ -43,7 +42,7 @@ export default async function AccountOrdersPage({
   const statusRaw = Array.isArray(params.status) ? params.status[0] : params.status;
   const status = isOrderStatus(statusRaw) ? statusRaw : null;
 
-  const [orders, orderCount, byStatus, spending, favoriteCount, active] = await Promise.all([
+  const [orders, orderCount, byStatus, spending, active] = await Promise.all([
     prisma.order.findMany({
       where: { userId: user.id, ...(status ? { status } : {}) },
       orderBy: { createdAt: "desc" },
@@ -68,9 +67,6 @@ export default async function AccountOrdersPage({
       where: { userId: user.id, status: { not: "cancelled" } },
       _sum: { total: true },
     }),
-    // The wishlist as the account holds it — the browser's copy is merged
-    // into this on arrival, so the figure is the whole list, not one tab's.
-    prisma.favorite.count({ where: { userId: user.id } }),
     // The newest order still on its way — the one thing a customer opens
     // this page to check — drawn at the top with where it has got to.
     prisma.order.findFirst({
@@ -88,10 +84,9 @@ export default async function AccountOrdersPage({
     byStatus.find((row) => row.status === value)?._count._all ?? 0;
   const total = byStatus.reduce((sum, row) => sum + row._count._all, 0);
 
-  /* Four figures, all of them counted rather than described. The wishlist
-     is one of them and the way to the wishlist page — the overview used to
-     keep a column of three doors beside the orders, and two of the three
-     went where the tabs above already go. */
+  /* Three figures, all of them counted rather than described. The wishlist
+     is not one of them any more: it left the account's menu, and a count
+     of it here was a door to a page the menu no longer has. */
   const stats = [
     {
       icon: BagIcon,
@@ -102,12 +97,6 @@ export default async function AccountOrdersPage({
       icon: TagIcon,
       label: t.account.spentTotal,
       value: <CountUp value={spent} kind="money" locale={locale} />,
-    },
-    {
-      icon: HeartIcon,
-      label: t.favorites.title,
-      value: <CountUp value={favoriteCount} locale={locale} />,
-      href: "/favorites",
     },
     {
       icon: TruckIcon,
@@ -129,104 +118,80 @@ export default async function AccountOrdersPage({
           between a group's `div` and its terms, and the wrapper that used to
           hold them read as a list with no items. The icon lives inside the
           term instead, where decoration beside a label belongs. */}
+      {/* The order on its way, set in the middle: the mark, the status,
+          the number large, the facts under it, the four steps, and the way
+          to it — the one thing a customer opens this page to check. */}
       {active && (
-        <Link
-          href={`/order/${active.number}`}
-          /* One row on a wide screen; on a phone the words above and the
-             marks below, since a number, a date and four marks do not
-             share 340px. */
-          className="card flex flex-col gap-4 card-pad transition-colors hover:border-ink-900 sm:flex-row sm:items-center sm:gap-6"
-        >
-          <span className="flex min-w-0 flex-1 items-center gap-4">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand-solid text-brand-on-solid">
-              <TruckIcon size={20} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                <span className="eyebrow">{t.account.activeOrder}</span>
-                <StatusBadge status={active.status} t={t} />
-              </span>
-              {/* The number, and the facts under it on a phone rather than
-                  cut off beside it. */}
-              <span className="mt-1 block">
-                <span className="font-mono text-base font-bold text-ink-900">{active.number}</span>
-                <span className="block text-xs text-ink-500 sm:ml-2 sm:inline">
-                  {formatDate(active.createdAt)} ·{" "}
-                  {countText(t.admin.productCountOne, t.admin.productCount, active._count.items)} ·{" "}
-                  {formatPrice(active.total, locale)}
-                </span>
-              </span>
-            </span>
+        <Link href={`/order/${active.number}`} className="active-order">
+          <span className="active-order-mark">
+            <TruckIcon size={22} />
           </span>
-          <span className="flex items-center justify-between gap-4 pl-16 sm:justify-end sm:pl-0">
-            {/* Four steps as four marks, the ones passed filled, the one it
-                is on breathing — the timeline on the order page in a line. */}
-            <span aria-hidden="true" className="flex items-center gap-1.5">
-              {STEPS.map((step, index) => (
-                <span
-                  key={step}
-                  className={`h-2 rounded-pill ${
-                    index < activeStep
-                      ? "w-4 bg-ink-300"
-                      : index === activeStep
-                        ? "progress-now w-8 bg-brand-600"
-                        : "w-4 bg-ink-100"
-                  }`}
-                />
-              ))}
-            </span>
-            <span className="flex items-center gap-1 text-xs font-semibold whitespace-nowrap text-brand-600">
-              {t.account.activeOrderOpen}
-              <ChevronRightIcon size={14} />
-            </span>
+          <span className="eyebrow mt-4">{t.account.activeOrder}</span>
+          <span className="mt-2">
+            <StatusBadge status={active.status} t={t} />
+          </span>
+          <span className="mt-3 font-mono text-xl font-bold text-ink-900">{active.number}</span>
+          <span className="mt-1 text-sm text-ink-500">
+            {formatDate(active.createdAt)} ·{" "}
+            {countText(t.admin.productCountOne, t.admin.productCount, active._count.items)} ·{" "}
+            {formatPrice(active.total, locale)}
+          </span>
+          {/* Four steps as four marks, the ones passed filled, the one it
+              is on breathing — the timeline on the order page in a line. */}
+          <span aria-hidden="true" className="mt-5 flex items-center gap-1.5">
+            {STEPS.map((step, index) => (
+              <span
+                key={step}
+                className={`h-2 rounded-pill ${
+                  index < activeStep
+                    ? "w-5 bg-ink-300"
+                    : index === activeStep
+                      ? "progress-now w-10 bg-brand-600"
+                      : "w-5 bg-ink-100"
+                }`}
+              />
+            ))}
+          </span>
+          <span className="btn btn-outline btn-sm mt-5">
+            {t.account.activeOrderOpen}
+            <ChevronRightIcon size={14} />
           </span>
         </Link>
       )}
 
-      {/* The four figures on four rules, the way the home page sets its
-          counts: the number in the serif, the label under it in small
-          capitals, the icon beside the label. The wishlist's cell is the
-          way to the wishlist. */}
-      <dl className={`grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4 ${active ? "mt-6" : ""}`}>
-        {stats.map((stat) => {
-          const inner = (
-            <>
-              <dd className="display-md text-ink-900 tabular-nums">{stat.value}</dd>
-              <dt className="eyebrow mt-1.5 flex items-center gap-1.5">
-                <stat.icon size={13} className="shrink-0 text-brand-600" />
-                <span className="truncate">{stat.label}</span>
-                {stat.href && <ChevronRightIcon size={12} aria-hidden="true" className="shrink-0" />}
-              </dt>
-            </>
-          );
-          return stat.href ? (
-            <div key={stat.label} className="border-t border-ink-900">
-              <Link href={stat.href} className="group block pt-3 transition-colors hover:text-brand-600">
-                {inner}
-              </Link>
-            </div>
-          ) : (
-            <div key={stat.label} className="border-t border-ink-900 pt-3">
-              {inner}
-            </div>
-          );
-        })}
+      {/* The figures on rules, each set in the middle of its cell: the
+          number in the serif, the label under it in small capitals with
+          its icon. */}
+      {/* Three cells across from `sm` up; on a phone each is a row with
+          the figure at the left and its label at the right, since a sum
+          in lari does not fit a third of a phone. */}
+      <dl className={`grid grid-cols-1 sm:grid-cols-3 sm:gap-x-4 ${active ? "mt-8" : ""}`}>
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="flex items-center justify-between gap-4 border-t border-ink-900 py-3 sm:block sm:pt-4 sm:pb-0 sm:text-center"
+          >
+            <dd className="display-md whitespace-nowrap text-ink-900 tabular-nums">{stat.value}</dd>
+            <dt className="eyebrow flex items-center justify-center gap-1.5 sm:mt-2">
+              <stat.icon size={13} className="shrink-0 text-brand-600" />
+              <span>{stat.label}</span>
+            </dt>
+          </div>
+        ))}
       </dl>
 
-      <div className="mt-8">
+      <div className="mt-10">
         {/* ------------------------------ orders ----------------------------- */}
-        <div className="section-head">
-          <div>
-            <h2 className="text-lg font-semibold text-ink-900">{t.account.myOrders}</h2>
-          </div>
+        <div className="text-center">
+          <h2 className="display-sm text-ink-900">{t.account.myOrders}</h2>
           {/* Only when the list is not the whole story. A count beside a
               heading that shows every row is a number for its own sake. */}
           {orderCount > RECENT && (
-            <p className="text-xs text-ink-500">{fill(t.account.showingLast, { count: RECENT })}</p>
+            <p className="mt-1.5 text-xs text-ink-500">{fill(t.account.showingLast, { count: RECENT })}</p>
           )}
         </div>
 
-        <section id="orders" className="card mt-5 overflow-hidden scroll-mt-[calc(var(--header-h)+1rem)]">
+        <section id="orders" className="card mt-6 overflow-hidden scroll-mt-[calc(var(--header-h)+1rem)]">
 
           {/* Links rather than a `<select>`: the filter is part of the address,
               so a customer can bookmark "my delivered orders" and the back

@@ -41,7 +41,7 @@ export function OrderFilterTabs({
       aria-busy={isPending}
       /* The strip scrolls inside its own box on a phone, where six pills
          do not fit; the card around it hides its overflow and cannot. */
-      className={`flex gap-1.5 overflow-x-auto border-b border-line px-5 py-2.5 no-scrollbar transition-opacity ${
+      className={`flex gap-1.5 overflow-x-auto border-b border-line px-4 py-3 no-scrollbar transition-opacity sm:flex-wrap sm:justify-center sm:px-5 ${
         isPending ? "opacity-60" : ""
       }`}
     >

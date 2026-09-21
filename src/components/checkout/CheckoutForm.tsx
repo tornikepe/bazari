@@ -18,7 +18,7 @@ import { shippingFor, type DeliveryChoice } from "@/lib/cart-rules";
 import type { Dictionary } from "@/lib/i18n";
 import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/orders";
 import { lineKey } from "@/lib/cart-store";
-import { PAYMENT_METHODS, isGatewayMethod, type PaymentMethod } from "@/lib/payment";
+import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
 import { PaymentMark } from "@/components/checkout/PaymentMark";
 import { PhoneField } from "@/components/ui/PhoneField";
 import { SuggestField } from "@/components/ui/SuggestField";
@@ -622,26 +622,18 @@ export function CheckoutForm({
               ))}
             </div>
 
-            {/* What happens next for the method chosen: a gateway takes the
-                shopper to its own page and brings them back paid; cash is
-                paid at the door. One line, and it changes with the choice. */}
-            <p className="mt-3 text-xs text-ink-500">
-              {isGatewayMethod(payment) || payment === "card"
-                ? t.checkout.paymentGatewayNote
-                : payment === "bank_transfer"
-                  ? t.checkout.paymentTransferNote
-                  : t.checkout.paymentNote}
-            </p>
           </fieldset>
         </div>
 
         {/* ----------------------------- summary ---------------------------- */}
         <aside className="card lg:sticky lg:top-[calc(var(--header-h)+1rem)] card-pad">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
-            <span className="text-xs text-ink-500 tabular-nums">
+          {/* The head centred, as the page's own title is: the serif, and
+              the count under it as the small line. */}
+          <div className="text-center">
+            <h2 className="display-sm text-ink-900">{t.cart.summary}</h2>
+            <p className="eyebrow mt-1.5">
               {fill(t.favorites.count, { count: items.reduce((sum, item) => sum + item.quantity, 0) })}
-            </span>
+            </p>
           </div>
 
           {/* Keyed by the product *and* the combination: two sizes of one
@@ -669,12 +661,18 @@ export function CheckoutForm({
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </span>
                   {/* Two lines of the same product differ only here, so a
-                      summary that left it out would show the same row twice. */}
-                  {item.variantLabel && (
-                    <span className="block truncate text-xs text-ink-400">{item.variantLabel}</span>
-                  )}
-                  <span className="mt-0.5 block text-xs text-ink-500 tabular-nums">
-                    {item.quantity} × {formatPrice(item.price, locale)}
+                      summary that left it out would show the same row twice.
+                      A chip, so the size is read as a size and not as the
+                      end of the name. */}
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-ink-500 tabular-nums">
+                    {item.variantLabel && (
+                      <span className="rounded-pill border border-line bg-ink-50 px-1.5 py-px text-[11px] font-semibold text-ink-700">
+                        {item.variantLabel}
+                      </span>
+                    )}
+                    <span>
+                      {item.quantity} × {formatPrice(item.price, locale)}
+                    </span>
                   </span>
                 </span>
 
@@ -688,11 +686,16 @@ export function CheckoutForm({
           <div className="my-4 h-px bg-line" />
 
           {/* ----------------------------- coupon ---------------------------- */}
-          <div>
-            <label className="field-label" htmlFor="coupon">
+          {/* A dashed box, the label centred over the row, and a button
+              that looks like one: the ghost button beside the box read as a
+              word that did nothing. */}
+          <div className="coupon-box">
+            <label className="field-label block text-center" htmlFor="coupon">
               {t.checkout.couponLabel}
             </label>
-            <div className="flex gap-2">
+            {/* The box over the button rather than beside it: side by side
+                the box was too narrow for its own placeholder. */}
+            <div className="flex flex-col gap-2">
               <input
                 id="coupon"
                 value={couponInput}
@@ -715,7 +718,7 @@ export function CheckoutForm({
                     void applyCoupon();
                   }
                 }}
-                className="field min-w-0 flex-1 font-mono tracking-wide uppercase"
+                className="field w-full text-center font-mono tracking-wide uppercase"
               />
               <button
                 type="button"
@@ -728,7 +731,7 @@ export function CheckoutForm({
                     void applyCoupon();
                   }
                 }}
-                className="btn btn-ghost btn-md shrink-0"
+                className={`btn btn-md w-full ${coupon?.ok ? "btn-outline" : "btn-primary"}`}
               >
                 {/* Pinned to its widest label: the input beside it is what
                     would otherwise shrink when "apply" became "remove". */}
@@ -749,7 +752,7 @@ export function CheckoutForm({
 
             {coupon && (coupon.ok || coupon.reason !== "not-found") && (
               <p
-                className={`mt-1.5 text-xs leading-snug ${coupon.ok ? "text-success" : "text-danger"}`}
+                className={`mt-2 text-center text-xs leading-snug ${coupon.ok ? "text-success" : "text-danger"}`}
               >
                 {coupon.ok ? t.checkout.couponApplied : COUPON_ERRORS[coupon.reason](t)}
               </p>
@@ -758,14 +761,14 @@ export function CheckoutForm({
 
           <div className="my-4 h-px bg-line" />
 
-          <dl className="flex flex-col gap-2.5 text-sm">
-            <div className="flex items-center justify-between">
-              <dt className="text-ink-500">{t.cart.itemsTotal}</dt>
-              <dd className="font-semibold text-ink-800">{formatPrice(subtotal, locale)}</dd>
+          <dl className="summary-totals">
+            <div>
+              <dt>{t.cart.itemsTotal}</dt>
+              <dd>{formatPrice(subtotal, locale)}</dd>
             </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-ink-500">{t.cart.shipping}</dt>
-              <dd className="font-semibold text-ink-800">
+            <div>
+              <dt>{t.cart.shipping}</dt>
+              <dd>
                 {shipping === 0 ? (
                   <span className="text-success">{t.cart.freeShipping}</span>
                 ) : (
@@ -774,23 +777,20 @@ export function CheckoutForm({
               </dd>
             </div>
             {discount > 0 && (
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-500">{t.cart.discount}</dt>
-                <dd className="font-semibold text-success">
-                  −{formatPrice(discount, locale)}
-                </dd>
+              <div>
+                <dt>{t.cart.discount}</dt>
+                <dd className="text-success">−{formatPrice(discount, locale)}</dd>
               </div>
             )}
-            <div className="my-1 h-px bg-line" />
-            <div className="flex items-center justify-between">
-              <dt className="text-base font-bold text-ink-900">{t.cart.total}</dt>
+            <div className="summary-total">
+              <dt>{t.cart.total}</dt>
               <dd>
                 <Price value={payable} size="lg" />
               </dd>
             </div>
           </dl>
 
-          <TaxNote total={payable} rate={settings.vatRate} locale={locale} t={t} className="mt-1.5" />
+          <TaxNote total={payable} rate={settings.vatRate} locale={locale} t={t} className="mt-1.5 text-center" />
 
           {failure && (
             <ErrorNote

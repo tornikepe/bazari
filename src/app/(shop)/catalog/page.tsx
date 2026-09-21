@@ -82,7 +82,7 @@ export default async function CatalogPage({
               without it the rail could not be scrolled at all. */}
           <div
             data-lenis-prevent
-            className="sticky top-[var(--header-h)] card max-h-[calc(100dvh-var(--header-h)-1.5rem)] overflow-y-auto overscroll-contain card-pad-tight"
+            className="sticky top-[var(--header-h)] card max-h-[calc(100dvh-var(--header-h)-1.5rem)] overflow-y-auto overscroll-contain card-pad-tight pb-0"
           >
             <h2 className="mb-3 text-sm font-extrabold tracking-tight text-ink-900">
               {t.catalog.filters}

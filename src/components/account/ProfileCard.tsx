@@ -1,13 +1,20 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { updateProfile, type AuthState } from "@/app/actions/auth";
+import {
+  changePassword,
+  updateConsent,
+  updateEmail,
+  updatePhone,
+  type AuthState,
+} from "@/app/actions/auth";
 import { PhoneField } from "@/components/ui/PhoneField";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { AlertIcon, CalendarIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
-import { localDigits } from "@/lib/phone";
+import type { Dictionary } from "@/lib/i18n";
 
 export type Profile = {
   name: string;
@@ -21,6 +28,9 @@ export type Profile = {
   emailOptIn: boolean;
 };
 
+/** Which of the three editors is open; one at a time. */
+type Editor = "phone" | "email" | "password" | null;
+
 /* One field: the label, the value or the control, the rule. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -31,198 +41,315 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+/* A value that is only read, "—" when there is none. */
+function Value({ text, muted, fallback }: { text: string; muted?: boolean; fallback: string }) {
+  return <span className={`profile-value ${muted || !text ? "text-ink-400" : ""}`}>{text || fallback}</span>;
+}
+
+/* The word at the right of a field that opens its editor. */
+function EditLink({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="shrink-0 text-xs font-semibold text-brand-600 underline-offset-4 hover:underline"
+    >
+      {label}
+    </button>
+  );
+}
+
+/* The foot of an open editor: save, and the way back. */
+function EditorFoot({
+  pending,
+  onCancel,
+  t,
+}: {
+  pending: boolean;
+  onCancel: () => void;
+  t: Dictionary;
+}) {
+  return (
+    <div className="mt-3 flex items-center gap-2">
+      <button type="submit" disabled={pending} className="btn btn-primary btn-sm">
+        {pending && <SpinnerIcon size={14} />}
+        {t.account.saveProfile}
+      </button>
+      <button type="button" onClick={onCancel} className="btn btn-ghost btn-sm">
+        {t.account.cancel}
+      </button>
+    </div>
+  );
+}
+
 /**
  * The customer's details, laid out as the reference shop lays them: two
- * columns of label-over-value with a rule under each, read-only, and an
- * "edit" button at the card's head that turns the values into fields in
- * place. Save writes them all at once; cancel puts the values back.
+ * columns of label-over-value with a rule under each. Three of them — the
+ * mobile, the address, the password — change in place, each behind its
+ * own "edit" at the right of the row; the rest is read only. The two
+ * consents under everything save the moment they are ticked.
  */
-export function ProfileCard({
-  profile,
-  editing,
-  onCancel,
-  justSaved,
-}: {
-  profile: Profile;
-  editing: boolean;
-  onCancel: () => void;
-  justSaved: boolean;
-}) {
+export function ProfileCard({ profile, saved }: { profile: Profile; saved: string | null }) {
   const { t } = useI18n();
-  const [state, formAction, pending] = useActionState<AuthState, FormData>(updateProfile, {});
-  const dateRef = useRef<HTMLInputElement>(null);
+  const [editor, setEditor] = useState<Editor>(null);
+
+  const [phoneState, phoneAction, phonePending] = useActionState<AuthState, FormData>(updatePhone, {});
+  const [emailState, emailAction, emailPending] = useActionState<AuthState, FormData>(updateEmail, {});
+  const [passwordState, passwordAction, passwordPending] = useActionState<AuthState, FormData>(
+    changePassword,
+    {},
+  );
+
+  useFieldShake(phoneState, Boolean(phoneState.error), ["phone"]);
+  useFieldShake(emailState, Boolean(emailState.error), ["email"]);
+  useFieldShake(
+    passwordState,
+    Boolean(passwordState.error),
+    passwordState.error === "wrong-password" ? ["currentPassword"] : ["newPassword", "confirmPassword"],
+  );
+
+  const phoneFault =
+    phoneState.error === "phone"
+      ? t.auth.phoneInvalid
+      : phoneState.error === "phone-taken"
+        ? t.auth.phoneTaken
+        : phoneState.error
+          ? t.common.error
+          : null;
+  const emailFault =
+    emailState.error === "taken" ? t.auth.taken : emailState.error ? t.common.error : null;
+  const passwordFault =
+    passwordState.error === "wrong-password"
+      ? t.account.wrongPassword
+      : passwordState.error === "weak"
+        ? t.auth.weak
+        : passwordState.error === "mismatch"
+          ? t.auth.mismatch
+          : passwordState.error
+            ? t.common.error
+            : null;
+
   const [firstName, ...rest] = profile.name.split(" ");
   const lastName = rest.join(" ");
-
-  useFieldShake(state, Boolean(state.error), state.error === "phone" ? ["phone"] : ["firstName"]);
-  const fault = state.error ? (state.error === "phone" ? t.auth.phoneInvalid : t.common.error) : null;
-
   const birth = profile.birthDate ? new Date(profile.birthDate) : null;
   const birthShown = birth
     ? `${String(birth.getUTCDate()).padStart(2, "0")} / ${String(birth.getUTCMonth() + 1).padStart(2, "0")} / ${birth.getUTCFullYear()}`
-    : t.account.notSet;
-  const birthValue = birth ? birth.toISOString().slice(0, 10) : "";
+    : "";
   const genderShown =
     profile.gender === "female" ? t.account.genderFemale : profile.gender === "male" ? t.account.genderMale : "";
   const privacy = <Link href="/privacy" className="underline underline-offset-4">{t.account.optInHere}</Link>;
 
-  const value = (text: string, muted = false) => (
-    <span className={`profile-value ${muted ? "text-ink-400" : ""}`}>{text || t.account.notSet}</span>
-  );
+  const savedLine =
+    saved === "phone"
+      ? t.account.phoneSaved
+      : saved === "password"
+        ? t.account.passwordSaved
+        : saved
+          ? t.account.profileSaved
+          : null;
 
   return (
-    <form action={formAction} className="profile" data-editing={editing}>
-      {justSaved && !editing && (
+    <div className="profile">
+      {savedLine && !editor && (
         <p role="status" className="mb-5 flex items-center gap-1.5 text-sm font-semibold text-success">
           <CheckIcon size={15} />
-          {t.account.profileSaved}
+          {savedLine}
         </p>
       )}
 
       <div className="grid gap-x-16 gap-y-2 lg:grid-cols-2">
         <div>
           <Field label={t.account.firstName}>
-            {editing ? (
-              <input id="firstName" name="firstName" defaultValue={firstName} required className="profile-input" />
-            ) : (
-              value(firstName)
-            )}
+            <Value text={firstName} fallback={t.account.notSet} />
           </Field>
           <Field label={t.account.lastName}>
-            {editing ? (
-              <input id="lastName" name="lastName" defaultValue={lastName} className="profile-input" />
-            ) : (
-              value(lastName)
-            )}
+            <Value text={lastName} fallback={t.account.notSet} />
           </Field>
           <Field label={t.account.gender}>
             <span className="profile-radios">
               {(["female", "male"] as const).map((option) => (
-                <label key={option} className={editing ? "" : "pointer-events-none"}>
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={option}
-                    defaultChecked={profile.gender === option}
-                    disabled={!editing}
-                  />
+                <label key={option} className="pointer-events-none">
+                  <input type="radio" name="gender" value={option} checked={profile.gender === option} readOnly disabled />
                   <span className="profile-radio" aria-hidden="true" />
-                  <span className={profile.gender === option || editing ? "text-ink-700" : "text-ink-400"}>
+                  <span className={profile.gender === option ? "text-ink-700" : "text-ink-400"}>
                     {option === "female" ? t.account.genderFemale : t.account.genderMale}
                   </span>
                 </label>
               ))}
-              {!editing && !genderShown && <span className="sr-only">{t.account.notSet}</span>}
+              {!genderShown && <span className="sr-only">{t.account.notSet}</span>}
             </span>
           </Field>
           <Field label={t.account.birthDate}>
             <span className="flex items-center justify-between gap-3">
-              {editing ? (
-                <input ref={dateRef} type="date" name="birthDate" defaultValue={birthValue} className="profile-input" />
-              ) : (
-                value(birthShown, !birth)
-              )}
-              {/* The calendar is our mark, not the browser's: the native
-                  indicator is hidden and this opens the same picker. */}
-              {editing ? (
-                <button
-                  type="button"
-                  onClick={() => dateRef.current?.showPicker?.()}
-                  aria-label={t.account.birthDate}
-                  className="shrink-0 text-ink-500 transition-colors hover:text-ink-900"
-                >
-                  <CalendarIcon size={20} />
-                </button>
-              ) : (
-                <CalendarIcon size={20} className="shrink-0 text-ink-500" aria-hidden="true" />
-              )}
+              <Value text={birthShown} fallback={t.account.notSet} />
+              <CalendarIcon size={20} className="shrink-0 text-ink-400" aria-hidden="true" />
             </span>
           </Field>
           <Field label={t.account.personalId}>
-            {editing ? (
-              <input
-                name="personalId"
-                defaultValue={profile.personalId}
-                inputMode="numeric"
-                maxLength={20}
-                className="profile-input font-mono"
-              />
-            ) : (
-              value(profile.personalId)
-            )}
+            <Value text={profile.personalId} fallback={t.account.notSet} />
           </Field>
         </div>
 
         <div>
+          {/* ------------------------------ email ------------------------------ */}
           <Field label={t.auth.email}>
-            <span className="flex flex-wrap items-center justify-between gap-2">
-              {value(profile.email)}
-              {!profile.emailVerified && (
-                <Link
-                  href={`/verify?email=${encodeURIComponent(profile.email)}`}
-                  className="text-xs font-semibold text-warning underline-offset-4 hover:underline"
-                >
-                  {t.account.emailUnverified} →
-                </Link>
-              )}
-            </span>
-          </Field>
-          <Field label={t.account.mobile}>
-            {editing ? (
-              <PhoneField id="phone" name="phone" defaultValue={profile.phone} className="profile-phone" />
+            {editor === "email" ? (
+              <form action={emailAction}>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  defaultValue={profile.email}
+                  required
+                  autoFocus
+                  autoComplete="email"
+                  className="field"
+                />
+                <p className="mt-1.5 text-xs text-ink-500">{t.account.emailChangeHint}</p>
+                <FormFault message={emailFault} />
+                <EditorFoot pending={emailPending} onCancel={() => setEditor(null)} t={t} />
+              </form>
             ) : (
-              <span className="profile-value">
-                <span className="text-ink-500">+995</span>{" "}
-                {profile.phone ? profile.phone.replace(/^\+995\s?/, "") : "---------"}
+              <span className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                  <Value text={profile.email} fallback={t.account.notSet} />
+                  {!profile.emailVerified && (
+                    <Link
+                      href={`/verify?email=${encodeURIComponent(profile.email)}`}
+                      className="text-xs font-semibold text-warning underline-offset-4 hover:underline"
+                    >
+                      {t.account.emailUnverified} →
+                    </Link>
+                  )}
+                </span>
+                <EditLink onClick={() => setEditor("email")} label={t.account.edit} />
               </span>
             )}
           </Field>
-          {!profile.phone && !editing && (
+
+          {/* ------------------------------ phone ------------------------------ */}
+          <Field label={t.account.mobile}>
+            {editor === "phone" ? (
+              <form action={phoneAction}>
+                <PhoneField id="phone" name="phone" defaultValue={profile.phone} required invalid={Boolean(phoneFault)} />
+                <FormFault message={phoneFault} />
+                <EditorFoot pending={phonePending} onCancel={() => setEditor(null)} t={t} />
+              </form>
+            ) : (
+              <span className="flex items-center justify-between gap-3">
+                <span className="profile-value">
+                  <span className="text-ink-500">+995</span>{" "}
+                  {profile.phone ? profile.phone.replace(/^\+995\s?/, "") : "---------"}
+                </span>
+                <EditLink onClick={() => setEditor("phone")} label={t.account.edit} />
+              </span>
+            )}
+          </Field>
+          {!profile.phone && editor !== "phone" && (
             <p className="-mt-2 mb-4 flex items-center gap-2 text-sm text-ink-500">
               <AlertIcon size={16} className="shrink-0" />
               {t.account.addMobile}
             </p>
           )}
+
+          {/* ----------------------------- password ---------------------------- */}
           <Field label={t.account.password}>
-            <span className="flex items-center justify-between gap-3">
-              <span className="profile-value tracking-[0.2em]">••••••••••••</span>
-              <Link href="/forgot-password" className="text-xs font-semibold text-brand-600 hover:underline">
-                {t.account.changePassword}
-              </Link>
-            </span>
+            {editor === "password" ? (
+              <form action={passwordAction} className="flex flex-col gap-3">
+                <div>
+                  <label htmlFor="currentPassword" className="field-label">
+                    {t.account.currentPassword}
+                  </label>
+                  <PasswordField
+                    id="currentPassword"
+                    name="currentPassword"
+                    required
+                    autoFocus
+                    autoComplete="current-password"
+                    invalid={passwordState.error === "wrong-password"}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="newPassword" className="field-label">
+                    {t.auth.newPassword}
+                  </label>
+                  <PasswordField
+                    id="newPassword"
+                    name="password"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    invalid={passwordState.error === "weak" || passwordState.error === "mismatch"}
+                  />
+                  <p className="mt-1 text-xs text-ink-400">{t.auth.passwordHint}</p>
+                </div>
+                <div>
+                  <label htmlFor="confirmPassword" className="field-label">
+                    {t.auth.confirmPassword}
+                  </label>
+                  <PasswordField
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    required
+                    autoComplete="new-password"
+                    invalid={passwordState.error === "mismatch"}
+                  />
+                </div>
+                <FormFault message={passwordFault} />
+                <EditorFoot pending={passwordPending} onCancel={() => setEditor(null)} t={t} />
+              </form>
+            ) : (
+              <span className="flex items-center justify-between gap-3">
+                <span className="profile-value tracking-[0.2em]">••••••••••••</span>
+                <EditLink onClick={() => setEditor("password")} label={t.account.edit} />
+              </span>
+            )}
           </Field>
         </div>
       </div>
 
-      {/* The two consents, under everything, with the way to what they mean. */}
-      <div className="mt-8 flex flex-col gap-3 text-sm text-ink-700">
-        {(["smsOptIn", "emailOptIn"] as const).map((key) => (
-          <label key={key} className={`profile-check ${editing ? "" : "pointer-events-none"}`}>
-            <input type="checkbox" name={key} defaultChecked={profile[key]} disabled={!editing} />
-            <span className="profile-box" aria-hidden="true">
-              <CheckIcon size={12} strokeWidth={3} />
-            </span>
-            <span>
-              {key === "smsOptIn" ? t.account.smsOptIn : t.account.emailOptIn} {t.account.optInMore} {privacy}
-            </span>
-          </label>
-        ))}
-      </div>
+      <Consents profile={profile} privacy={privacy} />
+    </div>
+  );
+}
 
-      <FormFault message={fault} />
+/**
+ * The two consents, under everything: a tick saves itself. The box shows
+ * the new state at once and goes back if the save fails.
+ */
+function Consents({ profile, privacy }: { profile: Profile; privacy: React.ReactNode }) {
+  const { t } = useI18n();
+  const [state, setState] = useState({ smsOptIn: profile.smsOptIn, emailOptIn: profile.emailOptIn });
+  const [failed, setFailed] = useState(false);
+  const [, startTransition] = useTransition();
 
-      {editing && (
-        <div className="mt-8 flex flex-wrap items-center justify-end gap-2 border-t border-line pt-5">
-          <button type="button" onClick={onCancel} className="btn btn-outline btn-md">
-            {t.account.cancel}
-          </button>
-          <button type="submit" disabled={pending} className="btn btn-primary btn-md">
-            {pending && <SpinnerIcon size={15} />}
-            {t.account.saveProfile}
-          </button>
-        </div>
-      )}
+  function toggle(key: "smsOptIn" | "emailOptIn") {
+    const next = !state[key];
+    setState((current) => ({ ...current, [key]: next }));
+    setFailed(false);
+    startTransition(async () => {
+      const result = await updateConsent(key, next);
+      if (!result.ok) {
+        setState((current) => ({ ...current, [key]: !next }));
+        setFailed(true);
+      }
+    });
+  }
 
-    </form>
+  return (
+    <div className="mt-8 flex flex-col gap-3 text-sm text-ink-700">
+      {(["smsOptIn", "emailOptIn"] as const).map((key) => (
+        <label key={key} className="profile-check">
+          <input type="checkbox" name={key} checked={state[key]} onChange={() => toggle(key)} />
+          <span className="profile-box" aria-hidden="true">
+            <CheckIcon size={12} strokeWidth={3} />
+          </span>
+          <span>
+            {key === "smsOptIn" ? t.account.smsOptIn : t.account.emailOptIn} {t.account.optInMore} {privacy}
+          </span>
+        </label>
+      ))}
+      {failed && <FormFault message={t.common.error} />}
+    </div>
   );
 }

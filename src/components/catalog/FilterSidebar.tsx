@@ -138,15 +138,12 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
         : brands.filter((brand, index) => index < BRANDS_SHOWN || filters.brands.includes(brand))
   );
 
-  const priceActive = filters.minPrice !== null || filters.maxPrice !== null;
-  const availabilityActive = Number(filters.inStock) + Number(filters.onSale);
 
   return (
     <div className={`filter-rail ${isPending ? "opacity-60 transition-opacity" : "transition-opacity"}`}>
       {/* ---------------------------- categories --------------------------- */}
       <FilterGroup
         title={t.catalog.category}
-        badge={filters.category ? categoryName(categories.find((c) => c.slug === filters.category) ?? categories[0]!) : undefined}
       >
         <ul className="flex flex-col gap-0.5">
           <li>
@@ -173,7 +170,6 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
       {/* ------------------------------- price ----------------------------- */}
       <FilterGroup
         title={t.catalog.price}
-        badge={priceActive ? `${filters.minPrice ?? bounds.min} – ${filters.maxPrice ?? bounds.max} ₾` : undefined}
       >
         <form onSubmit={submitPrice} className="flex flex-col gap-3">
           <div className="price-boxes">
@@ -234,7 +230,6 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
       {brands.length > 0 && (
         <FilterGroup
           title={t.catalog.brand}
-          badge={filters.brands.length > 0 ? fill(t.catalog.activeCount, { count: filters.brands.length }) : undefined}
         >
           {brands.length > BRANDS_SHOWN && (
             <label className="relative mb-2 block">
@@ -288,7 +283,6 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
       {/* --------------------------- availability -------------------------- */}
       <FilterGroup
         title={t.catalog.availability}
-        badge={availabilityActive ? fill(t.catalog.activeCount, { count: availabilityActive }) : undefined}
         last
       >
         <div className="flex flex-col gap-1">
@@ -312,6 +306,15 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
       <div className="filter-foot">
         <button
           type="button"
+          onClick={() => (deferred ? commit() : submitPrice())}
+          disabled={isPending}
+          className="btn btn-primary btn-md w-full"
+        >
+          {isPending ? <SpinnerIcon size={15} /> : null}
+          {t.catalog.apply}
+        </button>
+        <button
+          type="button"
           onClick={() => {
             if (deferred) {
               setDraft({ ...EMPTY_FILTERS, q: live.q });
@@ -328,18 +331,9 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
               onApplied?.();
             });
           }}
-          className="btn btn-outline btn-md"
+          className="btn btn-outline btn-md w-full"
         >
           {t.catalog.priceReset}
-        </button>
-        <button
-          type="button"
-          onClick={() => (deferred ? commit() : submitPrice())}
-          disabled={isPending}
-          className="btn btn-primary btn-md flex-1"
-        >
-          {isPending ? <SpinnerIcon size={15} /> : null}
-          {t.catalog.apply}
         </button>
       </div>
     </div>
@@ -350,15 +344,13 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
 /* Building blocks                                                     */
 /* ------------------------------------------------------------------ */
 
-/** A group that folds, with what it holds said in its heading while folded. */
+/** A group that folds under its heading. */
 function FilterGroup({
   title,
-  badge,
   children,
   last = false,
 }: {
   title: string;
-  badge?: string;
   children: React.ReactNode;
   last?: boolean;
 }) {
@@ -375,11 +367,6 @@ function FilterGroup({
         className="flex min-h-9 w-full items-center gap-2 text-left"
       >
         <span className="text-sm font-bold text-ink-900">{title}</span>
-        {badge && (
-          <span className="badge max-w-[10rem] truncate bg-brand-50 text-[11px] text-brand-700">
-            {badge}
-          </span>
-        )}
         <ChevronDownIcon
           size={15}
           className={`ml-auto shrink-0 text-ink-400 transition-transform ${open ? "" : "-rotate-90"}`}

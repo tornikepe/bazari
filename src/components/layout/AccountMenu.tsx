@@ -6,11 +6,15 @@ import { logout } from "@/app/actions/auth";
 import { HoverPanel } from "@/components/layout/HoverPanel";
 import { MiniLogin } from "@/components/auth/MiniLogin";
 import { isStaff, type Role } from "@/lib/auth-roles";
+import { initialsOf } from "@/components/account/initials";
 import {
   CardIcon,
+  ChevronRightIcon,
+  ClockIcon,
   DashboardIcon,
+  HeartIcon,
   LogoutIcon,
-  SettingsIcon,
+  MapPinIcon,
   UserIcon,
 } from "@/components/ui/icons";
 
@@ -48,8 +52,9 @@ export function AccountMenu({ user }: { user: MenuUser }) {
   return (
     <HoverPanel
       label={label}
-      /* A form wants a little more room than a list of links. */
-      width={user ? "w-64" : "w-[19rem]"}
+      /* A form wants a little more room than a list of links; the
+         customer's list, with its six rows, a little more still. */
+      width={!user ? "w-[19rem]" : isStaff(user.role) ? "w-64" : "w-80"}
       trigger={
         <Link
           href={href}
@@ -186,33 +191,54 @@ function StaffPanel({ user }: { user: NonNullable<MenuUser> }) {
 
 function CustomerPanel({ user }: { user: NonNullable<MenuUser> }) {
   const { t } = useI18n();
+  const initials = initialsOf(user.name, user.email);
+  /* The same rows as the account page's own menu, in the same order. */
   const links = [
-    { href: "/account", label: t.account.title, icon: UserIcon },
-    {
-      href: "/account/settings",
-      label: t.account.settings,
-      icon: SettingsIcon,
-    },
-    { href: "/account/payments", label: t.account.payments, icon: CardIcon },
+    { href: "/account", label: t.account.menuProfile, icon: UserIcon },
+    { href: "/account/addresses", label: t.account.menuAddresses, icon: MapPinIcon },
+    { href: "/account/orders", label: t.account.menuOrders, icon: ClockIcon },
+    { href: "/favorites", label: t.account.menuWishlist, icon: HeartIcon },
+    { href: "/account/payments", label: t.account.menuPayments, icon: CardIcon },
   ];
   return (
     <>
-      <Who user={user} />
+      {/* Who: the picture on the brand's tint, the name under it, and the
+          address in the small line. */}
+      <div className="acct-pop-head">
+        {user.avatarUrl ? (
+          <Avatar url={user.avatarUrl} size={48} />
+        ) : (
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-pill bg-brand-solid text-base font-extrabold text-brand-on-solid">
+            {initials}
+          </span>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-ink-900">{user.name || user.email}</p>
+          <p className="truncate text-xs text-ink-500">{user.email}</p>
+        </div>
+      </div>
       <ul className="p-1.5">
         {links.map((link) => (
           <li key={link.href}>
-            <Link
-              href={link.href}
-              className="flex items-center gap-2.5 rounded-control px-2.5 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-900"
-            >
-              <link.icon size={16} className="shrink-0 text-ink-400" />
-              {link.label}
+            <Link href={link.href} className="acct-pop-row">
+              <span className="acct-pop-icon">
+                <link.icon size={16} />
+              </span>
+              <span className="min-w-0 flex-1 leading-snug">{link.label}</span>
+              <ChevronRightIcon size={14} className="shrink-0 text-ink-300" />
             </Link>
           </li>
         ))}
       </ul>
       <div className="border-t border-line p-1.5">
-        <SignOut />
+        <form action={logout}>
+          <button type="submit" className="acct-pop-row is-out">
+            <span className="acct-pop-icon">
+              <LogoutIcon size={16} />
+            </span>
+            {t.auth.signOut}
+          </button>
+        </form>
       </div>
     </>
   );

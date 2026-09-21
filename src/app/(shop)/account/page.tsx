@@ -7,9 +7,9 @@ import { ProfilePanel } from "@/components/account/ProfilePanel";
 import type { RawSearchParams } from "@/lib/filters";
 
 /**
- * The account itself: the customer's details, read-only until "edit" is
- * pressed. The orders, the addresses and the payment settings are the
- * other rows of the menu.
+ * The account itself: the customer's details, of which the mobile, the
+ * address and the password change in place. The orders, the addresses and
+ * the payment settings are the other rows of the menu.
  */
 export default async function AccountPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
   const { t } = await getI18n();
@@ -25,7 +25,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   return (
     <AccountShell user={user} t={t}>
       <ProfilePanel
-        justSaved={params.saved === "1"}
+        saved={typeof params.saved === "string" ? params.saved : null}
         profile={{
           name: user.name,
           email: user.email,

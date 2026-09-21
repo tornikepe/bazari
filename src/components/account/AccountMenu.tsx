@@ -9,7 +9,6 @@ import type { SessionUser } from "@/lib/auth";
 import {
   CardIcon,
   ClockIcon,
-  HeartIcon,
   LogoutIcon,
   MapPinIcon,
   UserIcon,
@@ -28,7 +27,6 @@ export function AccountMenu({ user, signOutLabel }: { user: SessionUser; signOut
     { href: "/account", label: t.account.menuProfile, icon: UserIcon },
     { href: "/account/addresses", label: t.account.menuAddresses, icon: MapPinIcon },
     { href: "/account/orders", label: t.account.menuOrders, icon: ClockIcon },
-    { href: "/favorites", label: t.account.menuWishlist, icon: HeartIcon },
     { href: "/account/payments", label: t.account.menuPayments, icon: CardIcon },
   ];
 

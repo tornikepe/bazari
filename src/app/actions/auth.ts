@@ -32,7 +32,9 @@ export type AuthState = {
     | "rate-limited"
     /* The shop has no mail provider configured, so no code can be sent to
        anybody. Never says anything about a particular address. */
-    | "mail-unavailable";
+    | "mail-unavailable"
+    /* The account page's password change: the current one was not right. */
+    | "wrong-password";
   sent?: boolean;
   /** Minutes until a rate-limited caller may retry. */
   retryMinutes?: number;
@@ -303,51 +305,109 @@ export async function logout() {
   redirect("/");
 }
 
-/** Updates the signed-in customer's saved delivery details. */
-export async function updateProfile(
-  _previous: AuthState,
-  formData: FormData,
-): Promise<AuthState> {
+/* ------------------------------------------------------------------ */
+/* The account page: three things change on their own, in place          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The mobile number, on its own. The one shape every number is kept in;
+ * one account per number, or a sign-in by phone could not know which.
+ */
+export async function updatePhone(_previous: AuthState, formData: FormData): Promise<AuthState> {
   const user = await getCurrentUser();
   if (!user) return { error: "invalid" };
 
-  /* One name in the row, asked for as two on the page: joined here with a
-     space, split again on the first space when shown. */
-  const first = String(formData.get("firstName") ?? formData.get("name") ?? "").trim();
-  const last = String(formData.get("lastName") ?? "").trim();
-  const name = [first, last].filter(Boolean).join(" ");
-  if (!name) return { error: "invalid" };
-  // The one shape every number is kept in; an emptied field stays empty.
-  const rawPhone = String(formData.get("phone") ?? "").trim();
-  const phone = rawPhone ? normalizePhone(rawPhone) : "";
-  if (phone === null) return { error: "phone" };
+  const phone = normalizePhone(String(formData.get("phone") ?? ""));
+  if (!phone) return { error: "phone" };
 
-  const gender = String(formData.get("gender") ?? "");
-  const birthRaw = String(formData.get("birthDate") ?? "").trim();
-  const birthDate = birthRaw ? new Date(`${birthRaw}T00:00:00Z`) : null;
-  if (birthDate && Number.isNaN(birthDate.getTime())) return { error: "invalid" };
+  const samePhone = await prisma.user.findFirst({
+    where: { phone, role: "customer", NOT: { id: user.id } },
+    select: { id: true },
+  });
+  if (samePhone) return { error: "phone-taken" };
 
   try {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        name,
-        phone,
-        city: String(formData.get("city") ?? "").trim(),
-        address: String(formData.get("address") ?? "").trim(),
-        gender: gender === "female" || gender === "male" ? gender : "",
-        birthDate,
-        personalId: String(formData.get("personalId") ?? "").trim().slice(0, 20),
-        smsOptIn: formData.get("smsOptIn") === "on",
-        emailOptIn: formData.get("emailOptIn") === "on",
-      },
-    });
+    await prisma.user.update({ where: { id: user.id }, data: { phone } });
   } catch (error) {
-    console.error("updateProfile failed", error);
+    console.error("updatePhone failed", error);
+    return { error: "failed" };
+  }
+  redirect("/account?saved=phone");
+}
+
+/**
+ * The address, on its own. A new address is unverified until its code is
+ * entered — the same door registration goes through — so the page that
+ * follows is the verification page, with the code already on its way.
+ */
+export async function updateEmail(_previous: AuthState, formData: FormData): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "invalid" };
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email || !email.includes("@")) return { error: "invalid" };
+  if (email === user.email) redirect("/account");
+
+  const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  if (existing) return { error: "taken" };
+
+  try {
+    await prisma.user.update({ where: { id: user.id }, data: { email, emailVerified: false } });
+  } catch (error) {
+    console.error("updateEmail failed", error);
     return { error: "failed" };
   }
 
-  redirect("/account?saved=1");
+  const { code } = await issueCode(user.id, "email_verification");
+  const sent = await sendVerificationEmail(email, code, await getLocale());
+  redirect(`/verify?email=${encodeURIComponent(email)}${sent ? "" : "&sent=0"}`);
+}
+
+/**
+ * The password, on its own: the current one has to be typed first, so a
+ * browser left open cannot have its password changed by whoever sits down
+ * at it. Every other session stops working, as after a reset.
+ */
+export async function changePassword(_previous: AuthState, formData: FormData): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "invalid" };
+
+  const current = String(formData.get("currentPassword") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+
+  if (password.length < MIN_PASSWORD_LENGTH) return { error: "weak" };
+  if (password !== confirm) return { error: "mismatch" };
+
+  const row = await prisma.user.findUnique({ where: { id: user.id }, select: { password: true } });
+  if (!row || !verifyPassword(current, row.password)) return { error: "wrong-password" };
+
+  try {
+    await prisma.user.update({ where: { id: user.id }, data: { password: hashPassword(password) } });
+  } catch (error) {
+    console.error("changePassword failed", error);
+    return { error: "failed" };
+  }
+
+  const version = await revokeSessions(user.id);
+  await createSession(user.id, version);
+  redirect("/account?saved=password");
+}
+
+/**
+ * The two consents, saved the moment a box is ticked — there is no form
+ * around them to submit.
+ */
+export async function updateConsent(key: "smsOptIn" | "emailOptIn", value: boolean) {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false as const };
+  try {
+    await prisma.user.update({ where: { id: user.id }, data: { [key]: value } });
+    return { ok: true as const };
+  } catch (error) {
+    console.error("updateConsent failed", error);
+    return { ok: false as const };
+  }
 }
 
 /**
