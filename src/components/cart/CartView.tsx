@@ -14,37 +14,29 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyCartArt } from "@/components/ui/illustrations";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { useChangeKey } from "@/components/ui/useChangeKey";
-import { PageBanner } from "@/components/account/PageBanner";
-import { CartIcon } from "@/components/ui/icons";
+import { PageIntro } from "@/components/ui/PageIntro";
 import { lineKey } from "@/lib/cart-store";
 
+/**
+ * The cart: the head in the middle, the lines in a card under it, and the
+ * summary under those — beside them on a wide screen. Drawn for a phone
+ * first: a line is the picture and the words, and under them the count
+ * and the line's sum on one row, so nothing is squeezed beside a 80px
+ * picture.
+ */
 export function CartView({ signedIn }: { signedIn: boolean }) {
   const { locale, t } = useI18n();
   const settings = useSettings();
   const { items, count, hydrated, subtotal, shipping, total, setQuantity, remove, clear } = useCart();
 
   // The server can't know the cart, so render a stable skeleton until the
-  // client has read localStorage.
-  //
-  // The title is real rather than a grey bar: it is a fixed string the server
-  // knows perfectly well, and without it this page had *no* `h1` at all before
-  // hydration — no title for a screen reader, and none ever for a reader
-  // without JavaScript. It showed on a machine slow enough to look before
-  // React ran.
-  const mark = (
-    <span
-      aria-hidden="true"
-      className="grid h-18 w-18 place-items-center rounded-[calc(var(--radius-card)-3px)] bg-brand-solid text-brand-on-solid sm:h-20 sm:w-20"
-    >
-      <CartIcon size={30} />
-    </span>
-  );
-
+  // client has read localStorage. The title is real rather than a grey
+  // bar: it is a fixed string the server knows perfectly well.
   if (!hydrated) {
     return (
       <div className="page">
-        <PageBanner eyebrow={t.nav.cart} title={t.cart.title} mark={mark} line="…" />
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
+        <PageIntro eyebrow={t.nav.cart} title={t.cart.title} line="…" />
+        <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-[1fr_21rem]">
           <div className="flex flex-col gap-3">
             {[0, 1, 2].map((index) => (
               <div key={index} className="h-28 animate-pulse rounded-card bg-ink-100" />
@@ -59,20 +51,10 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
   if (items.length === 0) {
     return (
       <div className="page">
-        <PageBanner
-          eyebrow={t.nav.cart}
-          title={t.cart.title}
-          mark={mark}
-          line={t.cart.emptyHint}
-          aside={
-            <Link href="/catalog" className="btn btn-outline btn-sm">
-              {t.catalog.title}
-            </Link>
-          }
-        />
+        <PageIntro eyebrow={t.nav.cart} title={t.cart.title} line={t.cart.emptyHint} />
 
         <EmptyState
-          className="card mx-auto mt-6 max-w-md"
+          className="card mx-auto mt-8 max-w-md"
           art={<EmptyCartArt size={96} />}
           title={t.cart.empty}
           text={t.cart.emptyHint}
@@ -96,20 +78,13 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
 
   return (
     <div className="page">
-      {/* The same card the account and the wishlist open with. */}
-      <PageBanner
+      <PageIntro
         eyebrow={t.nav.cart}
         title={t.cart.title}
-        mark={mark}
         line={`${fill(t.favorites.count, { count })} · ${t.cart.subtotal} ${formatPrice(subtotal, locale)}`}
-        aside={
-          <Link href="/checkout" className="btn btn-primary btn-sm">
-            {t.cart.checkout}
-          </Link>
-        }
       />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
+      <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}
         {/* `min-w-0`: grid children default to `min-width: auto`, which stops
             the rows below from shrinking and overflows narrow phones. */}
@@ -123,114 +98,84 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
             const key = lineKey(item);
 
             return (
-              // Rows share the same rule as everything else. The container draws the
-              // outer edge, so the first row must not draw one above itself.
-              <article
-                key={key}
-                className="flex gap-3 border-line p-3 not-first:border-t sm:gap-4 sm:p-4"
-              >
-                <Link
-                  href={`/product/${item.slug}`}
-                  className="relative h-24 w-24 shrink-0 overflow-hidden rounded-control border border-line bg-ink-50 sm:h-28 sm:w-28"
-                >
-                  <Image src={item.image} alt={name} fill sizes="112px" className="object-cover" />
+              <article key={key} className="line-row">
+                <Link href={`/product/${item.slug}`} className="line-pic">
+                  <Image src={item.image} alt={name} fill sizes="96px" className="object-cover" />
                 </Link>
 
-                <div className="flex min-w-0 flex-1 flex-col">
+                <div className="min-w-0">
                   <Link
                     href={`/product/${item.slug}`}
-                    className="clamp-2 text-sm leading-snug font-semibold text-ink-800 transition-colors hover:text-brand-600"
+                    className="line-clamp-2 text-sm leading-snug font-semibold text-ink-900 transition-colors hover:text-brand-600"
                   >
                     {name}
                   </Link>
-
-                  {item.variantLabel && (
-                    <p className="mt-0.5 text-xs text-ink-500">{item.variantLabel}</p>
-                  )}
-
-                  <div className="mt-1">
-                    <Price value={item.price} size="sm" />
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
+                    <span className="text-xs text-ink-500 tabular-nums">
+                      {formatPrice(item.price, locale)} / {t.product.unit}
+                    </span>
                   </div>
+                </div>
 
-                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
-                    <div className="flex items-center rounded-control border border-line">
-                      {/* Stops at one, as the product page's does. It used
-                          to go on to zero and take the line out, so a thumb
-                          reaching for "one fewer" deleted the row and the
-                          rows below it jumped up into the thumb's place. The
-                          bin beside the total is the way out of the cart. */}
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(key, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                        aria-label="-"
-                        className="btn btn-ghost h-8 w-8 rounded-none rounded-l-control p-0"
-                      >
-                        <MinusIcon size={13} />
-                      </button>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        min={1}
-                        max={max}
-                        onChange={(event) =>
-                          setQuantity(key, Number(event.target.value) || 1)
-                        }
-                        aria-label={t.cart.quantity}
-                        className="h-8 w-11 border-x border-line bg-transparent text-center text-sm font-semibold outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(key, item.quantity + 1)}
-                        disabled={item.quantity >= max}
-                        aria-label="+"
-                        className="btn btn-ghost h-8 w-8 rounded-none rounded-r-control p-0"
-                      >
-                        <PlusIcon size={13} />
-                      </button>
-                    </div>
+                {/* The count and the line's sum on a row of their own, with
+                    the bin at the end: on a phone this row runs under the
+                    picture, on a wide screen it sits at the right. */}
+                <div className="line-foot">
+                  <span className="mini-stepper line-stepper">
+                    {/* Stops at one, as the product page's does: a thumb
+                        reaching for "one fewer" must not delete the row.
+                        The bin is the way out of the cart. */}
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(key, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      aria-label="-"
+                    >
+                      <MinusIcon size={13} strokeWidth={2.5} />
+                    </button>
+                    <span aria-label={t.cart.quantity}>{item.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(key, item.quantity + 1)}
+                      disabled={item.quantity >= max}
+                      aria-label="+"
+                    >
+                      <PlusIcon size={13} strokeWidth={2.5} />
+                    </button>
+                  </span>
 
-                    <div className="flex items-center gap-3">
-                      {/* Keyed on the figure, so changing a quantity tints the
-                          line total for a moment. Pressing "+" otherwise
-                          changes two numbers on opposite sides of the row and
-                          neither of them says it changed. */}
-                      <LineTotal value={item.price * item.quantity} />
-                      <button
-                        type="button"
-                        onClick={() => remove(key)}
-                        aria-label={t.cart.remove}
-                        className="btn btn-ghost h-8 w-8 rounded-control p-0 text-ink-400 hover:text-danger"
-                      >
-                        <TrashIcon size={16} />
-                      </button>
-                    </div>
-                  </div>
+                  <span className="flex items-center gap-1">
+                    {/* Keyed on the figure, so changing a quantity tints the
+                        line total for a moment. */}
+                    <LineTotal value={item.price * item.quantity} />
+                    <button
+                      type="button"
+                      onClick={() => remove(key)}
+                      aria-label={t.cart.remove}
+                      className="btn btn-ghost h-9 w-9 rounded-pill p-0 text-ink-400 hover:text-danger"
+                    >
+                      <TrashIcon size={16} />
+                    </button>
+                  </span>
                 </div>
               </article>
             );
           })}
-
-          <div className="flex items-center justify-between gap-2 p-3 sm:p-4">
-            <Link href="/catalog" className="btn btn-outline btn-sm">
-              {t.cart.continueShopping}
-            </Link>
-          </div>
         </div>
 
         {/* ------------------------------ summary ---------------------------- */}
-        <aside className="card sticky top-[var(--header-h)] card-pad">
-          <h2 className="text-base font-bold text-ink-900">{t.cart.summary}</h2>
+        <aside className="card lg:sticky lg:top-[calc(var(--header-h)+1rem)] card-pad">
+          <h2 className="display-sm text-center text-ink-900">{t.cart.summary}</h2>
 
-          <dl className="mt-4 flex flex-col gap-2.5 text-sm">
-            <div className="flex items-center justify-between">
-              <dt className="text-ink-500">{t.cart.itemsTotal}</dt>
-              <dd className="font-semibold text-ink-800">{formatPrice(subtotal, locale)}</dd>
+          <dl className="summary-totals mt-5">
+            <div>
+              <dt>{t.cart.itemsTotal}</dt>
+              <dd>{formatPrice(subtotal, locale)}</dd>
             </div>
-
-            <div className="flex items-center justify-between">
-              <dt className="text-ink-500">{t.cart.shipping}</dt>
-              <dd className="font-semibold text-ink-800">
+            <div>
+              <dt>{t.cart.shipping}</dt>
+              <dd>
                 {shipping === 0 ? (
                   <span className="text-success">{t.cart.freeShipping}</span>
                 ) : (
@@ -238,39 +183,35 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
                 )}
               </dd>
             </div>
-
-            <div className="my-1 h-px bg-line" />
-
-            <div className="flex items-center justify-between">
-              <dt className="text-base font-bold text-ink-900">{t.cart.total}</dt>
+            <div className="summary-total">
+              <dt>{t.cart.total}</dt>
               <dd>
                 <TotalPrice value={total} />
               </dd>
             </div>
           </dl>
 
-          <TaxNote total={total} rate={settings.vatRate} locale={locale} t={t} className="mt-1.5" />
+          <TaxNote total={total} rate={settings.vatRate} locale={locale} t={t} className="mt-1.5 text-center" />
 
           {remaining > 0 && (
-            <div className="mt-4 flex items-start gap-2 rounded-control bg-accent-50 p-3 text-xs leading-snug text-accent-800">
-              <TruckIcon size={15} className="mt-px shrink-0" />
-              <span>
-                {fill(t.cart.freeShippingHint, { amount: formatPrice(remaining, locale) })}
-              </span>
+            <div className="mt-4 flex items-center justify-center gap-2 rounded-control bg-accent-50 px-3 py-2.5 text-center text-xs leading-snug text-accent-800">
+              <TruckIcon size={15} className="shrink-0" />
+              <span>{fill(t.cart.freeShippingHint, { amount: formatPrice(remaining, locale) })}</span>
             </div>
           )}
 
           <Link href="/checkout" className="btn btn-primary btn-lg mt-5 w-full">
             {t.cart.checkout}
           </Link>
+          <Link href="/catalog" className="btn btn-outline btn-md mt-2 w-full">
+            {t.cart.continueShopping}
+          </Link>
 
-          {/* Said before the click, not after the bounce. Being sent to a
-              sign-in form you did not ask for is a bad moment to discover the
-              rule — this way it is a known step rather than a surprise. */}
+          {/* Said before the click, not after the bounce: being sent to a
+              sign-in form you did not ask for is a bad moment to discover
+              the rule. */}
           {!signedIn && (
-            <p className="mt-2.5 text-center text-xs leading-relaxed text-ink-500">
-              {t.auth.signInToOrder}
-            </p>
+            <p className="mt-3 text-center text-xs leading-relaxed text-ink-500">{t.auth.signInToOrder}</p>
           )}
 
           {/* Emptying the cart, at the foot of the summary as a quiet line:
@@ -278,7 +219,7 @@ export function CartView({ signedIn }: { signedIn: boolean }) {
           <button
             type="button"
             onClick={clear}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-line pt-3 text-xs text-ink-400 transition-colors hover:text-danger"
+            className="mt-4 flex w-full items-center justify-center gap-1.5 border-t border-line pt-3.5 text-xs text-ink-400 transition-colors hover:text-danger"
           >
             <TrashIcon size={13} />
             {t.cart.clear}

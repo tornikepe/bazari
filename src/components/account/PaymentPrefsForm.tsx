@@ -62,13 +62,16 @@ export function PaymentPrefsForm({
   }
 
   return (
-    <form onSubmit={submit} className="stagger flex flex-col gap-4">
+    <form onSubmit={submit} className="flex flex-col">
       {/* ------------------------- default method ------------------------- */}
-      <section className="card card-pad">
-        <h2 className="text-sm font-bold text-ink-900">
+      {/* Three blocks under one another, each a title, a line and its
+          controls, a rule between: the account page's own rhythm, not
+          cards inside a card. */}
+      <section className="pb-7">
+        <h2 className="text-base font-bold text-ink-900">
           {t.account.preferredPayment}
         </h2>
-        <p className="mt-1 text-xs text-ink-500">
+        <p className="mt-1 text-sm text-ink-500">
           {t.account.preferredPaymentHint}
         </p>
 
@@ -107,11 +110,11 @@ export function PaymentPrefsForm({
       </section>
 
       {/* -------------------------- refund account ------------------------ */}
-      <section className="card card-pad">
-        <h2 className="text-sm font-bold text-ink-900">
+      <section className="border-t border-line py-7">
+        <h2 className="text-base font-bold text-ink-900">
           {t.account.refundAccount}
         </h2>
-        <p className="mt-1 text-xs text-ink-500">
+        <p className="mt-1 text-sm text-ink-500">
           {t.account.refundAccountHint}
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -145,11 +148,11 @@ export function PaymentPrefsForm({
       </section>
 
       {/* --------------------------- invoice line ------------------------- */}
-      <section className="card card-pad">
-        <h2 className="text-sm font-bold text-ink-900">
+      <section className="border-t border-line py-7">
+        <h2 className="text-base font-bold text-ink-900">
           {t.account.invoiceDetails}
         </h2>
-        <p className="mt-1 text-xs text-ink-500">
+        <p className="mt-1 text-sm text-ink-500">
           {t.account.invoiceDetailsHint}
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">

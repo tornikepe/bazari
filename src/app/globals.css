@@ -5482,3 +5482,105 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   background: var(--color-brand-50);
   color: var(--color-brand-600);
 }
+
+/* ---- The pages that are yours: cart and wishlist ---------------------- */
+
+/* The head set in the middle. */
+.page-intro {
+  max-width: 36rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* A line of the cart or the wishlist: the picture, the words beside it,
+   and a foot row under both for the count and the sum. From `sm` up the
+   foot sits at the right of the same row. */
+.line-row {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: 0.75rem 0.875rem;
+  padding: 1rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.line-row:first-child {
+  border-top: 0;
+}
+
+.line-pic {
+  position: relative;
+  display: block;
+  width: 5rem;
+  height: 5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-ink-50);
+}
+
+.line-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-ink-50);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ink-700);
+}
+
+.line-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.line-stepper {
+  height: 2.25rem;
+}
+
+.line-stepper > button {
+  width: 2.25rem;
+}
+
+.line-stepper > span {
+  min-width: 2rem;
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 640px) {
+  .line-row {
+    grid-template-columns: 6rem minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 1.125rem 1.25rem;
+  }
+
+  .line-pic {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  .line-foot {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+}
+
+/* ---- The address book ------------------------------------------------ */
+
+.addr-tile {
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  transition: border-color 0.2s ease;
+}
+
+.addr-tile.is-default {
+  border-color: var(--color-ink-900);
+}

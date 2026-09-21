@@ -6,6 +6,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import {
   CheckIcon,
+  MapPinIcon,
   PencilIcon,
   PlusIcon,
   SpinnerIcon,
@@ -96,70 +97,80 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
         />
       )}
 
+      {/* Nothing saved yet: the mark in its disc, the line, and the way to
+          add one — in the middle, as an empty page says it. */}
       {addresses.length === 0 && !editing && (
-        <p className="mt-4 text-sm text-ink-500">{t.account.addressNone}</p>
+        <div className="mt-6 flex flex-col items-center rounded-card border border-dashed border-ink-300 px-4 py-8 text-center">
+          <span className="order-delivery-mark">
+            <MapPinIcon size={18} />
+          </span>
+          <p className="mt-3 text-sm text-ink-600">{t.account.addressNone}</p>
+          <button type="button" onClick={() => setEditing("new")} className="btn btn-primary btn-md mt-4">
+            <PlusIcon size={15} />
+            {t.account.addressAdd}
+          </button>
+        </div>
       )}
 
-      {/* Tiles, two to a row from `sm` up: an address is four short lines,
-          and a list of full-width rows four lines tall was a column of
-          mostly empty boxes on a card the width of the page. */}
+      {/* Tiles, two to a row from `sm` up: the pin in a disc, the name of
+          the place with the "default" chip, the person and the number,
+          the street — and the actions on a rule at the tile's foot. */}
       {addresses.length > 0 && (
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {addresses.map((address) => (
-            <li
-              key={address.id}
-              className="rounded-control border border-line p-3.5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink-900">
-                    {address.label || address.city}
-                    {address.isDefault && (
-                      <span className="badge bg-brand-50 text-brand-700">
-                        {t.account.addressDefault}
-                      </span>
-                    )}
-                  </p>
-                  <p className="mt-0.5 text-sm text-ink-600">
-                    {address.fullName} · {address.phone}
-                  </p>
-                  <p className="text-sm text-ink-500">
-                    {address.city}, {address.street}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-1">
+            <li key={address.id} className={`addr-tile ${address.isDefault ? "is-default" : ""}`}>
+              {/* The head row: the mark, the name of the place with its
+                  chip, and edit/delete at the corner. The lines run under
+                  the whole row rather than in the column beside the mark,
+                  which on a phone was too narrow for a street. */}
+              <div className="flex items-center gap-3">
+                <span className="order-delivery-mark">
+                  <MapPinIcon size={18} />
+                </span>
+                <p className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm font-bold text-ink-900">
+                  <span className="truncate">{address.label || address.city}</span>
+                  {address.isDefault && (
+                    <span className="badge bg-brand-50 text-brand-700">{t.account.addressDefault}</span>
+                  )}
+                </p>
+                <span className="-mr-1.5 flex shrink-0 items-center">
                   <button
                     type="button"
                     onClick={() => setEditing(address.id)}
                     aria-label={`${t.account.addressEdit} — ${address.label || address.city}`}
-                    className="btn btn-ghost h-9 w-9 rounded-control p-0"
+                    className="btn btn-ghost h-9 w-9 rounded-pill p-0"
                   >
                     <PencilIcon size={15} />
                   </button>
-
                   <button
                     type="button"
                     disabled={isPending}
                     onClick={() => {
-                      if (!window.confirm(t.account.addressDeleteConfirm))
-                        return;
+                      if (!window.confirm(t.account.addressDeleteConfirm)) return;
                       act(() => deleteAddress(address.id));
                     }}
                     aria-label={`${t.account.addressDelete} — ${address.label || address.city}`}
-                    className="btn btn-ghost h-9 w-9 rounded-control p-0 text-ink-400 hover:text-danger"
+                    className="btn btn-ghost h-9 w-9 rounded-pill p-0 text-ink-400 hover:text-danger"
                   >
                     <TrashIcon size={15} />
                   </button>
-                </div>
+                </span>
               </div>
+              <p className="mt-3 text-sm text-ink-700">
+                {address.city}, {address.street}
+              </p>
+              <p className="mt-0.5 text-sm text-ink-500">
+                {address.fullName} · {address.phone}
+              </p>
 
+              {/* Only on the ones that are not the default: the whole width
+                  of the tile's foot, so the words never fight the icons. */}
               {!address.isDefault && (
                 <button
                   type="button"
                   disabled={isPending}
                   onClick={() => act(() => makeDefaultAddress(address.id))}
-                  className="btn btn-ghost btn-sm mt-1 -ml-2 text-brand-600"
+                  className="btn btn-outline btn-sm mt-3 w-full"
                 >
                   <CheckIcon size={14} />
                   {t.account.addressMakeDefault}
@@ -178,13 +189,13 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
         <form
           key={editing}
           onSubmit={submit}
-          className="mt-4 grid gap-x-4 gap-y-2 border-t border-line pt-4 sm:grid-cols-2"
+          className={`grid gap-x-4 gap-y-3 sm:grid-cols-2 ${addresses.length > 0 ? "mt-6 border-t border-line pt-6" : "mt-2"}`}
         >
           {current && <input type="hidden" name="id" value={current.id} />}
 
-          <p className="text-sm font-bold text-ink-900 sm:col-span-2">
+          <h3 className="display-sm text-ink-900 sm:col-span-2">
             {current ? t.account.addressEdit : t.account.addressAdd}
-          </p>
+          </h3>
 
           {(
             [
@@ -219,45 +230,34 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
               on the one that already is one is a control that does nothing. */}
           {!(current?.isDefault ?? false) && addresses.length > 0 && (
             <label className="mt-1 flex items-center gap-2 text-sm text-ink-600 sm:col-span-2">
-              <input
-                type="checkbox"
-                name="isDefault"
-                className="h-4 w-4 accent-brand-600"
-              />
+              <input type="checkbox" name="isDefault" className="h-4 w-4 accent-brand-600" />
               {t.account.addressMakeDefault}
             </label>
           )}
 
-          <div className="mt-2 flex flex-wrap gap-2 sm:col-span-2">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="btn btn-primary btn-sm"
-            >
+          {/* Full width on a phone, their own width from `sm` up. */}
+          <div className="mt-2 flex flex-col gap-2 sm:col-span-2 sm:flex-row">
+            <button type="submit" disabled={isPending} className="btn btn-primary btn-md">
               {isPending && <SpinnerIcon size={14} />}
               {t.account.addressSave}
             </button>
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="btn btn-outline btn-sm"
-            >
+            <button type="button" onClick={() => setEditing(null)} className="btn btn-outline btn-md">
               {t.account.addressCancel}
             </button>
           </div>
         </form>
       ) : full ? (
         <p className="mt-4 text-xs text-ink-400">{t.account.addressFull}</p>
-      ) : (
+      ) : addresses.length > 0 ? (
         <button
           type="button"
           onClick={() => setEditing("new")}
-          className="btn btn-outline btn-sm mt-4"
+          className="btn btn-outline btn-md mt-5 w-full sm:w-auto"
         >
           <PlusIcon size={15} />
           {t.account.addressAdd}
         </button>
-      )}
+      ) : null}
     </section>
   );
 }

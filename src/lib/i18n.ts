@@ -175,6 +175,8 @@ const ka = {
     sale: "-{percent}%",
     new: "ახალი",
     quantity: "რაოდენობა",
+    /* After a unit price in a cart line: "259,00 ₾ / ცალი". */
+    unit: "ცალი",
     description: "აღწერა",
     details: "დეტალები",
     brand: "ბრენდი",
@@ -1513,6 +1515,7 @@ const en: Dictionary = {
     sale: "-{percent}%",
     new: "New",
     quantity: "Quantity",
+    unit: "each",
     description: "Description",
     details: "Details",
     brand: "Brand",
