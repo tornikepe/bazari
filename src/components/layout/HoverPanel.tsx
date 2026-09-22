@@ -1,8 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, use, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Popover } from "@/components/ui/Overlay";
+
+/**
+ * A child can pin the panel open — the sign-in form does while it is
+ * being filled and after a wrong password, so the answer is not swept
+ * away by a pointer that strayed off the panel.
+ */
+const PinContext = createContext<((pinned: boolean) => void) | null>(null);
+
+export function useHoverPanelPin() {
+  return use(PinContext);
+}
 
 /**
  * A panel that opens under a header control while the pointer rests on
@@ -41,6 +52,7 @@ export function HoverPanel({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [canHover, setCanHover] = useState(false);
   const pathname = usePathname();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -64,11 +76,27 @@ export function HoverPanel({
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setPinned(false);
+        setOpen(false);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
+
+  /* Pinned, the pointer leaving is not enough to close it — a press
+     somewhere else is. */
+  useEffect(() => {
+    if (!pinned) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      setPinned(false);
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [pinned]);
 
   useEffect(
     () => () => {
@@ -78,9 +106,21 @@ export function HoverPanel({
   );
 
   const later = (next: boolean, delay: number) => {
+    if (!next && pinned) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setOpen(next), delay);
   };
+
+  const pin = useMemo(
+    () => (next: boolean) => {
+      setPinned(next);
+      if (next) {
+        if (timer.current) clearTimeout(timer.current);
+        setOpen(true);
+      }
+    },
+    [],
+  );
 
   return (
     <div
@@ -96,6 +136,9 @@ export function HoverPanel({
         if (canHover) later(true, 0);
       }}
       onBlur={(event) => {
+        /* Focus that went nowhere — a button disabled the moment it was
+           pressed — is not focus that left the panel. */
+        if (!event.relatedTarget) return;
         if (!rootRef.current?.contains(event.relatedTarget as Node)) later(false, 0);
       }}
     >
@@ -107,7 +150,7 @@ export function HoverPanel({
         aria-label={label}
         className={`mt-2 ${width} max-w-[calc(100vw-2rem)] overflow-hidden rounded-card border border-line bg-surface shadow-pop`}
       >
-        {children}
+        <PinContext value={pin}>{children}</PinContext>
       </Popover>
     </div>
   );

@@ -34,7 +34,7 @@ export type MenuUser = {
  * the payment methods. The click goes where it always went: sign-in, the
  * account, the dashboard.
  */
-export function AccountMenu({ user }: { user: MenuUser }) {
+export function AccountMenu({ user, social }: { user: MenuUser; social?: React.ReactNode }) {
   const { t } = useI18n();
 
   const href = !user
@@ -70,7 +70,7 @@ export function AccountMenu({ user }: { user: MenuUser }) {
       }
     >
       {!user ? (
-        <SignedOut />
+        <SignedOut social={social} />
       ) : isStaff(user.role) ? (
         <StaffPanel user={user} />
       ) : (
@@ -100,15 +100,15 @@ function Avatar({ url, size }: { url: string; size: number }) {
 
 /* Signed out, the panel *is* the sign-in: the form itself, not two doors
    to it — see `MiniLogin`. */
-function SignedOut() {
+function SignedOut({ social }: { social?: React.ReactNode }) {
   const { t } = useI18n();
   return (
     <>
-      <div className="border-b border-line px-4 py-3">
+      <div className="border-b border-line px-4 py-3 text-center">
         <p className="text-sm font-bold text-ink-900">{t.account.signedOutTitle}</p>
         <p className="mt-0.5 text-xs text-ink-500">{t.account.signedOutHint}</p>
       </div>
-      <MiniLogin />
+      <MiniLogin social={social} />
     </>
   );
 }

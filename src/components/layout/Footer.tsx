@@ -70,11 +70,11 @@ export async function Footer() {
     // page that read as a black stripe above the footer in dark mode. The
     // separation is now the footer's own top rule plus its internal padding,
     // which is surface-coloured and therefore invisible as a seam.
-    <footer className="site-footer border-t border-line bg-surface">
+    <footer className="site-footer border-t border-line bg-ink-50">
       {/* The same columns at every width: the shop's block, then the two
           lists side by side. No category list — the catalogue is one link
           away in the bar and on the home page. */}
-      <div className="page-container grid gap-8 py-8 sm:py-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
+      <div className="page-container grid gap-7 py-8 sm:py-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-12">
         {/* Centred on a phone, where the block is read as one column with
             the lists under it; left-aligned from `sm` up, beside them. */}
         <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
@@ -83,7 +83,7 @@ export async function Footer() {
             <Wordmark name={settings.name} className="text-base" />
           </Link>
 
-          <p className="mt-4 max-w-sm text-xs leading-relaxed text-ink-500 sm:text-sm">{tagline}</p>
+          <p className="mt-3.5 max-w-sm text-xs leading-relaxed text-ink-500 sm:text-sm">{tagline}</p>
 
           {/* The ways to reach the shop, when it has set any: one line each,
               and the line is the link. */}
@@ -104,30 +104,19 @@ export async function Footer() {
           )}
         </div>
 
-        {/* From `sm` up the two titles sit on one line across the block, a
-            rule under them, and each list under its title: the titles are
-            one row of the grid and the lists the next, so they share a
-            baseline whatever the lists' lengths. On a phone the two groups
-            stack — a title, its list, the next title, its list — with the
-            column wide enough for every link to keep to one line; the
-            `order` classes put the DOM's two rows back into that sequence. */}
-        <div className="grid grid-cols-1 gap-x-8 text-center sm:grid-cols-2">
-          {groups.map((group, index) => (
-            <h2
-              key={group.id}
-              id={group.id}
-              className={`label border-b border-line pb-3 text-ink-400 ${index === 0 ? "order-1" : "order-3"} sm:order-none`}
-            >
+        {/* Two columns of links from the narrowest phone up, each under
+            its own title on a rule: the lists are short and the foot stays
+            short with them, rather than one column of nine rows that was a
+            screen of its own. */}
+        <div className="grid grid-cols-2 gap-x-6 text-center sm:gap-x-8">
+          {groups.map((group) => (
+            <h2 key={group.id} id={group.id} className="label border-b border-line pb-2.5 text-ink-400">
               {group.title}
             </h2>
           ))}
-          {groups.map((group, index) => (
-            <nav
-              key={`${group.id}-links`}
-              aria-labelledby={group.id}
-              className={`pt-4 ${index === 0 ? "order-2 pb-8" : "order-4"} sm:order-none sm:pb-0`}
-            >
-              <ul className="flex flex-col items-center gap-0.5">
+          {groups.map((group) => (
+            <nav key={`${group.id}-links`} aria-labelledby={group.id} className="pt-2.5">
+              <ul className="flex flex-col items-center">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <FooterLink href={link.href}>{link.label}</FooterLink>

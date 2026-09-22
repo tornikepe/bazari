@@ -35,11 +35,11 @@ export function AccountMenu({ user, signOutLabel }: { user: SessionUser; signOut
       <div className="account-menu-who">
         {user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.avatarUrl} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full object-cover" />
+          <img src={user.avatarUrl} alt="" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover lg:h-10 lg:w-10" />
         ) : (
           <span
             aria-hidden="true"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-solid text-sm font-extrabold text-brand-on-solid"
+            className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-solid text-base font-extrabold text-brand-on-solid lg:h-10 lg:w-10 lg:text-sm"
           >
             {initialsOf(user.name, user.email)}
           </span>
@@ -60,14 +60,14 @@ export function AccountMenu({ user, signOutLabel }: { user: SessionUser; signOut
               aria-current={current ? "page" : undefined}
               className={`account-menu-row ${current ? "is-on" : ""}`}
             >
-              <item.icon size={20} className="shrink-0" />
+              <item.icon size={18} className="shrink-0" />
               <span className="min-w-0">{item.label}</span>
             </Link>
           );
         })}
         <form action={logout}>
           <button type="submit" className="account-menu-row is-out">
-            <LogoutIcon size={20} className="shrink-0" />
+            <LogoutIcon size={18} className="shrink-0" />
             {signOutLabel}
           </button>
         </form>

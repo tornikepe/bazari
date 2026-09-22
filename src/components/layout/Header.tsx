@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { HeaderBar } from "@/components/layout/HeaderBar";
 import { FavoritesSync } from "@/components/product/FavoritesSync";
 import { CartSync } from "@/components/cart/CartSync";
+import { SocialButtons } from "@/components/auth/SocialButtons";
 
 async function HeaderContent() {
   const [categories, user] = await Promise.all([
@@ -18,6 +19,10 @@ async function HeaderContent() {
     <>
       <HeaderBar
         categories={categories}
+        /* Rendered here, on the server, and handed down: which providers
+           this deployment holds is read from the environment. Only for a
+           visitor who is not signed in — the panel is the sign-in then. */
+        social={user ? null : <SocialButtons compact />}
         user={
           user
             ? { name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl }

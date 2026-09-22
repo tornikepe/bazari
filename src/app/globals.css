@@ -4034,47 +4034,59 @@ h3,
 
 .account-menu-who {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.25rem 0.5rem 0.75rem;
+  gap: 0.625rem;
+  padding: 0 0 1rem;
+  text-align: center;
 }
 
-.account-menu-list {
-  display: flex;
-  gap: 0.25rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 0.25rem;
-}
-
-.account-menu-list::-webkit-scrollbar {
-  display: none;
-}
-
-/* To the screen's edges on a phone, so the row past the edge shows its
-   beginning and the strip is known to scroll. */
-@media (max-width: 1023px) {
-  .account-menu-list {
-    margin-inline: -1rem;
-    padding-inline: 1rem;
+@media (min-width: 1024px) {
+  .account-menu-who {
+    flex-direction: row;
+    gap: 0.75rem;
+    padding: 0.25rem 0.5rem 0.75rem;
+    text-align: left;
   }
+}
+
+/* Every row visible: a grid of pills that wraps, not a strip that
+   scrolls — half the account's pages were past the screen's edge and
+   nothing said so. */
+.account-menu-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
 }
 
 .account-menu-row {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  flex-shrink: 0;
-  min-height: 3rem;
-  padding: 0 1.125rem 0 1rem;
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
-  font-weight: 500;
+  justify-content: center;
+  gap: 0.625rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
   color: var(--color-ink-800);
-  white-space: nowrap;
+  text-align: center;
   transition:
     background-color 0.15s ease,
+    border-color 0.15s ease,
     color 0.15s ease;
+}
+
+/* Sign-out on a line of its own, across both columns. */
+.account-menu-list > form {
+  grid-column: 1 / -1;
+}
+
+.account-menu-list > form > .account-menu-row {
+  width: 100%;
 }
 
 .account-menu-row:hover {
@@ -4082,9 +4094,9 @@ h3,
 }
 
 .account-menu-row.is-on {
-  background: var(--color-ink-100);
-  color: var(--color-ink-900);
-  font-weight: 600;
+  border-color: var(--color-ink-900);
+  background: var(--color-ink-900);
+  color: var(--color-surface);
 }
 
 .account-menu-row.is-out {
@@ -4097,21 +4109,28 @@ h3,
     top: calc(var(--header-h) + 1rem);
   }
 
+  /* A column at the left of the card on a wide screen, each row reading
+     from its left edge as a menu does. */
   .account-menu-list {
-    flex-direction: column;
-    overflow: visible;
-    padding-bottom: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
   }
 
   .account-menu-row {
+    justify-content: flex-start;
     min-height: 3.5rem;
-    padding-block: 0.625rem;
-    border-radius: var(--radius-card);
+    padding: 0.625rem 1rem;
+    border-color: transparent;
+    background: transparent;
     font-size: var(--text-base);
     line-height: 1.3;
-    /* A long row — the orders with their returns — wraps to a second line
-       in the column rather than losing its end to an ellipsis. */
-    white-space: normal;
+    text-align: left;
+  }
+
+  .account-menu-row.is-on {
+    border-color: transparent;
+    background: var(--color-ink-100);
+    color: var(--color-ink-900);
   }
 }
 
@@ -4136,11 +4155,22 @@ h3,
 
 .account-card-head {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.25rem 1.25rem 1rem;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem 1.25rem;
   border-bottom: 1px solid var(--color-line);
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .account-card-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+  }
 }
 
 .account-card-body {
@@ -4170,6 +4200,21 @@ h3,
 /* The profile's fields: a label over a value with a rule under, the value
    turning into a bare input — same place, same size, the rule still the
    only line — while editing. */
+@media (max-width: 639px) {
+  .profile-field {
+    text-align: center;
+  }
+
+  .profile-radios,
+  .profile-field > span.flex {
+    justify-content: center;
+  }
+
+  .profile-check {
+    text-align: left;
+  }
+}
+
 .profile-field {
   display: flex;
   flex-direction: column;
@@ -4517,10 +4562,33 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 }
 
 /* The button sits in the card's body, under the price — see
-   `ProductCard`. A size down on a narrow phone, where two cards share
-   the width. */
+   `ProductCard`. */
 .product-card .card-actions .btn {
   font-size: 13px;
+}
+
+/* On a phone two cards share the width, and "add to cart" lost its end
+   to an ellipsis: the mark goes, the words wrap, and the button grows a
+   line rather than cutting itself short. */
+@media (max-width: 639px) {
+  .product-card .card-actions .btn {
+    height: auto;
+    min-height: 2.75rem;
+    padding-inline: 0.625rem;
+    font-size: 12px;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .product-card .card-actions .btn > svg {
+    display: none;
+  }
+
+  .product-card .card-actions .btn > span {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
 }
 
 .product-card .card-sheet {
@@ -5964,4 +6032,62 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   border-color: var(--color-success);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-success) 16%, transparent);
   color: var(--color-success);
+}
+
+/* ---- Sign in with Google ---------------------------------------------- */
+
+/* The mark and the words as one group in the middle of the button. */
+.social-btn {
+  display: flex;
+  width: 100%;
+  min-height: 2.875rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0 1rem;
+  border: 1px solid var(--color-ink-300);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink-900);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.social-btn:hover {
+  border-color: var(--color-ink-900);
+  background: var(--color-ink-50);
+}
+
+.social-btn.is-compact {
+  min-height: 2.5rem;
+  font-size: 13px;
+}
+
+/* ---- The checkout on a phone ------------------------------------------ */
+
+/* Every label and its box read down the middle, as the cart and the
+   wishlist do; from `sm` up the form goes back to reading from the left. */
+@media (max-width: 639px) {
+  .checkout-form .field-label {
+    display: block;
+    text-align: center;
+  }
+
+  .checkout-form .field,
+  .checkout-form .qty-value {
+    text-align: center;
+  }
+
+  /* The prefix and the digits as one centred group. */
+  .checkout-form .field.flex {
+    justify-content: center;
+  }
+
+  .summary-lines > li {
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    gap: 0.625rem;
+  }
 }

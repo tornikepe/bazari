@@ -278,7 +278,7 @@ export function CheckoutForm({
   const legend = (title: string) => {
     step += 1;
     return (
-      <legend className="flex items-center gap-3 px-1 text-base font-bold text-ink-900">
+      <legend className="flex w-full items-center justify-center gap-3 px-1 text-base font-bold text-ink-900 sm:justify-start">
         <span
           aria-hidden="true"
           className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-solid text-xs font-extrabold text-brand-on-solid tabular-nums"
@@ -311,7 +311,7 @@ export function CheckoutForm({
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="mt-8 grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-start"
+        className="checkout-form mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start"
       >
         <div className="flex flex-col gap-5">
           {/* -------------------------- saved addresses ---------------------- */}
@@ -597,7 +597,7 @@ export function CheckoutForm({
               {methods.map((method) => (
                 <label
                   key={method}
-                  className={`flex cursor-pointer items-center gap-3 rounded-control border px-3.5 py-3 text-sm transition-colors ${
+                  className={`flex cursor-pointer items-center justify-center gap-3 rounded-control border px-3.5 py-3 text-center text-sm transition-colors sm:justify-start sm:text-left ${
                     payment === method
                       ? "border-brand-600 bg-brand-50 font-semibold text-brand-700"
                       : "border-line text-ink-700 hover:border-ink-300"

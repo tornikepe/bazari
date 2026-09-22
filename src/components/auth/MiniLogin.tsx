@@ -1,13 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { login, type AuthState } from "@/app/actions/auth";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { SpinnerIcon } from "@/components/ui/icons";
+import { shakeField, useFieldShake } from "@/components/ui/field-fault";
+import { useHoverPanelPin } from "@/components/layout/HoverPanel";
 
 /**
  * The sign-in, in the panel under the account icon: email or phone, the
@@ -15,17 +17,54 @@ import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
  * account to create, a password forgotten. The same action the sign-in
  * page runs, told to come back to the page the panel was opened on.
  */
-export function MiniLogin() {
+export function MiniLogin({ social }: { social?: React.ReactNode }) {
   const { t } = useI18n();
   const pathname = usePathname();
   const [state, formAction, pending] = useActionState<AuthState, FormData>(login, {});
+  const wrong = Boolean(state.error);
+  const pin = useHoverPanelPin();
+  /** Which of the two was left empty on the last press. */
+  const [missing, setMissing] = useState<{ identifier?: boolean; password?: boolean }>({});
+
+  useFieldShake(state, wrong, ["mini-identifier", "mini-password"]);
+
+  /* The panel stays put while the form is in use and after a wrong
+     password: it used to vanish as the press disabled the button, so the
+     answer was never seen. */
+  useEffect(() => {
+    if (wrong || pending) pin?.(true);
+  }, [wrong, pending, pin]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 p-4">
+    <form
+      action={formAction}
+      /* Our own check rather than the browser's bubble: an empty box
+         reddens and shakes where it stands, and the panel stays open. */
+      noValidate
+      onSubmit={(event) => {
+        pin?.(true);
+        const data = new FormData(event.currentTarget);
+        const identifier = String(data.get("email") ?? "").trim();
+        const password = String(data.get("password") ?? "");
+        if (identifier && password) {
+          setMissing({});
+          return;
+        }
+        event.preventDefault();
+        setMissing({ identifier: !identifier, password: !password });
+        if (!identifier) shakeField(document.getElementById("mini-identifier"));
+        if (!password) shakeField(document.getElementById("mini-password"));
+      }}
+      className="flex flex-col gap-3 p-4"
+    >
       <input type="hidden" name="next" value={pathname === "/login" ? "/account" : pathname} />
 
+      {/* The other way in, above the form and under its own small line:
+          most people who have a Google account will use it. */}
+      {social}
+
       <div>
-        <label className="field-label" htmlFor="mini-identifier">
+        <label className="field-label block text-center" htmlFor="mini-identifier">
           {t.auth.identifier}
         </label>
         <input
@@ -34,27 +73,31 @@ export function MiniLogin() {
           type="text"
           inputMode="email"
           autoComplete="username"
-          required
-          className="field h-10"
+          aria-invalid={wrong || missing.identifier || undefined}
+          onChange={() => missing.identifier && setMissing((current) => ({ ...current, identifier: false }))}
+          className="field h-10 text-center"
         />
       </div>
 
       <div>
-        <label className="field-label" htmlFor="mini-password">
+        <label className="field-label block text-center" htmlFor="mini-password">
           {t.auth.password}
         </label>
-        <PasswordField id="mini-password" name="password" autoComplete="current-password" required />
+        <PasswordField
+          id="mini-password"
+          name="password"
+          autoComplete="current-password"
+          invalid={wrong || Boolean(missing.password)}
+          onChange={() => missing.password && setMissing((current) => ({ ...current, password: false }))}
+        />
       </div>
 
-      {state.error && (
-        <p
-          role="alert"
-          className="flex items-center gap-2 rounded-control bg-danger-soft p-2.5 text-xs text-danger"
-        >
-          <AlertIcon size={14} className="shrink-0" />
-          {state.error === "rate-limited"
-            ? fill(t.auth.rateLimited, { minutes: String(state.retryMinutes ?? 15) })
-            : t.auth.invalid}
+      {/* A wrong pair reddens the two boxes and says nothing else — see
+          `useFieldShake`. Only the wait after too many tries needs words,
+          because the boxes cannot say how long. */}
+      {state.error === "rate-limited" && (
+        <p role="alert" className="text-center text-xs font-semibold text-danger">
+          {fill(t.auth.rateLimited, { minutes: String(state.retryMinutes ?? 15) })}
         </p>
       )}
 

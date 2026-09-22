@@ -22,7 +22,9 @@ export function FooterLink({ href, children }: { href: string; children: React.R
       aria-current={current ? "page" : undefined}
       // A size down on a phone, and never wrapped: a link broken over two
       // lines in a column of one-line links reads as two links.
-      className={`flex min-h-9 items-center justify-center text-[13px] whitespace-nowrap transition-colors hover:text-brand-600 sm:text-sm ${
+      /* Two narrow columns on a phone, so a long name wraps rather than
+         runs under its neighbour. */
+      className={`flex min-h-9 items-center justify-center text-center text-[13px] leading-tight text-balance transition-colors hover:text-brand-600 sm:whitespace-nowrap sm:text-sm ${
         current ? "font-semibold text-ink-900" : "text-ink-500"
       }`}
     >

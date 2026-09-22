@@ -19,7 +19,14 @@ const ICONS = { google: GoogleIcon, facebook: FacebookIcon };
  * environment variables — the client has no business knowing which ones this
  * deployment holds.
  */
-export async function SocialButtons({ next = "" }: { next?: string }) {
+export async function SocialButtons({
+  next = "",
+  compact = false,
+}: {
+  next?: string;
+  /** In the header's panel: no divider under it, and a shorter button. */
+  compact?: boolean;
+}) {
   const { t } = await getI18n();
   const query = next ? `?next=${encodeURIComponent(next)}` : "";
 
@@ -32,29 +39,27 @@ export async function SocialButtons({ next = "" }: { next?: string }) {
   if (providers.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`flex flex-col ${compact ? "gap-2" : "gap-4"}`}>
       <div className="grid gap-2">
         {providers.map(({ id, label, Icon }) => (
           // A link, not a form: this is a redirect to a third party, and it
           // changes nothing here until the visitor comes back.
-          <a
-            key={id}
-            href={`/api/auth/${id}${query}`}
-            className="btn btn-outline relative min-h-11 w-full justify-center px-12 text-sm font-semibold"
-          >
-            {/* Pinned left, label centred: the marks are different widths and
-                a flex row would leave the two labels at different offsets. */}
-            <Icon size={18} className="absolute left-4" />
-            {t.auth.continueWith.replace("{provider}", label)}
+          <a key={id} href={`/api/auth/${id}${query}`} className={`social-btn ${compact ? "is-compact" : ""}`}>
+            {/* The mark and the words as one centred group, so the two
+                buttons read as a pair rather than as two offsets. */}
+            <Icon size={18} className="shrink-0" />
+            <span>{t.auth.continueWith.replace("{provider}", label)}</span>
           </a>
         ))}
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-line" />
-        <span className="text-xs text-ink-400">{t.auth.or}</span>
-        <span className="h-px flex-1 bg-line" />
-      </div>
+      {!compact && (
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-line" />
+          <span className="text-xs text-ink-400">{t.auth.or}</span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
+      )}
     </div>
   );
 }

@@ -88,7 +88,7 @@ export function AvatarForm({
           far end. The picture is the subject, so it comes first and the
           heading stands beside it rather than above a card that is mostly
           empty space around a square. */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-4">
+      <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-4 sm:text-left">
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -107,7 +107,7 @@ export function AvatarForm({
           </span>
         )}
 
-        <div className="min-w-48 flex-1">
+        <div className="min-w-0 sm:min-w-48 sm:flex-1">
           <h2 className="text-sm font-bold text-ink-900">{t.account.photo}</h2>
           <p className="mt-1 text-xs leading-relaxed text-ink-500">
             {t.account.photoHint}

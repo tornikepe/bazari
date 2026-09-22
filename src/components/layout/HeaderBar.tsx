@@ -42,9 +42,12 @@ export type HeaderUser = { name: string; email: string; role: Role; avatarUrl: s
 export function HeaderBar({
   categories,
   user,
+  social,
 }: {
   categories: HeaderCategory[];
   user: HeaderUser;
+  /** The sign-in panel's Google button, rendered on the server. */
+  social?: React.ReactNode;
 }) {
   const { locale, t, setLocale } = useI18n();
   const settings = useSettings();
@@ -166,7 +169,7 @@ export function HeaderBar({
 
           {/* Icon-only, so the cluster's width doesn't depend on how long
               "ანგარიში" vs "Account" happens to be. */}
-          <AccountMenu user={user} />
+          <AccountMenu user={user} social={social} />
 
           {/* The heart and the cart each open a panel under the pointer —
               the list itself, in brief — and stay links: a click goes to the
