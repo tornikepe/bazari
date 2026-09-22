@@ -54,7 +54,7 @@ export default function FavoritesPage() {
     return (
       <div className="page">
         <PageIntro eyebrow={t.account.menuWishlist} title={t.favorites.title} line="…" />
-        <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-[1fr_21rem]">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
           <div className="flex flex-col gap-3">
             {[0, 1, 2].map((index) => (
               <div key={index} className="h-28 animate-pulse rounded-card bg-ink-100" />
@@ -97,7 +97,7 @@ export default function FavoritesPage() {
         line={`${countText(t.favorites.countOne, t.favorites.count, products.length)} · ${t.favorites.worth} ${formatPrice(worth, locale)}`}
       />
 
-      <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-3">
           {products.map((product) => {
             const name = locale === "ka" ? product.nameKa : product.nameEn;

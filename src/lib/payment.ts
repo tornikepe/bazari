@@ -9,7 +9,6 @@ import type { PaymentMethod, PaymentStatus } from "@/generated/prisma/enums";
  * schema enum.
  */
 export const PAYMENT_METHODS = [
-  "cash_on_delivery",
   "card",
   "bank_transfer",
   "tbc",

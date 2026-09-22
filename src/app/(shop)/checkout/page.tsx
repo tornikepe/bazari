@@ -61,7 +61,6 @@ export default async function CheckoutPage() {
     ...gateways.map((gateway) => gateway.provider),
     ...(cardGateway() ? (["card"] as const) : []),
     "bank_transfer",
-    ...(settings.codEnabled ? (["cash_on_delivery"] as const) : []),
   ];
 
   /* The default address wins over the profile fields when there is one: a

@@ -949,22 +949,20 @@ async function main() {
                 ? "pending"
                 : "confirmed";
 
-      const paymentMethod =
-        random() < 0.72 ? "cash_on_delivery" : random() < 0.7 ? "card" : "bank_transfer";
-      /* Paid when the money has actually moved. Cash is collected at the
-         door, so a cash order is paid once delivered and not before; a card
-         or transfer order is confirmed *because* it was paid, so any the
-         shop has touched is paid, and a cancelled card order was refunded.
-         A cancelled cash or transfer order never paid anything, and
-         "refunded" on it was a lie. */
+      const paymentMethod = random() < 0.55 ? "bank_transfer" : random() < 0.6 ? "tbc" : "bog";
+      /* Paid when the money has actually moved: a transfer or a bank's
+         gateway is confirmed *because* it was paid, so any the shop has
+         touched is paid, and a cancelled gateway order was refunded. A
+         cancelled transfer never paid anything, and "refunded" on it was
+         a lie. */
       const paymentStatus =
         status === "delivered"
           ? "paid"
           : status === "cancelled"
-            ? paymentMethod === "card"
-              ? "refunded"
-              : "unpaid"
-            : paymentMethod !== "cash_on_delivery" && status !== "pending"
+            ? paymentMethod === "bank_transfer"
+              ? "unpaid"
+              : "refunded"
+            : status !== "pending"
               ? "paid"
               : "unpaid";
 

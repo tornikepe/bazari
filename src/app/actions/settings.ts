@@ -106,7 +106,6 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     contactHoursEn: text(formData, "contactHoursEn", 120),
     freeShippingThreshold,
     shippingFee,
-    codEnabled: formData.get("codEnabled") === "on",
     vatRate,
     pickupEnabled: formData.get("pickupEnabled") === "on",
     pickupAddress: text(formData, "pickupAddress", 200),

@@ -30,7 +30,6 @@ enum TokenPurpose {
 }
 
 enum PaymentMethod {
-  cash_on_delivery
   card
   bank_transfer
   /// Online gateways, one value each so an order says which it was paid
@@ -406,7 +405,7 @@ model Order {
   couponId String?
   coupon   Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
 
-  paymentMethod PaymentMethod @default(cash_on_delivery)
+  paymentMethod PaymentMethod @default(bank_transfer)
   paymentStatus PaymentStatus @default(unpaid)
 
   status      OrderStatus @default(pending)
@@ -861,7 +860,6 @@ model ShopSettings {
   /// Tetri, like every other amount in this schema.
   freeShippingThreshold Int     @default(20000)
   shippingFee           Int     @default(1500)
-  codEnabled            Boolean @default(true)
   /// Whole percent. Georgia's VAT is 18; zero — the default — means the
   /// shop has not said it is registered, and no tax line is shown anywhere.
   vatRate               Int     @default(0)

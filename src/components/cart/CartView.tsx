@@ -37,7 +37,7 @@ export function CartView() {
     return (
       <div className="page">
         <PageIntro eyebrow={t.nav.cart} title={t.cart.title} line="…" />
-        <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-[1fr_21rem]">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
           <div className="flex flex-col gap-3">
             {[0, 1, 2].map((index) => (
               <div key={index} className="h-28 animate-pulse rounded-card bg-ink-100" />
@@ -85,7 +85,7 @@ export function CartView() {
         line={`${fill(t.favorites.count, { count })} · ${t.cart.subtotal} ${formatPrice(subtotal, locale)}`}
       />
 
-      <div className="mx-auto mt-8 grid max-w-5xl gap-6 lg:grid-cols-[1fr_21rem] lg:items-start">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}
         {/* `min-w-0`: grid children default to `min-width: auto`, which stops
             the rows below from shrinking and overflows narrow phones. */}

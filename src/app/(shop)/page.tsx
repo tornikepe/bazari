@@ -287,20 +287,32 @@ export default async function HomePage() {
       {/* -------------------------------- why ------------------------------ */}
       <section className="page-container pt-14 pb-16 lg:pt-20 lg:pb-24">
         <div className="section-head reveal">
-          <p className="eyebrow">{t.home.whyTitle}</p>
+          <div>
+            <p className="eyebrow">{t.home.whyTitle}</p>
+            <h2 className="display-md mt-2 text-ink-900">{t.home.whyHint}</h2>
+          </div>
+          <SectionLink href="/catalog">{t.home.heroCta}</SectionLink>
         </div>
 
-        {/* Four claims as four columns, each numbered in the serif, the
-            icon small beside the title. */}
-        <div className="mt-8 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Four steps on one rule: the number in the serif, the icon in a
+            disc beside it, the claim under them — and on a wide screen a
+            chevron on the rule between one step and the next. */}
+        <div className="how-steps mt-10">
           {perks.map((perk, index) => (
-            <div key={perk.title} className="reveal">
-              <span className="display-md block text-ink-300">{String(index + 1).padStart(2, "0")}</span>
-              <h3 className="mt-4 flex items-center gap-2.5 text-lg text-ink-900">
-                <perk.icon size={18} className="shrink-0 text-brand-600" />
-                {perk.title}
-              </h3>
+            <div key={perk.title} className="how-step reveal">
+              <div className="flex items-center justify-between gap-3">
+                <span className="how-step-num">{String(index + 1).padStart(2, "0")}</span>
+                <span className="how-step-mark">
+                  <perk.icon size={18} />
+                </span>
+              </div>
+              <h3 className="mt-4 text-lg leading-snug font-semibold text-ink-900">{perk.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-ink-500">{perk.text}</p>
+              {index < perks.length - 1 && (
+                <span className="how-step-arrow" aria-hidden="true">
+                  <ArrowRightIcon size={13} />
+                </span>
+              )}
             </div>
           ))}
         </div>

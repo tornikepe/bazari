@@ -120,12 +120,7 @@ export function CheckoutForm({
   // enforcement.
   const methods: PaymentMethod[] =
     offered ??
-    PAYMENT_METHODS.filter(
-      (method) =>
-        method === "card" ||
-        method === "bank_transfer" ||
-        (method === "cash_on_delivery" && settings.codEnabled),
-    );
+    PAYMENT_METHODS.filter((method) => method === "card" || method === "bank_transfer");
   const [payment, setPayment] = useState<PaymentMethod>(
     preferred && methods.includes(preferred) ? preferred : (methods[0] ?? "bank_transfer"),
   );
@@ -639,44 +634,30 @@ export function CheckoutForm({
           {/* Keyed by the product *and* the combination: two sizes of one
               shirt are two lines, and keying on the product alone made React
               fold them onto one another. */}
-          {/* The picture at 56px in its own bordered tile, and the count as
-              a line of text under the name rather than a badge over the
-              picture's corner — the badge covered a quarter of a 48px photo,
-              which is the part of the photo that told you what it was. */}
-          <ul className="mt-4 flex max-h-80 flex-col gap-3 overflow-y-auto overscroll-contain">
+          {/* Each line its own ruled row: the picture, then the name with
+              the size and the count under it, then the line's sum at the
+              right — the three columns line up down the list rather than
+              each row arranging itself. */}
+          <ul className="summary-lines mt-5">
             {items.map((item) => (
-              <li key={lineKey(item)} className="flex items-center gap-3">
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control border border-line bg-surface">
-                  <Image
-                    src={item.image}
-                    alt=""
-                    fill
-                    sizes="56px"
-                    className="object-cover"
-                  />
-                </div>
+              <li key={lineKey(item)}>
+                <span className="summary-line-pic">
+                  <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
+                </span>
 
-                <span className="min-w-0 flex-1">
-                  <span className="clamp-2-xs block text-xs leading-snug font-semibold text-ink-900">
+                <span className="min-w-0">
+                  <span className="line-clamp-2 text-xs leading-snug font-semibold text-ink-900">
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </span>
-                  {/* Two lines of the same product differ only here, so a
-                      summary that left it out would show the same row twice.
-                      A chip, so the size is read as a size and not as the
-                      end of the name. */}
-                  <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-ink-500 tabular-nums">
-                    {item.variantLabel && (
-                      <span className="rounded-pill border border-line bg-ink-50 px-1.5 py-px text-[11px] font-semibold text-ink-700">
-                        {item.variantLabel}
-                      </span>
-                    )}
-                    <span>
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
+                    <span className="text-xs text-ink-500 tabular-nums">
                       {item.quantity} × {formatPrice(item.price, locale)}
                     </span>
                   </span>
                 </span>
 
-                <span className="shrink-0 text-sm font-bold text-ink-900 tabular-nums">
+                <span className="text-sm font-bold whitespace-nowrap text-ink-900 tabular-nums">
                   {formatPrice(item.price * item.quantity, locale)}
                 </span>
               </li>
@@ -707,6 +688,7 @@ export function CheckoutForm({
                    reasons worth words (expired, used up, under the minimum)
                    keep theirs below. */
                 aria-invalid={coupon !== null && !coupon.ok}
+                data-ok={coupon?.ok ? "true" : undefined}
                 onChange={(event) => {
                   setCouponInput(event.target.value.toUpperCase());
                   setCoupon(null);
@@ -750,11 +732,13 @@ export function CheckoutForm({
               </button>
             </div>
 
-            {coupon && (coupon.ok || coupon.reason !== "not-found") && (
-              <p
-                className={`mt-2 text-center text-xs leading-snug ${coupon.ok ? "text-success" : "text-danger"}`}
-              >
-                {coupon.ok ? t.checkout.couponApplied : COUPON_ERRORS[coupon.reason](t)}
+            {/* Nothing is said in words about a code that worked — the box
+                turns green and the figures below change, which is the
+                answer. A code that did not is red, and only the reasons
+                worth a sentence get one. */}
+            {coupon && !coupon.ok && coupon.reason !== "not-found" && (
+              <p className="mt-2 text-center text-xs leading-snug text-danger">
+                {COUPON_ERRORS[coupon.reason](t)}
               </p>
             )}
           </div>

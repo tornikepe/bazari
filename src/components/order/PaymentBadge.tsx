@@ -29,9 +29,6 @@ export function paymentWording(
   if (orderStatus === "cancelled") {
     return { label: t.orderDone.notCharged, tone: "bg-ink-100 text-ink-600" };
   }
-  if (method === "cash_on_delivery") {
-    return { label: t.orderDone.payOnDelivery, tone: "bg-info-soft text-info" };
-  }
   if (method === "bank_transfer") {
     return { label: t.orderDone.awaitingTransfer, tone: "bg-warning-soft text-warning" };
   }

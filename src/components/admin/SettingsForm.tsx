@@ -161,17 +161,6 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
           />
         </div>
 
-        <label className="flex items-center gap-2.5 text-sm text-ink-700">
-          <input
-            type="checkbox"
-            name="codEnabled"
-            defaultChecked={settings.codEnabled}
-            disabled={!canWrite}
-            className="h-4 w-4"
-          />
-          {t.admin.codEnabled}
-        </label>
-
         <div className="border-t border-line pt-4">
           <label className="flex items-center gap-2.5 text-sm text-ink-700">
             <input

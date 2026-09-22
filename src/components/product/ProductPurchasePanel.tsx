@@ -90,13 +90,15 @@ export function ProductPurchasePanel({
           {choice}
           <div>
             <span className="field-label">{t.product.quantity}</span>
-            <div className="stepper pick-shell w-full">
+            {/* Two round marks and the number between them, in a box the
+                height of the size control beside it. */}
+            <div className="qty">
               <button
                 type="button"
                 onClick={() => setQuantity(quantity - 1)}
                 disabled={soldOut || quantity <= 1}
                 aria-label="-"
-                className="stepper-button"
+                className="qty-button"
               >
                 <MinusIcon size={16} strokeWidth={2.5} />
               </button>
@@ -108,14 +110,14 @@ export function ProductPurchasePanel({
                 disabled={soldOut}
                 onChange={(event) => setQuantity(Number(event.target.value) || 1)}
                 aria-label={t.product.quantity}
-                className="stepper-value flex-1"
+                className="qty-value"
               />
               <button
                 type="button"
                 onClick={() => setQuantity(quantity + 1)}
                 disabled={soldOut || quantity >= max}
                 aria-label="+"
-                className="stepper-button"
+                className="qty-button"
               >
                 <PlusIcon size={16} strokeWidth={2.5} />
               </button>

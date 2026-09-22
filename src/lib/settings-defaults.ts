@@ -27,7 +27,6 @@ export type ShopSettings = {
   /** Tetri, like every other amount in the app. */
   freeShippingThreshold: number;
   shippingFee: number;
-  codEnabled: boolean;
   /** Whole percent, contained in every price. Zero hides the tax line. */
   vatRate: number;
   /** Whether a shopper may collect an order rather than have it sent. */
@@ -61,7 +60,6 @@ export const DEFAULT_SETTINGS: ShopSettings = {
   currencySymbol: "₾",
   freeShippingThreshold: 20_000,
   shippingFee: 1_500,
-  codEnabled: true,
   vatRate: 0,
   pickupEnabled: false,
   pickupAddress: "",

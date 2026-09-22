@@ -6,7 +6,8 @@ import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel"
 import type { CartItem } from "@/components/providers/CartProvider";
 import { isComplete, labelFor, priceOf, variantFor, type Option, type Variant } from "@/lib/variants";
 import { Price } from "@/components/ui/Price";
-import { ChevronDownIcon, CloseIcon } from "@/components/ui/icons";
+import { CloseIcon } from "@/components/ui/icons";
+import { SizeSelect } from "@/components/product/SizeSelect";
 import { fill } from "@/lib/i18n";
 
 /**
@@ -17,10 +18,10 @@ import { fill } from "@/lib/i18n";
  * chosen is not the price of anything. So the panel shows the product's price
  * until a combination is complete and the combination's afterwards.
  *
- * Buttons rather than dropdowns. Two of them is a dropdown's worth of clicks
- * with none of the opening, and a sold-out size can say so where it stands
- * instead of hiding inside a list — which is the one thing a shopper most
- * wants to know before they have picked anything.
+ * The choice is the shop's own control rather than the platform's select:
+ * a button that opens a panel of the sizes, where a sold-out one can say so
+ * in the shop's own hand instead of disappearing into an operating system's
+ * wheel.
  *
  * A combination that was never generated is unselectable rather than absent: a
  * shop can stop making "Red / XL" without withdrawing red or XL, and a shopper
@@ -77,36 +78,23 @@ export function VariantPicker({
     );
   }
 
-  /* The choice as a select, one per option, the way the reference shop
-     asks for a size: a control that opens rather than a row of buttons.
-     A combination that was never generated, or is gone, is offered but
-     marked, so a shopper who picks it is told rather than handed another. */
+  /* The choice as the shop's own control, one per option: a button that
+     opens a panel of the sizes, with the ones that cannot be bought
+     struck through — a shopper who picks a gone pair is told rather than
+     handed another. */
   const selects = options.map((option) => (
-    <div key={option.id}>
-      <label className="field-label" htmlFor={`option-${option.id}`}>
-        {option.name}
-      </label>
-      {/* The native select inside a shell of the site's own — the box, the
-          chevron — since a bare select draws itself in the platform's
-          style and matched nothing on the page. */}
-      <span className="pick">
-        <select
-          id={`option-${option.id}`}
-          value={chosen[option.id] ?? ""}
-          onChange={(event) =>
-            setChosen((current) => ({ ...current, [option.id]: event.target.value || undefined }))
-          }
-        >
-          {option.values.map((value) => (
-            <option key={value.id} value={value.id} disabled={!reachable(option.id, value.id)}>
-              {value.label}
-              {reachable(option.id, value.id) ? "" : ` — ${t.product.outOfStock}`}
-            </option>
-          ))}
-        </select>
-        <ChevronDownIcon size={18} className="pick-chevron" aria-hidden="true" />
-      </span>
-    </div>
+    <SizeSelect
+      key={option.id}
+      label={option.name}
+      soldOutLabel={t.product.outOfStock}
+      value={chosen[option.id]}
+      choices={option.values.map((value) => ({
+        id: value.id,
+        label: value.label,
+        available: reachable(option.id, value.id),
+      }))}
+      onChange={(valueId) => setChosen((current) => ({ ...current, [option.id]: valueId }))}
+    />
   ));
 
   return (

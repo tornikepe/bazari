@@ -91,8 +91,8 @@ export function ActiveFilterChips({
   }
 
   /* A row of black pills, each with a cross that turns red under the
-     pointer, and "clear" as an outlined pill at the end — the same
-     family as the buttons, a size down. */
+     pointer. No "clear all" here: the filters' own foot has one, and two
+     of them two inches apart was a choice about which to press. */
   return (
     <div className="mb-5 flex flex-wrap items-center gap-2">
       <span className="eyebrow mr-1">{t.catalog.activeFilters}</span>
@@ -103,14 +103,6 @@ export function ActiveFilterChips({
           <CloseIcon size={13} strokeWidth={2.5} />
         </button>
       ))}
-
-      <button
-        type="button"
-        onClick={() => remove({ ...filters, q: "", category: "", brands: [], minPrice: null, maxPrice: null, inStock: false, onSale: false })}
-        className="btn btn-outline btn-sm"
-      >
-        {t.catalog.clear}
-      </button>
     </div>
   );
 }

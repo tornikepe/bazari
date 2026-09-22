@@ -221,16 +221,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
   }
 
-  // The setting exists to be obeyed. The form hides the option, but this is a
-  // Server Action and takes a POST from anywhere.
+  /* This is a Server Action and takes a POST from anywhere, so the method
+     is checked here and not only in the form. */
   const paymentMethod = isPaymentMethod(input.paymentMethod)
     ? input.paymentMethod
-    : "cash_on_delivery";
-  if (paymentMethod === "cash_on_delivery" && !settings.codEnabled) {
-    return { ok: false, error: "invalid" };
-  }
+    : "bank_transfer";
   // An online gateway the dashboard has not switched on — or has switched
-  // off since the form was drawn — is refused here, the same way cash is.
+  // off since the form was drawn — is refused here.
   if (isGatewayMethod(paymentMethod) && !(await gatewayContext(paymentMethod))) {
     return { ok: false, error: "invalid" };
   }

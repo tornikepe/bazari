@@ -65,6 +65,7 @@ const ka = {
     dealsTitle: "ფასდაკლებული პროდუქტები",
     dealsText: "ნახე ყველა პოზიცია, რომელსაც ამჟამად ძველი ფასი აქვს მითითებული.",
     whyTitle: "როგორ მუშაობს",
+    whyHint: "ოთხი ნაბიჯი — არჩევიდან მიწოდებამდე",
     why1Title: "აირჩიე კატალოგიდან",
     why1Text: "გაფილტრე კატეგორიით, ფასის დიაპაზონით, ბრენდით ან მარაგით და იპოვე საჭირო პროდუქტი.",
     why2Title: "დაამატე კალათაში",
@@ -142,7 +143,7 @@ const ka = {
     reviewPhotoRemove: "ფოტოს მოხსნა",
     reviewPhotoOpen: "ფოტოს გადიდება",
     addToCart: "კალათაში დამატება",
-    addToCartShort: "კალათაში",
+    addToCartShort: "კალათაში დამატება",
     buyShort: "ყიდვა",
     inCart: "კალათაშია",
     buyNow: "ახლავე შეძენა",
@@ -270,7 +271,6 @@ const ka = {
     couponPlaceholder: "შეიყვანე კოდი",
     couponApply: "გამოყენება",
     couponRemove: "მოხსნა",
-    couponApplied: "კოდი გააქტიურდა",
     couponNotFound: "ასეთი კოდი არ არსებობს",
     couponExpired: "კოდს ვადა გაუვიდა",
     couponUsedUp: "კოდი ამოწურულია",
@@ -299,7 +299,6 @@ const ka = {
     paidBadge: "გადახდილია",
     unpaidBadge: "გადაუხდელია",
     refundedBadge: "თანხა დაბრუნებულია",
-    payOnDelivery: "გადახდა კურიერთან ჩაბარებისას",
     awaitingTransfer: "ელოდება საბანკო გადარიცხვას",
     notCharged: "თანხა არ ჩამოჭრილა",
     byStatus: {
@@ -432,7 +431,6 @@ const ka = {
     preferredPayment: "გადახდის მეთოდი",
     preferredPaymentHint: "გაფორმებისას ეს მეთოდი უკვე არჩეული დაგხვდება — იქვე შეგიძლია შეცვალო.",
     methodHint: {
-      cash_on_delivery: "ნაღდით ან ბარათით, კურიერთან ჩაბარებისას",
       card: "ბანკის გვერდზე, ნებისმიერი ბარათით",
       bank_transfer: "ინვოისით, კომპანიის ანგარიშზე",
       tbc: "TBC-ის გვერდზე, ნებისმიერი ბარათით",
@@ -964,7 +962,6 @@ const ka = {
     freeShippingField: "უფასო მიწოდების ზღვარი",
     shippingFeeField: "მიწოდების საფასური",
     shippingHint: "ლარებში. კალათაშიც და შეკვეთის ჯამშიც იგივე წესი მოქმედებს.",
-    codEnabled: "კურიერთან გადახდა",
     pickupEnabled: "თვითგატანა",
     pickupEnabledHint: "მყიდველს შეეძლება შეკვეთა მაღაზიიდან თავად წაიღოს, მიწოდების გარეშე.",
     pickupAddressField: "თვითგატანის მისამართი",
@@ -1272,7 +1269,6 @@ const ka = {
   },
 
   payment: {
-    cash_on_delivery: "კურიერთან",
     card: "ბარათით",
     bank_transfer: "საბანკო გადარიცხვა",
     tbc: "TBC ბანკი",
@@ -1405,6 +1401,7 @@ const en: Dictionary = {
     dealsTitle: "Discounted products",
     dealsText: "See every item that currently has a reduced price.",
     whyTitle: "How it works",
+    whyHint: "Four steps, from choosing to the door",
     why1Title: "Pick from the catalog",
     why1Text: "Filter by category, price range, brand or availability to find what you need.",
     why2Title: "Add to your cart",
@@ -1608,7 +1605,6 @@ const en: Dictionary = {
     couponPlaceholder: "Enter code",
     couponApply: "Apply",
     couponRemove: "Remove",
-    couponApplied: "Code applied",
     couponNotFound: "No such code",
     couponExpired: "This code has expired",
     couponUsedUp: "This code has been fully used",
@@ -1637,7 +1633,6 @@ const en: Dictionary = {
     paidBadge: "Paid",
     unpaidBadge: "Not paid",
     refundedBadge: "Refunded",
-    payOnDelivery: "Pay the courier on delivery",
     awaitingTransfer: "Awaiting the bank transfer",
     notCharged: "Nothing was charged",
     byStatus: {
@@ -1770,7 +1765,6 @@ const en: Dictionary = {
     preferredPayment: "Payment method",
     preferredPaymentHint: "The checkout will have this selected for you — you can still change it there.",
     methodHint: {
-      cash_on_delivery: "Cash or card, to the courier on delivery",
       card: "On the bank's page, any card",
       bank_transfer: "By invoice, to the company account",
       tbc: "On TBC's page, any card",
@@ -2302,7 +2296,6 @@ const en: Dictionary = {
     freeShippingField: "Free delivery above",
     shippingFeeField: "Delivery fee",
     shippingHint: "In lari. The same rule applies in the cart and in the order total.",
-    codEnabled: "Cash on delivery",
     pickupEnabled: "Collection in person",
     pickupEnabledHint: "A shopper may collect an order from the shop instead of having it sent.",
     pickupAddressField: "Collection address",
@@ -2610,7 +2603,6 @@ const en: Dictionary = {
   },
 
   payment: {
-    cash_on_delivery: "Cash on delivery",
     card: "Card",
     bank_transfer: "Bank transfer",
     tbc: "TBC Bank",

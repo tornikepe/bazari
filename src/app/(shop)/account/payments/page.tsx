@@ -40,7 +40,6 @@ export default async function AccountPaymentsPage() {
     ...gateways.map((gateway) => gateway.provider),
     ...(cardGateway() ? (["card"] as const) : []),
     "bank_transfer",
-    ...(settings.codEnabled ? (["cash_on_delivery"] as const) : []),
   ];
 
   return (

@@ -71,22 +71,6 @@ export function ProductCard({
           {soldOut && <span className="badge bg-panel text-panel-fg">{t.product.outOfStock}</span>}
         </div>
 
-        {/* Into the cart, or straight to the checkout. A product sold in
-            sizes opens its sizes on the card — see `CardActions`. */}
-        <div className="card-actions">
-          <CardActions
-            needsChoice={needsChoice}
-            product={{
-              productId: product.id,
-              slug: product.slug,
-              nameKa: product.nameKa,
-              nameEn: product.nameEn,
-              image: product.image,
-              price: product.price,
-              stock: product.stock,
-            }}
-          />
-        </div>
       </div>
 
       <div className="card-body flex flex-1 flex-col gap-1.5">
@@ -117,6 +101,25 @@ export function ProductCard({
             {fill(t.product.lowStock, { count: product.stock })}
           </span>
         )}
+
+        {/* Under the price, not over the photograph: a word across a
+            picture hid the thing being sold, and this is where a shopper
+            looks once the price has been read. */}
+        <div className="card-actions mt-2.5">
+          <CardActions
+            look="plain"
+            needsChoice={needsChoice}
+            product={{
+              productId: product.id,
+              slug: product.slug,
+              nameKa: product.nameKa,
+              nameEn: product.nameEn,
+              image: product.image,
+              price: product.price,
+              stock: product.stock,
+            }}
+          />
+        </div>
       </div>
     </article>
   );

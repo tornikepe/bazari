@@ -44,7 +44,6 @@ export const getSettings = cache(async (): Promise<ShopSettings> => {
       currencySymbol: row.currencySymbol,
       freeShippingThreshold: row.freeShippingThreshold,
       shippingFee: row.shippingFee,
-      codEnabled: row.codEnabled,
       vatRate: row.vatRate,
       pickupEnabled: row.pickupEnabled,
       pickupAddress: row.pickupAddress,

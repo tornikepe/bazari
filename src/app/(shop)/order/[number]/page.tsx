@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/icons";
 import { STATUS_STYLES } from "@/components/ui/StatusBadge";
 import { OrderProgress } from "@/components/order/OrderProgress";
-import { paymentWording } from "@/components/order/PaymentBadge";
 import { OrderBeacon } from "@/components/order/OrderBeacon";
 import { orderHistory } from "@/lib/order-status";
 import { getSettings } from "@/lib/settings";
@@ -100,7 +99,6 @@ export default async function OrderConfirmationPage({
   const returnAllowed = owner
     ? mayRequestReturn(order, order.returns, settings.returnWindowDays)
     : ({ ok: false, reason: "off" } as const);
-  const payment = paymentWording(order.paymentMethod, order.paymentStatus, order.status, t);
 
   const sticker = {
     pending: { icon: ClockIcon, className: "bg-warning-soft text-warning" },
@@ -152,23 +150,17 @@ export default async function OrderConfirmationPage({
             {t.orderDone.byStatus[order.status].title}
           </h1>
 
-          {/* The four facts as four tiles: where it stands and what the
-              money is doing — the status is the shop's, the payment the
-              money's, and one does not imply the other — then the number
-              and the sum. Each in its own tone, with a dot of it. */}
+          {/* Three facts as three tiles, each set in the middle of its
+              own: where the order stands, its number, its sum. What the
+              money is doing is not one of them — the shop is paid through
+              a bank's gateway or by transfer, and "waiting for a
+              transfer" is the timeline's business, not a headline. */}
           <dl className="order-facts">
             <div>
               <dt>{t.admin.status}</dt>
               <dd className={STATUS_STYLES[order.status]?.split(" ").pop() ?? "text-ink-700"}>
                 <span aria-hidden="true" className="order-facts-dot" />
                 {t.status[order.status]}
-              </dd>
-            </div>
-            <div>
-              <dt>{t.admin.payment}</dt>
-              <dd className={payment.tone.split(" ").pop()}>
-                <span aria-hidden="true" className="order-facts-dot" />
-                {payment.label}
               </dd>
             </div>
             <div>
@@ -204,53 +196,48 @@ export default async function OrderConfirmationPage({
 
         {/* items */}
         <div className="card mt-4 card-pad">
-          <h2 className="text-sm font-bold text-ink-900">{t.admin.items}</h2>
+          <h2 className="display-sm text-center text-ink-900">{t.admin.items}</h2>
 
-          <ul className="mt-3 flex flex-col gap-3">
+          {/* The same three columns as the checkout's summary, ruled: the
+              picture, the name with its size and count under it, the
+              line's sum at the right. */}
+          <ul className="summary-lines mt-5 max-h-none">
             {order.items.map((item) => (
-              <li key={item.id} className="flex items-center gap-3">
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control bg-ink-50">
-                  <Image
-                    src={item.image}
-                    alt=""
-                    fill
-                    sizes="56px"
-                    className="object-cover"
-                  />
-                </div>
+              <li key={item.id}>
+                <span className="summary-line-pic">
+                  <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
+                </span>
 
-                <div className="min-w-0 flex-1">
-                  <p className="clamp-2 text-sm leading-snug font-medium text-ink-800">
+                <span className="min-w-0">
+                  <span className="line-clamp-2 text-xs leading-snug font-semibold text-ink-900">
                     {locale === "ka" ? item.nameKa : item.nameEn}
-                  </p>
-                  {item.variantLabel && (
-                    <p className="mt-0.5 text-xs text-ink-500">
-                      {item.variantLabel}
-                    </p>
-                  )}
-                  <p className="mt-0.5 text-xs text-ink-400">
-                    {item.quantity} × {formatPrice(item.price, locale)}
-                  </p>
-                </div>
+                  </span>
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
+                    <span className="text-xs text-ink-500 tabular-nums">
+                      {item.quantity} × {formatPrice(item.price, locale)}
+                    </span>
+                  </span>
+                </span>
 
-                <Price value={item.price * item.quantity} size="sm" />
+                <span className="text-sm font-bold whitespace-nowrap text-ink-900 tabular-nums">
+                  {formatPrice(item.price * item.quantity, locale)}
+                </span>
               </li>
             ))}
           </ul>
 
           {/* Breakdown from the snapshotted columns, so a shopper can see
               exactly how the total was reached. */}
-          <dl className="mt-4 flex flex-col gap-2 border-t border-line pt-4 text-sm">
-            <div className="flex items-center justify-between">
-              <dt className="text-ink-500">{t.cart.itemsTotal}</dt>
-              <dd className="font-semibold text-ink-800">
-                {formatPrice(order.subtotal, locale)}
-              </dd>
+          <dl className="summary-totals mt-5 border-t border-line pt-5">
+            <div>
+              <dt>{t.cart.itemsTotal}</dt>
+              <dd>{formatPrice(order.subtotal, locale)}</dd>
             </div>
 
-            <div className="flex items-center justify-between">
-              <dt className="text-ink-500">{t.cart.shipping}</dt>
-              <dd className="font-semibold text-ink-800">
+            <div>
+              <dt>{t.cart.shipping}</dt>
+              <dd>
                 {order.shipping <= 0 ? (
                   <span className="text-success">{t.cart.freeShipping}</span>
                 ) : (
@@ -260,8 +247,8 @@ export default async function OrderConfirmationPage({
             </div>
 
             {order.discount > 0 && (
-              <div className="flex items-center justify-between gap-3">
-                <dt className="flex min-w-0 items-center gap-1.5 text-ink-500">
+              <div>
+                <dt className="flex min-w-0 items-center gap-1.5">
                   {t.cart.discount}
                   {order.coupon && (
                     <span className="shrink-0 rounded-pill bg-accent-50 px-1.5 py-0.5 font-mono text-xs font-bold text-accent-800">
@@ -269,16 +256,12 @@ export default async function OrderConfirmationPage({
                     </span>
                   )}
                 </dt>
-                <dd className="shrink-0 font-semibold text-success">
-                  −{formatPrice(order.discount, locale)}
-                </dd>
+                <dd className="text-success">−{formatPrice(order.discount, locale)}</dd>
               </div>
             )}
 
-            <div className="mt-1 flex items-center justify-between border-t border-line pt-3">
-              <dt className="text-base font-bold text-ink-900">
-                {t.cart.total}
-              </dt>
+            <div className="summary-total">
+              <dt>{t.cart.total}</dt>
               <dd>
                 <Price value={order.total} size="lg" />
               </dd>
@@ -292,7 +275,7 @@ export default async function OrderConfirmationPage({
             amount={order.tax}
             locale={locale}
             t={t}
-            className="mt-1.5"
+            className="mt-1.5 text-center"
           />
 
           {/* Where it is going, or where it is waiting. The zone is the
