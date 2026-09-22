@@ -52,7 +52,9 @@ export function CartView() {
   if (items.length === 0) {
     return (
       <div className="page">
-        <PageIntro eyebrow={t.nav.cart} title={t.cart.title} line={t.cart.emptyHint} />
+        {/* No line under the title here: the card below says the same
+            sentence, and saying it twice read as a mistake. */}
+        <PageIntro eyebrow={t.nav.cart} title={t.cart.title} />
 
         <EmptyState
           className="card mx-auto mt-8 max-w-md"
@@ -89,7 +91,7 @@ export function CartView() {
         {/* ------------------------------- items ----------------------------- */}
         {/* `min-w-0`: grid children default to `min-width: auto`, which stops
             the rows below from shrinking and overflows narrow phones. */}
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-2.5 sm:gap-3">
           {items.map((item) => {
             const name = locale === "ka" ? item.nameKa : item.nameEn;
             const max = Math.max(1, item.stock);

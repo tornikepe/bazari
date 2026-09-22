@@ -52,7 +52,7 @@ function EditLink({ onClick, label }: { onClick: () => void; label: string }) {
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 text-xs font-semibold text-brand-600 underline-offset-4 hover:underline"
+      className="profile-edit"
     >
       {label}
     </button>
@@ -180,9 +180,9 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
             </span>
           </Field>
           <Field label={t.account.birthDate}>
-            <span className="flex items-center justify-between gap-3">
+            <span className="profile-row">
               <Value text={birthShown} fallback={t.account.notSet} />
-              <CalendarIcon size={20} className="shrink-0 text-ink-400" aria-hidden="true" />
+              <CalendarIcon size={20} className="hidden shrink-0 text-ink-400 sm:block" aria-hidden="true" />
             </span>
           </Field>
           <Field label={t.account.personalId}>
@@ -210,8 +210,8 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
                 <EditorFoot pending={emailPending} onCancel={() => setEditor(null)} t={t} />
               </form>
             ) : (
-              <span className="flex flex-wrap items-center justify-between gap-2">
-                <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="profile-row">
+                <span className="flex min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-start">
                   <Value text={profile.email} fallback={t.account.notSet} />
                   {!profile.emailVerified && (
                     <Link
@@ -236,7 +236,7 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
                 <EditorFoot pending={phonePending} onCancel={() => setEditor(null)} t={t} />
               </form>
             ) : (
-              <span className="flex items-center justify-between gap-3">
+              <span className="profile-row">
                 <span className="profile-value">
                   <span className="text-ink-500">+995</span>{" "}
                   {profile.phone ? profile.phone.replace(/^\+995\s?/, "") : "---------"}
@@ -299,7 +299,7 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
                 <EditorFoot pending={passwordPending} onCancel={() => setEditor(null)} t={t} />
               </form>
             ) : (
-              <span className="flex items-center justify-between gap-3">
+              <span className="profile-row">
                 <span className="profile-value tracking-[0.2em]">••••••••••••</span>
                 <EditLink onClick={() => setEditor("password")} label={t.account.edit} />
               </span>

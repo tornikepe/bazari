@@ -69,7 +69,8 @@ export default function FavoritesPage() {
   if (products.length === 0) {
     return (
       <div className="page">
-        <PageIntro eyebrow={t.account.menuWishlist} title={t.favorites.title} line={t.favorites.emptyHint} />
+        {/* The card below says the sentence; the head only names the page. */}
+        <PageIntro eyebrow={t.account.menuWishlist} title={t.favorites.title} />
 
         {/* The cart's empty page, with a heart: the card in the middle, and
             what was looked at under it. */}
@@ -98,7 +99,7 @@ export default function FavoritesPage() {
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-2.5 sm:gap-3">
           {products.map((product) => {
             const name = locale === "ka" ? product.nameKa : product.nameEn;
             return (
