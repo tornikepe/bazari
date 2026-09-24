@@ -14,7 +14,7 @@ import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { AlertIcon, BagCheckIcon, CheckIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
+import { AlertIcon, BagCheckIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -369,28 +369,31 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-4">
             <Price value={product.price} oldValue={product.oldPrice} size="xl" />
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {discount > 0 && product.oldPrice && (
-              /* What the reduction is worth, said twice over: the share as
-                 a filled badge, the money in words beside it. */
-              <span className="price-tag is-save">
-                <span className="price-tag-badge">−{discount}%</span>
-                {fill(t.product.youSave, {
-                  amount: formatPrice(product.oldPrice - product.price, locale),
-                })}
-              </span>
-            )}
-            <span
-              className={`price-tag ${soldOut ? "is-out" : product.stock <= LOW_STOCK_THRESHOLD ? "is-low" : "is-stock"}`}
-            >
-              {soldOut ? <AlertIcon size={14} /> : product.stock <= LOW_STOCK_THRESHOLD ? <AlertIcon size={14} /> : <CheckIcon size={14} strokeWidth={3} />}
-              {soldOut
-                ? t.product.outOfStock
-                : product.stock <= LOW_STOCK_THRESHOLD
-                  ? t.product.lowStock
-                  : t.product.inStock}
-            </span>
-          </div>
+          {/* What the reduction is worth: the share filled at the head of
+              the tag, the money after it. Nothing is said when a product
+              is simply in stock — a shop's products are in stock, and one
+              that is not is not shown at all; only the two cases worth a
+              word get one. */}
+          {(discount > 0 || soldOut || product.stock <= LOW_STOCK_THRESHOLD) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {discount > 0 && product.oldPrice && (
+                <span className="price-tag is-save">
+                  <span className="price-tag-badge">−{discount}%</span>
+                  <span className="price-tag-words">
+                    {fill(t.product.youSave, {
+                      amount: formatPrice(product.oldPrice - product.price, locale),
+                    })}
+                  </span>
+                </span>
+              )}
+              {(soldOut || product.stock <= LOW_STOCK_THRESHOLD) && (
+                <span className={`price-tag ${soldOut ? "is-out" : "is-low"}`}>
+                  <AlertIcon size={14} />
+                  {soldOut ? t.product.outOfStock : t.product.lowStock}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Nothing here until somebody real has written something. */}
           {product.ratingCount > 0 && (

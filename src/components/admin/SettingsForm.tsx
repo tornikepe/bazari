@@ -184,6 +184,33 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
         />
       </Section>
 
+      {/* Where a transfer should be sent. Shown at the checkout the moment
+          the shopper chooses that way to pay, and nowhere at all while
+          these are empty. */}
+      <Section title={t.admin.settingsBank} note={t.admin.settingsBankHint}>
+        <Field
+          name="bankIban"
+          label={t.admin.bankIbanField}
+          placeholder="GE00XX0000000000000000"
+          defaultValue={settings.bankIban}
+          disabled={!canWrite}
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            name="bankHolder"
+            label={t.admin.bankHolderField}
+            defaultValue={settings.bankHolder}
+            disabled={!canWrite}
+          />
+          <Field
+            name="bankName"
+            label={t.admin.bankNameField}
+            defaultValue={settings.bankName}
+            disabled={!canWrite}
+          />
+        </div>
+      </Section>
+
       <Section title={t.admin.settingsReturns} note={t.admin.returnWindowHint}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field

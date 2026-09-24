@@ -47,6 +47,9 @@ export const getSettings = cache(async (): Promise<ShopSettings> => {
       vatRate: row.vatRate,
       pickupEnabled: row.pickupEnabled,
       pickupAddress: row.pickupAddress,
+      bankIban: row.bankIban,
+      bankHolder: row.bankHolder,
+      bankName: row.bankName,
       returnWindowDays: row.returnWindowDays,
     };
   } catch (error) {

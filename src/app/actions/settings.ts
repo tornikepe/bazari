@@ -109,6 +109,12 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     vatRate,
     pickupEnabled: formData.get("pickupEnabled") === "on",
     pickupAddress: text(formData, "pickupAddress", 200),
+    /* The shop's own account, in the one shape a bank writes it: no
+       spaces, upper case. Blank clears it, and the checkout then says
+       nothing about where to send the money. */
+    bankIban: text(formData, "bankIban", 34).replace(/\s+/g, "").toUpperCase(),
+    bankHolder: text(formData, "bankHolder", 120),
+    bankName: text(formData, "bankName", 80),
     returnWindowDays,
   };
 

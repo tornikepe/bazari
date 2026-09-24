@@ -75,6 +75,26 @@ export const CardIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A bank's front: a roof over columns. For where a transfer is sent. */
+export const BankIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 10.5 12 4l9 6.5" />
+    <path d="M5 10.5V19" />
+    <path d="M9.5 10.5V19" />
+    <path d="M14.5 10.5V19" />
+    <path d="M19 10.5V19" />
+    <path d="M3 19h18" />
+  </Icon>
+);
+
+/** Two sheets, one behind the other — "copy this". */
+export const CopyIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" />
+  </Icon>
+);
+
 export const InfoIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="9" />

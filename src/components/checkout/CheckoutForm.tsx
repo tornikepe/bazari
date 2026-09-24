@@ -20,6 +20,7 @@ import { placeOrder, previewCoupon, type CouponPreview } from "@/app/actions/ord
 import { lineKey } from "@/lib/cart-store";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
 import { PaymentMark } from "@/components/checkout/PaymentMark";
+import { BankDetails } from "@/components/checkout/BankDetails";
 import { PhoneField } from "@/components/ui/PhoneField";
 import { SuggestField } from "@/components/ui/SuggestField";
 import { suggestCities } from "@/lib/georgian-cities";
@@ -617,6 +618,8 @@ export function CheckoutForm({
               ))}
             </div>
 
+            {/* Where to send it, as soon as that is the way chosen. */}
+            {payment === "bank_transfer" && <BankDetails />}
           </fieldset>
         </div>
 

@@ -6,7 +6,6 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { updatePaymentPrefs } from "@/app/actions/account";
 import { Busy, Swap } from "@/components/ui/Swap";
 import { ErrorNote } from "@/components/ui/ErrorNote";
-import { CheckIcon } from "@/components/ui/icons";
 
 export type InvoicePrefs = { invoiceCompany: string; invoiceTaxId: string };
 
@@ -70,25 +69,16 @@ export function InvoiceLineForm({ prefs }: { prefs: InvoicePrefs }) {
         </div>
       </div>
 
-      {/* Saved without a word: a tick in the button for a moment. */}
+      {/* Nothing is drawn when it saves; a screen reader still gets told. */}
       <span className="sr-only" role="status">
         {status === "saved" ? t.account.paymentsSaved : ""}
       </span>
 
+      {/* The button says one thing and keeps saying it: a tick that
+          appeared inside it read as a second control. */}
       <button type="submit" disabled={isPending} className="btn btn-primary btn-md mt-4 w-full sm:w-auto">
         <Swap
-          show={
-            isPending ? (
-              <Busy label={t.account.saving} />
-            ) : status === "saved" ? (
-              <>
-                <CheckIcon size={16} strokeWidth={3} />
-                {t.account.saveProfile}
-              </>
-            ) : (
-              t.account.saveProfile
-            )
-          }
+          show={isPending ? <Busy label={t.account.saving} /> : t.account.saveProfile}
           of={[t.account.saveProfile]}
         />
       </button>

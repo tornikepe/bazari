@@ -889,6 +889,14 @@ model ShopSettings {
   pickupEnabled         Boolean @default(false)
   /// Where they collect it. Empty means the contact address above.
   pickupAddress         String  @default("")
+  /// Where a bank transfer should be sent: the shop's own account, shown
+  /// at the checkout the moment "transfer" is chosen. Empty means the
+  /// shop has not entered one, and the checkout says nothing rather than
+  /// showing an empty box.
+  bankIban    String @default("")
+  bankHolder  String @default("")
+  bankName    String @default("")
+
   /// Days after delivery in which a shopper may ask to return something.
   /// Zero switches the request form off without touching the policy page.
   returnWindowDays      Int     @default(14)

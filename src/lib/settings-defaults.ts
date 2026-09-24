@@ -33,6 +33,10 @@ export type ShopSettings = {
   pickupEnabled: boolean;
   /** Where from. Empty means the contact address. */
   pickupAddress: string;
+  /** Where a bank transfer should be sent. Empty means none is set. */
+  bankIban: string;
+  bankHolder: string;
+  bankName: string;
   /** Days after delivery in which a return may be asked for. Zero: never. */
   returnWindowDays: number;
 };
@@ -63,5 +67,8 @@ export const DEFAULT_SETTINGS: ShopSettings = {
   vatRate: 0,
   pickupEnabled: false,
   pickupAddress: "",
+  bankIban: "",
+  bankHolder: "",
+  bankName: "",
   returnWindowDays: 14,
 };
