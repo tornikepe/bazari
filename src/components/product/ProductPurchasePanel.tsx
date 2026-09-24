@@ -86,7 +86,7 @@ export function ProductPurchasePanel({
     <div className="flex flex-col gap-5">
       {/* The choice and the quantity on one row. */}
       {(!soldOut || keepShape) && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="buy-choice grid gap-4 sm:grid-cols-2">
           {choice}
           <div>
             <span className="field-label">{t.product.quantity}</span>

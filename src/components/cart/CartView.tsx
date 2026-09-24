@@ -115,7 +115,7 @@ export function CartView() {
                 </button>
 
                 <Link href={`/product/${item.slug}`} className="line-pic">
-                  <Image src={item.image} alt={name} fill sizes="(max-width: 640px) 112px, 96px" className="object-cover" />
+                  <Image src={item.image} alt={name} fill sizes="(max-width: 640px) 104px, 96px" className="object-cover" />
                 </Link>
 
                 <div className="line-body">
@@ -125,42 +125,57 @@ export function CartView() {
                   >
                     {name}
                   </Link>
-                  <div className="line-meta">
-                    {/* Sold in sizes: the size is chosen here, on the line. */}
-                    {item.variantId && <LineSizePicker item={item} />}
-                    <span className="text-xs text-ink-500 tabular-nums">
-                      {formatPrice(item.price, locale)} / {t.product.unit}
-                    </span>
-                  </div>
+
+                  {/* The size on its own line under the name — a select is a
+                      control, not a word, and beside the unit price it read
+                      as one long line of small print. */}
+                  {item.variantId && (
+                    <div className="line-size">
+                      <LineSizePicker item={item} />
+                    </div>
+                  )}
+
+                  <p className="line-unit">
+                    {formatPrice(item.price, locale)} / {t.product.unit}
+                  </p>
                 </div>
 
-                {/* The count and the line's sum. */}
+                {/* The count and what the line comes to, each under its own
+                    small word: two figures side by side with nothing to name
+                    them was the part that read as a muddle. */}
                 <div className="line-foot">
-                  <span className="mini-stepper line-stepper">
-                    {/* Stops at one, as the product page's does: a thumb
-                        reaching for "one fewer" must not delete the row.
-                        The cross is the way out of the cart. */}
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(key, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      aria-label="-"
-                    >
-                      <MinusIcon size={13} strokeWidth={2.5} />
-                    </button>
-                    <span aria-label={t.cart.quantity}>{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(key, item.quantity + 1)}
-                      disabled={item.quantity >= max}
-                      aria-label="+"
-                    >
-                      <PlusIcon size={13} strokeWidth={2.5} />
-                    </button>
-                  </span>
-                  {/* Keyed on the figure, so changing a quantity tints the
-                      line total for a moment. */}
-                  <LineTotal value={item.price * item.quantity} />
+                  <div className="line-cell">
+                    <span className="line-cell-label">{t.cart.quantity}</span>
+                    <span className="mini-stepper line-stepper">
+                      {/* Stops at one, as the product page's does: a thumb
+                          reaching for "one fewer" must not delete the row.
+                          The cross is the way out of the cart. */}
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(key, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                        aria-label="-"
+                      >
+                        <MinusIcon size={13} strokeWidth={2.5} />
+                      </button>
+                      <span aria-label={t.cart.quantity}>{item.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(key, item.quantity + 1)}
+                        disabled={item.quantity >= max}
+                        aria-label="+"
+                      >
+                        <PlusIcon size={13} strokeWidth={2.5} />
+                      </button>
+                    </span>
+                  </div>
+
+                  <div className="line-cell is-sum">
+                    <span className="line-cell-label">{t.cart.subtotal}</span>
+                    {/* Keyed on the figure, so changing a quantity tints the
+                        line total for a moment. */}
+                    <LineTotal value={item.price * item.quantity} />
+                  </div>
                 </div>
               </article>
             );
@@ -196,23 +211,30 @@ export function CartView() {
 
           <TaxNote total={total} rate={settings.vatRate} locale={locale} t={t} className="mt-1.5 text-center" />
 
+          {/* One line: the van, the sum to go set in ink, the rest quiet. */}
           {remaining > 0 && (
-            <div className="mt-4 flex items-center justify-center gap-2 rounded-control bg-accent-50 px-3 py-2.5 text-center text-xs leading-snug text-accent-800">
+            <p className="free-ship">
               <TruckIcon size={15} className="shrink-0" />
-              <span>{fill(t.cart.freeShippingHint, { amount: formatPrice(remaining, locale) })}</span>
-            </div>
+              <span className="truncate">
+                {fill(t.cart.freeShippingHint, { amount: formatPrice(remaining, locale) })}
+              </span>
+            </p>
           )}
 
-          <Link href="/checkout" className="btn btn-primary btn-lg mt-5 w-full">
-            {t.cart.checkout}
-          </Link>
-          <Link href="/catalog" className="btn btn-outline btn-md mt-2 w-full">
-            {t.cart.continueShopping}
-          </Link>
+          {/* The way on, the way back, and the way to undo it — each with
+              room of its own, in that order of weight. */}
+          <div className="cart-actions">
+            <Link href="/checkout" className="btn btn-primary btn-lg w-full">
+              {t.cart.checkout}
+            </Link>
+            <Link href="/catalog" className="btn btn-outline btn-md w-full">
+              {t.cart.continueShopping}
+            </Link>
+          </div>
 
           {/* Emptying the cart, at the foot of the summary as a quiet line:
               it undoes everything above and should not look like a step. */}
-          <button type="button" onClick={clear} className="btn btn-ghost btn-md mt-3 w-full text-ink-600 hover:text-danger">
+          <button type="button" onClick={clear} className="btn btn-ghost btn-md mt-5 w-full text-ink-500 hover:text-danger">
             <TrashIcon size={15} />
             {t.cart.clear}
           </button>

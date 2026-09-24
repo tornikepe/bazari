@@ -2592,6 +2592,37 @@ html[data-reveal="all"] .reveal-view {
 
 /* The active filters: black pills a size under the buttons, the cross
    red under the pointer. */
+/* The chosen filters, above the grid: the heading and the pills down the
+   middle on a phone, on one line from `sm` up. */
+.active-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.active-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .active-filters {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: left;
+  }
+
+  .active-filters-row {
+    justify-content: flex-start;
+  }
+}
+
 .filter-chip {
   display: inline-flex;
   align-items: center;
@@ -4885,6 +4916,20 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   color: var(--color-success);
 }
 
+/* The share, filled, at the head of the saving's tag: paper on green. */
+.price-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.0625rem 0.4375rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+  color: var(--color-surface);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
 .price-tag.is-low {
   color: var(--color-warning);
 }
@@ -5691,12 +5736,69 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 .line-foot {
   display: flex;
   width: 100%;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 0.75rem;
   margin-top: 0.125rem;
   padding-top: 0.875rem;
   border-top: 1px solid var(--color-line);
+}
+
+/* A cell of the foot: the small word, the thing under it. */
+.line-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+
+.line-cell.is-sum {
+  align-items: flex-end;
+}
+
+.line-cell-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-ink-400);
+}
+
+/* The size under the name, and the unit price under that. */
+.line-size {
+  margin-top: 0.625rem;
+}
+
+.line-unit {
+  margin-top: 0.5rem;
+  font-size: 12px;
+  color: var(--color-ink-500);
+  font-variant-numeric: tabular-nums;
+}
+
+/* How much more buys free delivery: one line, the van, the words. */
+.free-ship {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid color-mix(in oklab, var(--color-accent-800) 20%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-50);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent-800);
+  white-space: nowrap;
+}
+
+/* The summary's two ways out, with room between them. */
+.cart-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
 }
 
 .line-foot-one {
@@ -5729,6 +5831,15 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     gap: 1rem;
     padding: 1.125rem 3rem 1.125rem 1.25rem;
     text-align: left;
+  }
+
+  .line-size,
+  .line-unit {
+    margin-top: 0.375rem;
+  }
+
+  .line-cell {
+    align-items: flex-end;
   }
 
   .line-x {
@@ -6181,5 +6292,26 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     gap: 0.625rem;
     font-size: 13px;
     line-height: 1.45;
+  }
+}
+
+/* ---- The product page's choice on a phone ----------------------------- */
+
+/* The two words above the controls sit over the middle of them, as the
+   rest of the page's labels do; from `sm` up they read from the left. */
+@media (max-width: 639px) {
+  .size-select .field-label,
+  .buy-choice .field-label {
+    display: block;
+    text-align: center;
+  }
+
+  .size-select-button,
+  .qty-value {
+    text-align: center;
+  }
+
+  .size-select-button > span:first-child {
+    flex: 1;
   }
 }

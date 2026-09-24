@@ -14,7 +14,7 @@ import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { AlertIcon, BagCheckIcon, CheckIcon, RefreshIcon, StarIcon, TagIcon, TruckIcon } from "@/components/ui/icons";
+import { AlertIcon, BagCheckIcon, CheckIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SITE_TITLE, SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -371,8 +371,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {discount > 0 && product.oldPrice && (
+              /* What the reduction is worth, said twice over: the share as
+                 a filled badge, the money in words beside it. */
               <span className="price-tag is-save">
-                <TagIcon size={14} />
+                <span className="price-tag-badge">−{discount}%</span>
                 {fill(t.product.youSave, {
                   amount: formatPrice(product.oldPrice - product.price, locale),
                 })}
@@ -385,7 +387,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {soldOut
                 ? t.product.outOfStock
                 : product.stock <= LOW_STOCK_THRESHOLD
-                  ? fill(t.product.lowStock, { count: product.stock })
+                  ? t.product.lowStock
                   : t.product.inStock}
             </span>
           </div>

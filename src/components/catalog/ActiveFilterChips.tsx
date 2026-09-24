@@ -92,17 +92,23 @@ export function ActiveFilterChips({
 
   /* A row of black pills, each with a cross that turns red under the
      pointer. No "clear all" here: the filters' own foot has one, and two
-     of them two inches apart was a choice about which to press. */
-  return (
-    <div className="mb-5 flex flex-wrap items-center gap-2">
-      <span className="eyebrow mr-1">{t.catalog.activeFilters}</span>
+     of them two inches apart was a choice about which to press.
 
-      {chips.map((chip) => (
-        <button key={chip.key} type="button" onClick={chip.onRemove} className="filter-chip">
-          <span className="max-w-[14rem] truncate">{chip.label}</span>
-          <CloseIcon size={13} strokeWidth={2.5} />
-        </button>
-      ))}
+     On a phone the heading sits on its own line above the pills and the
+     pills are centred under it, since a label and four pills on one
+     wrapping row left a ragged block with the heading stranded. */
+  return (
+    <div className="active-filters">
+      <span className="eyebrow">{t.catalog.activeFilters}</span>
+
+      <div className="active-filters-row">
+        {chips.map((chip) => (
+          <button key={chip.key} type="button" onClick={chip.onRemove} className="filter-chip">
+            <span className="max-w-[12rem] truncate">{chip.label}</span>
+            <CloseIcon size={13} strokeWidth={2.5} />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

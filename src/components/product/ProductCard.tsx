@@ -12,8 +12,6 @@ import { fill } from "@/lib/i18n";
 import { trackProductEvent } from "@/lib/product-events";
 import type { ProductCardData } from "@/lib/catalog";
 
-const LOW_STOCK_THRESHOLD = 10;
-
 export function ProductCard({
   product,
   priority = false,
@@ -36,7 +34,6 @@ export function ProductCard({
   const discount = discountPercent(product.price, product.oldPrice);
   const soldOut = product.stock <= 0;
   const needsChoice = product._count.options > 0;
-  const lowStock = !soldOut && product.stock <= LOW_STOCK_THRESHOLD;
 
   return (
     // `reveal-view`: the card rises into place as it scrolls into view.
@@ -95,12 +92,6 @@ export function ProductCard({
         <div className="mt-auto pt-1">
           <Price value={product.price} oldValue={product.oldPrice} size="md" />
         </div>
-
-        {lowStock && (
-          <span className="text-[11px] font-semibold text-warning">
-            {fill(t.product.lowStock, { count: product.stock })}
-          </span>
-        )}
 
         {/* Under the price, not over the photograph: a word across a
             picture hid the thing being sold, and this is where a shopper
