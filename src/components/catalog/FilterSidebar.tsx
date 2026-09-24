@@ -3,7 +3,7 @@
 import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { CheckIcon, ChevronDownIcon, CloseIcon, SearchIcon, SpinnerIcon } from "@/components/ui/icons";
+import { CheckIcon, ChevronDownIcon, CloseIcon, SearchIcon } from "@/components/ui/icons";
 import { buildQuery, EMPTY_FILTERS, type CatalogFilters } from "@/lib/filters";
 import { fill } from "@/lib/i18n";
 
@@ -310,7 +310,6 @@ export function FilterSidebar({ filters: live, categories, brands, bounds, onApp
           disabled={isPending}
           className="btn btn-primary btn-md w-full"
         >
-          {isPending ? <SpinnerIcon size={15} /> : null}
           {t.catalog.apply}
         </button>
         <button

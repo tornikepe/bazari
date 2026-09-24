@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { SpinnerIcon } from "@/components/ui/icons";
 
 /**
  * A label that changes without changing size.
@@ -43,15 +42,16 @@ export function Swap({
 }
 
 /**
- * What a control shows while it is working: the spinner in place of the
- * label, the label kept for a screen reader. Used as the `show` of a `Swap`
- * whose `of` holds the idle labels, so the control keeps its idle size.
+ * What a control shows while it is working: the word for it, in place of
+ * the idle label. Used as the `show` of a `Swap` whose `of` holds the idle
+ * labels, so the control keeps its idle size.
+ *
+ * It used to be a turning ring. A ring inside a button is a second thing
+ * happening in a place that should only be saying one — and on a fast
+ * connection it appears and goes in the same blink, which reads as a
+ * flicker rather than as progress. The word, with the button dimmed and
+ * unpressable beneath it, says the same thing quietly.
  */
 export function Busy({ label }: { label: string }) {
-  return (
-    <span className="flex justify-center">
-      <SpinnerIcon size="1em" />
-      <span className="sr-only">{label}</span>
-    </span>
-  );
+  return <span className="flex justify-center">{label}</span>;
 }

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { register, type AuthState } from "@/app/actions/auth";
-import { SpinnerIcon } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { PhoneField } from "@/components/ui/PhoneField";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
@@ -80,7 +79,7 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
         </>
       }
     >
-      {social}
+      <div className="mt-5">{social}</div>
 
       <form action={formAction} onSubmit={checkPasswords} className="mt-5 flex flex-col gap-4">
         <div>
@@ -154,7 +153,6 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
         <FormFault message={fault} />
 
         <button type="submit" disabled={pending} className="btn btn-primary btn-md w-full">
-          {pending && <SpinnerIcon size={16} />}
           {pending ? t.auth.signingUp : t.auth.signUp}
         </button>
       </form>

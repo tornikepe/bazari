@@ -6,7 +6,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { login, type AuthState } from "@/app/actions/auth";
-import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { AlertIcon } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 import { looksLikePhone, localDigits } from "@/lib/phone";
@@ -86,7 +86,9 @@ export function LoginForm({
         </>
       }
     >
-      {social}
+      {/* Room above it: the button sat against the sentence under the
+          title as though it belonged to it, and the card read top-heavy. */}
+      <div className="mt-5">{social}</div>
 
       <form action={formAction} onSubmit={validate} noValidate className="mt-5 flex flex-col gap-4">
         {/* Carried through the sign-in so "you need an account to check out"
@@ -151,7 +153,6 @@ export function LoginForm({
         <FormFault message={fault} />
 
         <button type="submit" disabled={pending} className="btn btn-primary btn-md w-full">
-          {pending && <SpinnerIcon size={16} />}
           {pending ? t.auth.signingIn : t.auth.signIn}
         </button>
       </form>

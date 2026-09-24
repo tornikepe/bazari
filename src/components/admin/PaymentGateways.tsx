@@ -195,7 +195,7 @@ function GatewayCard({
                 show={
                   isPending ? <Busy label={t.admin.saving} /> : t.admin.save
                 }
-                of={[t.admin.save]}
+                of={[t.admin.save, t.admin.saving]}
               />
             </button>
             {status === "saved" && (

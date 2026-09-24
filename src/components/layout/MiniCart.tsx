@@ -58,26 +58,24 @@ export function MiniCart() {
           const max = Math.max(1, item.stock);
 
           return (
-            <li key={key} className="flex gap-3 px-4 py-3">
-              <Link
-                href={`/product/${item.slug}`}
-                className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control border border-line bg-ink-50"
-              >
+            <li key={key} className="mini-line">
+              <Link href={`/product/${item.slug}`} className="mini-pic">
                 <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
               </Link>
 
-              <div className="min-w-0 flex-1">
-                <Link
-                  href={`/product/${item.slug}`}
-                  className="clamp-2-xs text-xs leading-snug font-semibold text-ink-900 hover:text-brand-600"
-                >
+              <div className="min-w-0">
+                {/* The name and what the line costs, one under the other
+                    with nothing between them: they are the two halves of
+                    one statement and were a line and a half apart. */}
+                <Link href={`/product/${item.slug}`} className="mini-name">
                   {name}
                 </Link>
-                {item.variantLabel && (
-                  <p className="mt-0.5 truncate text-xs text-ink-500">{item.variantLabel}</p>
-                )}
+                <p className="mini-sum">{formatPrice(item.price * item.quantity, locale)}</p>
 
-                <div className="mt-2 flex items-center justify-between gap-2">
+                {/* What there is to say about this line — the size it is,
+                    and how many — set together in the middle under it. */}
+                <div className="mini-meta">
+                  {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
                   {/* A small stepper: a pill with the number centred between
                       two round marks, the cart page's in miniature. */}
                   <span className="mini-stepper">
@@ -99,10 +97,6 @@ export function MiniCart() {
                       <PlusIcon size={12} strokeWidth={2.5} />
                     </button>
                   </span>
-
-                  <span className="text-sm font-bold whitespace-nowrap text-ink-900 tabular-nums">
-                    {formatPrice(item.price * item.quantity, locale)}
-                  </span>
                 </div>
               </div>
 
@@ -110,7 +104,7 @@ export function MiniCart() {
                 type="button"
                 onClick={() => remove(key)}
                 aria-label={`${t.cart.remove} — ${name}`}
-                className="btn btn-ghost -mr-1.5 h-7 w-7 min-h-0 shrink-0 self-start rounded-control p-0 text-ink-400 hover:text-danger"
+                className="mini-x"
               >
                 <CloseIcon size={14} />
               </button>

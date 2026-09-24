@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
-import { SpinnerIcon } from "@/components/ui/icons";
 import { retryPayment } from "@/app/actions/payments-gateway";
 
 /** "Pay now", on an unpaid card order: opens a new attempt and goes there. */
@@ -30,7 +29,6 @@ export function PayNowButton({ orderNumber }: { orderNumber: string }) {
         }}
         className="btn btn-primary btn-md"
       >
-        {isPending && <SpinnerIcon size={15} />}
         {t.orderDone.payNow}
       </button>
       {failed && <ErrorNote title={t.orderDone.payNowFailed} hint={t.orderDone.payNowFailedHint} />}

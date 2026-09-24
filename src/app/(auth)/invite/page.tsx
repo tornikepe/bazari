@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { acceptInvite, type AuthState } from "@/app/actions/auth";
-import { SpinnerIcon } from "@/components/ui/icons";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 
 /**
@@ -77,7 +76,6 @@ function InviteForm() {
           disabled={pending || !token}
           className="btn btn-primary btn-md w-full"
         >
-          {pending && <SpinnerIcon size={16} />}
           {t.auth.inviteAccept}
         </button>
       </form>

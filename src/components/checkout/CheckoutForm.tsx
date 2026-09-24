@@ -9,7 +9,7 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 import { TaxNote } from "@/components/ui/TaxNote";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Price } from "@/components/ui/Price";
-import { MapPinIcon, SpinnerIcon, ShieldIcon } from "@/components/ui/icons";
+import { MapPinIcon, ShieldIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { formatPrice } from "@/lib/format";
@@ -321,9 +321,12 @@ export function CheckoutForm({
               thing that is already selected is a control with no purpose. */}
           {saved.length > 1 && (
             <fieldset className="card card-pad">
-              <legend className="px-1 text-sm font-bold text-ink-900">{t.account.addressPick}</legend>
+              {legend(t.account.addressPick)}
 
-              <div className="mt-3 flex flex-col gap-2">
+              {/* The same tiles as the address book's, with a radio on
+                  each: two rows of plain bordered labels read as a form
+                  control where the rest of the page reads as cards. */}
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {saved.map((address) => {
                   /* Chosen by what is in the fields, not by a separate
                      "selected" state: a customer who picks an address and then
@@ -336,49 +339,49 @@ export function CheckoutForm({
                     form.address === address.street;
 
                   return (
-                    <label
-                      key={address.id}
-                      className={`flex cursor-pointer items-start gap-3 border p-3 text-sm transition-colors ${
-                        inUse ? "border-brand-600 bg-brand-50" : "border-line hover:bg-ink-50"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="savedAddress"
-                        checked={inUse}
-                        onChange={() =>
-                          setForm((current) => ({
-                            ...current,
-                            customerName: address.fullName,
-                            phone: address.phone,
-                            city: address.city,
-                            address: address.street,
-                            note: address.note || current.note,
-                          }))
-                        }
-                        className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
-                      />
+                    <li key={address.id}>
+                      <label className={`addr-tile pick-tile ${inUse ? "is-on" : ""}`}>
+                        <span className="tile-head">
+                          <span className="order-delivery-mark">
+                            <MapPinIcon size={18} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="tile-title">{address.label || address.city}</span>
+                            {address.isDefault && (
+                              <span className="badge mt-1 bg-brand-50 text-brand-700">
+                                {t.account.addressDefault}
+                              </span>
+                            )}
+                          </span>
+                          <input
+                            type="radio"
+                            name="savedAddress"
+                            checked={inUse}
+                            onChange={() =>
+                              setForm((current) => ({
+                                ...current,
+                                customerName: address.fullName,
+                                phone: address.phone,
+                                city: address.city,
+                                address: address.street,
+                                note: address.note || current.note,
+                              }))
+                            }
+                            className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
+                          />
+                        </span>
 
-                      <span className="min-w-0">
-                        <span className="block font-semibold text-ink-900">
-                          {address.label || address.city}
-                          {address.isDefault && (
-                            <span className="badge ml-2 bg-brand-50 text-brand-700">
-                              {t.account.addressDefault}
-                            </span>
-                          )}
-                        </span>
-                        <span className="block text-ink-600">
-                          {address.fullName} · {address.phone}
-                        </span>
-                        <span className="block text-ink-500">
+                        <span className="mt-3 block text-sm break-words text-ink-700">
                           {address.city}, {address.street}
                         </span>
-                      </span>
-                    </label>
+                        <span className="mt-0.5 block text-sm break-words text-ink-500">
+                          {address.fullName} · {address.phone}
+                        </span>
+                      </label>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </fieldset>
           )}
 
@@ -624,7 +627,7 @@ export function CheckoutForm({
         </div>
 
         {/* ----------------------------- summary ---------------------------- */}
-        <aside className="card lg:sticky lg:top-[calc(var(--header-h)+1rem)] card-pad">
+        <aside className="card summary-stick card-pad">
           {/* The head centred, as the page's own title is: the serif, and
               the count under it as the small line. */}
           <div className="text-center">
@@ -641,7 +644,7 @@ export function CheckoutForm({
               the size and the count under it, then the line's sum at the
               right — the three columns line up down the list rather than
               each row arranging itself. */}
-          <ul className="summary-lines mt-5">
+          <ul className="summary-lines is-open mt-5">
             {items.map((item) => (
               <li key={lineKey(item)}>
                 <span className="summary-line-pic">
@@ -795,7 +798,6 @@ export function CheckoutForm({
           )}
 
           <button type="submit" disabled={submitting} className="btn btn-primary btn-lg mt-5 w-full">
-            {submitting && <SpinnerIcon size={17} />}
             {submitting ? t.checkout.placing : t.checkout.placeOrder}
           </button>
 
@@ -817,7 +819,6 @@ export function CheckoutForm({
             <Price value={payable} size="md" />
           </div>
           <button type="submit" disabled={submitting} className="btn btn-primary btn-md shrink-0 whitespace-nowrap">
-            {submitting && <SpinnerIcon size={16} />}
             {submitting ? t.checkout.placing : t.checkout.placeOrderShort}
           </button>
         </div>

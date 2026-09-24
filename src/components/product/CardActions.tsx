@@ -5,7 +5,7 @@ import { useCart, type CartItem } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { lineKey } from "@/lib/cart-store";
 import { labelFor, priceOf, type Option, type Variant } from "@/lib/variants";
-import { CartIcon, CheckIcon, SpinnerIcon } from "@/components/ui/icons";
+import { CartIcon, CheckIcon } from "@/components/ui/icons";
 
 type Line = Omit<CartItem, "quantity">;
 type Loaded = { price: number; options: Option[]; variants: Variant[] };
@@ -123,9 +123,7 @@ export function CardActions({
           : `btn-md ${inCart ? "btn-secondary" : "btn-outline"}`
       } ${failed ? "border-danger" : ""}`}
     >
-      {busy ? (
-        <SpinnerIcon size={15} className="shrink-0" />
-      ) : inCart ? (
+      {inCart ? (
         <CheckIcon size={15} className="shrink-0" />
       ) : (
         <CartIcon size={15} className="shrink-0" />

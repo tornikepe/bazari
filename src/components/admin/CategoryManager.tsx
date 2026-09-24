@@ -210,7 +210,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                     t.admin.save
                   )
                 }
-                of={[editing === "new" ? t.admin.create : t.admin.save]}
+                of={[editing === "new" ? t.admin.create : t.admin.save, t.admin.saving]}
               />
             </button>
           </div>

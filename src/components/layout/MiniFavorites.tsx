@@ -89,11 +89,11 @@ export function MiniFavorites() {
            the names arrive and nothing under it jumps. */
         <ul className="mini-list divide-y divide-line" aria-busy data-lenis-prevent>
           {wanted.map((id) => (
-            <li key={id} className="flex gap-3 px-4 py-3">
+            <li key={id} className="mini-line is-middle">
               <span className="skeleton h-14 w-14 shrink-0 rounded-control" />
-              <span className="flex flex-1 flex-col gap-2 py-1">
-                <span className="skeleton h-3 w-3/4 rounded-sm" />
-                <span className="skeleton h-3 w-1/3 rounded-sm" />
+              <span className="flex flex-col gap-2 py-1">
+                <span className="skeleton h-3 w-36 rounded-sm" />
+                <span className="skeleton h-3 w-16 rounded-sm" />
               </span>
             </li>
           ))}
@@ -103,21 +103,18 @@ export function MiniFavorites() {
           {rows.map((product) => {
             const name = locale === "ka" ? product.nameKa : product.nameEn;
             return (
-              <li key={product.id} className="flex items-center gap-3 px-4 py-3">
-                <Link
-                  href={`/product/${product.slug}`}
-                  className="relative h-14 w-14 shrink-0 overflow-hidden rounded-control border border-line bg-ink-50"
-                >
+              <li key={product.id} className="mini-line is-middle">
+                <Link href={`/product/${product.slug}`} className="mini-pic">
                   <Image src={product.image} alt="" fill sizes="56px" className="object-cover" />
                 </Link>
-                <div className="min-w-0 flex-1">
-                  <Link
-                    href={`/product/${product.slug}`}
-                    className="clamp-2-xs text-xs leading-snug font-semibold text-ink-900 hover:text-brand-600"
-                  >
+                <div className="min-w-0">
+                  {/* The name and the price as one block: the name's box
+                      used to be two lines tall whatever it held, which set
+                      a one-line name half a row above its own price. */}
+                  <Link href={`/product/${product.slug}`} className="mini-name">
                     {name}
                   </Link>
-                  <div className="mt-1">
+                  <div className="mt-0.5">
                     <Price value={product.price} oldValue={product.oldPrice} size="sm" />
                   </div>
                 </div>
@@ -125,7 +122,7 @@ export function MiniFavorites() {
                   type="button"
                   onClick={() => toggleFavorite(product.id)}
                   aria-label={`${t.favorites.remove} — ${name}`}
-                  className="btn btn-ghost -mr-1.5 h-7 w-7 min-h-0 shrink-0 rounded-control p-0 text-ink-400 hover:text-danger"
+                  className="mini-x"
                 >
                   <CloseIcon size={14} />
                 </button>

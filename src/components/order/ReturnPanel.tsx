@@ -278,7 +278,7 @@ export function ReturnPanel({
               <button type="submit" disabled={isPending} className="btn btn-primary btn-md">
                 <Swap
                   show={isPending ? <Busy label={t.returns.submitting} /> : t.returns.submit}
-                  of={[t.returns.submit]}
+                  of={[t.returns.submit, t.returns.submitting]}
                 />
               </button>
               <button type="button" onClick={() => setOpen(false)} className="btn btn-outline btn-md">

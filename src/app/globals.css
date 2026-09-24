@@ -4010,6 +4010,86 @@ h3,
 
 /* The header cart's stepper: a pill, the number centred between two
    round marks. */
+/* ---- A line in the cart's or the wishlist's panel --------------------- */
+
+/* Three columns that hold down the list: the picture, the words, the
+   cross. The words are the name with its price directly under it — the
+   two were set a line and a half apart because the name's box reserved
+   two lines whether it needed them or not — and under both, in the
+   middle, whatever there is to say about this line. */
+.mini-line {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) 1.75rem;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.mini-line.is-middle {
+  align-items: center;
+}
+
+.mini-pic {
+  position: relative;
+  display: block;
+  width: 3.5rem;
+  height: 3.5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-ink-50);
+}
+
+.mini-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-ink-900);
+  transition: color 0.15s ease;
+}
+
+.mini-name:hover {
+  color: var(--color-brand-600);
+}
+
+.mini-sum {
+  margin-top: 0.125rem;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--color-ink-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mini-x {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-control);
+  color: var(--color-ink-400);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.mini-x:hover {
+  background: var(--color-ink-50);
+  color: var(--color-danger);
+}
+
 .mini-stepper {
   display: inline-flex;
   align-items: center;
@@ -4092,11 +4172,16 @@ h3,
 }
 
 @media (min-width: 1024px) {
+  /* Still a column on a wide screen: the picture is large enough now that
+     a name beside it had a hundred and sixty pixels to live in, and the
+     menu's own rows below are centred too. */
   .account-menu-who {
-    flex-direction: row;
-    gap: 0.875rem;
-    padding: 0.25rem 0.25rem 1rem;
-    text-align: left;
+    gap: 1rem;
+    padding: 0.5rem 0.25rem 1.25rem;
+  }
+
+  .account-menu-name {
+    font-size: var(--text-lg);
   }
 }
 
@@ -4177,20 +4262,80 @@ h3,
   color: var(--color-brand-on-solid);
 }
 
+/* The two words a pointer gets: change the picture, or take it off. Lies
+   over the circle, out of the way until the pointer rests there. A thumb
+   never sees it — it has the camera on the edge and the bin at the
+   corner, which do not need a pointer to be found. */
+.avatar-pick-over {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, #000 58%, transparent);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  pointer-events: none;
+}
+
+.avatar-pick-over > button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, #fff 88%, transparent);
+  color: var(--color-ink-900);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.avatar-pick-over > button:hover {
+  background: #fff;
+}
+
+.avatar-pick-over > button.is-off:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .avatar-pick-over {
+    display: flex;
+  }
+
+  .avatar-pick:hover .avatar-pick-over,
+  .avatar-pick:focus-within .avatar-pick-over {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* With the two words over the picture, the camera on its edge and the
+     bin at its corner are a second way to say the same thing. */
+  .avatar-pick-mark,
+  .avatar-pick-x {
+    display: none;
+  }
+}
+
 @media (min-width: 1024px) {
+  /* Bigger on a wide screen, not smaller: the column has the room, and
+     the picture is the one thing on this page that is the customer. */
   .avatar-pick-button {
-    width: 4rem;
-    height: 4rem;
+    width: 6rem;
+    height: 6rem;
   }
 
   .avatar-pick-initials {
-    font-size: var(--text-base);
+    font-size: 1.5rem;
   }
 
-  .avatar-pick-mark,
-  .avatar-pick-x {
-    width: 1.5rem;
-    height: 1.5rem;
+  .avatar-pick-over > button {
+    width: 2.25rem;
+    height: 2.25rem;
   }
 }
 
@@ -5703,8 +5848,8 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 }
 
 .order-facts dd {
-  display: inline-flex;
-  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
@@ -5713,6 +5858,12 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   font-weight: 700;
   line-height: 1.3;
   overflow-wrap: anywhere;
+}
+
+.order-facts-word {
+  min-width: 0;
+  font-size: 13px;
+  text-align: center;
 }
 
 @media (max-width: 639px) {
@@ -5875,11 +6026,13 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 }
 
 /* The size, as the shop's own control on the card's own tone. */
-.line-size {
-  margin-top: 0.75rem;
+.line-pick {
+  display: block;
+  width: 100%;
+  max-width: 12rem;
 }
 
-.line-size .pick > select {
+.line-pick > select {
   height: 2.5rem;
   padding: 0 2.25rem 0 0.875rem;
   border-color: color-mix(in oklab, var(--color-panel-fg) 24%, transparent);
@@ -5891,11 +6044,11 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   text-align-last: center;
 }
 
-.line-size .pick > select option {
+.line-pick > select option {
   color: var(--color-ink-900);
 }
 
-.line-size .pick-chevron {
+.line-pick .pick-chevron {
   right: 0.75rem;
   color: var(--color-panel-fg);
 }
@@ -5921,12 +6074,16 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 .line-cell {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.375rem;
+  min-width: 0;
 }
 
-.line-cell.is-sum {
-  align-items: flex-end;
+/* The size is its own row on a phone, under the name and above the rule. */
+.line-cell.is-size {
+  width: 100%;
+  max-width: 14rem;
+  margin-top: 0.25rem;
 }
 
 .line-cell-label {
@@ -6058,16 +6215,52 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     display: none;
   }
 
+  /* Five columns on a wide screen: the picture, the name, the size, the
+     count, the line's sum. The size and the count are set in the middle
+     of their own columns under their own word — they were a wide select
+     stranded under the name and a stepper pinned to the right edge. */
   .line-card {
     display: grid;
-    grid-template-columns: 6rem minmax(0, 1fr) auto;
+    grid-template-columns: 6rem minmax(0, 1fr) auto auto auto;
     align-items: center;
-    gap: 1rem;
+    gap: 1rem 1.25rem;
     padding: 1.125rem 3rem 1.125rem 1.25rem;
     border: 1px solid var(--color-line);
     background: var(--color-surface);
     color: var(--color-ink-900);
     text-align: left;
+  }
+
+  .line-pic {
+    grid-column: 1;
+  }
+
+  .line-body {
+    grid-column: 2;
+  }
+
+  /* The foot is no longer a box of its own: its two cells are columns
+     four and five of the card itself. */
+  .line-foot {
+    display: contents;
+  }
+
+  .line-cell.is-size {
+    grid-column: 3;
+    width: auto;
+    min-width: 9rem;
+    max-width: none;
+    margin-top: 0;
+  }
+
+  .line-cell.is-qty {
+    grid-column: 4;
+    min-width: 6.5rem;
+  }
+
+  .line-cell.is-sum {
+    grid-column: 5;
+    min-width: 6rem;
   }
 
   .line-name {
@@ -6099,44 +6292,27 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     color: var(--color-ink-700);
   }
 
-  .line-size,
   .line-unit,
   .line-price {
     margin-top: 0.375rem;
   }
 
-  .line-size {
-    max-width: 14rem;
+  .line-pick {
+    max-width: 10rem;
   }
 
-  .line-size .pick > select {
+  .line-pick > select {
     border-color: var(--color-ink-300);
     background: var(--color-surface);
     color: var(--color-ink-900);
-    text-align: left;
-    text-align-last: left;
   }
 
-  .line-size .pick-chevron {
+  .line-pick .pick-chevron {
     color: var(--color-ink-500);
   }
 
   .line-unit {
     color: var(--color-ink-500);
-  }
-
-  .line-foot {
-    width: auto;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-
-  .line-cell {
-    align-items: flex-end;
   }
 
   .line-cell-label {
@@ -6172,6 +6348,13 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     color: var(--color-ink-900);
   }
 
+  /* The wishlist's card has one control rather than three cells, so its
+     foot stays a box and takes the three columns the cells would. */
+  .line-foot.line-foot-one {
+    display: flex;
+    grid-column: 3 / -1;
+  }
+
   .line-foot-one > * {
     width: auto;
     min-width: 11rem;
@@ -6190,9 +6373,53 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   }
 }
 
+/* ---- The summary beside the cart, the wishlist and the checkout ------- */
+
+/* The way on, the way back: each with room of its own rather than stacked
+   edge to edge, so neither is pressed by mistake. */
+.cart-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* The summary rides beside the list on a wide screen. When it is taller
+   than the screen — a long list of lines, a coupon box, the totals —
+   pinning its top put its foot below the fold with no way to reach it:
+   the page scrolled, the panel did not, and the button that places the
+   order could not be seen. It now keeps its own height and scrolls
+   inside itself. */
+@media (min-width: 1024px) {
+  .summary-stick {
+    position: sticky;
+    top: calc(var(--header-h) + 1rem);
+    align-self: start;
+    max-height: calc(100dvh - var(--header-h) - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-300) transparent;
+  }
+}
+
+/* An empty cart or wishlist fills the screen rather than leaving the
+   footer halfway up it: the card sits in the middle of the room it has. */
+.empty-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100svh - var(--header-h) - 6rem);
+}
+
 /* ---- The address book ------------------------------------------------ */
 
 .addr-tile {
+  /* A grid item's least width is its content's unless it is told
+     otherwise, and a tile holding a bank's mark, a name, two round
+     buttons and an account number decided it was wider than its column —
+     it reached the screen's right edge and sat half out of its card. */
+  min-width: 0;
   padding: 1.125rem;
   border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-card) * 1.5);
@@ -6200,6 +6427,48 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+/* The head of a tile: the mark, what it is called, and what can be done
+   to it — three columns, the middle one the only one that gives. */
+.tile-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tile-title {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-acts {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: -0.375rem;
+}
+
+.tile-iban {
+  margin-top: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-ink-50);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--color-ink-900);
+  overflow-wrap: anywhere;
 }
 
 .addr-tile:hover {
@@ -6211,6 +6480,19 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 .addr-tile.is-default {
   border-color: var(--color-ink-900);
   box-shadow: 0 0 0 3px var(--color-ink-100);
+}
+
+/* The same tile with a radio on it, for choosing at the checkout: the
+   chosen one takes the brand's edge rather than ink's, so "this is the
+   one I picked" and "this is the one saved as usual" do not look alike. */
+.pick-tile {
+  display: block;
+  cursor: pointer;
+}
+
+.pick-tile.is-on {
+  border-color: var(--color-brand-600);
+  box-shadow: 0 0 0 3px var(--color-brand-50);
 }
 
 /* ---- "View all" ------------------------------------------------------- */
@@ -6494,7 +6776,31 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   max-height: 22rem;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* A box that scrolls says so: a thin rail down its edge, rather than a
+     list that simply stops halfway through a row. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-300) transparent;
 }
+
+.summary-lines::-webkit-scrollbar,
+.summary-stick::-webkit-scrollbar {
+  width: 6px;
+}
+
+.summary-lines::-webkit-scrollbar-thumb,
+.summary-stick::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--color-ink-300);
+}
+
+/* At the checkout the panel itself is what scrolls, and on the order
+   page the page does, so the list inside shows every line: a box that
+   stops halfway down a row is a row nobody knows is there. */
+.summary-lines.is-open {
+  max-height: none;
+  overflow: visible;
+}
+
 
 .summary-lines > li {
   display: grid;

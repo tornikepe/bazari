@@ -79,7 +79,7 @@ export function InvoiceLineForm({ prefs }: { prefs: InvoicePrefs }) {
       <button type="submit" disabled={isPending} className="btn btn-primary btn-md mt-4 w-full sm:w-auto">
         <Swap
           show={isPending ? <Busy label={t.account.saving} /> : t.account.saveProfile}
-          of={[t.account.saveProfile]}
+          of={[t.account.saveProfile, t.account.saving]}
         />
       </button>
 

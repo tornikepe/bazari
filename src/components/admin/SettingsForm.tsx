@@ -246,7 +246,7 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
       {canWrite && (
         <div className="flex flex-wrap items-center gap-3">
           <button type="submit" disabled={isPending} className="btn btn-primary btn-md">
-            <Swap show={isPending ? <Busy label={t.admin.saving} /> : t.admin.save} of={[t.admin.save]} />
+            <Swap show={isPending ? <Busy label={t.admin.saving} /> : t.admin.save} of={[t.admin.save, t.admin.saving]} />
           </button>
 
           {status === "saved" && !isPending && (

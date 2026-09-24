@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { resendVerification, verifyEmail, type AuthState } from "@/app/actions/auth";
-import { AlertIcon, SpinnerIcon } from "@/components/ui/icons";
+import { AlertIcon } from "@/components/ui/icons";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 import { fill } from "@/lib/i18n";
 
@@ -89,7 +89,6 @@ function VerifyForm() {
         <FormFault message={state.error ? message : null} />
 
         <button type="submit" disabled={pending} className="btn btn-primary btn-md w-full">
-          {pending && <SpinnerIcon size={16} />}
           {pending ? t.auth.verifying : t.auth.verify}
         </button>
       </form>
@@ -110,7 +109,6 @@ function VerifyForm() {
           disabled={resending || undelivered}
           className="btn btn-ghost btn-sm w-full"
         >
-          {resending && <SpinnerIcon size={15} />}
           {t.auth.resend}
         </button>
       </form>

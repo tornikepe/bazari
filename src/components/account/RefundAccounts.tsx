@@ -112,15 +112,15 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {accounts.map((account) => (
             <li key={account.id} className={`addr-tile ${account.isDefault ? "is-default" : ""}`}>
-              <div className="flex items-center gap-3">
+              <div className="tile-head">
                 <PaymentMark method={account.bank === "bog" ? "bog" : "tbc"} />
-                <p className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm font-bold text-ink-900">
-                  <span className="truncate">{t.payment[account.bank === "bog" ? "bog" : "tbc"]}</span>
+                <span className="min-w-0">
+                  <span className="tile-title">{t.payment[account.bank === "bog" ? "bog" : "tbc"]}</span>
                   {account.isDefault && (
-                    <span className="badge bg-brand-50 text-brand-700">{t.account.addressDefault}</span>
+                    <span className="badge mt-1 bg-brand-50 text-brand-700">{t.account.addressDefault}</span>
                   )}
-                </p>
-                <span className="-mr-1.5 flex shrink-0 items-center">
+                </span>
+                <span className="tile-acts">
                   <button
                     type="button"
                     onClick={() => open(account.id)}
@@ -144,8 +144,10 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
                 </span>
               </div>
 
-              <p className="mt-3 font-mono text-sm break-all text-ink-800">{account.iban}</p>
-              {account.holder && <p className="mt-0.5 text-sm text-ink-500">{account.holder}</p>}
+              {/* The number in its own box, as it is at the checkout: it
+                  is the one thing on the tile that gets read out. */}
+              <p className="tile-iban">{account.iban}</p>
+              {account.holder && <p className="mt-1.5 text-center text-sm break-words text-ink-500">{account.holder}</p>}
 
               {!account.isDefault && (
                 <button

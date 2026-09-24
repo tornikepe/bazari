@@ -6,7 +6,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { requestPasswordReset, resetPassword, type AuthState } from "@/app/actions/auth";
-import { CheckIcon, SpinnerIcon } from "@/components/ui/icons";
+import { CheckIcon } from "@/components/ui/icons";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 
 export default function ForgotPasswordPage() {
@@ -90,7 +90,6 @@ export default function ForgotPasswordPage() {
           <FormFault message={requestState.error ? message(requestState) : null} />
 
           <button type="submit" disabled={requesting} className="btn btn-primary btn-md w-full">
-            {requesting && <SpinnerIcon size={16} />}
             {requesting ? t.auth.sending : t.auth.sendCode}
           </button>
         </form>
@@ -155,7 +154,6 @@ export default function ForgotPasswordPage() {
           <FormFault message={resetState.error ? message(resetState) : null} />
 
           <button type="submit" disabled={resetting} className="btn btn-primary btn-md w-full">
-            {resetting && <SpinnerIcon size={16} />}
             {resetting ? t.auth.resetting : t.auth.resetPassword}
           </button>
         </form>

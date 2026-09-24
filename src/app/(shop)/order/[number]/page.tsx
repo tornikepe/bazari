@@ -160,7 +160,10 @@ export default async function OrderConfirmationPage({
               <dt>{t.admin.status}</dt>
               <dd className={STATUS_STYLES[order.status]?.split(" ").pop() ?? "text-ink-700"}>
                 <span aria-hidden="true" className="order-facts-dot" />
-                {t.status[order.status]}
+                {/* The word in a box of its own, so a long one — and
+                    "დასამუშავებელი" is the longest — wraps inside the tile
+                    instead of shouldering the dot onto a line above it. */}
+                <span className="order-facts-word">{t.status[order.status]}</span>
               </dd>
             </div>
             <div>
@@ -201,7 +204,12 @@ export default async function OrderConfirmationPage({
           {/* The same three columns as the checkout's summary, ruled: the
               picture, the name with its size and count under it, the
               line's sum at the right. */}
-          <ul className="summary-lines mt-5 max-h-none">
+          {/* Every line of it, with the page doing the scrolling. The box
+              used to stop at a fifth of the way down the fifth row and
+              scroll inside itself, which on a nine-line order meant four
+              of the things bought could not be seen at all — `max-h-none`
+              was a utility set against a plain rule and never applied. */}
+          <ul className="summary-lines is-open mt-5">
             {order.items.map((item) => (
               <li key={item.id}>
                 <span className="summary-line-pic">

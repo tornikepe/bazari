@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SearchIcon, SpinnerIcon } from "@/components/ui/icons";
+import { SearchIcon } from "@/components/ui/icons";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
 import Image from "next/image";
 import { formatDate, formatPrice } from "@/lib/format";
@@ -200,7 +200,7 @@ function TrackOrderForm() {
               />
 
               <button type="submit" disabled={isPending} className="btn btn-primary btn-md w-full">
-                {isPending ? <SpinnerIcon size={16} /> : <SearchIcon size={16} />}
+                <SearchIcon size={16} />
                 {isPending ? t.track.searching : t.track.submit}
               </button>
             </div>

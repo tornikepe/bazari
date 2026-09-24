@@ -123,17 +123,17 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
                   chip, and edit/delete at the corner. The lines run under
                   the whole row rather than in the column beside the mark,
                   which on a phone was too narrow for a street. */}
-              <div className="flex items-center gap-3">
+              <div className="tile-head">
                 <span className="order-delivery-mark">
                   <MapPinIcon size={18} />
                 </span>
-                <p className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm font-bold text-ink-900">
-                  <span className="truncate">{address.label || address.city}</span>
+                <span className="min-w-0">
+                  <span className="tile-title">{address.label || address.city}</span>
                   {address.isDefault && (
-                    <span className="badge bg-brand-50 text-brand-700">{t.account.addressDefault}</span>
+                    <span className="badge mt-1 bg-brand-50 text-brand-700">{t.account.addressDefault}</span>
                   )}
-                </p>
-                <span className="-mr-1.5 flex shrink-0 items-center">
+                </span>
+                <span className="tile-acts">
                   <button
                     type="button"
                     onClick={() => setEditing(address.id)}

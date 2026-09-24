@@ -53,21 +53,25 @@ export function CartView() {
   if (items.length === 0) {
     return (
       <div className="page">
-        {/* No line under the title here: the card below says the same
-            sentence, and saying it twice read as a mistake. */}
-        <PageIntro eyebrow={t.nav.cart} title={t.cart.title} />
+        {/* Nothing in it: the head and the card take the screen rather
+            than leaving the footer halfway up it. */}
+        <div className="empty-page">
+          {/* No line under the title here: the card below says the same
+              sentence, and saying it twice read as a mistake. */}
+          <PageIntro eyebrow={t.nav.cart} title={t.cart.title} />
 
-        <EmptyState
-          className="card mx-auto mt-8 max-w-md"
-          art={<EmptyCartArt size={96} />}
-          title={t.cart.empty}
-          text={t.cart.emptyHint}
-          action={
-            <Link href="/catalog" className="btn btn-primary btn-md">
-              {t.cart.continueShopping}
-            </Link>
-          }
-        />
+          <EmptyState
+            className="card mx-auto mt-8 max-w-md"
+            art={<EmptyCartArt size={96} />}
+            title={t.cart.empty}
+            text={t.cart.emptyHint}
+            action={
+              <Link href="/catalog" className="btn btn-primary btn-md">
+                {t.cart.continueShopping}
+              </Link>
+            }
+          />
+        </div>
 
         {/* What they were just looking at, under the empty state rather than
             inside it: the card is the answer to "there is nothing here", and
@@ -125,22 +129,19 @@ export function CartView() {
                       {name}
                     </Link>
 
-                    {/* Sold in sizes: the size is chosen here, on the line. */}
-                    {item.variantId && (
-                      <div className="line-size">
-                        <LineSizePicker item={item} />
-                      </div>
-                    )}
-
                     <p className="line-unit">
                       {formatPrice(item.price, locale)} / {t.product.unit}
                     </p>
                   </div>
 
+                  {/* Sold in sizes: the size is chosen here, on the line,
+                      in a column of its own beside the count. */}
+                  {item.variantId && <LineSizePicker item={item} />}
+
                   {/* The count and what the line comes to, each under its
                       own small word. */}
                   <div className="line-foot">
-                    <div className="line-cell">
+                    <div className="line-cell is-qty">
                       <span className="line-cell-label">{t.cart.quantity}</span>
                       <span className="line-stepper">
                         {/* Stops at one: a thumb reaching for "one fewer"
@@ -179,7 +180,7 @@ export function CartView() {
         </div>
 
         {/* ------------------------------ summary ---------------------------- */}
-        <aside className="card lg:sticky lg:top-[calc(var(--header-h)+1rem)] card-pad">
+        <aside className="card summary-stick card-pad">
           <h2 className="display-sm text-center text-ink-900">{t.cart.summary}</h2>
 
           <dl className="summary-totals mt-5">
@@ -230,7 +231,7 @@ export function CartView() {
 
           {/* Emptying the cart, at the foot of the summary as a quiet line:
               it undoes everything above and should not look like a step. */}
-          <button type="button" onClick={clear} className="btn btn-ghost btn-md mt-5 w-full text-ink-500 hover:text-danger">
+          <button type="button" onClick={clear} className="btn btn-ghost btn-md mt-4 w-full text-ink-500 hover:text-danger">
             <TrashIcon size={15} />
             {t.cart.clear}
           </button>

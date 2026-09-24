@@ -174,7 +174,7 @@ export function ProductForm({
                     t.admin.create
                   )
                 }
-                of={[product ? t.admin.save : t.admin.create]}
+                of={[product ? t.admin.save : t.admin.create, t.admin.saving]}
               />
             </button>
           </div>

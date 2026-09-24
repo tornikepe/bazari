@@ -7,7 +7,6 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { login, type AuthState } from "@/app/actions/auth";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { SpinnerIcon } from "@/components/ui/icons";
 import { shakeField, useFieldShake } from "@/components/ui/field-fault";
 import { useHoverPanelPin } from "@/components/layout/HoverPanel";
 
@@ -102,7 +101,6 @@ export function MiniLogin({ social }: { social?: React.ReactNode }) {
       )}
 
       <button type="submit" disabled={pending} className="btn btn-primary btn-md w-full">
-        {pending && <SpinnerIcon size={16} />}
         {pending ? t.auth.signingIn : t.auth.signIn}
       </button>
 

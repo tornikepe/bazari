@@ -70,22 +70,24 @@ export default function FavoritesPage() {
   if (products.length === 0) {
     return (
       <div className="page">
-        {/* The card below says the sentence; the head only names the page. */}
-        <PageIntro eyebrow={t.account.menuWishlist} title={t.favorites.title} />
+        {/* Nothing on it: the head and the card take the screen, as the
+            empty cart's do. */}
+        <div className="empty-page">
+          {/* The card below says the sentence; the head only names the page. */}
+          <PageIntro eyebrow={t.account.menuWishlist} title={t.favorites.title} />
 
-        {/* The cart's empty page, with a heart: the card in the middle, and
-            what was looked at under it. */}
-        <EmptyState
-          className="card mx-auto mt-8 max-w-md"
-          art={<EmptyHeartArt size={96} />}
-          title={t.favorites.empty}
-          text={t.favorites.emptyHint}
-          action={
-            <Link href="/catalog" className="btn btn-primary btn-md">
-              {t.cart.continueShopping}
-            </Link>
-          }
-        />
+          <EmptyState
+            className="card mx-auto mt-8 max-w-md"
+            art={<EmptyHeartArt size={96} />}
+            title={t.favorites.empty}
+            text={t.favorites.emptyHint}
+            action={
+              <Link href="/catalog" className="btn btn-primary btn-md">
+                {t.cart.continueShopping}
+              </Link>
+            }
+          />
+        </div>
         <RecentlyViewed take={4} />
       </div>
     );
@@ -153,7 +155,7 @@ export default function FavoritesPage() {
           })}
         </div>
 
-        <aside className="card lg:sticky lg:top-[calc(var(--header-h)+1rem)] card-pad">
+        <aside className="card summary-stick card-pad">
           <h2 className="display-sm text-center text-ink-900">{t.favorites.summary}</h2>
           <dl className="summary-totals mt-5">
             <div>
@@ -168,11 +170,13 @@ export default function FavoritesPage() {
             </div>
           </dl>
 
-          <Link href="/catalog" className="btn btn-primary btn-lg mt-5 w-full">
-            {t.cart.continueShopping}
-          </Link>
+          <div className="cart-actions">
+            <Link href="/catalog" className="btn btn-primary btn-lg w-full">
+              {t.cart.continueShopping}
+            </Link>
+          </div>
 
-          <button type="button" onClick={clearFavorites} className="btn btn-ghost btn-md mt-3 w-full text-ink-600 hover:text-danger">
+          <button type="button" onClick={clearFavorites} className="btn btn-ghost btn-md mt-4 w-full text-ink-600 hover:text-danger">
             <TrashIcon size={15} />
             {t.favorites.clear}
           </button>

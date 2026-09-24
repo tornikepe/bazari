@@ -61,6 +61,15 @@ export function AvatarPicker({
     });
   }
 
+  function remove() {
+    setFailed(null);
+    startTransition(async () => {
+      const result = await removeAvatar();
+      if (!result.ok) setFailed(t.common.error);
+      router.refresh();
+    });
+  }
+
   return (
     <div className="avatar-pick">
       <input
@@ -93,7 +102,8 @@ export function AvatarPicker({
         )}
 
         {/* The camera on the picture's lower edge, so the picture reads as
-            something that can be changed. */}
+            something that can be changed. A pointer gets the two words
+            over the picture instead — see `.avatar-pick-over`. */}
         <span className="avatar-pick-mark" aria-hidden="true">
           {isPending ? <SpinnerIcon size={14} /> : <CameraIcon size={14} />}
         </span>
@@ -102,17 +112,41 @@ export function AvatarPicker({
       {avatarUrl && !isPending && (
         <button
           type="button"
-          onClick={() => startTransition(async () => {
-            const result = await removeAvatar();
-            if (!result.ok) setFailed(t.common.error);
-            router.refresh();
-          })}
+          onClick={remove}
           aria-label={t.account.photoRemove}
           title={t.account.photoRemove}
           className="avatar-pick-x"
         >
           <TrashIcon size={12} />
         </button>
+      )}
+
+      {/* What a pointer sees when it rests on the picture: change it, or
+          take it off. A sibling rather than something inside the picture's
+          own button, because a button cannot hold buttons; it lies over
+          the circle and only takes the pointer once it is shown. */}
+      {!isPending && (
+        <span className="avatar-pick-over">
+          <button
+            type="button"
+            onClick={() => input.current?.click()}
+            aria-label={t.account.photoChoose}
+            title={t.account.photoChoose}
+          >
+            <CameraIcon size={15} />
+          </button>
+          {avatarUrl && (
+            <button
+              type="button"
+              onClick={remove}
+              aria-label={t.account.photoRemove}
+              title={t.account.photoRemove}
+              className="is-off"
+            >
+              <TrashIcon size={15} />
+            </button>
+          )}
+        </span>
       )}
 
       {failed && (
