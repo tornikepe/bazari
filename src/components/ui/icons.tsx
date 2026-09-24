@@ -87,6 +87,15 @@ export const BankIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A purse with a clasp: what was paid in and what is left. */
+export const WalletIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a1 1 0 0 1 1 1v2" />
+    <path d="M3 7.5V17a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5.5A2.5 2.5 0 0 1 3 7.5Z" />
+    <circle cx="16.5" cy="14.5" r="1.25" />
+  </Icon>
+);
+
 /** Two sheets, one behind the other — "copy this". */
 export const CopyIcon = (p: IconProps) => (
   <Icon {...p}>

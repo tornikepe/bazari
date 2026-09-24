@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Georgian, Noto_Serif_Georgian } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { I18nProvider } from "@/components/providers/I18nProvider";
@@ -37,10 +38,32 @@ const notoGeorgian = Noto_Sans_Georgian({
 // title over a plain sans — needs both scripts in the same voice, and this
 // is the one serif on Google Fonts that draws Georgian properly.
 const notoSerifGeorgian = Noto_Serif_Georgian({
-  variable: "--font-display",
+  // `--font-serif`, not `--font-display`: the stylesheet builds
+  // `--font-display` out of this one and the Georgian face, and a custom
+  // property that names itself is circular and silently drops out.
+  variable: "--font-serif",
   subsets: ["georgian", "latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
+});
+
+/**
+ * The shop's Georgian face: BPG Nino Mtavruli Bold, self-hosted.
+ *
+ * `unicode-range` is what makes this a *Georgian* face rather than the
+ * site's face. The browser reaches for it only when a character falls in
+ * the Georgian blocks, so Latin words, digits, the lari sign, the × in
+ * "2 × 179,00 ₾" and the − in "−17%" — none of which this font draws —
+ * keep the faces that do. It ships one weight, declared across the whole
+ * range so the browser uses it at every weight the page asks for rather
+ * than smearing a synthetic bold over an already bold face.
+ */
+const bpgNino = localFont({
+  src: "./fonts/bpg-nino-mtavruli-bold.woff2",
+  variable: "--font-georgian",
+  weight: "400 900",
+  display: "swap",
+  declarations: [{ prop: "unicode-range", value: "U+10A0-10FF, U+1C90-1CBF, U+2D00-2D2F" }],
 });
 
 /**
@@ -122,7 +145,7 @@ export default async function RootLayout({
       // Opts smooth scrolling out of route transitions, which would otherwise
       // animate the jump to the top of each new page.
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} ${notoSerifGeorgian.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} ${notoSerifGeorgian.variable} ${bpgNino.variable} h-full antialiased`}
     >
       <head>
         {/* Runs before paint: falls back to the OS preference for a visitor

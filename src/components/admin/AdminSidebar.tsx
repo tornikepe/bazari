@@ -30,6 +30,7 @@ import {
   SettingsIcon,
   ShieldIcon,
   UsersIcon,
+  WalletIcon,
 } from "@/components/ui/icons";
 
 export function AdminSidebar({
@@ -67,6 +68,7 @@ export function AdminSidebar({
         { href: "/dashboard/returns", label: t.admin.returns, icon: RefreshIcon },
         { href: "/dashboard/coupons", label: t.admin.coupons, icon: TagIcon },
         { href: "/dashboard/customers", label: t.admin.customers, icon: UsersIcon },
+        { href: "/dashboard/margins", label: t.admin.margins, icon: WalletIcon },
       ],
     },
     {

@@ -57,9 +57,17 @@ export function Motion() {
         root.style.setProperty("--cx", `${event.clientX}px`);
         root.style.setProperty("--cy", `${event.clientY}px`);
         if (!root.dataset.cursor) root.dataset.cursor = "on";
-        const over = (event.target as Element | null)?.closest("a, button, [role=button], input, select, textarea, label");
+        /* Three states, not two. Over something to press, the dot grows;
+           over a box being typed in it goes away altogether, because a
+           black disc sitting on the caret while a password is typed is
+           the pointer competing with the field for the same spot. */
+        const target = event.target as Element | null;
+        const typing = target?.closest(
+          "input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]), textarea, select, [contenteditable=''], [contenteditable='true']",
+        );
+        const press = target?.closest("a, button, [role=button], label");
         const dot = document.querySelector<HTMLElement>(".cursor-dot");
-        if (dot) dot.dataset.over = over ? "link" : "";
+        if (dot) dot.dataset.over = typing ? "text" : press ? "link" : "";
       };
       leave = () => delete root.dataset.cursor;
       window.addEventListener("pointermove", move, { passive: true });

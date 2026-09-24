@@ -63,7 +63,7 @@ export function MiniLogin({ social }: { social?: React.ReactNode }) {
       {social}
 
       <div>
-        <label className="field-label block text-center" htmlFor="mini-identifier">
+        <label className="field-label" htmlFor="mini-identifier">
           {t.auth.identifier}
         </label>
         <input
@@ -74,12 +74,12 @@ export function MiniLogin({ social }: { social?: React.ReactNode }) {
           autoComplete="username"
           aria-invalid={wrong || missing.identifier || undefined}
           onChange={() => missing.identifier && setMissing((current) => ({ ...current, identifier: false }))}
-          className="field h-10 text-center"
+          className="field h-10"
         />
       </div>
 
       <div>
-        <label className="field-label block text-center" htmlFor="mini-password">
+        <label className="field-label" htmlFor="mini-password">
           {t.auth.password}
         </label>
         <PasswordField

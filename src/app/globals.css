@@ -148,13 +148,17 @@
   --dur-base: 0.28s;
   --dur-slow: 0.6s;
 
-  /* Typography — Geist has no Georgian glyphs, so Noto Sans Georgian picks
-     up those characters per-glyph through the fallback chain. */
-  --font-sans: var(--font-geist-sans), var(--font-noto-georgian), system-ui, -apple-system,
-    "Segoe UI", sans-serif;
+  /* Typography. BPG Nino Mtavruli comes first everywhere and draws only
+     Georgian — its `unicode-range` in `layout.tsx` sees to that — so the
+     rest of the chain still carries Latin, the digits and the signs the
+     Georgian face does not hold (the lari, the ×, the −). Noto Sans
+     Georgian stays behind it for the handful of archaic letters BPG Nino
+     leaves out. */
+  --font-sans: var(--font-georgian), var(--font-geist-sans), var(--font-noto-georgian), system-ui,
+    -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   /* The headline face — see `layout.tsx`. */
-  --font-display: var(--font-display), "Noto Serif Georgian", Georgia, serif;
+  --font-display: var(--font-georgian), var(--font-serif), "Noto Serif Georgian", Georgia, serif;
 
   /* Type scale.
      --------------------------------------------------------------------
@@ -4844,6 +4848,12 @@ html[data-cursor] .cursor-dot {
 html[data-cursor] .cursor-dot[data-over="link"] {
   --cs: 4;
   background: #ffffff;
+}
+
+/* Over a box that is typed in: gone, and the browser's own caret cursor
+   is the only mark on the field. */
+html[data-cursor] .cursor-dot[data-over="text"] {
+  opacity: 0;
 }
 
 /* ---- Product card --------------------------------------------------- */

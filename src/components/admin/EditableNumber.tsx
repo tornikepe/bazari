@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { setProductNumber } from "@/app/actions/admin";
+import type { ProductNumberField } from "@/lib/product-numbers";
 import { fill } from "@/lib/i18n";
 
 /**
@@ -33,7 +34,7 @@ export function EditableNumber({
   name,
 }: {
   id: string;
-  field: "price" | "stock";
+  field: ProductNumberField;
   /** In whatever unit the field is typed in: lari for a price, units for stock. */
   value: number;
   /** What it looks like when nobody is editing — a formatted price, or a badge. */

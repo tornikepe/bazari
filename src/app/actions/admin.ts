@@ -14,6 +14,7 @@ import { DEFAULT_PHOTO, photosFromForm } from "@/lib/product-photos";
 import { releaseStockAlerts } from "@/lib/stock-emails";
 import type { Prisma } from "@/generated/prisma/client";
 import { audit, diff } from "@/lib/audit";
+import { PRODUCT_NUMBER_FIELDS, type ProductNumberField } from "@/lib/product-numbers";
 
 // The placeholder every product without a photo of its own shares.
 const DEFAULT_IMAGE = DEFAULT_PHOTO;
@@ -329,34 +330,43 @@ export async function saveProduct(id: string | null, formData: FormData): Promis
 /**
  * One number, changed from the table.
  *
- * Two fields and no more. Price and stock are what a shop owner changes daily
- * and what the form makes them open a page and scroll for; everything else on
- * a product is either prose, which needs a text area, or a decision, which
- * needs the form's context. A general "set any column from the table" action
- * would be a much larger hole in a Server Action reachable by direct POST.
+ * Three fields and no more. What a product costs to buy, what it sells for
+ * and how many there are is what a shop owner changes daily and what the
+ * form makes them open a page and scroll for; everything else on a product
+ * is either prose, which needs a text area, or a decision, which needs the
+ * form's context. A general "set any column from the table" action would be
+ * a much larger hole in a Server Action reachable by direct POST.
  *
- * `price` arrives in lari because that is what was typed, and is stored in
- * tetri like every other amount here. `stock` writes a ledger row, the same as
- * the form does — a figure that moved with nothing to explain it is exactly
- * what the ledger exists to prevent.
+ * `price` and `cost` arrive in lari because that is what was typed, and are
+ * stored in tetri like every other amount here. `stock` writes a ledger row,
+ * the same as the form does — a figure that moved with nothing to explain it
+ * is exactly what the ledger exists to prevent.
  */
 export async function setProductNumber(
   id: string,
-  field: "price" | "stock",
+  field: ProductNumberField,
   value: number,
 ): Promise<ActionResult & { value?: number }> {
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "unauthorized" };
-  if (field !== "price" && field !== "stock") return { ok: false, error: "invalid" };
+  const column = PRODUCT_NUMBER_FIELDS[field];
+  if (!column) return { ok: false, error: "invalid" };
   if (!Number.isFinite(value) || value < 0) return { ok: false, error: "invalid" };
 
-  const stored = field === "price" ? Math.round(value * 100) : Math.floor(value);
+  const stored = field === "stock" ? Math.floor(value) : Math.round(value * 100);
   // A product with no price is not a product; the form refuses it too.
   if (field === "price" && stored <= 0) return { ok: false, error: "invalid" };
 
   const before = await prisma.product.findUnique({
     where: { id },
-    select: { stock: true, price: true, nameEn: true, nameKa: true, _count: { select: { variants: true } } },
+    select: {
+      stock: true,
+      price: true,
+      costPrice: true,
+      nameEn: true,
+      nameKa: true,
+      _count: { select: { variants: true } },
+    },
   });
   if (!before) return { ok: false, error: "invalid" };
   /* A product sold in sizes keeps its stock per size, and the figure on the
@@ -367,7 +377,7 @@ export async function setProductNumber(
 
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.product.update({ where: { id }, data: { [field]: stored } });
+      await tx.product.update({ where: { id }, data: { [column]: stored } });
       if (field === "stock") {
         await recordStockChange(tx, id, before.stock, stored, "Set from the product table");
       }
@@ -384,7 +394,7 @@ export async function setProductNumber(
     action: field === "stock" ? "product.stock" : "product.update",
     entityId: id,
     label: before.nameEn || before.nameKa,
-    changes: { [field]: [before[field], stored] },
+    changes: { [column]: [before[column], stored] },
   });
 
   revalidateStorefront();
