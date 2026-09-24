@@ -39,11 +39,10 @@ export function OrderFilterTabs({
     <nav
       aria-label={t.account.orderFilter}
       aria-busy={isPending}
-      /* The strip scrolls inside its own box on a phone, where six pills
-         do not fit; the card around it hides its overflow and cannot. */
-      className={`flex gap-1.5 overflow-x-auto border-b border-line px-4 py-3 no-scrollbar transition-opacity sm:flex-wrap sm:justify-center sm:px-5 ${
-        isPending ? "opacity-60" : ""
-      }`}
+      /* One strip that scrolls sideways rather than a block that wraps to
+         two ragged rows: the row keeps its height however many statuses
+         this account has reached, and the chosen one is filled. */
+      className={`order-tabs ${isPending ? "is-busy" : ""}`}
     >
       {options.map(({ value, count }) => {
         const active = current === value;
@@ -53,14 +52,10 @@ export function OrderFilterTabs({
             type="button"
             onClick={() => choose(value)}
             aria-pressed={active}
-            className={`flex min-h-9 shrink-0 items-center gap-1.5 rounded-pill px-3.5 text-sm transition-colors ${
-              active
-                ? "bg-panel font-semibold text-panel-fg"
-                : "border border-line text-ink-600 hover:bg-ink-50"
-            }`}
+            className={`order-tab ${active ? "is-on" : ""}`}
           >
             {value ? t.status[value] : t.account.orderFilterAll}
-            <span className={active ? "text-panel-muted" : "text-ink-400"}>{count}</span>
+            <span className="order-tab-count">{count}</span>
           </button>
         );
       })}

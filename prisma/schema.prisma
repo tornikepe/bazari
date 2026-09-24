@@ -551,6 +551,8 @@ model User {
   /// preselects, an account to refund cash and transfer orders to, and the
   /// company line an invoice should carry. All optional; all theirs.
   preferredPayment PaymentMethod?
+  /// Which bank the refund account is at — "tbc", "bog", or empty.
+  refundBank     String              @default("")
   refundIban     String              @default("")
   refundName     String              @default("")
   invoiceCompany String              @default("")

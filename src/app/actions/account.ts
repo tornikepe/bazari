@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { checkUpload, type UploadRefusal } from "@/lib/image-upload";
-import { isPaymentMethod } from "@/lib/payment";
 
 export type AvatarResult =
   | { ok: true }
@@ -70,8 +69,10 @@ export async function updatePaymentPrefs(
   if (!user || user.role !== "customer")
     return { ok: false, error: "unauthorized" };
 
-  const method = String(formData.get("preferredPayment") ?? "");
-  const preferredPayment = isPaymentMethod(method) ? method : null;
+  /* Which bank the refund account is at. Only the two the shop deals
+     with, or nothing at all. */
+  const bank = String(formData.get("refundBank") ?? "");
+  const refundBank = bank === "tbc" || bank === "bog" ? bank : "";
   const refundIban = String(formData.get("refundIban") ?? "")
     .replace(/\s+/g, "")
     .toUpperCase()
@@ -84,7 +85,7 @@ export async function updatePaymentPrefs(
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        preferredPayment,
+        refundBank,
         refundIban,
         refundName: String(formData.get("refundName") ?? "")
           .trim()

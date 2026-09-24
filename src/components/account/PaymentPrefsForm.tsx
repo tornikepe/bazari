@@ -8,10 +8,11 @@ import { PaymentMark } from "@/components/checkout/PaymentMark";
 import { Busy, Swap } from "@/components/ui/Swap";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { CheckIcon } from "@/components/ui/icons";
-import type { PaymentMethod } from "@/lib/payment";
+import { shakeField } from "@/components/ui/field-fault";
 
 export type PaymentPrefs = {
-  preferredPayment: PaymentMethod | null;
+  /** "tbc", "bog", or empty. */
+  refundBank: string;
   refundIban: string;
   refundName: string;
   invoiceCompany: string;
@@ -28,23 +29,17 @@ export type PaymentPrefs = {
  * go if an order paid in cash or by transfer comes back, and the company
  * line an invoice should carry.
  */
-export function PaymentPrefsForm({
-  prefs,
-  methods,
-}: {
-  prefs: PaymentPrefs;
-  /** The methods the checkout offers today, in its order. */
-  methods: PaymentMethod[];
-}) {
+export function PaymentPrefsForm({ prefs }: { prefs: PaymentPrefs }) {
   const { t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "saved" | "invalid" | "failed">(
     "idle",
   );
-  // One of the methods is always chosen — the first, until a choice is
-  // saved: a default that can be "none" is not a default.
-  const [choice, setChoice] = useState<string>(prefs.preferredPayment ?? methods[0] ?? "");
+  const [bank, setBank] = useState(prefs.refundBank);
+  /* The box reddens on a bad IBAN and says nothing else — see the
+     `aria-invalid` below. Cleared as soon as it is typed in again. */
+  const [ibanBad, setIbanBad] = useState(false);
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,69 +49,53 @@ export function PaymentPrefsForm({
       const result = await updatePaymentPrefs(formData);
       if (!result.ok) {
         setStatus(result.error === "invalid" ? "invalid" : "failed");
+        if (result.error === "invalid") {
+          setIbanBad(true);
+          shakeField(document.getElementById("refundIban"));
+        }
         return;
       }
       setStatus("saved");
+      window.setTimeout(() => setStatus("idle"), 2400);
       router.refresh();
     });
   }
 
   return (
     <form onSubmit={submit} className="flex flex-col">
-      {/* ------------------------- default method ------------------------- */}
-      {/* Three blocks under one another, each a title, a line and its
-          controls, a rule between: the account page's own rhythm, not
-          cards inside a card. */}
-      <section className="pb-7">
-        <h2 className="text-base font-bold text-ink-900">
-          {t.account.preferredPayment}
-        </h2>
-        <p className="mt-1 text-sm text-ink-500">
-          {t.account.preferredPaymentHint}
-        </p>
-
-        <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-          {methods.map((method) => (
-            <label
-              key={method}
-              className={`flex cursor-pointer items-center gap-3 rounded-control border px-3.5 py-3 text-sm transition-colors ${
-                choice === method
-                  ? "border-brand-600 bg-brand-50 font-semibold text-brand-700"
-                  : "border-line text-ink-700 hover:border-ink-300"
-              }`}
-            >
-              <input
-                type="radio"
-                name="preferredPayment"
-                value={method}
-                checked={choice === method}
-                onChange={() => setChoice(method)}
-                className="h-4 w-4 shrink-0 accent-[var(--color-brand-600)]"
-              />
-              {/* The mark from `sm` up: in the narrow card of a phone it
-                  left the words a third of the row. */}
-              <span className="hidden sm:contents">
-                <PaymentMark method={method} />
-              </span>
-              <span className="min-w-0 leading-snug">
-                {t.payment[method]}
-                <span className="block text-xs font-normal text-ink-500">
-                  {t.account.methodHint[method]}
-                </span>
-              </span>
-            </label>
-          ))}
-        </div>
-      </section>
-
       {/* -------------------------- refund account ------------------------ */}
-      <section className="border-t border-line py-7">
+      <section className="pb-7">
         <h2 className="text-base font-bold text-ink-900">
           {t.account.refundAccount}
         </h2>
         <p className="mt-1 text-sm text-ink-500">
           {t.account.refundAccountHint}
         </p>
+
+        {/* Which bank the account is at: the two the shop deals with, as
+            two cards with the bank's mark — chosen again clears it, since
+            an account at neither is a perfectly good answer. */}
+        <div className="bank-picks mt-4">
+          {(["tbc", "bog"] as const).map((id) => (
+            <label key={id} className={`bank-pick ${bank === id ? "is-on" : ""}`}>
+              <input
+                type="radio"
+                name="refundBank"
+                value={id}
+                checked={bank === id}
+                onChange={() => setBank(id)}
+                onClick={() => bank === id && setBank("")}
+                className="sr-only"
+              />
+              <PaymentMark method={id} />
+              <span className="bank-pick-name">{t.payment[id]}</span>
+              <span className="bank-pick-tick" aria-hidden="true">
+                <CheckIcon size={13} strokeWidth={3} />
+              </span>
+            </label>
+          ))}
+        </div>
+
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="refundIban" className="field-label">
@@ -129,6 +108,8 @@ export function PaymentPrefsForm({
               placeholder="GE00XX0000000000000000"
               autoComplete="off"
               spellCheck={false}
+              aria-invalid={ibanBad || undefined}
+              onChange={() => ibanBad && setIbanBad(false)}
               className="field font-mono"
             />
           </div>
@@ -187,31 +168,22 @@ export function PaymentPrefsForm({
           longer than it, so the button is at hand wherever the change was
           made — the status beside it, the button at the right. */}
       <div className="form-bar">
-        <div className="min-w-0 flex-1 text-sm">
-          {status === "saved" ? (
-            <span role="status" className="flex items-center gap-1.5 font-semibold text-success">
-              <CheckIcon size={16} />
-              {t.account.paymentsSaved}
-            </span>
-          ) : status === "invalid" ? (
-            <span role="alert" className="font-semibold text-danger">
-              {t.account.refundIbanInvalid}
-            </span>
-          ) : (
-            /* The hint is already over the options; in the bar it is for a
-               wide screen, where the button would otherwise stand alone. */
-            <span className="hidden text-ink-500 sm:inline">{t.account.preferredPaymentHint}</span>
-          )}
-        </div>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="btn btn-primary btn-md shrink-0"
-        >
+        {/* Nothing is said in words: a bad account number reddens its own
+            box, and a save that worked puts a tick in the button for a
+            moment. */}
+        <span className="sr-only" role="status">
+          {status === "saved" ? t.account.paymentsSaved : status === "invalid" ? t.account.refundIbanInvalid : ""}
+        </span>
+        <button type="submit" disabled={isPending} className="btn btn-primary btn-md w-full sm:ml-auto sm:w-auto">
           <Swap
             show={
               isPending ? (
                 <Busy label={t.account.saving} />
+              ) : status === "saved" ? (
+                <>
+                  <CheckIcon size={16} strokeWidth={3} />
+                  {t.account.saveProfile}
+                </>
               ) : (
                 t.account.saveProfile
               )

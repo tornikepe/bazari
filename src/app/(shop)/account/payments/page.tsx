@@ -2,54 +2,37 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getI18n } from "@/lib/locale";
-import { getSettings } from "@/lib/settings";
-import { cardGateway } from "@/lib/payments";
-import { enabledGateways } from "@/lib/payments/gateways";
 import { AccountShell, AccountCardHead } from "@/components/account/AccountShell";
 import { PaymentPrefsForm } from "@/components/account/PaymentPrefsForm";
-import type { PaymentMethod } from "@/lib/payment";
 
 /**
- * The customer's payment page: which of the shop's ways to pay the
- * checkout should have ready, where a refund should go, and the company
- * line an invoice should carry. The methods offered are the checkout's own
- * list, built the same way, so nothing can be chosen here that is not
- * there.
+ * The customer's payment page: where a refund should go — the bank and the
+ * account — and the company line an invoice should carry. Which way to pay
+ * is chosen at the checkout, on the order it belongs to, and not kept here.
  */
 export default async function AccountPaymentsPage() {
   const { t } = await getI18n();
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/account/payments");
 
-  const [row, gateways, settings] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        preferredPayment: true,
-        refundIban: true,
-        refundName: true,
-        invoiceCompany: true,
-        invoiceTaxId: true,
-      },
-    }),
-    enabledGateways(),
-    getSettings(),
-  ]);
-
-  const methods: PaymentMethod[] = [
-    ...gateways.map((gateway) => gateway.provider),
-    ...(cardGateway() ? (["card"] as const) : []),
-    "bank_transfer",
-  ];
+  const row = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      refundBank: true,
+      refundIban: true,
+      refundName: true,
+      invoiceCompany: true,
+      invoiceTaxId: true,
+    },
+  });
 
   return (
     <AccountShell user={user} t={t}>
       <AccountCardHead title={t.account.menuPayments} />
       <div className="account-card-body">
         <PaymentPrefsForm
-          methods={methods}
           prefs={{
-            preferredPayment: row?.preferredPayment ?? null,
+            refundBank: row?.refundBank ?? "",
             refundIban: row?.refundIban ?? "",
             refundName: row?.refundName ?? "",
             invoiceCompany: row?.invoiceCompany ?? "",

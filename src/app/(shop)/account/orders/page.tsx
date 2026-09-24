@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getI18n } from "@/lib/locale";
 import { countText, fill } from "@/lib/i18n";
 import { formatDate, formatPrice } from "@/lib/format";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge, STATUS_STYLES } from "@/components/ui/StatusBadge";
 import { isOrderStatus, ORDER_STATUSES } from "@/lib/order-status";
 import {
   BagIcon,
@@ -20,6 +20,12 @@ import Image from "next/image";
 import type { RawSearchParams } from "@/lib/filters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyOrdersArt } from "@/components/ui/illustrations";
+
+/** The status as a dot in its own colour, before the word. */
+function StatusDot({ status }: { status: string }) {
+  const tone = STATUS_STYLES[status]?.split(" ").pop() ?? "text-ink-400";
+  return <span aria-hidden="true" className={`order-row-dot ${tone}`} />;
+}
 
 export default async function AccountOrdersPage({
   searchParams,
@@ -227,18 +233,15 @@ export default async function AccountOrdersPage({
               }
             />
           ) : (
-            <ul className="stagger divide-y divide-line">
+            <ul className="order-rows">
               {orders.map((order) => (
                 <li key={order.id}>
-                  {/* A grid, not a wrapping row. Laid out with `flex-wrap` the
-                      totals landed at a different x on every line — ₾104.00
-                      above ₾96.50 above ₾194.00, none of them aligned — and a
-                      column of money that does not line up cannot be scanned,
-                      which is the only thing this list is for. */}
-                  <Link
-                    href={`/order/${order.number}`}
-                    className="row-lean grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-3.5 hover:bg-ink-50 sm:grid-cols-[auto_1fr_6.5rem_auto_1rem] sm:gap-x-4 sm:px-5"
-                  >
+                  {/* Every row the same shape and the same height, whatever
+                      the status is called: the pictures, then the number
+                      over its date and status, then the sum. A row that
+                      grew a line under a long badge made the list jump as
+                      the filter changed. */}
+                  <Link href={`/order/${order.number}`} className="order-row">
                     {/* The first pictures, fanned: up to three, the ones
                         behind stepped to the right and dimmed. */}
                     <span className="order-fan" aria-hidden="true">
@@ -252,45 +255,24 @@ export default async function AccountOrdersPage({
                       )}
                     </span>
 
-                    {/* On a phone the pictures are one picture, the count
-                        stays for the order's own page, and the badge goes
-                        under the number: the row is narrow inside the account
-                        card, and three things on one line cut the number to
-                        "BZ-07773…". */}
-                    <div className="min-w-0">
-                      <p className="truncate font-mono text-sm font-bold text-ink-900">
-                        {order.number}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink-400 sm:truncate">
-                        {formatDate(order.createdAt)}
-                        <span className="hidden sm:inline">
-                          {" "}·{" "}
-                          {countText(
-                            t.admin.productCountOne,
-                            t.admin.productCount,
-                            order._count.items,
-                          )}
-                        </span>
-                      </p>
-                    </div>
-
-                    <p className="text-right text-sm font-bold whitespace-nowrap text-ink-900 tabular-nums">
-                      {formatPrice(order.total, locale)}
-                    </p>
-
-                    {/* Its own column from `sm` up so the badges form a line
-                        rather than starting wherever the price happened to end.
-                        Sized by its widest badge: at a fixed 7.5rem the Georgian
-                        "confirmed" overran the column and covered the price. */}
-                    <span className="col-span-2 col-start-2 row-start-2 justify-self-start sm:col-span-1 sm:col-start-auto sm:row-start-auto sm:justify-self-end">
-                      <StatusBadge status={order.status} t={t} />
+                    {/* The number over its status at the left, the sum over
+                        its date at the right: two lines on each side, so
+                        every row is the same height and nothing is cut. */}
+                    <span className="order-row-main">
+                      <span className="order-row-number">{order.number}</span>
+                      <span className="order-row-meta">
+                        <StatusDot status={order.status} />
+                        <span className="truncate">{t.status[order.status]}</span>
+                      </span>
                     </span>
 
-                    <ChevronRightIcon
-                      size={16}
-                      aria-hidden="true"
-                      className="row-chevron hidden shrink-0 text-ink-300 sm:block"
-                    />
+                    <span className="order-row-end">
+                      <span className="order-row-sum">
+                        {formatPrice(order.total, locale)}
+                        <ChevronRightIcon size={15} aria-hidden="true" className="order-row-chevron" />
+                      </span>
+                      <span className="order-row-date">{formatDate(order.createdAt)}</span>
+                    </span>
                   </Link>
                 </li>
               ))}
