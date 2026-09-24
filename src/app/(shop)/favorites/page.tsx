@@ -155,7 +155,7 @@ export default function FavoritesPage() {
           })}
         </div>
 
-        <aside className="card summary-stick card-pad">
+        <aside className="card summary-stick card-pad" data-lenis-prevent>
           <h2 className="display-sm text-center text-ink-900">{t.favorites.summary}</h2>
           <dl className="summary-totals mt-5">
             <div>

@@ -71,33 +71,35 @@ export function MiniCart() {
                   {name}
                 </Link>
                 <p className="mini-sum">{formatPrice(item.price * item.quantity, locale)}</p>
+              </div>
 
-                {/* What there is to say about this line — the size it is,
-                    and how many — set together in the middle under it. */}
-                <div className="mini-meta">
-                  {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
-                  {/* A small stepper: a pill with the number centred between
-                      two round marks, the cart page's in miniature. */}
-                  <span className="mini-stepper">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(key, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      aria-label="-"
-                    >
-                      <MinusIcon size={12} strokeWidth={2.5} />
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(key, item.quantity + 1)}
-                      disabled={item.quantity >= max}
-                      aria-label="+"
-                    >
-                      <PlusIcon size={12} strokeWidth={2.5} />
-                    </button>
-                  </span>
-                </div>
+              {/* What there is to say about this line — the size it is and
+                  how many — stacked in its own column, ending where the
+                  cross begins. It used to sit in the middle under the
+                  name, a long way from anything it belonged to. */}
+              <div className="mini-meta">
+                {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
+                {/* A small stepper: a pill with the number centred between
+                    two round marks, the cart page's in miniature. */}
+                <span className="mini-stepper">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(key, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
+                    aria-label="-"
+                  >
+                    <MinusIcon size={12} strokeWidth={2.5} />
+                  </button>
+                  <span>{item.quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(key, item.quantity + 1)}
+                    disabled={item.quantity >= max}
+                    aria-label="+"
+                  >
+                    <PlusIcon size={12} strokeWidth={2.5} />
+                  </button>
+                </span>
               </div>
 
               <button

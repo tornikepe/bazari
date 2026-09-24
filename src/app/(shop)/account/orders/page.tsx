@@ -201,21 +201,20 @@ export default async function AccountOrdersPage({
 
           {/* Links rather than a `<select>`: the filter is part of the address,
               so a customer can bookmark "my delivered orders" and the back
-              button behaves. Only the statuses this account has actually
-              reached are offered — a tab reading "cancelled 0" invites a click
-              that leads nowhere. */}
-          {/* Only the statuses this account has actually reached are
-              offered — a tab reading "cancelled 0" invites a click that
+              button behaves. The row offers every status, whether this
+              account has reached it or not.
+              The row is the whole journey an order takes — waiting,
+              confirmed, on its way, delivered — and a customer looking for
+              "on its way" should find the word rather than have to work out
+              that its absence means none of theirs are. The ones at zero are
+              greyed and cannot be pressed, so nothing invites a click that
               leads nowhere. Switches in place: see `OrderFilterTabs`. */}
           {total > 0 && (
             <OrderFilterTabs
               current={status}
               options={[
                 { value: null, count: total },
-                ...ORDER_STATUSES.filter((value) => countFor(value) > 0).map((value) => ({
-                  value,
-                  count: countFor(value),
-                })),
+                ...ORDER_STATUSES.map((value) => ({ value, count: countFor(value) })),
               ]}
             />
           )}

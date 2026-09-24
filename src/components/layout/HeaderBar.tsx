@@ -207,6 +207,10 @@ export function HeaderBar({
 
           <HoverPanel
             label={t.nav.cart}
+            /* Wider than the rest: a cart line carries a picture, a name,
+               a size, a stepper and a cross, and at 22rem the name was
+               down to a hundred and forty pixels. */
+            width="w-[24rem]"
             trigger={
               <Link
                 href="/cart"

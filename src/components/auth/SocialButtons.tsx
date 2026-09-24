@@ -45,10 +45,10 @@ export async function SocialButtons({
           // A link, not a form: this is a redirect to a third party, and it
           // changes nothing here until the visitor comes back.
           <a key={id} href={`/api/auth/${id}${query}`} className={`social-btn ${compact ? "is-compact" : ""}`}>
-            {/* The mark and the words as one centred group, so the two
-                buttons read as a pair rather than as two offsets. */}
-            <Icon size={18} className="shrink-0" />
-            <span>{t.auth.continueWith.replace("{provider}", label)}</span>
+            {/* The mark at the size Google publishes it, and the words
+                beside it as one centred group. */}
+            <Icon size={18} />
+            <span className="truncate">{t.auth.continueWith.replace("{provider}", label)}</span>
           </a>
         ))}
       </div>

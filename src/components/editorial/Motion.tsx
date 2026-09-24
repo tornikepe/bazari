@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+import { registerScroller } from "@/lib/scroll-to-field";
 
 /**
  * The storefront's motion: inertial scrolling that settles on sections,
@@ -31,6 +32,10 @@ export function Motion() {
     const root = document.documentElement;
 
     const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 1, smoothWheel: true, syncTouch: false });
+    /* Anything that needs to take the page somewhere — the checkout
+       scrolling to the field it is complaining about — goes through this
+       instance rather than starting a native scroll it would fight. */
+    registerScroller(lenis);
     let frame = 0;
     const raf = (time: number) => {
       lenis.raf(time);
@@ -81,6 +86,7 @@ export function Motion() {
       lenis.stop();
       lenis.destroy();
       window.removeEventListener("popstate", pop);
+      registerScroller(null);
       if (move) window.removeEventListener("pointermove", move);
       if (leave) document.removeEventListener("mouseleave", leave);
       delete root.dataset.cursor;

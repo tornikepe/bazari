@@ -26,6 +26,8 @@ import { SuggestField } from "@/components/ui/SuggestField";
 import { suggestCities } from "@/lib/georgian-cities";
 import { localDigits } from "@/lib/phone";
 import { Busy, Swap } from "@/components/ui/Swap";
+import { scrollToField } from "@/lib/scroll-to-field";
+import { shakeField } from "@/components/ui/field-fault";
 
 /** Maps a rejection reason to the matching translated message. */
 const COUPON_ERRORS: Record<
@@ -42,6 +44,22 @@ const COUPON_ERRORS: Record<
 type FieldErrors = Partial<
   Record<"customerName" | "phone" | "city" | "address" | "zone", string>
 >;
+
+/**
+ * Which box on the page each complaint belongs to, and the order the form
+ * reads in. A shopper who presses "place the order" and is told something
+ * is wrong three screens above them has been told nothing useful; the
+ * first thing that is wrong is scrolled to and focused.
+ */
+const FIELD_IDS: Record<keyof FieldErrors, string> = {
+  customerName: "checkout-name",
+  phone: "checkout-phone",
+  zone: "zone",
+  city: "checkout-city",
+  address: "checkout-address",
+};
+
+const FIELD_ORDER: (keyof FieldErrors)[] = ["customerName", "phone", "zone", "city", "address"];
 
 export type CheckoutDefaults = {
   customerName: string;
@@ -181,6 +199,16 @@ export function CheckoutForm({
     else if (!localDigits(form.phone)) next.phone = t.checkout.invalidPhone;
 
     setErrors(next);
+
+    /* Straight to the first thing that is wrong: the page scrolls there,
+       the box shakes, and the caret lands in it. */
+    const first = FIELD_ORDER.find((key) => next[key]);
+    if (first) {
+      const element = document.getElementById(FIELD_IDS[first]);
+      scrollToField(element);
+      shakeField(element);
+    }
+
     return Object.keys(next).length === 0;
   }
 
@@ -391,6 +419,7 @@ export function CheckoutForm({
 
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <Field
+                id="checkout-name"
                 label={t.checkout.name}
                 value={form.customerName}
                 onChange={(value) => update("customerName", value)}
@@ -627,7 +656,7 @@ export function CheckoutForm({
         </div>
 
         {/* ----------------------------- summary ---------------------------- */}
-        <aside className="card summary-stick card-pad">
+        <aside className="card summary-stick card-pad" data-lenis-prevent>
           {/* The head centred, as the page's own title is: the serif, and
               the count under it as the small line. */}
           <div className="text-center">
@@ -636,6 +665,13 @@ export function CheckoutForm({
               {fill(t.favorites.count, { count: items.reduce((sum, item) => sum + item.quantity, 0) })}
             </p>
           </div>
+
+          {/* What the panel scrolls, when there is more of it than there
+              is screen: the lines and the coupon box. The totals and the
+              button below stay where they are, because a shopper hunting
+              for "place the order" at the foot of a long order was the
+              whole complaint. */}
+          <div className="summary-scroll" data-lenis-prevent>
 
           {/* Keyed by the product *and* the combination: two sizes of one
               shirt are two lines, and keying on the product alone made React
@@ -651,19 +687,19 @@ export function CheckoutForm({
                   <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
                 </span>
 
-                <span className="min-w-0">
-                  <span className="line-clamp-2 text-xs leading-snug font-semibold text-ink-900">
+                <span className="summary-line-body">
+                  <span className="summary-line-name">
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span className="summary-line-meta">
                     {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
-                    <span className="text-xs text-ink-500 tabular-nums">
+                    <span className="tabular-nums">
                       {item.quantity} × {formatPrice(item.price, locale)}
                     </span>
                   </span>
                 </span>
 
-                <span className="text-sm font-bold whitespace-nowrap text-ink-900 tabular-nums">
+                <span className="summary-line-sum">
                   {formatPrice(item.price * item.quantity, locale)}
                 </span>
               </li>
@@ -749,6 +785,8 @@ export function CheckoutForm({
             )}
           </div>
 
+          </div>
+
           <div className="my-4 h-px bg-line" />
 
           <dl className="summary-totals">
@@ -829,6 +867,7 @@ export function CheckoutForm({
 }
 
 function Field({
+  id: given,
   label,
   value,
   onChange,
@@ -838,6 +877,8 @@ function Field({
   placeholder,
   autoComplete,
 }: {
+  /** A fixed id, for the fields the form has to be able to scroll to. */
+  id?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -847,7 +888,7 @@ function Field({
   placeholder?: string;
   autoComplete?: string;
 }) {
-  const id = `field-${label.replace(/\s+/g, "-")}`;
+  const id = given ?? `field-${label.replace(/\s+/g, "-")}`;
 
   return (
     <div>

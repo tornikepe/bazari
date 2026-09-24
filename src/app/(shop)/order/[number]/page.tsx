@@ -216,19 +216,19 @@ export default async function OrderConfirmationPage({
                   <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
                 </span>
 
-                <span className="min-w-0">
-                  <span className="line-clamp-2 text-xs leading-snug font-semibold text-ink-900">
+                <span className="summary-line-body">
+                  <span className="summary-line-name">
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span className="summary-line-meta">
                     {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
-                    <span className="text-xs text-ink-500 tabular-nums">
+                    <span className="tabular-nums">
                       {item.quantity} × {formatPrice(item.price, locale)}
                     </span>
                   </span>
                 </span>
 
-                <span className="text-sm font-bold whitespace-nowrap text-ink-900 tabular-nums">
+                <span className="summary-line-sum">
                   {formatPrice(item.price * item.quantity, locale)}
                 </span>
               </li>

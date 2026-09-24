@@ -39,9 +39,12 @@ export function OrderFilterTabs({
     <nav
       aria-label={t.account.orderFilter}
       aria-busy={isPending}
-      /* One strip that scrolls sideways rather than a block that wraps to
-         two ragged rows: the row keeps its height however many statuses
-         this account has reached, and the chosen one is filled. */
+      /* Words with a rule under the chosen one, not a row of filled
+         lozenges each with a disc of its own behind the count: five
+         pills side by side read as five buttons competing, and the one
+         thing the row has to say is which of the five you are looking
+         at. A status this account has never reached is still shown —
+         the row is the journey an order takes — but greyed and dead. */
       className={`order-tabs ${isPending ? "is-busy" : ""}`}
     >
       {options.map(({ value, count }) => {
@@ -50,11 +53,12 @@ export function OrderFilterTabs({
           <button
             key={value ?? "all"}
             type="button"
+            disabled={count === 0}
             onClick={() => choose(value)}
             aria-pressed={active}
             className={`order-tab ${active ? "is-on" : ""}`}
           >
-            {value ? t.status[value] : t.account.orderFilterAll}
+            <span>{value ? t.status[value] : t.account.orderFilterAll}</span>
             <span className="order-tab-count">{count}</span>
           </button>
         );
