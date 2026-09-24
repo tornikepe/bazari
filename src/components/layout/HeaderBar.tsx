@@ -111,7 +111,6 @@ export function HeaderBar({
   const navLinks: MenuLink[] = [
     { href: "/catalog", label: t.nav.catalog, icon: "catalog" },
     { href: "/catalog?sale=1", label: t.nav.deals, icon: "deals" },
-    { href: "/favorites", label: t.favorites.title, icon: "favorites" },
     { href: "/track", label: t.track.title, icon: "track" },
     { href: "/about", label: t.nav.about, icon: "about" },
     { href: "/contact", label: t.nav.contact, icon: "contact" },

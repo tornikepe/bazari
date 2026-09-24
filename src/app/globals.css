@@ -4067,17 +4067,130 @@ h3,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0 0 1rem;
+  gap: 0.875rem;
+  padding: 0.25rem 0 1.25rem;
   text-align: center;
+}
+
+.account-menu-name {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-menu-mail {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 13px;
+  color: var(--color-ink-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (min-width: 1024px) {
   .account-menu-who {
     flex-direction: row;
-    gap: 0.75rem;
-    padding: 0.25rem 0.5rem 0.75rem;
+    gap: 0.875rem;
+    padding: 0.25rem 0.25rem 1rem;
     text-align: left;
+  }
+}
+
+/* The picture as a control: the camera on its lower edge, a small bin at
+   its corner when there is one to take off. */
+.avatar-pick {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-pick-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 999px;
+  background: var(--color-brand-solid);
+  color: var(--color-brand-on-solid);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.avatar-pick-button:hover {
+  transform: scale(1.03);
+}
+
+.avatar-pick-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-surface), 0 0 0 6px var(--color-ink-900);
+}
+
+.avatar-pick-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.avatar-pick-initials {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.avatar-pick-mark {
+  position: absolute;
+  right: -0.125rem;
+  bottom: -0.125rem;
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 999px;
+  border: 2px solid var(--color-surface);
+  background: var(--color-ink-900);
+  color: var(--color-surface);
+}
+
+.avatar-pick-x {
+  position: absolute;
+  top: -0.125rem;
+  right: -0.125rem;
+  display: grid;
+  place-items: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  border-radius: 999px;
+  border: 2px solid var(--color-surface);
+  background: var(--color-ink-100);
+  color: var(--color-ink-600);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.avatar-pick-x:hover {
+  background: var(--color-danger);
+  color: var(--color-brand-on-solid);
+}
+
+@media (min-width: 1024px) {
+  .avatar-pick-button {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .avatar-pick-initials {
+    font-size: var(--text-base);
+  }
+
+  .avatar-pick-mark,
+  .avatar-pick-x {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 }
 
@@ -4246,13 +4359,18 @@ h3,
   }
 }
 
+/* A field is a box of its own rather than a line on a rule: the label
+   small at the top, the value under it, and the whole thing a card that
+   an "edit" pill sits inside. */
 .profile-field {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  padding: 0.75rem 0 0.625rem;
-  border-bottom: 1px solid var(--color-line);
-  margin-bottom: 0.25rem;
+  gap: 0.25rem;
+  margin-bottom: 0.625rem;
+  padding: 0.75rem 0.875rem 0.8125rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-ink-50);
 }
 
 /* The label is the quiet one and the value the thing being read: the two
@@ -5635,54 +5753,73 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   text-align: center;
 }
 
-/* A line of the cart or the wishlist. On a phone it is a card of its
-   own with everything down the middle: the picture, the words, the size
-   and the price, then the count and the sum on a row. From `sm` up the
-   same card is a row: the picture at the left, the words beside it, the
-   count and the sum at the right. The cross at the corner takes the
-   line off the list. */
+/* A line of the cart or the wishlist.
+   ---------------------------------------------------------------
+   On a phone it is a card of ink with its words in paper — the list
+   is the page's subject, and a column of white boxes on white paper
+   was a list that had to be looked for. Everything in it is the
+   shop's own control: the size opens the shop's panel, the count is
+   a pill with two round marks, and both read down the middle. From
+   `sm` up the same card is a light row: the picture at the left, the
+   words beside it, the count and the sum at the right. */
 .line-card {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.625rem;
-  padding: 1.25rem 1rem 0.875rem;
-  border: 1px solid var(--color-line);
+  gap: 0.75rem;
+  padding: 1.5rem 1.125rem 1.125rem;
   border-radius: var(--radius-card);
-  background: var(--color-surface);
+  background: var(--color-panel);
+  color: var(--color-panel-fg);
   text-align: center;
 }
 
-/* The name: a size up from the meta under it, and never more than two
-   lines. */
-.line-card .line-body > a {
+.line-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   font-size: 15px;
+  font-weight: 600;
   line-height: 1.3;
+  color: var(--color-panel-fg);
+  transition: opacity 0.15s ease;
+}
+
+.line-name:hover {
+  opacity: 0.75;
+}
+
+.line-brand {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-panel-muted);
 }
 
 .line-x {
   position: absolute;
-  top: 0.625rem;
-  right: 0.625rem;
+  top: 0.75rem;
+  right: 0.75rem;
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 1px solid var(--color-line);
+  width: 1.875rem;
+  height: 1.875rem;
   border-radius: 999px;
-  background: var(--color-surface);
-  color: var(--color-ink-500);
+  background: color-mix(in oklab, var(--color-panel-fg) 12%, transparent);
+  color: var(--color-panel-fg);
   transition:
     background-color 0.15s ease,
-    border-color 0.15s ease,
     color 0.15s ease;
 }
 
 .line-x:hover {
-  border-color: var(--color-danger);
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
+  background: var(--color-danger);
+  color: #fff;
 }
 
 .line-pic {
@@ -5691,9 +5828,8 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   width: 6.5rem;
   height: 6.5rem;
   overflow: hidden;
-  border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
-  background: var(--color-ink-50);
+  background: color-mix(in oklab, var(--color-panel-fg) 10%, transparent);
 }
 
 .line-body {
@@ -5701,36 +5837,61 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   width: 100%;
 }
 
-.line-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.line-price {
   margin-top: 0.5rem;
+}
+
+/* On the dark card the price is paper, and the old price a step down. */
+.line-card [data-price="now"] {
+  color: var(--color-panel-fg);
+}
+
+.line-card [data-price="old"] {
+  color: var(--color-panel-muted);
 }
 
 .line-chip {
   display: inline-flex;
   align-items: center;
   padding: 0.125rem 0.5rem;
-  border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
-  background: var(--color-ink-50);
+  background: color-mix(in oklab, var(--color-panel-fg) 14%, transparent);
   font-size: 11px;
   font-weight: 600;
-  color: var(--color-ink-700);
+  color: var(--color-panel-fg);
 }
 
-/* The size select on a line: the product page's box, a size down. */
-.line-pick > select {
-  height: 2.25rem;
-  padding: 0 2.25rem 0 0.75rem;
+/* The size, as the shop's own control on the card's own tone. */
+.line-size {
+  margin-top: 0.75rem;
+}
+
+.line-size .pick > select {
+  height: 2.5rem;
+  padding: 0 2.25rem 0 0.875rem;
+  border-color: color-mix(in oklab, var(--color-panel-fg) 24%, transparent);
+  background: color-mix(in oklab, var(--color-panel-fg) 8%, transparent);
+  color: var(--color-panel-fg);
   font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  text-align-last: center;
 }
 
-.line-pick .pick-chevron {
-  right: 0.625rem;
+.line-size .pick > select option {
+  color: var(--color-ink-900);
+}
+
+.line-size .pick-chevron {
+  right: 0.75rem;
+  color: var(--color-panel-fg);
+}
+
+.line-unit {
+  margin-top: 0.625rem;
+  font-size: 12px;
+  color: var(--color-panel-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .line-foot {
@@ -5739,12 +5900,11 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   align-items: flex-end;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-top: 0.125rem;
+  margin-top: 0.25rem;
   padding-top: 0.875rem;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid color-mix(in oklab, var(--color-panel-fg) 16%, transparent);
 }
 
-/* A cell of the foot: the small word, the thing under it. */
 .line-cell {
   display: flex;
   flex-direction: column;
@@ -5761,44 +5921,50 @@ html[data-cursor] .cursor-dot[data-over="link"] {
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-ink-400);
+  color: var(--color-panel-muted);
 }
 
-/* The size under the name, and the unit price under that. */
-.line-size {
-  margin-top: 0.625rem;
-}
 
-.line-unit {
-  margin-top: 0.5rem;
-  font-size: 12px;
-  color: var(--color-ink-500);
-  font-variant-numeric: tabular-nums;
-}
 
-/* How much more buys free delivery: one line, the van, the words. */
-.free-ship {
-  display: flex;
+/* The count: a pill with a round mark at each end, in the card's tone. */
+.line-stepper {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid color-mix(in oklab, var(--color-accent-800) 20%, transparent);
-  border-radius: var(--radius-pill);
-  background: var(--color-accent-50);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-accent-800);
-  white-space: nowrap;
+  height: 2.5rem;
+  padding: 0 0.25rem;
+  border: 1px solid color-mix(in oklab, var(--color-panel-fg) 24%, transparent);
+  border-radius: 999px;
 }
 
-/* The summary's two ways out, with room between them. */
-.cart-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+.line-stepper > button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  color: var(--color-panel-fg);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.line-stepper > button:hover:not(:disabled) {
+  background: var(--color-panel-fg);
+  color: var(--color-panel);
+}
+
+.line-stepper > button:disabled {
+  color: color-mix(in oklab, var(--color-panel-fg) 35%, transparent);
+}
+
+.line-stepper > span {
+  min-width: 2rem;
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-panel-fg);
 }
 
 .line-foot-one {
@@ -5807,53 +5973,143 @@ html[data-cursor] .cursor-dot[data-over="link"] {
 
 .line-foot-one > * {
   width: 100%;
-  max-width: 16rem;
+  max-width: 18rem;
 }
 
-.line-stepper {
-  height: 2.25rem;
+/* The wishlist's button on the dark card: paper, filling with ink. */
+.line-foot-one .btn-outline {
+  border-color: color-mix(in oklab, var(--color-panel-fg) 30%, transparent);
+  color: var(--color-panel-fg);
 }
 
-.line-stepper > button {
-  width: 2.25rem;
+.line-foot-one .btn-outline:hover {
+  background: var(--color-panel-fg);
+  border-color: var(--color-panel-fg);
+  color: var(--color-panel);
 }
 
-.line-stepper > span {
-  min-width: 2rem;
-  font-size: var(--text-sm);
+/* ---- Swiping a line away ---------------------------------------------- */
+
+.swipe {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  transition:
+    max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease,
+    margin 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 40rem;
+}
+
+.swipe-under {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 1.5rem;
+  border-radius: var(--radius-card);
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.swipe-top {
+  position: relative;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Let go past the point of no return: the card slides off, then its own
+   space folds away, and only then is the row removed. */
+.swipe.is-going .swipe-top {
+  transform: translateX(-110%);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.swipe.is-going {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: -0.625rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe,
+  .swipe-top {
+    transition: none;
+  }
 }
 
 @media (min-width: 640px) {
+  /* A pointer has the cross; the red field under the card is for a thumb. */
+  .swipe-under {
+    display: none;
+  }
+
   .line-card {
     display: grid;
     grid-template-columns: 6rem minmax(0, 1fr) auto;
     align-items: center;
     gap: 1rem;
     padding: 1.125rem 3rem 1.125rem 1.25rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    color: var(--color-ink-900);
     text-align: left;
   }
 
-  .line-size,
-  .line-unit {
-    margin-top: 0.375rem;
+  .line-name {
+    font-size: var(--text-sm);
+    color: var(--color-ink-900);
   }
 
-  .line-cell {
-    align-items: flex-end;
+  .line-brand {
+    color: var(--color-ink-400);
   }
 
   .line-x {
     top: 0.75rem;
     right: 0.75rem;
+    background: transparent;
+    color: var(--color-ink-400);
   }
 
   .line-pic {
     width: 6rem;
     height: 6rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-ink-50);
   }
 
-  .line-meta {
-    justify-content: flex-start;
+  .line-chip {
+    border: 1px solid var(--color-line);
+    background: var(--color-ink-50);
+    color: var(--color-ink-700);
+  }
+
+  .line-size,
+  .line-unit,
+  .line-price {
+    margin-top: 0.375rem;
+  }
+
+  .line-size {
+    max-width: 14rem;
+  }
+
+  .line-size .pick > select {
+    border-color: var(--color-ink-300);
+    background: var(--color-surface);
+    color: var(--color-ink-900);
+    text-align: left;
+    text-align-last: left;
+  }
+
+  .line-size .pick-chevron {
+    color: var(--color-ink-500);
+  }
+
+  .line-unit {
+    color: var(--color-ink-500);
   }
 
   .line-foot {
@@ -5861,28 +6117,87 @@ html[data-cursor] .cursor-dot[data-over="link"] {
     flex-direction: column;
     align-items: flex-end;
     gap: 0.5rem;
+    margin-top: 0;
     padding-top: 0;
     border-top: 0;
+  }
+
+  .line-cell {
+    align-items: flex-end;
+  }
+
+  .line-cell-label {
+    color: var(--color-ink-400);
+  }
+
+  .line-card [data-price="now"] {
+    color: var(--color-ink-900);
+  }
+
+  .line-card [data-price="old"] {
+    color: var(--color-ink-400);
+  }
+
+  .line-stepper {
+    border-color: var(--color-line);
+  }
+
+  .line-stepper > button {
+    color: var(--color-ink-600);
+  }
+
+  .line-stepper > button:hover:not(:disabled) {
+    background: var(--color-ink-900);
+    color: var(--color-surface);
+  }
+
+  .line-stepper > button:disabled {
+    color: var(--color-ink-300);
+  }
+
+  .line-stepper > span {
+    color: var(--color-ink-900);
   }
 
   .line-foot-one > * {
     width: auto;
     min-width: 11rem;
+    max-width: none;
+  }
+
+  .line-foot-one .btn-outline {
+    border-color: var(--color-ink-300);
+    color: var(--color-ink-900);
+  }
+
+  .line-foot-one .btn-outline:hover {
+    background: var(--color-ink-900);
+    border-color: var(--color-ink-900);
+    color: var(--color-surface);
   }
 }
 
 /* ---- The address book ------------------------------------------------ */
 
 .addr-tile {
-  padding: 1rem;
+  padding: 1.125rem;
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-card);
+  border-radius: calc(var(--radius-card) * 1.5);
   background: var(--color-surface);
-  transition: border-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
+.addr-tile:hover {
+  border-color: var(--color-ink-300);
+}
+
+/* The one that is used unless told otherwise: an ink edge and a faint
+   ring, so it is the tile the eye lands on. */
 .addr-tile.is-default {
   border-color: var(--color-ink-900);
+  box-shadow: 0 0 0 3px var(--color-ink-100);
 }
 
 /* ---- "View all" ------------------------------------------------------- */

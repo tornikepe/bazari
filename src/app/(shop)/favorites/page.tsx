@@ -7,6 +7,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { useFavorites } from "@/components/product/FavoriteButton";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { CardActions } from "@/components/product/CardActions";
+import { SwipeAway } from "@/components/cart/SwipeAway";
 import { Price } from "@/components/ui/Price";
 import { CloseIcon, TrashIcon } from "@/components/ui/icons";
 import { clearFavorites, toggleFavorite } from "@/lib/favorites-store";
@@ -103,52 +104,51 @@ export default function FavoritesPage() {
           {products.map((product) => {
             const name = locale === "ka" ? product.nameKa : product.nameEn;
             return (
-              <article key={product.id} className="line-card">
-                <button
-                  type="button"
-                  onClick={() => toggleFavorite(product.id)}
-                  aria-label={t.favorites.remove}
-                  title={t.favorites.remove}
-                  className="line-x"
-                >
-                  <CloseIcon size={14} strokeWidth={2.5} />
-                </button>
-
-                <Link href={`/product/${product.slug}`} className="line-pic">
-                  <Image src={product.image} alt={name} fill sizes="(max-width: 640px) 112px, 96px" className="object-cover" />
-                </Link>
-
-                <div className="line-body">
-                  {product.brand && <span className="eyebrow block truncate">{product.brand}</span>}
-                  <Link
-                    href={`/product/${product.slug}`}
-                    className="line-clamp-2 mt-0.5 text-sm leading-snug font-semibold text-ink-900 transition-colors hover:text-brand-600"
+              <SwipeAway key={product.id} onRemove={() => toggleFavorite(product.id)} label={t.favorites.remove}>
+                <article className="line-card">
+                  <button
+                    type="button"
+                    onClick={() => toggleFavorite(product.id)}
+                    aria-label={t.favorites.remove}
+                    title={t.favorites.remove}
+                    className="line-x"
                   >
-                    {name}
-                  </Link>
-                  <div className="line-meta">
-                    <Price value={product.price} oldValue={product.oldPrice} size="sm" />
-                  </div>
-                </div>
+                    <CloseIcon size={14} strokeWidth={2.5} />
+                  </button>
 
-                {/* Into the cart, as the card does it: a sized product goes
-                    in as its first size, to be changed in the cart. */}
-                <div className="line-foot line-foot-one">
-                  <CardActions
-                    look="plain"
-                    needsChoice={product._count.options > 0}
-                    product={{
-                      productId: product.id,
-                      slug: product.slug,
-                      nameKa: product.nameKa,
-                      nameEn: product.nameEn,
-                      image: product.image,
-                      price: product.price,
-                      stock: product.stock,
-                    }}
-                  />
-                </div>
-              </article>
+                  <Link href={`/product/${product.slug}`} className="line-pic">
+                    <Image src={product.image} alt={name} fill sizes="(max-width: 640px) 104px, 96px" className="object-cover" />
+                  </Link>
+
+                  <div className="line-body">
+                    {product.brand && <span className="line-brand">{product.brand}</span>}
+                    <Link href={`/product/${product.slug}`} className="line-name">
+                      {name}
+                    </Link>
+                    <div className="line-price">
+                      <Price value={product.price} oldValue={product.oldPrice} size="sm" />
+                    </div>
+                  </div>
+
+                  {/* Into the cart, as the card does it: a sized product
+                      goes in as its first size, to be changed in the cart. */}
+                  <div className="line-foot line-foot-one">
+                    <CardActions
+                      look="plain"
+                      needsChoice={product._count.options > 0}
+                      product={{
+                        productId: product.id,
+                        slug: product.slug,
+                        nameKa: product.nameKa,
+                        nameEn: product.nameEn,
+                        image: product.image,
+                        price: product.price,
+                        stock: product.stock,
+                      }}
+                    />
+                  </div>
+                </article>
+              </SwipeAway>
             );
           })}
         </div>

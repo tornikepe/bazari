@@ -38,11 +38,11 @@ export function Price({
 
   return (
     <span className={`inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5 ${className}`}>
-      <span className={`font-bold tracking-tight text-ink-900 ${currentSize}`}>
+      <span data-price="now" className={`font-bold tracking-tight text-ink-900 ${currentSize}`}>
         {formatPrice(value, locale)}
       </span>
       {showOld && (
-        <span className={`font-medium text-ink-400 line-through ${oldSize}`}>
+        <span data-price="old" className={`font-medium text-ink-400 line-through ${oldSize}`}>
           {formatPrice(oldValue, locale)}
         </span>
       )}

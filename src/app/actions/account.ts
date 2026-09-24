@@ -69,27 +69,10 @@ export async function updatePaymentPrefs(
   if (!user || user.role !== "customer")
     return { ok: false, error: "unauthorized" };
 
-  /* Which bank the refund account is at. Only the two the shop deals
-     with, or nothing at all. */
-  const bank = String(formData.get("refundBank") ?? "");
-  const refundBank = bank === "tbc" || bank === "bog" ? bank : "";
-  const refundIban = String(formData.get("refundIban") ?? "")
-    .replace(/\s+/g, "")
-    .toUpperCase()
-    .slice(0, 34);
-  if (refundIban && !/^[A-Z]{2}\d{2}[A-Z0-9]{8,30}$/.test(refundIban)) {
-    return { ok: false, error: "invalid" };
-  }
-
   try {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        refundBank,
-        refundIban,
-        refundName: String(formData.get("refundName") ?? "")
-          .trim()
-          .slice(0, 120),
         invoiceCompany: String(formData.get("invoiceCompany") ?? "")
           .trim()
           .slice(0, 160),

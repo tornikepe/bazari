@@ -552,6 +552,7 @@ model User {
   /// company line an invoice should carry. All optional; all theirs.
   preferredPayment PaymentMethod?
   /// Which bank the refund account is at — "tbc", "bog", or empty.
+  refundAccounts RefundAccount[]
   refundBank     String              @default("")
   refundIban     String              @default("")
   refundName     String              @default("")
@@ -670,6 +671,25 @@ model Favorite {
 /// prefills for someone who has never saved anything, and moving them would
 /// mean a migration of every account for no gain. This table is the *book* —
 /// the second address, the office, the parents' house.
+/// An account a refund can be sent to: which bank, the IBAN, and the name
+/// on it. At most two per customer — a personal one and a company one is
+/// the whole of it — enforced in the action that creates them.
+model RefundAccount {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "tbc" or "bog" — the two banks the shop deals with.
+  bank      String
+  iban      String
+  holder    String   @default("")
+  /// The one a refund goes to unless the shop is told otherwise.
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
 model Address {
   id        String   @id @default(cuid())
   userId    String

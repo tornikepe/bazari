@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { logout } from "@/app/actions/auth";
-import { initialsOf } from "@/components/account/initials";
+import { AvatarPicker } from "@/components/account/AvatarPicker";
 import type { SessionUser } from "@/lib/auth";
 import {
   CardIcon,
@@ -33,20 +33,11 @@ export function AccountMenu({ user, signOutLabel }: { user: SessionUser; signOut
   return (
     <aside className="account-menu">
       <div className="account-menu-who">
-        {user.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.avatarUrl} alt="" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover lg:h-10 lg:w-10" />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-solid text-base font-extrabold text-brand-on-solid lg:h-10 lg:w-10 lg:text-sm"
-          >
-            {initialsOf(user.name, user.email)}
-          </span>
-        )}
+        {/* The picture is the control: pressing it chooses a new one. */}
+        <AvatarPicker name={user.name} email={user.email} avatarUrl={user.avatarUrl} />
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-ink-900">{user.name || user.email}</span>
-          <span className="block truncate text-xs text-ink-500">{user.email}</span>
+          <span className="account-menu-name">{user.name || user.email}</span>
+          <span className="account-menu-mail">{user.email}</span>
         </span>
       </div>
 

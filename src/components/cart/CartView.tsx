@@ -8,6 +8,7 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 import { Price } from "@/components/ui/Price";
 import { CloseIcon, MinusIcon, PlusIcon, TrashIcon, TruckIcon } from "@/components/ui/icons";
 import { LineSizePicker } from "@/components/cart/LineSizePicker";
+import { SwipeAway } from "@/components/cart/SwipeAway";
 import { TaxNote } from "@/components/ui/TaxNote";
 import { formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
@@ -101,83 +102,78 @@ export function CartView() {
             const key = lineKey(item);
 
             return (
-              <article key={key} className="line-card">
-                {/* Off the list: a small cross at the card's corner, where a
-                    card is closed everywhere else. */}
-                <button
-                  type="button"
-                  onClick={() => remove(key)}
-                  aria-label={t.cart.remove}
-                  title={t.cart.remove}
-                  className="line-x"
-                >
-                  <CloseIcon size={14} strokeWidth={2.5} />
-                </button>
-
-                <Link href={`/product/${item.slug}`} className="line-pic">
-                  <Image src={item.image} alt={name} fill sizes="(max-width: 640px) 104px, 96px" className="object-cover" />
-                </Link>
-
-                <div className="line-body">
-                  <Link
-                    href={`/product/${item.slug}`}
-                    className="line-clamp-2 text-sm leading-snug font-semibold text-ink-900 transition-colors hover:text-brand-600"
+              <SwipeAway key={key} onRemove={() => remove(key)} label={t.cart.remove}>
+                <article className="line-card">
+                  {/* Off the list with a pointer: the cross at the corner.
+                      A thumb swipes the card to the left instead. */}
+                  <button
+                    type="button"
+                    onClick={() => remove(key)}
+                    aria-label={t.cart.remove}
+                    title={t.cart.remove}
+                    className="line-x"
                   >
-                    {name}
+                    <CloseIcon size={14} strokeWidth={2.5} />
+                  </button>
+
+                  <Link href={`/product/${item.slug}`} className="line-pic">
+                    <Image src={item.image} alt={name} fill sizes="(max-width: 640px) 104px, 96px" className="object-cover" />
                   </Link>
 
-                  {/* The size on its own line under the name — a select is a
-                      control, not a word, and beside the unit price it read
-                      as one long line of small print. */}
-                  {item.variantId && (
-                    <div className="line-size">
-                      <LineSizePicker item={item} />
+                  <div className="line-body">
+                    <Link href={`/product/${item.slug}`} className="line-name">
+                      {name}
+                    </Link>
+
+                    {/* Sold in sizes: the size is chosen here, on the line. */}
+                    {item.variantId && (
+                      <div className="line-size">
+                        <LineSizePicker item={item} />
+                      </div>
+                    )}
+
+                    <p className="line-unit">
+                      {formatPrice(item.price, locale)} / {t.product.unit}
+                    </p>
+                  </div>
+
+                  {/* The count and what the line comes to, each under its
+                      own small word. */}
+                  <div className="line-foot">
+                    <div className="line-cell">
+                      <span className="line-cell-label">{t.cart.quantity}</span>
+                      <span className="line-stepper">
+                        {/* Stops at one: a thumb reaching for "one fewer"
+                            must not delete the row. */}
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(key, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                          aria-label="-"
+                        >
+                          <MinusIcon size={14} strokeWidth={2.5} />
+                        </button>
+                        <span aria-label={t.cart.quantity}>{item.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(key, item.quantity + 1)}
+                          disabled={item.quantity >= max}
+                          aria-label="+"
+                        >
+                          <PlusIcon size={14} strokeWidth={2.5} />
+                        </button>
+                      </span>
                     </div>
-                  )}
 
-                  <p className="line-unit">
-                    {formatPrice(item.price, locale)} / {t.product.unit}
-                  </p>
-                </div>
-
-                {/* The count and what the line comes to, each under its own
-                    small word: two figures side by side with nothing to name
-                    them was the part that read as a muddle. */}
-                <div className="line-foot">
-                  <div className="line-cell">
-                    <span className="line-cell-label">{t.cart.quantity}</span>
-                    <span className="mini-stepper line-stepper">
-                      {/* Stops at one, as the product page's does: a thumb
-                          reaching for "one fewer" must not delete the row.
-                          The cross is the way out of the cart. */}
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(key, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                        aria-label="-"
-                      >
-                        <MinusIcon size={13} strokeWidth={2.5} />
-                      </button>
-                      <span aria-label={t.cart.quantity}>{item.quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(key, item.quantity + 1)}
-                        disabled={item.quantity >= max}
-                        aria-label="+"
-                      >
-                        <PlusIcon size={13} strokeWidth={2.5} />
-                      </button>
-                    </span>
+                    <div className="line-cell is-sum">
+                      <span className="line-cell-label">{t.cart.subtotal}</span>
+                      {/* Keyed on the figure, so changing a quantity tints
+                          the line total for a moment. */}
+                      <LineTotal value={item.price * item.quantity} />
+                    </div>
                   </div>
-
-                  <div className="line-cell is-sum">
-                    <span className="line-cell-label">{t.cart.subtotal}</span>
-                    {/* Keyed on the figure, so changing a quantity tints the
-                        line total for a moment. */}
-                    <LineTotal value={item.price * item.quantity} />
-                  </div>
-                </div>
-              </article>
+                </article>
+              </SwipeAway>
             );
           })}
         </div>
