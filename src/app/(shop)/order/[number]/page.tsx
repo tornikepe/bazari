@@ -6,6 +6,7 @@ import { getI18n } from "@/lib/locale";
 import { getCurrentUser } from "@/lib/auth";
 import { readReceipts } from "@/lib/order-access";
 import { formatPrice } from "@/lib/format";
+import { LineDetails } from "@/components/cart/LineDetails";
 import { Price } from "@/components/ui/Price";
 import {
   CheckIcon,
@@ -221,7 +222,7 @@ export default async function OrderConfirmationPage({
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </span>
                   <span className="summary-line-meta">
-                    {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
+                    {item.variantLabel && <LineDetails label={item.variantLabel} />}
                     <span className="tabular-nums">
                       {item.quantity} × {formatPrice(item.price, locale)}
                     </span>

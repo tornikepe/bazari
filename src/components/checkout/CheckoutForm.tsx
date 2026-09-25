@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { LineDetails } from "@/components/cart/LineDetails";
 import { useCart } from "@/components/providers/CartProvider";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { TaxNote } from "@/components/ui/TaxNote";
@@ -692,7 +693,7 @@ export function CheckoutForm({
                     {locale === "ka" ? item.nameKa : item.nameEn}
                   </span>
                   <span className="summary-line-meta">
-                    {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
+                    {item.variantLabel && <LineDetails label={item.variantLabel} />}
                     <span className="tabular-nums">
                       {item.quantity} × {formatPrice(item.price, locale)}
                     </span>
