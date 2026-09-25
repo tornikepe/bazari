@@ -19,7 +19,7 @@ import { AlertIcon, CheckIcon, CopyIcon, ShieldIcon } from "@/components/ui/icon
  * can get into. Every other session is signed out at the same moment, so
  * this is also the button to press when a password may have leaked.
  */
-export function PasswordRotate() {
+export function PasswordRotate({ twoStep }: { twoStep: boolean }) {
   const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [password, setPassword] = useState<string | null>(null);
@@ -103,6 +103,18 @@ export function PasswordRotate() {
           {t.common.error}
         </p>
       )}
+
+      {/* Whether the dashboard asks for a second thing at sign-in, said
+          here because this is the page somebody reads when they are
+          thinking about how the shop is locked. */}
+      <p
+        className={`mt-4 flex items-start gap-1.5 border-t border-line pt-3 text-xs leading-snug ${
+          twoStep ? "text-success" : "text-warning"
+        }`}
+      >
+        {twoStep ? <CheckIcon size={14} strokeWidth={3} className="mt-px shrink-0" /> : <AlertIcon size={14} className="mt-px shrink-0" />}
+        {twoStep ? t.admin.pwTwoStepOn : t.admin.pwTwoStepOff}
+      </p>
     </section>
   );
 }
