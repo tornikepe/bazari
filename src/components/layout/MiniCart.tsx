@@ -73,12 +73,11 @@ export function MiniCart() {
                 <p className="mini-sum">{formatPrice(item.price * item.quantity, locale)}</p>
               </div>
 
-              {/* What there is to say about this line — the size it is and
-                  how many — stacked in its own column, ending where the
-                  cross begins. It used to sit in the middle under the
-                  name, a long way from anything it belonged to. */}
+              {/* How many, and nothing else. The size and any other label
+                  belong on the cart page, where there is room to change
+                  them; in a panel this narrow they were three words
+                  fighting over the same eighty pixels. */}
               <div className="mini-meta">
-                {item.variantLabel && <span className="line-chip">{item.variantLabel}</span>}
                 {/* A small stepper: a pill with the number centred between
                     two round marks, the cart page's in miniature. */}
                 <span className="mini-stepper">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useCart, type CartItem } from "@/components/providers/CartProvider";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { ChevronDownIcon } from "@/components/ui/icons";
+import { SizeSelect } from "@/components/product/SizeSelect";
 import { lineKey } from "@/lib/cart-store";
 import { labelFor, priceOf, type Option, type Variant } from "@/lib/variants";
 
@@ -87,37 +87,32 @@ export function LineSizePicker({ item }: { item: CartItem }) {
   const name = data.options.map((option) => option.name).join(" · ");
 
   return (
-    /* Its own cell, as the count and the line's sum are: the word for
-       what is being chosen over the control that chooses it, both set in
-       the middle of the column. The word was inside every option of the
-       select before, repeated once per size. */
+    /* The shop's own control, the same one the product page opens — a
+       button with a panel of sizes under it — rather than the platform's
+       select. The word for what is being chosen sits over it, and both
+       read down the middle of the cell. */
     <span className="line-cell is-size">
-      <span className="line-cell-label">{name}</span>
-      <span className="pick line-pick">
-        <select
-          value={item.variantId ?? ""}
-          aria-label={name}
-          onChange={(event) => {
-            const variant = data.variants.find((candidate) => candidate.id === event.target.value);
-            if (!variant) return;
-            replace(lineKey(item), {
-              ...item,
-              price: priceOf(data.price, variant),
-              stock: variant.stock,
-              variantId: variant.id,
-              variantLabel: labelFor(data.options, variant),
-            });
-          }}
-        >
-          {choices.map((variant) => (
-            <option key={variant.id} value={variant.id} disabled={variant.stock <= 0}>
-              {labelFor(data.options, variant)}
-              {variant.stock <= 0 ? ` — ${t.product.outOfStock}` : ""}
-            </option>
-          ))}
-        </select>
-        <ChevronDownIcon size={15} className="pick-chevron" aria-hidden="true" />
-      </span>
+      <SizeSelect
+        label={name}
+        choices={choices.map((variant) => ({
+          id: variant.id,
+          label: labelFor(data.options, variant),
+          available: variant.stock > 0,
+        }))}
+        value={item.variantId ?? undefined}
+        soldOutLabel={t.product.outOfStock}
+        onChange={(id) => {
+          const variant = data.variants.find((candidate) => candidate.id === id);
+          if (!variant) return;
+          replace(lineKey(item), {
+            ...item,
+            price: priceOf(data.price, variant),
+            stock: variant.stock,
+            variantId: variant.id,
+            variantLabel: labelFor(data.options, variant),
+          });
+        }}
+      />
     </span>
   );
 }

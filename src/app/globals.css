@@ -148,17 +148,21 @@
   --dur-base: 0.28s;
   --dur-slow: 0.6s;
 
-  /* Typography. BPG Nino Mtavruli comes first everywhere and draws only
-     Georgian — its `unicode-range` in `layout.tsx` sees to that — so the
-     rest of the chain still carries Latin, the digits and the signs the
-     Georgian face does not hold (the lari, the ×, the −). Noto Sans
-     Georgian stays behind it for the handful of archaic letters BPG Nino
-     leaves out. */
-  --font-sans: var(--font-georgian), var(--font-geist-sans), var(--font-noto-georgian), system-ui,
-    -apple-system, "Segoe UI", sans-serif;
+  /* Typography, in two halves that are meant to look like one. BPG Nino
+     Mtavruli comes first everywhere and draws only Georgian — its
+     `unicode-range` in `layout.tsx` sees to that — and Inter Bold behind
+     it draws the Latin, the digits and the three marks the Georgian face
+     does not hold (the lari, the ×, the −), at the same weight and the
+     same apparent size. Geist and Noto Sans Georgian stay at the end for
+     anything neither of them has.
+
+     The display face is the same pair. The serif that used to set the
+     headlines is gone: it drew Latin in a voice the Georgian beside it no
+     longer had. */
+  --font-sans: var(--font-georgian), var(--font-latin), var(--font-geist-sans),
+    var(--font-noto-georgian), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  /* The headline face — see `layout.tsx`. */
-  --font-display: var(--font-georgian), var(--font-serif), "Noto Serif Georgian", Georgia, serif;
+  --font-display: var(--font-sans);
 
   /* Type scale.
      --------------------------------------------------------------------
@@ -334,6 +338,10 @@
     background: var(--color-canvas);
     color: var(--color-ink-800);
     font-family: var(--font-sans);
+    /* Both faces the page is set in ship one weight each. Asking for 800
+       where only 700 exists would have the browser smear a fake bold over
+       an already bold letter; it is told not to. */
+    font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
     /* Georgian does not hyphenate and builds long compounds:
        "კონფიდენციალურობა" is seventeen characters with no break opportunity,
@@ -6051,7 +6059,31 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   color: var(--color-panel-fg);
 }
 
-/* The size, as the shop's own control on the card's own tone. */
+/* The size on a cart line: the shop's own control, sized to the cell and
+   drawn in whatever tone the card is. */
+.line-cell.is-size .size-select {
+  width: 100%;
+}
+
+.line-cell.is-size .field-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  text-align: center;
+}
+
+.line-cell.is-size .size-select-button {
+  height: 2.75rem;
+  font-size: var(--text-sm);
+  border-color: color-mix(in oklab, var(--color-panel-fg) 24%, transparent);
+  background: color-mix(in oklab, var(--color-panel-fg) 8%, transparent);
+  color: var(--color-panel-fg);
+}
+
+.line-cell.is-size .size-select-button:hover,
+.line-cell.is-size .size-select-button[aria-expanded="true"] {
+  border-color: var(--color-panel-fg);
+}
+
 .line-pick {
   display: block;
   width: 100%;
@@ -6329,18 +6361,16 @@ html[data-cursor] .cursor-dot[data-over="text"] {
     margin-top: 0.375rem;
   }
 
-  .line-pick {
-    max-width: 10rem;
-  }
-
-  .line-pick > select {
+  /* From `sm` up the card is paper again, and so is the control on it. */
+  .line-cell.is-size .size-select-button {
     border-color: var(--color-ink-300);
     background: var(--color-surface);
     color: var(--color-ink-900);
   }
 
-  .line-pick .pick-chevron {
-    color: var(--color-ink-500);
+  .line-cell.is-size .size-select-button:hover,
+  .line-cell.is-size .size-select-button[aria-expanded="true"] {
+    border-color: var(--color-ink-900);
   }
 
   .line-unit {
@@ -6690,6 +6720,10 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  /* The size reads down the middle of its own control, on every screen:
+     the chevron is pinned at the right and the label takes the rest, so
+     "40 2/3" sits in the centre rather than against the left edge. */
+  text-align: center;
   padding: 0 1rem;
   border: 1px solid var(--color-ink-300);
   border-radius: var(--radius-control);
@@ -6700,6 +6734,10 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.size-select-button > span:first-child {
+  flex: 1;
 }
 
 .size-select-button:hover,
@@ -7078,13 +7116,8 @@ html[data-cursor] .cursor-dot[data-over="text"] {
     text-align: center;
   }
 
-  .size-select-button,
   .qty-value {
     text-align: center;
-  }
-
-  .size-select-button > span:first-child {
-    flex: 1;
   }
 }
 

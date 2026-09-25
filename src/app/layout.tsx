@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Georgian, Noto_Serif_Georgian } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Noto_Sans_Georgian } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { CartProvider } from "@/components/providers/CartProvider";
@@ -33,17 +33,27 @@ const notoGeorgian = Noto_Sans_Georgian({
   display: "swap",
 });
 
-// The display face: a serif with Georgian and Latin in one family, for the
-// headlines. The editorial register the storefront is set in — a big serif
-// title over a plain sans — needs both scripts in the same voice, and this
-// is the one serif on Google Fonts that draws Georgian properly.
-const notoSerifGeorgian = Noto_Serif_Georgian({
-  // `--font-serif`, not `--font-display`: the stylesheet builds
-  // `--font-display` out of this one and the Georgian face, and a custom
-  // property that names itself is circular and silently drops out.
-  variable: "--font-serif",
-  subsets: ["georgian", "latin"],
-  weight: ["400", "500", "600", "700"],
+/**
+ * The Latin half of the shop's voice: Inter, bold and nothing else.
+ *
+ * The Georgian face is a single bold weight in capital forms, and beside
+ * it Geist at 400 read as a whisper next to a shout — a price in Latin
+ * digits looked smaller and lighter than the Georgian word in front of
+ * it, which is what "the numbers are not centred with the text" was
+ * describing. Inter at 700 sits at the same apparent size and the same
+ * weight as BPG Nino Mtavruli, so a line that mixes the two reads as one
+ * line. One weight only, for the same reason the Georgian has one: the
+ * two must not drift apart at a heading.
+ *
+ * It also carries the three marks the Georgian face does not draw — the
+ * lari, the multiplication sign and the minus — and it has proper tabular
+ * figures, which the Georgian face does not, so prices still line up in a
+ * column.
+ */
+const inter = Inter({
+  variable: "--font-latin",
+  subsets: ["latin", "latin-ext"],
+  weight: ["700"],
   display: "swap",
 });
 
@@ -63,6 +73,13 @@ const bpgNino = localFont({
   variable: "--font-georgian",
   weight: "400 900",
   display: "swap",
+  /* No metric-matched fallback family. Next would add one — "bpgNino
+     Fallback" — with no `unicode-range` of its own, and because it sits
+     directly behind this face in the chain it would catch every Latin
+     letter and every digit before the Latin face further down was ever
+     reached. A face scoped to one script must not be followed by an
+     unscoped copy of itself. */
+  adjustFontFallback: false,
   declarations: [{ prop: "unicode-range", value: "U+10A0-10FF, U+1C90-1CBF, U+2D00-2D2F" }],
 });
 
@@ -145,7 +162,7 @@ export default async function RootLayout({
       // Opts smooth scrolling out of route transitions, which would otherwise
       // animate the jump to the top of each new page.
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} ${notoSerifGeorgian.variable} ${bpgNino.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} ${inter.variable} ${bpgNino.variable} h-full antialiased`}
     >
       <head>
         {/* Runs before paint: falls back to the OS preference for a visitor
