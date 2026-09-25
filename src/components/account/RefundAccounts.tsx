@@ -39,6 +39,7 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
   const [editing, setEditing] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [ibanBad, setIbanBad] = useState(false);
+  const [holderBad, setHolderBad] = useState(false);
   const [bank, setBank] = useState("");
 
   const current = accounts.find((account) => account.id === editing);
@@ -47,6 +48,7 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
   function open(id: string | null) {
     setFailed(false);
     setIbanBad(false);
+    setHolderBad(false);
     setBank(id ? (accounts.find((account) => account.id === id)?.bank ?? "") : "");
     setEditing(id);
   }
@@ -56,6 +58,23 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
     const formData = new FormData(event.currentTarget);
     setFailed(false);
     setIbanBad(false);
+    setHolderBad(false);
+
+    /* Both are required, and the form says which is missing before it asks
+       the server — an empty name and a bad number are different mistakes. */
+    const iban = String(formData.get("iban") ?? "").trim();
+    const holder = String(formData.get("holder") ?? "").trim();
+    if (!iban || !holder) {
+      if (!iban) {
+        setIbanBad(true);
+        shakeField(document.getElementById("account-iban"));
+      }
+      if (!holder) {
+        setHolderBad(true);
+        if (iban) shakeField(document.getElementById("account-holder"));
+      }
+      return;
+    }
 
     startTransition(async () => {
       const result = await saveRefundAccount(formData);
@@ -171,6 +190,10 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
         <form
           key={editing}
           onSubmit={submit}
+          /* The shop says what is missing, in the shop's language, on the
+             box it is about. `required` stays for what it means to a
+             screen reader; the browser's own bubble is turned off. */
+          noValidate
           className={`grid gap-x-4 gap-y-3 sm:grid-cols-2 ${accounts.length > 0 ? "mt-6 border-t border-line pt-6" : "mt-2"}`}
         >
           {current && <input type="hidden" name="id" value={current.id} />}
@@ -230,6 +253,9 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
               name="holder"
               defaultValue={current?.holder ?? ""}
               autoComplete="name"
+              required
+              aria-invalid={holderBad || undefined}
+              onChange={() => holderBad && setHolderBad(false)}
               className="field"
             />
           </div>

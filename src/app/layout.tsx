@@ -58,7 +58,18 @@ const inter = Inter({
 });
 
 /**
- * The shop's Georgian face: BPG Nino Mtavruli Bold, self-hosted.
+ * The shop's Georgian face: BPG Nino Mtavruli Bold, self-hosted and with
+ * its glyphs moved onto the baseline.
+ *
+ * The face as published draws everything about four and a half per cent of
+ * the em *above* the baseline. On its own that is invisible — every letter
+ * floats by the same amount. Beside a Latin face that sits on the baseline
+ * properly it is not: "3 პროდუქტი · ჯამი 357,00 ₾" came out with the
+ * Georgian riding high and every digit looking dropped, which is what "the
+ * numbers are not on the same line as the text" was describing. No CSS can
+ * move one font's glyphs relative to another's inside a line — they share
+ * the baseline by definition — so the outlines were shifted down by 92
+ * units once, here, and the two faces now sit on the same line.
  *
  * `unicode-range` is what makes this a *Georgian* face rather than the
  * site's face. The browser reaches for it only when a character falls in

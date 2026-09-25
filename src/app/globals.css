@@ -2606,7 +2606,9 @@ html[data-reveal="all"] .reveal-view {
 .filter-row-count {
   flex-shrink: 0;
   margin-left: auto;
-  font-size: 12px;
+  /* Same size as the name beside it, for the same reason as the count on
+     a status tab. */
+  font-size: inherit;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-ink-400);
@@ -7319,8 +7321,12 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   cursor: default;
 }
 
+/* The same size as the word it belongs to. A figure two pixels smaller
+   sitting on the same baseline reads as a subscript — "delivered" with a
+   little 14 hanging off it — and what it should read as is one line with
+   a number at the end of it. Colour is what separates them, not size. */
 .order-tab-count {
-  font-size: 11px;
+  font-size: inherit;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-ink-400);

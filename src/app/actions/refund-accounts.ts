@@ -43,7 +43,13 @@ export async function saveRefundAccount(formData: FormData): Promise<RefundAccou
 
   const id = String(formData.get("id") ?? "").trim();
   const data = read(formData);
-  if (!data.bank || !looksLikeIban(data.iban)) return { ok: false, error: "invalid" };
+  /* All three, and the holder is not optional. A refund is a transfer to a
+     named person: a bank matches the name against the account, and one sent
+     to a number with nobody on it comes back days later with no explanation
+     the shop can give. */
+  if (!data.bank || !looksLikeIban(data.iban) || !data.holder) {
+    return { ok: false, error: "invalid" };
+  }
 
   const makeDefault = formData.get("isDefault") === "on";
 
