@@ -1,9 +1,11 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { audit } from "@/lib/audit";
 import { consumeCode, consumeInvite, issueCode } from "@/lib/verification";
-import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/auth-emails";
+import { sendPasswordResetEmail, sendStaffLoginEmail, sendVerificationEmail } from "@/lib/auth-emails";
 import { mailConfigured } from "@/lib/mail";
 import { getLocale } from "@/lib/locale";
 import { clientIp, consume, reset } from "@/lib/rate-limit";
@@ -15,6 +17,7 @@ import {
   getCurrentUser,
   hashPassword,
   homeFor,
+  isStaff,
   verifyPassword,
 } from "@/lib/auth";
 
@@ -38,6 +41,13 @@ export type AuthState = {
   sent?: boolean;
   /** Minutes until a rate-limited caller may retry. */
   retryMinutes?: number;
+  /**
+   * The password was right and the account is staff, so the form must now
+   * ask for the code that went to the address on it. The address is echoed
+   * back only because the second step has to name it; it is never a value
+   * the form can set, so it cannot be used to sign in as somebody else.
+   */
+  staffCode?: { email: string };
 };
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -89,6 +99,63 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
   await reset(`login:ip:${ip}`);
   await reset(`login:email:${who}`);
 
+  /* Staff get a second step: the password is one half, a code sent to the
+     address on the account is the other. The dashboard can reprice the
+     shop, read every customer's address and empty the stockroom, and a
+     password is one leaked note away from anybody.
+     
+     Only when the shop can actually send email. If it cannot, there is no
+     code to type and insisting on one would lock the owner out of their
+     own shop — the fallback is the password alone, and the dashboard says
+     so until a mail key is set. Nothing an attacker does can turn the
+     mailer off; only the deployment's own configuration can. */
+  if (isStaff(user.role) && mailConfigured()) {
+    const { code } = await issueCode(user.id, "staff_login");
+    await sendStaffLoginEmail(user.email, code, await getLocale());
+    return { staffCode: { email: user.email } };
+  }
+
+  await createSession(user.id, user.sessionVersion);
+  redirect(safeNext(formData.get("next")) ?? homeFor(user.role));
+}
+
+/**
+ * The second half of a staff sign-in.
+ *
+ * The code is the only thing this takes on trust, and it is six digits, so
+ * it is metered twice over: `consumeCode` locks the code itself after five
+ * wrong tries, and the address is counted here so a caller cannot simply
+ * ask for a fresh code and start again. Everything about the account is
+ * checked a second time — staff still, not disabled — because minutes have
+ * passed since the password was.
+ */
+export async function confirmStaffSignIn(
+  _previous: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const code = String(formData.get("code") ?? "").trim();
+  if (!email || !code) return { error: "invalid" };
+
+  const ip = await clientIp();
+  for (const key of [`staffcode:ip:${ip}`, `staffcode:email:${email}`]) {
+    const limit = await consume(key, 10, 30 * 60);
+    if (!limit.ok) {
+      return { error: "rate-limited", retryMinutes: Math.ceil(limit.retryAfter / 60) };
+    }
+  }
+
+  const result = await consumeCode(email, "staff_login", code);
+  if (!result.ok) {
+    return { error: result.reason === "invalid" ? "invalid" : result.reason };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: result.userId },
+    select: { id: true, role: true, sessionVersion: true, disabledAt: true },
+  });
+  if (!user || !isStaff(user.role) || user.disabledAt) return { error: "invalid" };
+
   await createSession(user.id, user.sessionVersion);
   redirect(safeNext(formData.get("next")) ?? homeFor(user.role));
 }
@@ -125,6 +192,15 @@ export async function register(_previous: AuthState, formData: FormData): Promis
   if (!phone) return { error: "phone" };
   if (password.length < MIN_PASSWORD_LENGTH) return { error: "weak" };
   if (password !== confirm) return { error: "mismatch" };
+
+  /* Signing up costs the shop an email and a row. Unmetered, one host can
+     make a thousand accounts in a minute — and every one of them sends a
+     verification code, which is somebody else's inbox if the address is
+     not theirs. Five an hour from one address is generous for a person. */
+  const signUps = await consume(`register:ip:${await clientIp()}`, 5, 60 * 60);
+  if (!signUps.ok) {
+    return { error: "rate-limited", retryMinutes: Math.ceil(signUps.retryAfter / 60) };
+  }
 
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existing) return { error: "taken" };
@@ -392,6 +468,62 @@ export async function changePassword(_previous: AuthState, formData: FormData): 
   const version = await revokeSessions(user.id);
   await createSession(user.id, version);
   redirect("/account?saved=password");
+}
+
+/**
+ * A new password for a staff account, made by the shop rather than by the
+ * person using it.
+ *
+ * The one the dashboard shipped with came out of a seed script and lives
+ * in a file on somebody's disk; the one a person invents is a word they
+ * already use somewhere else. This makes twenty characters out of the
+ * system's random source, sets it, and hands it back exactly once — after
+ * that it exists only as a hash, and nobody, including this shop, can read
+ * it again.
+ *
+ * Every other session is cut at the same moment, and the caller's own is
+ * reissued, so rotating a password that may have leaked actually removes
+ * whoever was using it.
+ *
+ * The plain text is returned to the caller over the same TLS connection
+ * that carried their session and is never written to a log or a column.
+ */
+export async function generateStaffPassword(): Promise<
+  { ok: true; password: string } | { ok: false }
+> {
+  const user = await getCurrentUser();
+  if (!user || !isStaff(user.role)) return { ok: false };
+
+  /* An alphabet with no 0/O and no 1/l/I in it: this is read off a screen
+     and typed, or read down a phone. Four groups of five, which is a
+     shape people copy without losing their place. */
+  const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
+  const bytes = randomBytes(20);
+  const chars = [...bytes].map((byte) => ALPHABET[byte % ALPHABET.length]);
+  const password = [0, 5, 10, 15].map((at) => chars.slice(at, at + 5).join("")).join("-");
+
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashPassword(password) },
+    });
+  } catch (error) {
+    console.error("generateStaffPassword failed", error);
+    return { ok: false };
+  }
+
+  // Everything else signed out, this session kept.
+  const version = await revokeSessions(user.id);
+  await createSession(user.id, version);
+
+  await audit({
+    actor: user.email,
+    action: "staff.password",
+    entityId: user.id,
+    label: user.email,
+  });
+
+  return { ok: true, password };
 }
 
 /**

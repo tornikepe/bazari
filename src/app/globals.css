@@ -2552,8 +2552,14 @@ html[data-reveal="all"] .reveal-view {
   align-items: center;
   gap: 0.625rem;
   width: 100%;
-  min-height: 2.5rem;
-  padding: 0.375rem 0.625rem;
+  /* Every row the same height, whatever its name is and whichever
+     language it is in. A category whose name ran to two lines was eight
+     pixels taller than the one above it, so the rail was ragged in
+     Georgian and even in English — and the whole column changed height
+     when the language did. The name is held to one line and told to
+     shorten itself if it cannot fit. */
+  height: 2.5rem;
+  padding: 0 0.625rem;
   border-radius: var(--radius-control);
   text-align: left;
   font-size: 13px;
@@ -2561,6 +2567,14 @@ html[data-reveal="all"] .reveal-view {
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
+}
+
+/* The name inside a row: one line, cut with an ellipsis when it is
+   longer than the rail is wide. The count beside it keeps its place. */
+.filter-row > span:not(.filter-row-icon) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .filter-row:hover {
@@ -3116,10 +3130,12 @@ html[data-reveal="all"] .reveal-view {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 3rem;
-  min-width: 3rem;
-  padding-inline: 0.875rem;
-  border-radius: var(--radius-control);
+  /* A circle of a fixed size, on every screen and in every language —
+     see the comment on the launcher's markup. */
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0;
+  border-radius: 999px;
   background: var(--color-brand-solid);
   color: var(--color-brand-on-solid);
   font-size: var(--text-sm);
@@ -3142,20 +3158,11 @@ html[data-reveal="all"] .reveal-view {
   background: var(--color-brand-solid-hover);
 }
 
-/* Below 640px the label is dropped and the launcher is a circle: on a 320px
-   screen a pill with a Georgian word on it takes a third of the width. */
-.chat-launcher-label {
-  display: none;
-}
 
 @media (min-width: 640px) {
   .chat-launcher {
     right: calc(1.5rem + env(safe-area-inset-right, 0px));
     bottom: calc(1.5rem + var(--buy-bar-h, 0px) + env(safe-area-inset-bottom, 0px));
-  }
-
-  .chat-launcher-label {
-    display: inline;
   }
 }
 

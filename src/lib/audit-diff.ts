@@ -31,6 +31,9 @@ export const AUDIT_ACTIONS = [
   "staff.invite",
   "staff.role",
   "staff.disable",
+  /// A staff member rotating their own password. The password itself is
+  /// never part of the entry — only that it changed, and when.
+  "staff.password",
   "customer.disable",
   "review.publish",
   "spend.update",

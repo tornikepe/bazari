@@ -19,6 +19,11 @@ const COPY = {
     resetSubject: "პაროლის აღდგენა",
     resetHeading: "პაროლის აღდგენა",
     resetBody: "პაროლის შესაცვლელი კოდია:",
+    staffSubject: "ადმინში შესვლის კოდი",
+    staffHeading: "ადმინში შესვლა",
+    staffBody: "შესვლის დასასრულებლად შეიყვანე ეს კოდი:",
+    staffWarn:
+      "თუ ეს შენ არ ყოფილხარ — ვიღაცამ შენი პაროლი იცის. შეცვალე ის დაუყოვნებლივ.",
     expires: "კოდი 15 წუთის განმავლობაში მოქმედებს.",
     ignore: "თუ ეს შენ არ მოგითხოვია, უბრალოდ იგნორირება გაუკეთე ამ წერილს.",
   },
@@ -29,6 +34,11 @@ const COPY = {
     resetSubject: "Reset your password",
     resetHeading: "Reset your password",
     resetBody: "Your password reset code is:",
+    staffSubject: "Your dashboard sign-in code",
+    staffHeading: "Sign in to the dashboard",
+    staffBody: "Enter this code to finish signing in:",
+    staffWarn:
+      "If this wasn't you, somebody knows your password. Change it now.",
     expires: "The code is valid for 15 minutes.",
     ignore: "If you didn't request this, you can safely ignore this email.",
   },
@@ -82,5 +92,24 @@ export async function sendPasswordResetEmail(to: string, code: string, locale: L
     subject: `${t.resetSubject} — ${SITE_TITLE}`,
     text: plain(t.resetHeading, t.resetBody, code, footer),
     html: wrap(t.resetHeading, t.resetBody, code, footer),
+  });
+}
+
+/**
+ * The second half of a staff sign-in.
+ *
+ * Its own message rather than the verification one: this arrives because
+ * somebody typed the right password, and the line that matters is the one
+ * telling the owner what it means if they did not.
+ */
+export async function sendStaffLoginEmail(to: string, code: string, locale: Locale) {
+  const t = COPY[locale];
+  const footer = [t.expires, t.staffWarn];
+
+  return sendMail({
+    to,
+    subject: `${t.staffSubject} — ${SITE_TITLE}`,
+    text: plain(t.staffHeading, t.staffBody, code, footer),
+    html: wrap(t.staffHeading, t.staffBody, code, footer),
   });
 }

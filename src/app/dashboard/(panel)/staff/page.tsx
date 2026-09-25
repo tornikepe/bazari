@@ -4,6 +4,7 @@ import { getI18n } from "@/lib/locale";
 import { formatDate } from "@/lib/format";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { StaffManager } from "@/components/admin/StaffManager";
+import { PasswordRotate } from "@/components/admin/PasswordRotate";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 /**
@@ -55,6 +56,10 @@ export default async function AdminStaffPage() {
           }))}
         />
       </div>
+
+      {/* The one thing on this page that is about the reader rather than
+          about the team. */}
+      <PasswordRotate />
     </div>
   );
 }

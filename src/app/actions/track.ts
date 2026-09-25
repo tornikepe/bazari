@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { clientIp, consume } from "@/lib/rate-limit";
 import { orderHistory } from "@/lib/order-status";
 import { getLocale } from "@/lib/locale";
 import type { OrderStatus } from "@/lib/order-status";
@@ -56,6 +57,15 @@ export async function trackOrder(orderNumber: string, phone: string): Promise<Tr
   const digits = phone.replace(/\D/g, "");
 
   if (!number || digits.length < 9) return { ok: false, error: "invalid" };
+
+  /* An order number and a phone number are both guessable, and this page
+     is open to anyone. Unmetered it is a way to walk the order book: a
+     number that exists answers differently from one that does not, and
+     the last four digits of a phone are not much of a secret. Twenty
+     tries an hour from one address is more than anybody checking their
+     own parcel needs. */
+  const throttle = await consume(`track:ip:${await clientIp()}`, 20, 60 * 60);
+  if (!throttle.ok) return { ok: false, error: "invalid" };
 
   const order = await prisma.order.findUnique({
     where: { number },

@@ -61,11 +61,19 @@ export function ChatWidget({ available }: { available: boolean }) {
      Chromium the next Tab happened to wrap to the skip link, which hid it; in
      Firefox the launcher kept focus and the keyboard suite could not leave it. */
   const wasOpen = useRef(false);
+  const panelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (open) {
       wasOpen.current = true;
-      inputRef.current?.focus();
+      /* The panel itself, not the box at the foot of it. Opening a
+         conversation is not the same as starting to write one: focusing
+         the input threw a phone's keyboard up over the greeting the
+         panel had just been opened to read, and on a wide screen it put
+         a caret in a box nobody had pointed at. A keyboard user still
+         lands inside the dialog, and Tab from here reaches the input in
+         one press. */
+      panelRef.current?.focus({ preventScroll: true });
     } else if (wasOpen.current) {
       // Returning focus to the launcher keeps keyboard users where they were,
       // rather than dropping them at the top of the document.
@@ -140,11 +148,15 @@ export function ChatWidget({ available }: { available: boolean }) {
       {/* ---------------------------------------------------------- */}
       {panelMounted && (
         <section
+          ref={panelRef}
           id={panelId}
           role="dialog"
           aria-label={t.chat.title}
           data-state={panelState}
-          className="chat-panel card flex flex-col overflow-hidden shadow-pop"
+          /* Focusable only as a target for the open — never in the tab
+             order, and no ring around the whole panel when it takes it. */
+          tabIndex={-1}
+          className="chat-panel card flex flex-col overflow-hidden shadow-pop outline-none"
         >
           <header className="flex shrink-0 items-center gap-2.5 bg-panel px-3.5 py-3 text-panel-fg">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-brand-solid text-brand-on-solid">
@@ -322,13 +334,15 @@ export function ChatWidget({ available }: { available: boolean }) {
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         aria-label={open ? t.chat.close : t.chat.launch}
+        title={open ? t.chat.close : t.chat.launch}
         className="chat-launcher"
       >
+        {/* A mark and no word. The word was "დახმარება" in one language
+            and "Help" in the other, and "დახურვა" or "Close" once the
+            panel was open — four widths for a button pinned to a corner,
+            which moved its own left edge every time the language or the
+            state changed. What it is is in its label and its tooltip. */}
         {open ? <CloseIcon size={20} /> : <ChatIcon size={20} />}
-        {/* The label follows the icon — a cross next to the word "Help" reads
-            as a button that dismisses help rather than one that closes the
-            panel. */}
-        <span className="chat-launcher-label">{open ? t.chat.close : t.chat.launch}</span>
       </button>
     </div>
   );

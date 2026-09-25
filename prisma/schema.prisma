@@ -27,6 +27,9 @@ enum TokenPurpose {
   password_reset
   /// A staff member setting their password for the first time.
   staff_invite
+  /// The second step of a staff sign-in: the password was right, and this
+  /// code — sent to the address on the account — is the other half.
+  staff_login
 }
 
 enum PaymentMethod {
@@ -426,6 +429,12 @@ model Order {
   @@index([createdAt])
   @@index([userId])
   @@index([paymentStatus])
+  /// Both of these are foreign keys with nothing behind them. Postgres does
+  /// not index a key just because it references one, so deleting a coupon or
+  /// a courier zone had to read every order to find the rows pointing at it,
+  /// and the dashboard's "orders on this coupon" did the same.
+  @@index([couponId])
+  @@index([deliveryZoneId])
 }
 
 /// Status-change history for an order — who moved it and when.
@@ -468,6 +477,11 @@ model OrderItem {
   returnItems  ReturnItem[]
 
   @@index([orderId])
+  /// What this product has sold, and what it earned — the cost-and-profit
+  /// page asks exactly that, of every line in the window. Without this it
+  /// read the whole table.
+  @@index([productId])
+  @@index([variantId])
 }
 
 /// A shopper asking to send something back.
@@ -629,6 +643,8 @@ model Review {
   @@unique([productId, userId])
   @@index([productId, isPublished, createdAt])
   @@index([userId])
+  /// "Has this order already been reviewed?", asked on every order page.
+  @@index([orderId])
 }
 
 /// A picture a customer attached to their review — the product as it
@@ -663,6 +679,9 @@ model Favorite {
 
   @@id([userId, productId])
   @@index([userId, createdAt])
+  /// The key starts with the user, so the product half of it is not
+  /// indexed on its own — and deleting a product had to scan the table.
+  @@index([productId])
 }
 
 /// A delivery address a customer has saved.
@@ -983,6 +1002,9 @@ model ProductEvent {
   count     Int     @default(0)
 
   @@id([day, productId, kind])
+  /// The key starts with the day, so a question about one product over a
+  /// window could not use it.
+  @@index([productId])
   @@index([day])
 }
 

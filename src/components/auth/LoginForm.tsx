@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { AuthCard } from "@/components/auth/AuthCard";
-import { login, type AuthState } from "@/app/actions/auth";
+import { confirmStaffSignIn, login, type AuthState } from "@/app/actions/auth";
 import { AlertIcon } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { FormFault, useFieldShake } from "@/components/ui/field-fault";
@@ -20,6 +20,16 @@ export function LoginForm({
 }) {
   const { t } = useI18n();
   const [state, formAction, pending] = useActionState<AuthState, FormData>(login, {});
+  const [codeState, codeAction, codePending] = useActionState<AuthState, FormData>(
+    confirmStaffSignIn,
+    {},
+  );
+
+  /* The password was right and the account is staff, so the shop has sent a
+     code to the address on it and the form is now asking for that instead.
+     Once here it stays here: a staff sign-in does not fall back to the
+     password form because the code was mistyped. */
+  const awaiting = state.staffCode;
 
   /**
    * Field errors the site writes, instead of the browser's own bubble.
@@ -71,6 +81,62 @@ export function LoginForm({
       // put where the problem is rather than told there is one somewhere.
       (found.email ? emailRef : passwordRef).current?.focus();
     }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* The second step, for staff                                        */
+  /* ---------------------------------------------------------------- */
+  if (awaiting) {
+    const codeFault = codeState.error
+      ? codeState.error === "rate-limited"
+        ? fill(t.auth.rateLimited, { minutes: String(codeState.retryMinutes ?? 15) })
+        : codeState.error === "expired"
+          ? t.auth.expired
+          : codeState.error === "too-many-attempts"
+            ? t.auth.tooManyAttempts
+            : t.auth.invalid
+      : null;
+
+    return (
+      <AuthCard
+        title={t.auth.staffCodeTitle}
+        hint={fill(t.auth.staffCodeHint, { email: awaiting.email })}
+        footer={
+          <a href="/login" className="font-semibold text-brand-600 hover:underline">
+            {t.auth.staffCodeBack}
+          </a>
+        }
+      >
+        <form action={codeAction} className="mt-5 flex flex-col gap-4">
+          <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="email" value={awaiting.email} />
+
+          <div>
+            <label className="field-label" htmlFor="staff-code">
+              {t.auth.staffCodeLabel}
+            </label>
+            <input
+              id="staff-code"
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              /* Six digits, and nothing else can be typed into it. */
+              pattern="[0-9]*"
+              maxLength={6}
+              autoFocus
+              aria-invalid={Boolean(codeState.error) || undefined}
+              className="field text-center font-mono text-lg tracking-[0.4em]"
+            />
+          </div>
+
+          <FormFault message={codeFault} />
+
+          <button type="submit" disabled={codePending} className="btn btn-primary btn-md w-full">
+            {codePending ? t.auth.signingIn : t.auth.staffCodeSubmit}
+          </button>
+        </form>
+      </AuthCard>
+    );
   }
 
   return (
