@@ -423,9 +423,13 @@ database is an ocean away pays for it on every page.
 
 ## Known limits
 
-- **Images live in Postgres**, served through `/api/images` with long cache headers. Simple, no
-  second service to configure, and fine at this size — a shop with tens of thousands of photos
-  would want object storage.
+- **Everything uploaded lives in Postgres** — product photos, avatars, review photos and
+  transfer slips — served through routes with `immutable` cache headers, so the CDN answers
+  after the first hit and the database is not touched again. Simple, and no second service to
+  configure. The figure to watch is the slips: they are the largest thing a shopper uploads
+  (about 300 kB each, one per bank-transfer order), and at a couple of thousand orders they
+  outweigh the whole catalogue. Either move to a larger database plan, or expire them — a slip
+  for money that arrived six months ago is dead weight and somebody else's personal data.
 - **No test suite.** There was one; it was removed deliberately. CI runs lint, typecheck and a
   migrate-from-empty check, and changes are verified against a real browser instead.
 - **The gateway adapters are written but not yet exercised against live merchant accounts.**
