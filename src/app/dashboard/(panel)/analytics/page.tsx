@@ -98,9 +98,12 @@ export default async function AnalyticsPage({
       <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line lg:grid-cols-4">
         {figures.map((figure) => (
           <div key={figure.label} className="min-w-0 bg-surface px-4 py-3.5">
-            <dt className="label truncate text-ink-500" title={figure.label}>
-              {figure.label}
-            </dt>
+            {/* Wrapping, not truncated. "ერთი კლიენტის მოყვანა" came out as
+                "ერთი კლიენტის მოყ…" in a half-width card on a phone, and a
+                figure whose name has been cut off is a figure about nothing.
+                The number below it still truncates — a number that does not
+                fit is at least still a number. */}
+            <dt className="label leading-snug text-ink-500">{figure.label}</dt>
             <dd
               className={`mt-1.5 truncate text-lg font-extrabold tracking-tight tabular-nums sm:text-xl ${
                 "tone" in figure && figure.tone ? figure.tone : "text-ink-900"

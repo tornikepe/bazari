@@ -7123,6 +7123,29 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   outline-offset: 2px;
 }
 
+/* ---- The dashboard's rail ---------------------------------------------- */
+
+/* Three bands: the name, the list of pages, the way out. Only the middle
+   one scrolls, so however short the window the account and the sign-out
+   are where they were last time. */
+.admin-rail-nav {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* No scrollbar drawn over a dark rail two hundred and forty pixels wide;
+     the list is short enough that its own edge says there is more. */
+  scrollbar-width: none;
+}
+
+.admin-rail-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* The bands that must not shrink when the middle one is long. */
+.admin-rail-head,
+.admin-rail-foot {
+  flex-shrink: 0;
+}
+
 /* ---- The photograph of a transfer -------------------------------------- */
 
 /* A box under the bank details, in the same tone as them, with the one

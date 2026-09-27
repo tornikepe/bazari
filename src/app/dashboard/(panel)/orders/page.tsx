@@ -200,7 +200,13 @@ export default async function AdminOrdersPage({
       )}
 
       {/* status tabs */}
-      <div className="mt-4 -mx-4 flex gap-1.5 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">
+      {/* Wrapping, not a sideways scroller. It was one, with its scrollbar
+          hidden, so on a phone the row ended flush at the screen edge with
+          a tab sliced in half and nothing to say the rest were there — and
+          the states of an order list are exactly what must all be visible
+          at once on the page that works them. Two short rows cost less than
+          a hidden one. */}
+      <div className="mt-4 flex flex-wrap gap-1.5">
         {tabs.map((tab) => (
           <Link
             key={tab.value || "all"}
@@ -209,7 +215,7 @@ export default async function AdminOrdersPage({
             /* 44px on a phone. These were 30px tall, which is a comfortable
                size for a mouse and a poor one for a thumb — and this row is
                the primary way an order list is narrowed on a small screen. */
-            className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-control px-3 py-1.5 text-sm font-medium transition-colors sm:min-h-9 ${
+            className={`flex min-h-11 items-center gap-1.5 rounded-control px-3 py-1.5 text-sm font-medium transition-colors sm:min-h-9 ${
               (status ?? "") === tab.value
                 ? "bg-panel text-panel-fg"
                 : "border border-line bg-surface text-ink-600 hover:bg-ink-50"

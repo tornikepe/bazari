@@ -91,7 +91,7 @@ export function AdminSidebar({
 
   const nav = (
     <>
-      <div className="flex items-center gap-2.5 px-2 pb-5">
+      <div className="admin-rail-head flex items-center gap-2.5 px-2 pb-4">
         <LogoMark size={36} />
         <div className="min-w-0">
           <p className="truncate text-sm font-extrabold tracking-tight text-panel-fg">Bazari</p>
@@ -99,7 +99,12 @@ export function AdminSidebar({
         </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-4">
+      {/* The only band that scrolls. Seventeen destinations plus a footer is
+          taller than a 900-pixel window, and when the whole rail scrolled
+          together the way out — "back to the shop", "sign out" — was below
+          the fold on every page. The name and the exits stay put; the list
+          of pages moves under them. */}
+      <nav className="admin-rail-nav flex min-h-0 flex-1 flex-col gap-3.5">
         {groups.map((group, index) => (
           <div key={group.label ?? index} className="flex flex-col gap-0.5">
             {group.label && (
@@ -130,7 +135,7 @@ export function AdminSidebar({
         ))}
       </nav>
 
-      <div className="flex flex-col gap-3 border-t border-panel-fg/10 pt-4">
+      <div className="admin-rail-foot flex flex-col gap-2 border-t border-panel-fg/10 pt-3">
         <div className="flex items-center gap-1">
           <ThemeToggle className="text-panel-muted hover:bg-panel-fg/10 hover:text-panel-fg" />
 
@@ -194,11 +199,13 @@ export function AdminSidebar({
       </div>
 
       {/* Desktop rail */}
-      {/* `h-dvh` and `overflow-y-auto`: on a short window the rail's own
-          content is taller than the rail, and without the scroll its last
-          rows — the account, the sign-out — rendered past its bottom edge
-          onto the page's canvas, grey text on grey. */}
-      <aside className="admin-rail sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-y-auto bg-panel p-4 lg:flex">
+      {/* `h-dvh`, and the scrolling moved inside to `nav` rather than sitting
+          on the rail itself. Seventeen destinations and a footer come to more
+          than a 900-pixel window holds, and when the rail scrolled as one
+          piece the way out — back to the shop, sign out — was below the fold
+          on every page of the dashboard. `overflow-hidden` here so nothing
+          escapes the rail; the middle band is what moves. */}
+      <aside className="admin-rail sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-hidden bg-panel p-4 lg:flex">
         {nav}
       </aside>
 
@@ -213,7 +220,7 @@ export function AdminSidebar({
           /* `overflow-y-auto`, like the rail: on a phone the drawer is
              taller than the screen, and without it the theme switch and
              the sign-out at its foot could not be scrolled to. */
-          className="w-64 max-w-[85vw] overflow-y-auto overscroll-contain bg-panel p-4 shadow-pop"
+          className="admin-rail flex w-64 max-w-[85vw] flex-col overflow-hidden overscroll-contain bg-panel p-4 shadow-pop"
         >
             <button
               type="button"

@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { fill } from "@/lib/i18n";
+import { fill, type Dictionary, type Locale } from "@/lib/i18n";
+import { formatPrice } from "@/lib/format";
 import { saveProduct } from "@/app/actions/admin";
 import { MAX_SPECS, parseSpecs, type Spec } from "@/lib/product-specs";
 import {
@@ -60,6 +61,12 @@ export function ProductForm({
   /* A title and, when the failure is one the reader can do nothing specific
      about, the one thing they were never told: whether anything was saved. */
   const [error, setError] = useState<{ title: string; hint?: string } | null>(null);
+
+  /* What it cost and what it sells for, held here only so the line under
+     them can answer while they are still being typed. The form still posts
+     the inputs themselves; these are a mirror, not the source. */
+  const [cost, setCost] = useState(product ? String(product.costPrice / 100) : "0");
+  const [sell, setSell] = useState(product ? String(product.price / 100) : "");
 
   /* One ordered list, and the first entry is the main photo. There used to be
      a "main photo" field and a separate gallery beside it, which meant the
@@ -311,19 +318,42 @@ export function ProductForm({
           </section>
 
           {/* ------------------------- price and stock ----------------------- */}
+          {/* Bought for, sold for, and what is left — in that order, and with
+              the answer written out under them. The two figures were in a
+              grid of five with the cost fourth, labelled with the accounting
+              word for it, and the one question a shop owner actually asks of
+              this page — "what do I make on one of these" — was arithmetic
+              they had to do in their head. */}
           <section className="card card-pad">
             <h2 className="text-sm font-bold text-ink-900">{t.admin.price}</h2>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Text
+                name="costPrice"
+                label={t.admin.costPriceField}
+                hint={t.admin.costPriceHint}
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={product ? product.costPrice / 100 : 0}
+                onChange={(event) => setCost(event.target.value)}
+              />
               <Text
                 name="price"
                 label={t.admin.price}
+                hint={t.admin.priceHint}
                 type="number"
                 step="0.01"
                 min="0"
                 defaultValue={product ? product.price / 100 : ""}
                 required
+                onChange={(event) => setSell(event.target.value)}
               />
+            </div>
+
+            <ProfitLine cost={cost} sell={sell} t={t} locale={locale} />
+
+            <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-3">
               <Text
                 name="oldPrice"
                 label={t.admin.oldPrice}
@@ -339,14 +369,6 @@ export function ProductForm({
                 type="number"
                 min="0"
                 defaultValue={product?.stock ?? 0}
-              />
-              <Text
-                name="costPrice"
-                label={t.admin.costPriceField}
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={product ? product.costPrice / 100 : 0}
               />
               <Text
                 name="lowStockAt"
@@ -562,6 +584,52 @@ export function ProductForm({
 }
 
 /* ------------------------------------------------------------------ */
+
+/**
+ * "Bought for X, sold for Y, so Z is yours" — while the two are being typed.
+ *
+ * Lari in, lari out: these are the form's own fields, which a shop owner
+ * types in whole money, and the only place tetri appear is the price that
+ * goes to the server. Nothing is shown until both have a number in them,
+ * because a margin on a missing cost is not a cautious guess, it is the
+ * selling price with a percentage sign after it.
+ *
+ * Selling under cost is not refused — a clearance is a real thing a shop
+ * does — but it is said plainly and in red rather than quietly rendered as
+ * a minus sign.
+ */
+function ProfitLine({
+  cost,
+  sell,
+  t,
+  locale,
+}: {
+  cost: string;
+  sell: string;
+  t: Dictionary;
+  locale: Locale;
+}) {
+  const bought = Number(String(cost).replace(",", "."));
+  const sold = Number(String(sell).replace(",", "."));
+  const known = Number.isFinite(bought) && Number.isFinite(sold) && bought > 0 && sold > 0;
+  if (!known) return <p className="mt-3 text-xs text-ink-400">{t.admin.profitUnknown}</p>;
+
+  const profit = sold - bought;
+  const share = Math.round((profit / sold) * 100);
+  const loss = profit < 0;
+
+  return (
+    <p
+      className={`mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-control px-3 py-2.5 text-sm font-bold ${
+        loss ? "bg-danger-soft text-danger" : "bg-success-soft text-success"
+      }`}
+    >
+      <span>{t.admin.profitPerItem}</span>
+      <span className="tabular-nums">{formatPrice(Math.round(profit * 100), locale)}</span>
+      <span className="text-xs font-semibold opacity-80">· {share}%</span>
+    </p>
+  );
+}
 
 function Text({
   name,

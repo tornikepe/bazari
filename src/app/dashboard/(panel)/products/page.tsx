@@ -381,6 +381,23 @@ export default async function AdminProductsPage({
                           {formatPrice(product.oldPrice, locale)}
                         </span>
                       )}
+                      {/* What it cost, under what it sells for. The two
+                          numbers only mean anything beside each other, and
+                          reading one of them meant opening the product or
+                          leaving for another page. Silent when no cost has
+                          been entered: a margin computed against zero is
+                          the selling price with a per-cent sign after it. */}
+                      {product.costPrice > 0 && (
+                        <span className="block text-xs whitespace-nowrap text-ink-400">
+                          {formatPrice(product.costPrice, locale)}
+                          {product.price > 0 && (
+                            <span className={product.price > product.costPrice ? "text-success" : "text-danger"}>
+                              {" · "}
+                              {Math.round(((product.price - product.costPrice) / product.price) * 100)}%
+                            </span>
+                          )}
+                        </span>
+                      )}
                     </td>
 
                     <td className="figures">
