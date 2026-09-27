@@ -22,6 +22,7 @@ import { lineKey } from "@/lib/cart-store";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/payment";
 import { PaymentMark } from "@/components/checkout/PaymentMark";
 import { BankDetails } from "@/components/checkout/BankDetails";
+import { ReceiptUpload } from "@/components/checkout/ReceiptUpload";
 import { PhoneField } from "@/components/ui/PhoneField";
 import { SuggestField } from "@/components/ui/SuggestField";
 import { suggestCities } from "@/lib/georgian-cities";
@@ -130,6 +131,12 @@ export function CheckoutForm({
   const shipping = shippingFor(subtotal, items.length, settings, delivery);
   const total = subtotal + shipping;
 
+  /* The photograph of the transfer, for an order paid that way. Kept here
+     rather than in a form field because it is shrunk in the browser before
+     it is sent, and what goes to the server is the small copy. */
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptMissing, setReceiptMissing] = useState(false);
+
   // Prefilled from the account. Requiring people to sign in and then making
   // them retype the address they already gave us would be the worst of both.
   const [form, setForm] = useState({ ...defaults });
@@ -201,6 +208,11 @@ export function CheckoutForm({
 
     setErrors(next);
 
+    /* A transfer with no slip attached is the one thing the shop cannot
+       check later, so it is refused here with everything else. */
+    const noReceipt = payment === "bank_transfer" && !receipt;
+    setReceiptMissing(noReceipt);
+
     /* Straight to the first thing that is wrong: the page scrolls there,
        the box shakes, and the caret lands in it. */
     const first = FIELD_ORDER.find((key) => next[key]);
@@ -208,9 +220,13 @@ export function CheckoutForm({
       const element = document.getElementById(FIELD_IDS[first]);
       scrollToField(element);
       shakeField(element);
+    } else if (noReceipt) {
+      const element = document.getElementById("checkout-receipt");
+      scrollToField(element);
+      shakeField(element);
     }
 
-    return Object.keys(next).length === 0;
+    return Object.keys(next).length === 0 && !noReceipt;
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -238,6 +254,7 @@ export function CheckoutForm({
         })),
         couponCode: coupon?.ok ? coupon.code : undefined,
         paymentMethod: payment,
+        receipt: payment === "bank_transfer" ? receipt : null,
         deliveryMethod: delivery.method,
         deliveryZoneId: delivery.method === "courier" ? (zone?.id ?? undefined) : undefined,
       });
@@ -269,6 +286,10 @@ export function CheckoutForm({
                     }
                   : { title: t.checkout.failed, hint: t.checkout.failedHint },
         );
+        if (result.error === "receipt") {
+          setReceiptMissing(true);
+          scrollToField(document.getElementById("checkout-receipt"));
+        }
         return;
       }
 
@@ -330,7 +351,7 @@ export function CheckoutForm({
 
         {/* Where this is in the buying: the cart is behind, the order page
             ahead. Three stops, the middle one lit. */}
-        <ol className="checkout-steps mx-auto mt-2 flex max-w-md items-center justify-center gap-2 text-xs font-semibold">
+        <ol className="checkout-steps mt-2.5 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
           <li className="is-done"><span>1</span>{t.checkout.stepCart}</li>
           <li aria-hidden="true" className="rule" />
           <li className="is-current" aria-current="step"><span>2</span>{t.checkout.stepDetails}</li>
@@ -651,8 +672,21 @@ export function CheckoutForm({
               ))}
             </div>
 
-            {/* Where to send it, as soon as that is the way chosen. */}
-            {payment === "bank_transfer" && <BankDetails />}
+            {/* Where to send it, as soon as that is the way chosen — and
+                the slip back, which the shop has no other way of seeing. */}
+            {payment === "bank_transfer" && (
+              <>
+                <BankDetails />
+                <ReceiptUpload
+                  file={receipt}
+                  invalid={receiptMissing}
+                  onPick={(chosen) => {
+                    setReceipt(chosen);
+                    if (chosen) setReceiptMissing(false);
+                  }}
+                />
+              </>
+            )}
           </fieldset>
         </div>
 

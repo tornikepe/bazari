@@ -381,6 +381,20 @@ model Order {
   address      String
   note         String  @default("")
 
+  /// The photograph of the transfer, for an order paid by bank transfer.
+  ///
+  /// The shop has no way to see money arrive — there is no gateway telling
+  /// it anything — so the shopper's own slip is the evidence, uploaded
+  /// before the order can be placed and shown to the shop beside the order.
+  /// Stored here rather than in a table of its own for the same reason the
+  /// avatars are: it belongs to exactly one row, is never queried on its
+  /// own and is never joined to. Shrunk in the browser first.
+  receipt     Bytes?
+  /// The image's media type, as the browser reported it and the server
+  /// checked it. Served back by `/api/receipts/[number]`.
+  receiptType String    @default("")
+  receiptAt   DateTime?
+
   /// How it leaves the shop. For `pickup` the address columns above may be
   /// empty — there is nowhere to send anything.
   deliveryMethod DeliveryMethod @default(courier)

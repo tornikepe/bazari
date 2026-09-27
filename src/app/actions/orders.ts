@@ -39,6 +39,13 @@ export type PlaceOrderInput = {
   deliveryMethod?: string;
   /** Required for a courier when the shop has zones; ignored otherwise. */
   deliveryZoneId?: string;
+  /**
+   * The photograph of the transfer, for an order paid by bank transfer.
+   * Required for that method and ignored for every other: the shop has no
+   * gateway telling it the money arrived, so the slip is the only evidence
+   * it will ever have, and an order placed without one is a promise.
+   */
+  receipt?: File | null;
 };
 
 export type PlaceOrderResult =
@@ -50,8 +57,20 @@ export type PlaceOrderResult =
   | { ok: true; number: string; redirect?: string }
   | {
       ok: false;
-      error: "empty" | "invalid" | "unavailable" | "failed" | "rate-limited" | "sign-in-required";
+      error:
+        | "empty"
+        | "invalid"
+        | "unavailable"
+        | "failed"
+        | "rate-limited"
+        | "sign-in-required"
+        /** A bank transfer arrived without the photograph of the slip. */
+        | "receipt";
     };
+
+/** What the shop will take as a photograph of a transfer, and how big. */
+const RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic"];
+const MAX_RECEIPT_BYTES = 2_000_000;
 
 /** Thrown inside the order transaction when a line can no longer be filled. */
 class OutOfStockError extends Error {
@@ -79,6 +98,18 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   if (!customerName || !phone) return { ok: false, error: "invalid" };
   if (!Array.isArray(input.items) || input.items.length === 0) return { ok: false, error: "empty" };
+
+  /* The slip, read here rather than trusted: a `File` arriving at a Server
+     Action is whatever the caller put in the request, so its type and its
+     size are checked before any of it reaches a column. */
+  let receipt: { bytes: Uint8Array<ArrayBuffer>; type: string } | null = null;
+  if (input.paymentMethod === "bank_transfer") {
+    const file = input.receipt;
+    if (!(file instanceof File) || file.size === 0) return { ok: false, error: "receipt" };
+    if (file.size > MAX_RECEIPT_BYTES) return { ok: false, error: "receipt" };
+    if (!RECEIPT_TYPES.includes(file.type)) return { ok: false, error: "receipt" };
+    receipt = { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type };
+  }
 
   // How it leaves the shop. Decided from the settings and the zone table, not
   // from what the form claims is on offer: a request asking to collect from a
@@ -287,6 +318,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             tax,
             taxRate,
             paymentMethod,
+            /* Written flat rather than spread in: a conditional spread makes
+               the literal inexact, and Prisma then reads it as the *checked*
+               create input — the one that wants `user`, not `userId` — and
+               refuses the whole row over a field that was always there. */
+            receipt: receipt?.bytes ?? null,
+            receiptType: receipt?.type ?? "",
+            receiptAt: receipt ? new Date() : null,
             status: "pending",
             items: {
               create: lines.map(({ product, variant, quantity, price, sku, label }) => ({

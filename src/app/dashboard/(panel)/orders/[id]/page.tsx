@@ -32,6 +32,11 @@ export default async function AdminOrderDetailPage({
 
   const order = await prisma.order.findUnique({
     where: { id },
+    /* The photograph itself is not wanted here — only whether there is one.
+       It is up to two megabytes, and rendering the page would carry all of
+       it through the server for the sake of an `<img src>` that fetches it
+       again from `/api/receipts`, which is where the access check lives. */
+    omit: { receipt: true },
     include: {
       items: true,
       coupon: { select: { code: true } },
@@ -275,6 +280,40 @@ export default async function AdminOrderDetailPage({
               ))}
             </dl>
           </section>
+
+          {/* ----------------------------- receipt --------------------------- */}
+          {/* Only on the orders that have one, which is every bank transfer
+              placed since the slip became required. This is the thing the
+              shop checks against its statement before confirming, so it sits
+              directly under the payment card and opens full size in a tab —
+              a phone photograph of a slip is unreadable at panel width. */}
+          {order.receiptAt && order.receiptType && (
+            <section className="card card-pad">
+              <h2 className="text-sm font-bold text-ink-900">{t.admin.receipt}</h2>
+              <p className="mt-1 text-xs text-ink-500">
+                {t.admin.receiptUploaded}: {formatDateTime(order.receiptAt)}
+              </p>
+
+              {/* A plain `img`, not `next/image`: the optimizer would put a
+                  copy of a bank slip in a shared cache, and the route it
+                  comes from answers `private, no-store` precisely so that
+                  nothing does. */}
+              <a
+                href={`/api/receipts/${encodeURIComponent(order.number)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="slip-view"
+                title={t.admin.receiptOpen}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/receipts/${encodeURIComponent(order.number)}`}
+                  alt=""
+                  className="receipt-shot"
+                />
+              </a>
+            </section>
+          )}
 
           <PaymentPanel
             payments={order.payments.map((p) => ({

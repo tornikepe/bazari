@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
 import { getCurrentUser } from "@/lib/auth";
 import { readReceipts } from "@/lib/order-access";
-import { formatPrice } from "@/lib/format";
+import { formatDateTime, formatPrice } from "@/lib/format";
 import { LineDetails } from "@/components/cart/LineDetails";
 import { Price } from "@/components/ui/Price";
 import {
@@ -42,6 +42,10 @@ export default async function OrderConfirmationPage({
 
   const order = await prisma.order.findUnique({
     where: { number: decodeURIComponent(number) },
+    /* Not the photograph itself — up to two megabytes of it — only the two
+       columns that say there is one. The picture below is fetched from
+       `/api/receipts`, which is where the access check for it lives. */
+    omit: { receipt: true },
     include: {
       items: true,
       coupon: { select: { code: true } },
@@ -319,6 +323,38 @@ export default async function OrderConfirmationPage({
             </div>
           </div>
         </div>
+
+        {/* The slip they sent, given back to them. The shop asks for it
+            before it will take a transfer, and an order that shows nothing
+            afterwards leaves the sender wondering whether the photograph
+            arrived at all. It opens full size in a tab, because a slip is
+            photographed to be read. */}
+        {order.receiptAt && order.receiptType && (
+          <div className="card mt-4 card-pad">
+            <h2 className="display-sm text-center text-ink-900">{t.checkout.receiptTitle}</h2>
+            <p className="mt-1 text-center text-xs text-ink-500">
+              {t.admin.receiptUploaded}: {formatDateTime(order.receiptAt)}
+            </p>
+
+            {/* A plain `img` rather than `next/image`: the optimizer would
+                put a copy of a bank slip in a shared cache, and the route it
+                comes from answers `private, no-store` so that nothing does. */}
+            <a
+              href={`/api/receipts/${encodeURIComponent(order.number)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="slip-view"
+              title={t.admin.receiptOpen}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/receipts/${encodeURIComponent(order.number)}`}
+                alt=""
+                className="receipt-shot"
+              />
+            </a>
+          </div>
+        )}
 
         <ReturnPanel
           orderNumber={order.number}

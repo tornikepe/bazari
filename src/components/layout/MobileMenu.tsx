@@ -140,6 +140,11 @@ export function MobileMenu({
                       title={name}
                       aria-current={isCurrent(href) ? "page" : undefined}
                       tabIndex={folded ? -1 : undefined}
+                      /* Shut on the press rather than on the arrival: the
+                         drawer should be gone by the time the page under
+                         it changes, and a link to where you already are
+                         changes nothing for the router to report. */
+                      onClick={onClose}
                       className={row(isCurrent(href))}
                     >
                       <span
@@ -171,6 +176,7 @@ export function MobileMenu({
                 <Link
                   href={link.href}
                   aria-current={isCurrent(link.href) ? "page" : undefined}
+                  onClick={onClose}
                   className={row(isCurrent(link.href))}
                 >
                   <Icon size={17} className="shrink-0 text-ink-400" />
@@ -180,7 +186,7 @@ export function MobileMenu({
             );
           })}
           <li>
-            <Link href={account.href} className={row(isCurrent(account.href))}>
+            <Link href={account.href} onClick={onClose} className={row(isCurrent(account.href))}>
               <UserIcon size={17} className="shrink-0 text-ink-400" />
               <span className="min-w-0 flex-1 truncate">{account.label}</span>
             </Link>

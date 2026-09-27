@@ -211,10 +211,8 @@ export function CartView() {
           {/* One line: the van, the sum to go set in ink, the rest quiet. */}
           {remaining > 0 && (
             <p className="free-ship">
-              <TruckIcon size={15} className="shrink-0" />
-              <span className="truncate">
-                {fill(t.cart.freeShippingHint, { amount: formatPrice(remaining, locale) })}
-              </span>
+              <TruckIcon size={15} />
+              <span>{fill(t.cart.freeShippingHint, { amount: formatPrice(remaining, locale) })}</span>
             </p>
           )}
 

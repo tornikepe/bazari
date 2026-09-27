@@ -282,6 +282,15 @@ const ka = {
     couponUsedUp: "კოდი ამოწურულია",
     couponMinTotal: "შეკვეთის ჯამი ამ კოდისთვის საკმარისი არ არის",
     rateLimited: "ძალიან ბევრი მცდელობა. სცადე ცოტა ხანში.",
+    receiptTitle: "გადარიცხვის ქვითარი",
+    receiptHint: "ატვირთე ჩეკის ან გადარიცხვის ფოტო — ამის გარეშე შეკვეთას ვერ გავაფორმებთ.",
+    receiptPick: "ფოტოს ატვირთვა",
+    receiptReplace: "სხვა ფოტო",
+    receiptRemove: "წაშლა",
+    receiptWorking: "მუშავდება…",
+    receiptRequired: "ქვითრის ფოტო სავალდებულოა.",
+    receiptTooLarge: "ფოტო ძალიან დიდია — სცადე სხვა.",
+    receiptFailed: "ფოტო ვერ წაიკითხა — სცადე სხვა.",
   },
 
   orderDone: {
@@ -767,6 +776,9 @@ const ka = {
     noPayments: "გადახდის ჩანაწერი არ არის",
     paymentMethod: "გადახდის მეთოდი",
     paymentStatus: "გადახდის სტატუსი",
+    receipt: "გადარიცხვის ქვითარი",
+    receiptUploaded: "ატვირთულია",
+    receiptOpen: "სრული ზომით გახსნა",
     orderSubtotal: "პროდუქტები",
     orderDiscount: "ფასდაკლება",
 
@@ -1683,6 +1695,15 @@ const en: Dictionary = {
     couponUsedUp: "This code has been fully used",
     couponMinTotal: "Your order total is too low for this code",
     rateLimited: "Too many attempts. Please try again shortly.",
+    receiptTitle: "Transfer receipt",
+    receiptHint: "Upload a photo of the slip — the order cannot be placed without it.",
+    receiptPick: "Upload a photo",
+    receiptReplace: "Choose another",
+    receiptRemove: "Remove",
+    receiptWorking: "Working…",
+    receiptRequired: "A photo of the receipt is required.",
+    receiptTooLarge: "That photo is too large — try another.",
+    receiptFailed: "That photo could not be read — try another.",
   },
 
   orderDone: {
@@ -2168,6 +2189,9 @@ const en: Dictionary = {
     noPayments: "No payment record",
     paymentMethod: "Payment method",
     paymentStatus: "Payment status",
+    receipt: "Transfer receipt",
+    receiptUploaded: "Uploaded",
+    receiptOpen: "Open full size",
     orderSubtotal: "Items",
     orderDiscount: "Discount",
 

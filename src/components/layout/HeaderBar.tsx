@@ -81,10 +81,15 @@ export function HeaderBar({
     setQuery(urlQuery);
   }
 
-  // Route changes should always close the drawer.
-  const [lastPathname, setLastPathname] = useState(pathname);
-  if (lastPathname !== pathname) {
-    setLastPathname(pathname);
+  /* Going anywhere closes the drawer — and "anywhere" is the whole
+     address, not the path. The categories in the drawer are
+     `/catalog?category=shoes`: choosing one from the catalogue changed
+     only the query, so the path was the same, the drawer stayed open over
+     the results and the menu button stayed lit. */
+  const here = `${pathname}?${searchParams.toString()}`;
+  const [lastHere, setLastHere] = useState(here);
+  if (lastHere !== here) {
+    setLastHere(here);
     setMenuOpen(false);
     setSearchOpen(false);
   }
