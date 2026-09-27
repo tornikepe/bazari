@@ -539,3 +539,43 @@ export const FacebookIcon = ({ size = "1em", ...props }: IconProps) => (
     />
   </svg>
 );
+
+/* ---- The marks of the places a shop is also found --------------------- */
+
+/* Drawn on the same 24 grid as the rest and inheriting `currentColor`, so
+   they sit in a row with the phone and the envelope rather than beside
+   them. Outlines, not the brands' own filled logos in the brands' own
+   colours: four coloured badges in the foot of a page would out-shout the
+   shop, and these are a way to the account, not an endorsement of it. */
+
+export const InstagramIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="2" y="2" width="20" height="20" rx="5" />
+    <circle cx="12" cy="12" r="4" />
+    <path d="M17.5 6.5h.01" />
+  </Icon>
+);
+
+export const TikTokIcon = (p: IconProps) => (
+  <Icon {...p}>
+    {/* The note: a stem with its head, and the flag that leans over it. */}
+    <path d="M10 12.5a3.5 3.5 0 1 0 3.5 3.5V3a5 5 0 0 0 5 5" />
+  </Icon>
+);
+
+/* An outline, distinct from `FacebookIcon` above, which is the brand's own
+   filled logo in the brand's own blue. That one belongs on the sign-in
+   button, where a shopper is looking for the logo they know; this one
+   belongs in a row of four marks that must read as one set. */
+export const FacebookOutlineIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </Icon>
+);
+
+export const YouTubeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M2.5 17a24.1 24.1 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49 49 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.1 24.1 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49 49 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+    <path d="m10 15 5-3-5-3z" />
+  </Icon>
+);

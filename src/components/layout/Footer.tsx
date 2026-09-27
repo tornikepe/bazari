@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { FooterLink } from "@/components/layout/FooterLink";
 import { LogoMark, Wordmark } from "@/components/ui/Logo";
-import { MailIcon, PhoneIcon } from "@/components/ui/icons";
+import {
+  FacebookOutlineIcon,
+  InstagramIcon,
+  MailIcon,
+  PhoneIcon,
+  TikTokIcon,
+  YouTubeIcon,
+} from "@/components/ui/icons";
 import { getSettings } from "@/lib/settings";
 import { getPublishedPages } from "@/lib/info-store";
 import { getI18n } from "@/lib/locale";
@@ -64,6 +71,16 @@ export async function Footer() {
     },
   ].filter((contact): contact is Exclude<typeof contact, "" | false> => Boolean(contact));
 
+  /* Where else the shop is. Only the ones with an address: a mark linking
+     to an account that does not exist is worse than no mark, and a shop
+     that has an Instagram and nothing else should show one. */
+  const socials = [
+    { href: settings.instagramUrl, label: "Instagram", icon: InstagramIcon },
+    { href: settings.tiktokUrl, label: "TikTok", icon: TikTokIcon },
+    { href: settings.facebookUrl, label: "Facebook", icon: FacebookOutlineIcon },
+    { href: settings.youtubeUrl, label: "YouTube", icon: YouTubeIcon },
+  ].filter((social) => Boolean(social.href));
+
   return (
     // No top margin. A margin cannot be painted, so `mt-16` left a 4rem band
     // of the page background between two `bg-surface` blocks — on the home
@@ -101,6 +118,31 @@ export async function Footer() {
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* `rel="me"` says these are the shop's own accounts rather than
+              pages it is recommending, and `noopener` keeps the opened tab
+              from reaching back into this one. */}
+          {socials.length > 0 && (
+            <div className="mt-4">
+              <p className="label text-ink-400">{t.footer.follow}</p>
+              <ul className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
+                {socials.map((social) => (
+                  <li key={social.label}>
+                    <a
+                      href={social.href}
+                      target="_blank"
+                      rel="me noopener noreferrer"
+                      aria-label={social.label}
+                      title={social.label}
+                      className="social-mark"
+                    >
+                      <social.icon size={17} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 

@@ -50,6 +50,10 @@ export const getSettings = cache(async (): Promise<ShopSettings> => {
       bankIban: row.bankIban,
       bankHolder: row.bankHolder,
       bankName: row.bankName,
+      instagramUrl: row.instagramUrl,
+      tiktokUrl: row.tiktokUrl,
+      facebookUrl: row.facebookUrl,
+      youtubeUrl: row.youtubeUrl,
       returnWindowDays: row.returnWindowDays,
     };
   } catch (error) {

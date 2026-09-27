@@ -39,6 +39,25 @@ export function mailConfigured(): boolean {
 }
 
 /**
+ * Whether a staff sign-in takes a second step: the password, then a code
+ * sent to the address on the account.
+ *
+ * Off unless the deployment asks for it, and that default is deliberate.
+ * When this was keyed on nothing but "can the shop send email", setting a
+ * mail key switched it on everywhere at once — and the owner's own account
+ * is `admin@` on a domain the shop does not receive mail at, so the code
+ * went somewhere nobody reads and the dashboard locked its owner out of it.
+ * Turning a second factor on is a decision about who can reach the address,
+ * not a side effect of configuring a mailer.
+ *
+ * It still needs a mailer: without one there is no code to send, and
+ * insisting on one would lock the door and throw away the key.
+ */
+export function staffTwoStep(): boolean {
+  return process.env.STAFF_2FA === "1" && mailConfigured();
+}
+
+/**
  * The API key, tolerant of a fumbled copy-paste.
  *
  * Pasting into `vercel env add` easily picks up a trailing newline, or the

@@ -98,7 +98,10 @@ export default function FavoritesPage() {
       <PageIntro
         eyebrow={t.account.menuWishlist}
         title={t.favorites.title}
-        line={`${countText(t.favorites.countOne, t.favorites.count, products.length)} · ${t.favorites.worth} ${formatPrice(worth, locale)}`}
+        facts={[
+          countText(t.favorites.countOne, t.favorites.count, products.length),
+          `${t.favorites.worth} ${formatPrice(worth, locale)}`,
+        ]}
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">

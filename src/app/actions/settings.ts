@@ -23,6 +23,31 @@ function text(form: FormData, key: string, max = 200) {
 }
 
 /**
+ * An address the footer will turn into a link, checked before it is stored.
+ *
+ * Only `http` and `https` survive. Anything else — `javascript:` above all —
+ * would be written straight into an `href` on every page of the shop, which
+ * is a script injection with a settings form in front of it. A shop owner
+ * pasting a profile address never types one of those; whoever does is not
+ * the shop owner.
+ *
+ * Nonsense is dropped rather than refused. The field is one of four
+ * optional ones, and failing a whole save of the shop's name, telephone and
+ * delivery prices over a mistyped Instagram address would be the wrong
+ * trade.
+ */
+function socialUrl(form: FormData, key: string) {
+  const raw = text(form, key, 200);
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+/**
  * A money field, converted from what the shop owner typed to what is stored.
  *
  * The form takes lari with decimals because that is what a person thinks in;
@@ -115,6 +140,12 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     bankIban: text(formData, "bankIban", 34).replace(/\s+/g, "").toUpperCase(),
     bankHolder: text(formData, "bankHolder", 120),
     bankName: text(formData, "bankName", 80),
+    /* The full address of each profile, or nothing. The footer draws a mark
+       for the ones that are set and leaves the rest out entirely. */
+    instagramUrl: socialUrl(formData, "instagramUrl"),
+    tiktokUrl: socialUrl(formData, "tiktokUrl"),
+    facebookUrl: socialUrl(formData, "facebookUrl"),
+    youtubeUrl: socialUrl(formData, "youtubeUrl"),
     returnWindowDays,
   };
 

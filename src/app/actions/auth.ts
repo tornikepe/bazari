@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
 import { consumeCode, consumeInvite, issueCode } from "@/lib/verification";
 import { sendPasswordResetEmail, sendStaffLoginEmail, sendVerificationEmail } from "@/lib/auth-emails";
-import { mailConfigured } from "@/lib/mail";
+import { mailConfigured, staffTwoStep } from "@/lib/mail";
 import { getLocale } from "@/lib/locale";
 import { clientIp, consume, reset } from "@/lib/rate-limit";
 import { normalizePhone } from "@/lib/phone";
@@ -103,13 +103,15 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
      address on the account is the other. The dashboard can reprice the
      shop, read every customer's address and empty the stockroom, and a
      password is one leaked note away from anybody.
-     
-     Only when the shop can actually send email. If it cannot, there is no
-     code to type and insisting on one would lock the owner out of their
-     own shop — the fallback is the password alone, and the dashboard says
-     so until a mail key is set. Nothing an attacker does can turn the
-     mailer off; only the deployment's own configuration can. */
-  if (isStaff(user.role) && mailConfigured()) {
+
+     Only when the deployment has asked for it *and* the shop can send
+     email — see `staffTwoStep`. It was once keyed on the mailer alone, and
+     the day a mail key was set the owner was locked out of their own
+     dashboard, because the code went to an address on a domain the shop
+     does not receive mail at. A second factor that nobody can read is not
+     a second factor. Nothing an attacker does can flip this switch; only
+     the deployment's own configuration can. */
+  if (isStaff(user.role) && staffTwoStep()) {
     const { code } = await issueCode(user.id, "staff_login");
     await sendStaffLoginEmail(user.email, code, await getLocale());
     return { staffCode: { email: user.email } };

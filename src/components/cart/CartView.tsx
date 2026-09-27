@@ -89,7 +89,10 @@ export function CartView() {
       <PageIntro
         eyebrow={t.nav.cart}
         title={t.cart.title}
-        line={`${fill(t.favorites.count, { count })} · ${t.cart.subtotal} ${formatPrice(subtotal, locale)}`}
+        facts={[
+          fill(t.favorites.count, { count }),
+          `${t.cart.subtotal} ${formatPrice(subtotal, locale)}`,
+        ]}
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">

@@ -930,6 +930,15 @@ model ShopSettings {
   bankHolder  String @default("")
   bankName    String @default("")
 
+  /// Where the shop is on social media. Each one a full address, each one
+  /// optional: the footer draws a mark for the ones that are set and
+  /// nothing at all for the ones that are not, so a shop with an Instagram
+  /// and no TikTok shows one mark rather than one mark and a dead one.
+  instagramUrl String @default("")
+  tiktokUrl    String @default("")
+  facebookUrl  String @default("")
+  youtubeUrl   String @default("")
+
   /// Days after delivery in which a shopper may ask to return something.
   /// Zero switches the request form off without touching the policy page.
   returnWindowDays      Int     @default(14)

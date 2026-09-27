@@ -37,6 +37,11 @@ export type ShopSettings = {
   bankIban: string;
   bankHolder: string;
   bankName: string;
+  /** Where the shop is on social media. Empty means it is not, there. */
+  instagramUrl: string;
+  tiktokUrl: string;
+  facebookUrl: string;
+  youtubeUrl: string;
   /** Days after delivery in which a return may be asked for. Zero: never. */
   returnWindowDays: number;
 };
@@ -70,5 +75,9 @@ export const DEFAULT_SETTINGS: ShopSettings = {
   bankIban: "",
   bankHolder: "",
   bankName: "",
+  instagramUrl: "",
+  tiktokUrl: "",
+  facebookUrl: "",
+  youtubeUrl: "",
   returnWindowDays: 14,
 };

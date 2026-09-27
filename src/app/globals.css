@@ -5968,6 +5968,39 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   text-align: center;
 }
 
+/* What the page holds, under its title: the count, then the sum.
+   ---------------------------------------------------------------
+   A row of facts rather than one sentence. Each fact carries a number,
+   and a number parted from the word in front of it reads as belonging to
+   nothing — written as a sentence the line broke wherever it ran out of
+   room, leaving `ჯამი` at the end of one line and `2 926,00 ₾` at the
+   start of the next. Each fact holds together; the line wraps only
+   between them, and stays down the middle either way. */
+.intro-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.125rem 0.5rem;
+  margin-top: 0.625rem;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-ink-500);
+}
+
+.intro-facts > span {
+  white-space: nowrap;
+}
+
+/* The dot between two facts, drawn by the layout rather than typed into
+   the string: it belongs to the join, not to either sentence, and this
+   way it cannot start a line on its own. */
+.intro-facts > span:not(:last-child)::after {
+  content: "\00B7";
+  margin-inline-start: 0.5rem;
+  color: var(--color-ink-300);
+}
+
 /* A line of the cart or the wishlist.
    ---------------------------------------------------------------
    On a phone it is a card of ink with its words in paper — the list
@@ -6848,22 +6881,39 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   }
 }
 
+/* A size reads down the middle of its row, the way it does on the button
+   that opens the panel. Three columns, the outer two equal: the size sits
+   in the centre one and is therefore centred in the row itself, not in
+   whatever was left over once the tick had taken its place. `minmax(0,1fr)`
+   rather than `1fr`, so a wide "sold out" cannot grow its own column and
+   push the size off centre. */
 .size-select-option {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   width: 100%;
   min-height: 2.75rem;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   padding: 0 0.875rem;
   border-radius: var(--radius-control);
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-ink-800);
-  text-align: left;
+  text-align: center;
   transition:
     background-color 0.12s ease,
     color 0.12s ease;
+}
+
+.size-select-option > :first-child {
+  grid-column: 2;
+}
+
+/* The tick, or the words saying the size is gone: at the right edge, in
+   the third column, where it cannot move the size. */
+.size-select-option > :nth-child(2) {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .size-select-option:hover:not(:disabled) {
@@ -7041,6 +7091,36 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   border-color: var(--color-success);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-success) 16%, transparent);
   color: var(--color-success);
+}
+
+/* A way to one of the shop's other accounts: the mark in a bordered
+   square, large enough for a thumb, going to the brand's own colour on
+   hover only — a row of four coloured badges in the foot of a page would
+   out-shout the shop whose foot it is. */
+.social-mark {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink-500);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.social-mark:hover {
+  color: var(--color-brand-600);
+  border-color: var(--color-brand-600);
+  transform: translateY(-1px);
+}
+
+.social-mark:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
 }
 
 /* ---- The photograph of a transfer -------------------------------------- */
@@ -7317,15 +7397,17 @@ html[data-cursor] .cursor-dot[data-over="text"] {
 
 /* ---- The product page's choice on a phone ----------------------------- */
 
-/* The two words above the controls sit over the middle of them, as the
-   rest of the page's labels do; from `sm` up they read from the left. */
-@media (max-width: 639px) {
-  .size-select .field-label,
-  .buy-choice .field-label {
-    display: block;
-    text-align: center;
-  }
+/* The two words above the controls sit over the middle of them, at every
+   width. The control under each one centres what it says — the size, the
+   count — and a label pinned to the left of a centred control read as
+   belonging to the edge rather than to the thing below it. */
+.size-select .field-label,
+.buy-choice .field-label {
+  display: block;
+  text-align: center;
+}
 
+@media (max-width: 639px) {
   .qty-value {
     text-align: center;
   }

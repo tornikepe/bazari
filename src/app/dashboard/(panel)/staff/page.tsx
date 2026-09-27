@@ -5,7 +5,7 @@ import { formatDate } from "@/lib/format";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
 import { StaffManager } from "@/components/admin/StaffManager";
 import { PasswordRotate } from "@/components/admin/PasswordRotate";
-import { mailConfigured } from "@/lib/mail";
+import { staffTwoStep } from "@/lib/mail";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 /**
@@ -60,7 +60,7 @@ export default async function AdminStaffPage() {
 
       {/* The one thing on this page that is about the reader rather than
           about the team. */}
-      <PasswordRotate twoStep={mailConfigured()} />
+      <PasswordRotate twoStep={staffTwoStep()} />
     </div>
   );
 }

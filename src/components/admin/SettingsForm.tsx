@@ -211,6 +211,51 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
         </div>
       </Section>
 
+      {/* Where else the shop is. Four addresses, all optional: what is
+          filled in becomes a mark in the foot of every page, and what is
+          not is simply absent — no dead link to an account that does not
+          exist. */}
+      <Section title={t.admin.settingsSocial} note={t.admin.socialHint}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            name="instagramUrl"
+            label="Instagram"
+            type="url"
+            inputMode="url"
+            placeholder="https://instagram.com/…"
+            defaultValue={settings.instagramUrl}
+            disabled={!canWrite}
+          />
+          <Field
+            name="tiktokUrl"
+            label="TikTok"
+            type="url"
+            inputMode="url"
+            placeholder="https://tiktok.com/@…"
+            defaultValue={settings.tiktokUrl}
+            disabled={!canWrite}
+          />
+          <Field
+            name="facebookUrl"
+            label="Facebook"
+            type="url"
+            inputMode="url"
+            placeholder="https://facebook.com/…"
+            defaultValue={settings.facebookUrl}
+            disabled={!canWrite}
+          />
+          <Field
+            name="youtubeUrl"
+            label="YouTube"
+            type="url"
+            inputMode="url"
+            placeholder="https://youtube.com/@…"
+            defaultValue={settings.youtubeUrl}
+            disabled={!canWrite}
+          />
+        </div>
+      </Section>
+
       <Section title={t.admin.settingsReturns} note={t.admin.returnWindowHint}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
