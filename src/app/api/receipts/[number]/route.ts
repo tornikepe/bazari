@@ -15,9 +15,10 @@ import { readReceipts } from "@/lib/order-access";
  *
  * "Their own" is the same test the order page itself applies: signed in and
  * the order is theirs, or the signed cookie this browser was given when it
- * placed the order. Most bank transfers are placed by a guest, and a rule
- * that only knew about accounts would have hidden the slip from precisely
- * the people who had just sent it.
+ * placed the order. Checkout asks for an account today, so the first half
+ * covers every order placed through it; the cookie is there because the
+ * order page has always honoured it, and the picture on a page must not be
+ * reachable by a rule narrower than the page around it.
  *
  * Never cached by a shared cache, for the same reason.
  */
