@@ -235,10 +235,14 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
               </span>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-ink-900">
+                {/* Wrapping, not cut. "ტელეფონები და აქსესუარები" lost its
+                    last word on a phone, and the list of categories is the
+                    one place where the whole name is the point — two of them
+                    can begin with the same word. */}
+                <p className="text-sm leading-snug font-bold text-ink-900">
                   {locale === "ka" ? category.nameKa : category.nameEn}
                 </p>
-                <p className="truncate text-xs text-ink-400">
+                <p className="text-xs break-words text-ink-400">
                   /{category.slug} ·{" "}
                   {countText(t.admin.productCountOne, t.admin.productCount, category._count.products)}
                 </p>

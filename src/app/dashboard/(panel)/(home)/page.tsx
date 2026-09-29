@@ -343,7 +343,10 @@ export default async function DashboardPage({
                       <p className="font-mono text-xs font-bold whitespace-nowrap text-ink-900">
                         {order.number}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-ink-500">
+                      {/* Wrapping: on a phone "ნიკა ღვინიაშვილი · მცხეთა"
+                          lost its town, and who ordered and where it goes
+                          are the two things this line exists to say. */}
+                      <p className="mt-0.5 text-xs leading-snug text-ink-500">
                         {order.customerName} · {order.city}
                       </p>
                     </div>

@@ -36,7 +36,11 @@ export function ChartRangeTabs({
             href={`${basePath}?range=${days}`}
             aria-current={current ? "true" : undefined}
             scroll={false}
-            className={`w-20 py-1.5 text-center text-xs font-bold transition-colors not-first:border-l not-first:border-line ${
+            /* 44px on a phone, 30 from `sm` up. These were 30 everywhere,
+               which is a comfortable size for a mouse and a poor one for a
+               thumb — and on the margins, analytics and traffic pages this
+               row is the only way to change what is being looked at. */
+            className={`flex min-h-11 w-20 items-center justify-center py-1.5 text-center text-xs font-bold transition-colors not-first:border-l not-first:border-line sm:min-h-8 ${
               current ? "bg-ink-900 text-surface" : "text-ink-500 hover:bg-ink-50 hover:text-ink-900"
             }`}
           >

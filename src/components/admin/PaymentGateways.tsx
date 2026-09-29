@@ -176,7 +176,10 @@ function GatewayCard({
 
         <div>
           <p className="field-label">{t.admin.gatewayWebhook}</p>
-          <code className="block truncate rounded-control border border-line bg-canvas px-3 py-2 font-mono text-xs text-ink-700 select-all">
+          {/* Wrapping, not cut. This address is typed — or pasted — into a
+              bank's own settings page, and half of it is not an address.
+              `break-all` because a URL has no spaces to break at. */}
+          <code className="block rounded-control border border-line bg-canvas px-3 py-2 font-mono text-xs leading-relaxed break-all text-ink-700 select-all">
             {gateway.webhookUrl}
           </code>
           <p className="mt-1 text-xs text-ink-400">

@@ -172,7 +172,9 @@ export default async function MarginsPage({
                   href={keep(days)}
                   aria-current={current ? "true" : undefined}
                   scroll={false}
-                  className={`w-20 py-1.5 text-center text-xs font-bold transition-colors not-first:border-l not-first:border-line ${
+                  /* 44px on a phone, as on every other range control in
+                     the dashboard. Thirty pixels is a mouse's size. */
+                  className={`flex min-h-11 w-20 items-center justify-center py-1.5 text-center text-xs font-bold transition-colors not-first:border-l not-first:border-line sm:min-h-8 ${
                     current ? "bg-ink-900 text-surface" : "text-ink-500 hover:bg-ink-50 hover:text-ink-900"
                   }`}
                 >

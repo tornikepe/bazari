@@ -795,6 +795,17 @@
     padding: 0.625rem 1rem;
   }
 
+  /* A sixteen-pixel gutter on each side of every cell is thirty-two per
+     column, and on a four-column table that is a third of a phone's width
+     spent on nothing. Half of it below `sm`, which is the difference
+     between a table that fits and one that has to be dragged sideways. */
+  @media (max-width: 639px) {
+    .table th,
+    .table td {
+      padding: 0.625rem 0.5rem;
+    }
+  }
+
   /* On the row rather than between rows: a `tbody > * + *` border cannot be
      removed by a row that wants to run into the next one, and the ledger has
      one that does. */

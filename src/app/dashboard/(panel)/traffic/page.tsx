@@ -105,7 +105,13 @@ export default async function TrafficPage({
                     <span className="relative w-6 shrink-0 font-mono text-xs text-ink-400">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <span className="relative min-w-0 flex-1 truncate font-mono text-xs text-ink-800">
+                    {/* The address wraps rather than being cut. A list of
+                        the most-visited pages whose addresses end in "…" is
+                        a list of numbers with nothing attached: on a phone
+                        "/product/fnirsi-dso152-oscillosc…" and
+                        "/product/fnirsi-dso152-kit" are the same string.
+                        `break-all` because a path has no spaces to break at. */}
+                    <span className="relative min-w-0 flex-1 font-mono text-xs leading-snug break-all text-ink-800">
                       {page.path}
                     </span>
                     <span className="relative shrink-0 text-xs font-bold text-ink-900 tabular-nums">

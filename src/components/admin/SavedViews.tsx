@@ -180,7 +180,9 @@ function SaveButton({ onClick, label }: { onClick: () => void; label: string }) 
     <button
       type="button"
       onClick={onClick}
-      className="text-xs font-semibold text-ink-500 underline decoration-dotted underline-offset-4 hover:text-brand-600"
+      /* `min-h-9`: it was eighteen pixels tall, which is a line of text with
+         an underline under it rather than something a thumb can aim at. */
+      className="inline-flex min-h-9 items-center text-xs font-semibold text-ink-500 underline decoration-dotted underline-offset-4 hover:text-brand-600"
     >
       {label}
     </button>

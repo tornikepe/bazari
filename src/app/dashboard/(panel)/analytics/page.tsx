@@ -262,16 +262,24 @@ function FunnelTable({
   percent: (part: number, whole: number) => string;
   foot?: React.ReactNode;
 }) {
+  /* Nine columns is seven hundred and thirty-six pixels, and a phone has
+     three hundred and ninety. Inside a sideways scroller that meant five of
+     the nine were off the edge with nothing to say they were there. Four are
+     kept on a phone — what it was, how many saw it, how many bought it, what
+     it took — and the rest return at `sm`, where there is room for them. */
   const columns = [
-    t.admin.anViews,
-    t.admin.anClicks,
-    t.admin.anCarts,
-    t.admin.anOrders,
-    t.admin.anUnits,
-    t.admin.anConversion,
-    t.admin.anRevenue,
-    t.admin.anProfit,
+    { label: t.admin.anViews, phone: true },
+    { label: t.admin.anClicks, phone: false },
+    { label: t.admin.anCarts, phone: false },
+    { label: t.admin.anOrders, phone: true },
+    { label: t.admin.anUnits, phone: false },
+    { label: t.admin.anConversion, phone: false },
+    { label: t.admin.anRevenue, phone: true },
+    { label: t.admin.anProfit, phone: false },
   ];
+
+  /** Applied to the head and the body of a held-back column. */
+  const wide = "hidden sm:table-cell";
 
   return (
     <section className="card mt-4 overflow-hidden">
@@ -280,13 +288,16 @@ function FunnelTable({
         {foot}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[46rem] text-sm">
+        <table className="w-full min-w-0 text-sm sm:min-w-[46rem]">
           <thead>
             <tr className="border-b border-line text-left text-xs text-ink-500">
-              <th className="px-5 py-2.5 font-semibold">{firstColumn}</th>
+              <th className="px-2 py-2.5 font-semibold sm:px-5">{firstColumn}</th>
               {columns.map((column) => (
-                <th key={column} className="px-3 py-2.5 text-right font-semibold whitespace-nowrap">
-                  {column}
+                <th
+                  key={column.label}
+                  className={`px-1.5 py-2.5 text-right font-semibold whitespace-nowrap sm:px-3 ${column.phone ? "" : wide}`}
+                >
+                  {column.label}
                 </th>
               ))}
             </tr>
@@ -306,19 +317,26 @@ function FunnelTable({
               ];
               return (
                 <tr key={row.id} className="transition-colors hover:bg-ink-50">
-                  <td className="max-w-64 px-5 py-2.5">
+                  {/* The name wraps to a second line rather than losing its
+                      end. Every other cell in this row is a number about the
+                      thing this cell names, and "Creality Ender-3 V3 SE 3D
+                      პრი…" is a row of numbers about something the reader
+                      has to guess at. */}
+                  <td className="w-28 max-w-64 min-w-24 px-2 py-2.5 sm:w-64 sm:min-w-48 sm:px-5">
                     {href ? (
-                      <Link href={href} className="block truncate font-semibold text-ink-900 hover:text-brand-600">
+                      <Link href={href} className="block leading-snug font-semibold text-ink-900 hover:text-brand-600">
                         {nameOf(row)}
                       </Link>
                     ) : (
-                      <span className="block truncate font-semibold text-ink-900">{nameOf(row)}</span>
+                      <span className="block leading-snug font-semibold text-ink-900">{nameOf(row)}</span>
                     )}
                   </td>
                   {cells.map((cell, index) => (
                     <td
-                      key={columns[index]}
-                      className={`px-3 py-2.5 text-right tabular-nums whitespace-nowrap ${
+                      key={columns[index]!.label}
+                      className={`px-1.5 py-2.5 text-right tabular-nums whitespace-nowrap sm:px-3 ${
+                        columns[index]!.phone ? "" : wide
+                      } ${
                         index === 7 ? (row.profit < 0 ? "font-semibold text-danger" : "font-semibold text-ink-900") : "text-ink-700"
                       }`}
                     >

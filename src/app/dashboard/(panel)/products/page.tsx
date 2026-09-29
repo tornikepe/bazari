@@ -256,7 +256,10 @@ export default async function AdminProductsPage({
                     {locale === "ka" ? product.nameKa : product.nameEn}
                   </Link>
 
-                  <p className="truncate text-xs text-ink-400">
+                  {/* Wrapping: the category and the make were cut on a
+                      phone, and "სახლი და სამზარეულო · Xiao…" says neither
+                      of the two things it is there to say. */}
+                  <p className="text-xs leading-snug text-ink-400">
                     {product.category.icon}{" "}
                     {locale === "ka" ? product.category.nameKa : product.category.nameEn}
                     {product.brand && ` · ${product.brand}`}
