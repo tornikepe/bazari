@@ -77,9 +77,11 @@ export async function NotFoundView() {
                 <li key={category.slug}>
                   <Link
                     href={`/catalog?category=${category.slug}`}
-                    className="flex min-h-12 items-center justify-between gap-3 bg-surface px-4 text-sm text-ink-800 transition-colors hover:bg-ink-50"
+                    className="flex min-h-12 items-center justify-between gap-3 bg-surface px-4 py-2.5 text-sm text-ink-800 transition-colors hover:bg-ink-50"
                   >
-                    <span className="truncate">
+                    {/* Wrapping: this is a list of places to go instead, and
+                        "📱 ტელეფონები და აქსესუარე…" is not one of them. */}
+                    <span className="leading-snug">
                       {category.icon}{" "}
                       {locale === "ka" ? category.nameKa : category.nameEn}
                     </span>

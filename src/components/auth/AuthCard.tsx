@@ -40,7 +40,9 @@ export function AuthCard({
         <div className="mt-4 text-center text-sm text-ink-500">{footer}</div>
 
         <p className="mt-4 text-center text-xs text-ink-400">
-          <Link href="/" className="hover:text-brand-600">
+          {/* Padding for a thumb, cancelled by an equal negative margin:
+              the hit area grows, the line does not move. */}
+          <Link href="/" className="inline-block py-3 -my-3 hover:text-brand-600">
             ← {settings.name}
           </Link>
         </p>

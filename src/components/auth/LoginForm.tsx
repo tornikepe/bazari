@@ -102,7 +102,7 @@ export function LoginForm({
         title={t.auth.staffCodeTitle}
         hint={fill(t.auth.staffCodeHint, { email: awaiting.email })}
         footer={
-          <a href="/login" className="font-semibold text-brand-600 hover:underline">
+          <a href="/login" className="inline-block py-3 -my-3 font-semibold text-brand-600 hover:underline">
             {t.auth.staffCodeBack}
           </a>
         }
@@ -146,7 +146,7 @@ export function LoginForm({
       footer={
         <>
           {t.auth.noAccount}{" "}
-          <Link href="/register" className="font-semibold text-brand-600 hover:underline">
+          <Link href="/register" className="inline-block py-3 -my-3 font-semibold text-brand-600 hover:underline">
             {t.auth.signUp}
           </Link>
         </>
@@ -192,7 +192,7 @@ export function LoginForm({
             </label>
             <Link
               href="/forgot-password"
-              className="mb-1.5 text-xs font-semibold text-brand-600 hover:underline"
+              className="mb-1.5 inline-block py-2 -my-2 text-xs font-semibold text-brand-600 hover:underline"
             >
               {t.auth.forgot}
             </Link>

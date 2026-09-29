@@ -63,7 +63,10 @@ export default function ForgotPasswordPage() {
       title={t.auth.forgotTitle}
       hint={codeSent ? t.auth.codeHint : t.auth.forgotHint}
       footer={
-        <Link href="/login" className="font-semibold text-brand-600 hover:underline">
+        <Link
+          href="/login"
+          className="inline-block py-3 -my-3 font-semibold text-brand-600 hover:underline"
+        >
           {t.auth.backToSignIn}
         </Link>
       }

@@ -57,6 +57,13 @@ export function SalesTable({
     { total: 0, orders: 0, units: 0, profit: 0 },
   );
   const peak = Math.max(1, ...daily.map((day) => day.total));
+
+  /* A week, on a phone. Thirty rows of figures is most of a screen's height
+     spent scrolling past days nothing happened on, and the days a shop owner
+     opens this for are the last few. The rest are one tap away, and from
+     `sm` up they are all simply there. */
+  const PHONE_ROWS = 7;
+  const foldable = rows.length > PHONE_ROWS;
   const money = (tetri: number) => formatPrice(tetri, locale);
   const average = (revenue: number, orders: number) => (orders > 0 ? money(revenue / orders) : "—");
   /* Two of the six are held back on a phone. The table was six columns and
@@ -139,8 +146,16 @@ export function SalesTable({
       {rows.length === 0 ? (
         <p className="px-5 py-8 text-center text-sm text-ink-400">{t.admin.salesQuiet}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-0 text-sm sm:min-w-[40rem]">
+        <>
+          {/* A disclosure with no JavaScript in it: the checkbox is the
+              state, the label is the control, and the rule that shows the
+              held-back rows lives in the stylesheet. The table is rendered
+              by the server and stays there. */}
+          {foldable && (
+            <input type="checkbox" id="sales-more" className="sales-more-state sr-only" />
+          )}
+          <div className="sales-body overflow-x-auto">
+            <table className="w-full min-w-0 text-sm sm:min-w-[40rem]">
             <thead>
               <tr className="border-b border-line text-left text-xs text-ink-500">
                 <th className="px-3 py-2.5 font-semibold sm:px-5">{t.admin.salesDay}</th>
@@ -156,10 +171,12 @@ export function SalesTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {rows.map((day) => (
+              {rows.map((day, index) => (
                 <tr
                   key={day.date}
-                  className={`transition-colors hover:bg-ink-50 ${day.orders === 0 ? "text-ink-400" : ""}`}
+                  className={`transition-colors hover:bg-ink-50 ${day.orders === 0 ? "text-ink-400" : ""} ${
+                    foldable && index >= PHONE_ROWS ? "sales-extra" : ""
+                  }`}
                 >
                   <td className="px-3 py-2.5 sm:px-5">
                     <Link
@@ -208,8 +225,15 @@ export function SalesTable({
                 <td className="hidden sm:table-cell" />
               </tr>
             </tfoot>
-          </table>
-        </div>
+            </table>
+          </div>
+
+          {foldable && (
+            <label htmlFor="sales-more" className="sales-more">
+              {fill(t.admin.salesShowAll, { count: rows.length })}
+            </label>
+          )}
+        </>
       )}
     </section>
   );

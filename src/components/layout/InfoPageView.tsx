@@ -58,7 +58,13 @@ export async function InfoPageView({ slug }: { slug: InfoSlug }) {
                     <span className="w-4 shrink-0" aria-hidden="true" />
                   )}
                   {row.href ? (
-                    <a href={row.href} className="transition-colors hover:text-brand-600">
+                    /* Tapping this one dials, so it is worth a thumb's
+                       width: padding added and cancelled by an equal
+                       negative margin, so the row does not move. */
+                    <a
+                      href={row.href}
+                      className="inline-block py-2.5 -my-2.5 transition-colors hover:text-brand-600"
+                    >
                       {row.value}
                     </a>
                   ) : (

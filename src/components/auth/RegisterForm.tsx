@@ -73,7 +73,7 @@ export function RegisterForm({ social }: { social: React.ReactNode }) {
       footer={
         <>
           {t.auth.hasAccount}{" "}
-          <Link href="/login" className="font-semibold text-brand-600 hover:underline">
+          <Link href="/login" className="inline-block py-3 -my-3 font-semibold text-brand-600 hover:underline">
             {t.auth.signIn}
           </Link>
         </>
