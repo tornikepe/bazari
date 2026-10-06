@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
 import { formatDateTime, formatPrice } from "@/lib/format";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
 import { PaymentPanel } from "@/components/admin/PaymentPanel";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -129,7 +128,6 @@ export default async function AdminOrderDetailPage({
                 <FileIcon size={15} />
                 {t.orderDone.downloadPdf}
               </a>
-              <StatusBadge status={order.status} t={t} />
               <OrderStatusSelect id={order.id} status={order.status} />
             </div>
 

@@ -191,7 +191,13 @@ export default async function DashboardPage({
             <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
               {fill(t.admin.greeting, { name: firstName })}
             </h1>
-            <p className="hero-muted mt-2 text-sm">
+            {/* A wrapping row of two facts rather than one sentence. Written
+                inline, the second fact began with its own separator, and on
+                a phone the line broke after the first — leaving a "·"
+                stranded alone at the end of one line and "today: 7" at the
+                start of the next. Each fact now travels whole, dot
+                included, and the row wraps only between them. */}
+            <p className="hero-muted mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               {pendingCount > 0 ? (
                 <Link
                   href="/dashboard/orders?status=pending"
@@ -207,8 +213,11 @@ export default async function DashboardPage({
                 t.admin.heroAllClear
               )}
               {todayCount > 0 && (
-                <span className="ml-3">
-                  · {t.admin.ordersToday}:{" "}
+                <span className="whitespace-nowrap">
+                  <span aria-hidden="true" className="mr-1.5 opacity-60">
+                    ·
+                  </span>
+                  {t.admin.ordersToday}:{" "}
                   <span className="font-semibold text-panel-fg tabular-nums">{todayCount}</span>
                 </span>
               )}

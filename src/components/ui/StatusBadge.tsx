@@ -1,6 +1,16 @@
 import type { Dictionary } from "@/lib/i18n";
 
 /** The badge's colours per status, for anything drawn in the same tone. */
+/** The same five colours as a solid dot, for controls that carry the status
+    themselves rather than printing a badge beside one. */
+export const STATUS_DOTS: Record<string, string> = {
+  pending: "bg-warning",
+  confirmed: "bg-info",
+  shipped: "bg-brand-500",
+  delivered: "bg-success",
+  cancelled: "bg-ink-300",
+};
+
 export const STATUS_STYLES: Record<string, string> = {
   pending: "bg-warning-soft text-warning",
   confirmed: "bg-info-soft text-info",

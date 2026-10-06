@@ -81,7 +81,12 @@ export async function StockLedger({ productId }: { productId: string }) {
                         {movement.order.number}
                       </Link>
                     ) : (
-                      <span className="text-ink-300">—</span>
+                      /* `ink-400`, not `ink-300`: at 300 the dash came out
+                         at 1.8 against the row behind it, which is not a
+                         faint dash but no dash at all — and the cell then
+                         reads as a figure that failed to load rather than
+                         as a movement with no order behind it. */
+                      <span className="text-ink-400">—</span>
                     )}
                   </td>
                 </tr>

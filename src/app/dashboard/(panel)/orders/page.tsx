@@ -10,7 +10,6 @@ import {
   shopDayRange,
 } from "@/lib/format";
 import { countText, fill } from "@/lib/i18n";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
 import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { AdminPagination } from "@/components/admin/AdminPagination";
@@ -384,8 +383,7 @@ export default async function AdminOrdersPage({
                     locale={locale}
                   />
 
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
-                    <StatusBadge status={order.status} t={t} />
+                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
                     <OrderStatusSelect id={order.id} status={order.status} />
                   </div>
                 </li>
@@ -419,8 +417,11 @@ export default async function AdminOrdersPage({
                     <th>{t.admin.placedAt}</th>
                     <th className="hidden 2xl:table-cell">{t.admin.statusChangedAt}</th>
                     <th className="figures">{t.admin.total}</th>
+                    {/* One column, not two. The status and the control that
+                        changes it were separate columns printing the same
+                        word side by side; the control carries the status
+                        now, in the badge's own colour. */}
                     <th>{t.admin.status}</th>
-                    <th>{t.admin.updateStatus}</th>
                   </tr>
                 </thead>
 
@@ -517,10 +518,6 @@ export default async function AdminOrdersPage({
                         >
                           {t.payment[order.paymentStatus]}
                         </p>
-                      </td>
-
-                      <td>
-                        <StatusBadge status={order.status} t={t} />
                       </td>
 
                       <td>
