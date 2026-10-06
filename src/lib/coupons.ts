@@ -3,7 +3,14 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 
 export type CouponCheck =
-  | { ok: true; id: string; code: string; discount: number }
+  | {
+      ok: true;
+      id: string;
+      code: string;
+      discount: number;
+      /** The ceiling this check was made against, for the writer to guard on. */
+      maxUses: number | null;
+    }
   | { ok: false; reason: "not-found" | "expired" | "used-up" | "min-total" };
 
 /**
@@ -44,5 +51,5 @@ export async function checkCoupon(rawCode: string, subtotal: number): Promise<Co
   // Never more than the basket itself, or the shop pays the customer.
   const discount = Math.min(raw, subtotal);
 
-  return { ok: true, id: coupon.id, code: coupon.code, discount };
+  return { ok: true, id: coupon.id, code: coupon.code, discount, maxUses: coupon.maxUses };
 }

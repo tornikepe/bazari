@@ -143,6 +143,24 @@ export type ApplyResult =
  * — which they all do — collides and does nothing the second time. Everything
  * that follows happens in the same transaction as that insert.
  */
+/**
+ * Whether a newly arrived event may move the payment's state at all.
+ *
+ * Gateways do not guarantee order. A `failed` written after the `captured`
+ * it was racing — a retry of an earlier attempt, a timeout notice that
+ * overtook the success — would leave a payment marked failed against an
+ * order that is paid and already being packed, and the shop would read its
+ * own records and conclude the money never came. Money taken is a fact and
+ * only a refund undoes it; everything else arriving afterwards is recorded
+ * as an event and changes nothing.
+ */
+function mayMoveState(from: PaymentState, to: PaymentState): boolean {
+  if (from === to) return false;
+  if (from === "captured") return to === "refunded";
+  if (from === "refunded") return false;
+  return true;
+}
+
 export async function applyPaymentEvent(input: {
   provider: PaymentProvider;
   paymentId?: string;
@@ -218,17 +236,20 @@ export async function applyPaymentEvent(input: {
         },
       });
 
+      /* The event is always recorded; whether it moves the payment is a
+         separate question — see `mayMoveState`. */
+      const moves = mayMoveState(payment.state, input.state);
+
       await tx.payment.update({
         where: { id: payment.id },
         data: {
-          state: input.state,
-          failReason: input.failReason ?? "",
-          capturedAt: input.state === "captured" ? new Date() : undefined,
+          ...(moves ? { state: input.state, failReason: input.failReason ?? "" } : {}),
+          capturedAt: moves && input.state === "captured" ? new Date() : undefined,
           providerRef: input.providerRef ?? undefined,
         },
       });
 
-      if (input.state === "captured") {
+      if (moves && input.state === "captured") {
         // Paid, and — for an order still waiting to be looked at — confirmed
         // in the same breath: the money is the confirmation an online order
         // was waiting for, and the shop can start on it.

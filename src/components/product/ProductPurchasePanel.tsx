@@ -37,7 +37,7 @@ export function ProductPurchasePanel({
   choice?: React.ReactNode;
 }) {
   const { t } = useI18n();
-  const { items, hydrated, add, setQuantity: setLineQuantity } = useCart();
+  const { items, hydrated, setQuantity: setLineQuantity } = useCart();
   const [pending, setPending] = useState(1);
   const bar = useRef<HTMLDivElement>(null);
 

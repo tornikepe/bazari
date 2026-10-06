@@ -291,6 +291,8 @@ const ka = {
     receiptRequired: "ქვითრის ფოტო სავალდებულოა.",
     receiptTooLarge: "ფოტო ძალიან დიდია — სცადე სხვა.",
     receiptFailed: "ფოტო ვერ წაიკითხა — სცადე სხვა.",
+    couponGone: "კუპონი ამოიწურა",
+    couponGoneHint: "ამ კოდის ბოლო გამოყენება სხვამ მოასწრო. შეკვეთა არ გაფორმებულა — წაშალე კოდი კალათაში და სცადე ხელახლა.",
   },
 
   orderDone: {
@@ -765,6 +767,8 @@ const ka = {
     margin: "მარჟა",
     skuField: "SKU",
     costPriceField: "შესყიდვის ფასი",
+    photoLinkFailed: "ბმულით მითითებული ფოტო ვერ ჩამოიტვირთა",
+    photoLinkFailedHint: "შეამოწმე მისამართი — https უნდა იყოს და პირდაპირ სურათზე უნდა მიდიოდეს (2 MB-მდე). ან უბრალოდ ატვირთე ფაილი.",
     costPriceHint: "რამდენად იყიდე ერთი ცალი",
     priceHint: "რამდენად ყიდი ერთ ცალს",
     profitPerItem: "მოგება ერთ ცალზე:",
@@ -1712,6 +1716,8 @@ const en: Dictionary = {
     receiptRequired: "A photo of the receipt is required.",
     receiptTooLarge: "That photo is too large — try another.",
     receiptFailed: "That photo could not be read — try another.",
+    couponGone: "That code has run out",
+    couponGoneHint: "Somebody took its last use just now. Nothing was ordered — remove the code in your cart and try again.",
   },
 
   orderDone: {
@@ -2186,6 +2192,8 @@ const en: Dictionary = {
     margin: "Margin",
     skuField: "SKU",
     costPriceField: "Bought for",
+    photoLinkFailed: "That photo link could not be fetched",
+    photoLinkFailedHint: "Check the address — it has to be https and point straight at the image (up to 2 MB). Or just upload the file.",
     costPriceHint: "What one of these cost you",
     priceHint: "What you sell one for",
     profitPerItem: "You make on one:",

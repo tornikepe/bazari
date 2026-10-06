@@ -3,7 +3,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { getActiveZones } from "@/lib/delivery";
-import { getSettings } from "@/lib/settings";
 import { cardGateway } from "@/lib/payments";
 import { enabledGateways } from "@/lib/payments/gateways";
 import type { PaymentMethod } from "@/lib/payment";
@@ -28,7 +27,7 @@ export default async function CheckoutPage() {
   if (!user) redirect("/login?next=%2Fcheckout");
   if (user.role !== "customer") redirect("/cart");
 
-  const [saved, zones, gateways, settings, prefs] = await Promise.all([
+  const [saved, zones, gateways, prefs] = await Promise.all([
     prisma.address.findMany({
       where: { userId: user.id },
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
@@ -48,7 +47,6 @@ export default async function CheckoutPage() {
     getActiveZones(),
     // Likewise the gateways: only the ones switched on and filled in.
     enabledGateways(),
-    getSettings(),
     // What the customer chose on their payment page, to have ready.
     prisma.user.findUnique({ where: { id: user.id }, select: { preferredPayment: true } }),
   ]);

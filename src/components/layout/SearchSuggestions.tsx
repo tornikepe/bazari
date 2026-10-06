@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/components/providers/I18nProvider";
@@ -50,6 +51,7 @@ export function SearchSuggestions({
   onNavigate: () => void;
 }) {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const listId = useId();
 
   /**
@@ -156,14 +158,19 @@ export function SearchSuggestions({
           event.preventDefault();
           setDismissed(true);
           onNavigate();
-          window.location.assign(`/product/${chosen.slug}`);
+          /* The router, not `location.assign`. Pressing Enter on a
+             suggestion was reloading the whole application — the fonts, the
+             cart, every bundle — to reach a page that is one client
+             navigation away, and the mouse's path to the same product
+             (the `Link` below) never did that. */
+          router.push(`/product/${chosen.slug}`);
         }
       }
     };
 
     input.addEventListener("keydown", onKeyDown);
     return () => input.removeEventListener("keydown", onKeyDown);
-  }, [inputRef, onNavigate, items, active]);
+  }, [inputRef, onNavigate, items, active, router]);
 
   // The combobox wiring has to live on the input, which this component does not
   // own, so it is applied to the node directly.

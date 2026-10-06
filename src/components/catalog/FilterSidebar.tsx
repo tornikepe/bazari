@@ -3,7 +3,7 @@
 import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { CheckIcon, ChevronDownIcon, CloseIcon, SearchIcon } from "@/components/ui/icons";
+import { CheckIcon, ChevronDownIcon, SearchIcon } from "@/components/ui/icons";
 import { buildQuery, EMPTY_FILTERS, type CatalogFilters } from "@/lib/filters";
 import { fill } from "@/lib/i18n";
 

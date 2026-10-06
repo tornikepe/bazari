@@ -65,7 +65,9 @@ export type PlaceOrderResult =
         | "rate-limited"
         | "sign-in-required"
         /** A bank transfer arrived without the photograph of the slip. */
-        | "receipt";
+        | "receipt"
+        /** The coupon ran out of uses between the preview and the order. */
+        | "coupon-gone";
     };
 
 /** What the shop will take as a photograph of a transfer, and how big. */
@@ -77,6 +79,14 @@ class OutOfStockError extends Error {
   constructor() {
     super("out of stock");
     this.name = "OutOfStockError";
+  }
+}
+
+/** Thrown inside the order transaction when the coupon's last use is gone. */
+class CouponGoneError extends Error {
+  constructor() {
+    super("coupon used up");
+    this.name = "CouponGoneError";
   }
 }
 
@@ -244,11 +254,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // tampered request can't invent one.
   let discount = 0;
   let couponId: string | null = null;
+  let couponMaxUses: number | null = null;
   if (input.couponCode) {
     const coupon = await checkCoupon(input.couponCode, subtotal);
     if (coupon.ok) {
       discount = coupon.discount;
       couponId = coupon.id;
+      couponMaxUses = coupon.maxUses;
     }
   }
 
@@ -429,13 +441,25 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           });
         }
 
-        // Usage is counted inside the transaction, so a coupon can't exceed
-        // `maxUses` under concurrent checkouts.
+        /* The same conditional write the stock uses, and for the same
+           reason. Being inside a transaction was never enough on its own:
+           two checkouts racing for a coupon's last use each read the count
+           during validation, and an unguarded `increment` then took both —
+           Postgres serialises the two updates on the row and lets each
+           succeed, leaving `usedCount` one past `maxUses`. The ceiling is
+           the one this order was validated against, so the database decides
+           at write time which of the two got the last use, and the loser's
+           whole order rolls back rather than being sold at a discount the
+           shop had stopped offering. */
         if (couponId) {
-          await tx.coupon.update({
-            where: { id: couponId },
+          const took = await tx.coupon.updateMany({
+            where: {
+              id: couponId,
+              ...(couponMaxUses !== null ? { usedCount: { lt: couponMaxUses } } : {}),
+            },
             data: { usedCount: { increment: 1 } },
           });
+          if (took.count === 0) throw new CouponGoneError();
         }
 
         return created;
@@ -544,6 +568,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       return { ok: true, number: order.number };
     } catch (error) {
       if (error instanceof OutOfStockError) return { ok: false, error: "unavailable" };
+      if (error instanceof CouponGoneError) return { ok: false, error: "coupon-gone" };
 
       const isDuplicateNumber =
         typeof error === "object" &&

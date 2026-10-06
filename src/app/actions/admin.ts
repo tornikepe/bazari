@@ -10,7 +10,8 @@ import { generateSku } from "@/lib/sku";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { specsFromForm } from "@/lib/product-specs";
 import { forgetUnusedImages, photosOf } from "@/lib/product-images";
-import { DEFAULT_PHOTO, photosFromForm } from "@/lib/product-photos";
+import { DEFAULT_PHOTO, photosFromForm, type Photo } from "@/lib/product-photos";
+import { fetchImage } from "@/lib/fetch-image";
 import { releaseStockAlerts } from "@/lib/stock-emails";
 import type { Prisma } from "@/generated/prisma/client";
 import { audit, diff } from "@/lib/audit";
@@ -23,7 +24,15 @@ export type ActionResult =
   | { ok: true }
   | {
       ok: false;
-      error: "unauthorized" | "invalid" | "slug-taken" | "sku-taken" | "has-products" | "failed";
+      error:
+        | "unauthorized"
+        | "invalid"
+        | "slug-taken"
+        | "sku-taken"
+        | "has-products"
+        /** A pasted photo address could not be fetched and stored. */
+        | "photo-link"
+        | "failed";
     };
 
 /**
@@ -233,12 +242,67 @@ async function announceIfBack(productId: string, before: number, after: number) 
   );
 }
 
+/**
+ * Replaces every photo address that is not ours with one that is.
+ *
+ * Local addresses — an upload, the bundled placeholder — are left exactly as
+ * they are. Anything else is downloaded once and stored as a row, so the
+ * shop owns every picture in its own catalogue. One that cannot be fetched
+ * fails the whole save rather than being dropped quietly: a shop owner who
+ * pasted a link and saw "saved" would believe the photo was there.
+ */
+async function adoptPastedPhotos(
+  photos: Photo[],
+): Promise<{ ok: true; photos: Photo[] } | { ok: false }> {
+  const out: Photo[] = [];
+
+  for (const photo of photos) {
+    if (photo.url.startsWith("/")) {
+      out.push(photo);
+      continue;
+    }
+
+    const fetched = await fetchImage(photo.url);
+    if (!fetched.ok) {
+      console.warn(`[products] refused a pasted photo: ${fetched.reason}`);
+      return { ok: false };
+    }
+
+    const stored = await prisma.productImage.create({
+      data: {
+        data: Buffer.from(fetched.bytes),
+        contentType: fetched.type,
+        bytes: fetched.bytes.byteLength,
+        /* The last part of the address it came from, so the dashboard's
+           list of stored pictures can say where this one was found. */
+        filename: new URL(photo.url).pathname.split("/").pop()?.slice(0, 120) ?? "",
+      },
+      select: { id: true },
+    });
+    out.push({ ...photo, url: `/api/images/${stored.id}` });
+  }
+
+  return { ok: true, photos: out };
+}
+
 export async function saveProduct(id: string | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "unauthorized" };
 
   const parsed = await readProductForm(formData, id ?? undefined);
   if (!parsed.ok) return { ok: false, error: parsed.error };
+
+  /* Any photo given as somebody else's address is fetched and kept here,
+     and the address is replaced with our own. The form offers "or paste a
+     link"; what it used to do with one was store the link, which left the
+     catalogue depending on another site staying up — and, because
+     `next/image` refuses a host that is not in `remotePatterns`, made the
+     product page and the home page answer 500 rather than show a broken
+     picture. See `fetchImage` for what is and is not fetched. */
+  const adopted = await adoptPastedPhotos(parsed.data.photos as Photo[]);
+  if (!adopted.ok) return { ok: false, error: "photo-link" };
+  parsed.data.photos = adopted.photos;
+  parsed.data.image = adopted.photos[0]?.url ?? parsed.data.image;
 
   /* What it points at now, so the photos it stops pointing at can have their
      bytes cleaned up after the save. Read before, compared after: an upload
@@ -734,6 +798,7 @@ async function applyOrderStatus(
     where: { id },
     select: {
       status: true,
+      paymentStatus: true,
       number: true,
       email: true,
       total: true,
@@ -769,7 +834,15 @@ async function applyOrderStatus(
           // stage, so re-opening an order doesn't rewrite its history.
           ...(status === "shipped" ? { shippedAt: now } : {}),
           ...(status === "delivered" ? { deliveredAt: now, paymentStatus: "paid" } : {}),
-          ...(status === "cancelled" ? { paymentStatus: "refunded" } : {}),
+          /* "Refunded" only if there was something to refund. A bank
+             transfer nobody ever sent is cancelled `unpaid`, and marking it
+             refunded printed an invoice stamped as money returned and put a
+             "refunded" badge against an order that was never paid — the
+             dashboard reading, in its own records, that the shop had given
+             back money it never received. */
+          ...(status === "cancelled" && order.paymentStatus === "paid"
+            ? { paymentStatus: "refunded" as const }
+            : {}),
         },
       });
 

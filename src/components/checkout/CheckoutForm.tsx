@@ -276,7 +276,13 @@ export function CheckoutForm({
                   hint: t.checkout.unavailableHint,
                   action: { href: "/cart", label: t.checkout.openCart },
                 }
-              : result.error === "rate-limited"
+              : result.error === "coupon-gone"
+                ? {
+                    title: t.checkout.couponGone,
+                    hint: t.checkout.couponGoneHint,
+                    action: { href: "/cart", label: t.checkout.openCart },
+                  }
+                : result.error === "rate-limited"
                 ? { title: t.checkout.rateLimited, hint: t.checkout.rateLimitedHint }
                 : result.error === "sign-in-required"
                   ? {

@@ -148,9 +148,11 @@ export function ProductForm({
             ? { title: t.admin.slugTaken }
             : result.error === "sku-taken"
               ? { title: t.admin.skuTaken }
-              : result.error === "invalid"
-                ? { title: t.admin.required }
-                : { title: t.common.error, hint: t.common.errorHint },
+              : result.error === "photo-link"
+                ? { title: t.admin.photoLinkFailed, hint: t.admin.photoLinkFailedHint }
+                : result.error === "invalid"
+                  ? { title: t.admin.required }
+                  : { title: t.common.error, hint: t.common.errorHint },
         );
         return;
       }
@@ -410,7 +412,19 @@ export function ProductForm({
               {photos.map((photo, index) => (
                 <li key={photo.url} className="flex gap-3 border-t border-line pt-3 first:border-t-0 first:pt-0">
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-control border border-line bg-ink-50">
-                    <Image src={photo.url} alt="" fill sizes="80px" className="object-cover" />
+                    {/* A plain `img` for a photo that is still somebody
+                        else's address. `next/image` refuses a host that is
+                        not in `remotePatterns` — by throwing — so pasting a
+                        link used to take the whole form down with it, and
+                        the shop owner saw the editor vanish. A pasted
+                        address only lives this long: saving fetches the
+                        picture and replaces it with one of ours. */}
+                    {photo.url.startsWith("/") ? (
+                      <Image src={photo.url} alt="" fill sizes="80px" className="object-cover" />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photo.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                    )}
                     {index === 0 && (
                       <span className="absolute inset-x-0 bottom-0 bg-ink-900/80 py-0.5 text-center text-[0.625rem] font-bold text-white">
                         {t.admin.photoMain}
