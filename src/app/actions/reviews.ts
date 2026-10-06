@@ -49,16 +49,6 @@ async function refreshRating(tx: Prisma.TransactionClient, productId: string) {
  * Each is read for what it is (see `image-upload.ts`), not for what the
  * browser called it.
  */
-/** Prisma's "a unique constraint would be broken" — here, "already paid". */
-function isDuplicate(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: string }).code === "P2002"
-  );
-}
-
 export async function submitReview(formData: FormData): Promise<SubmitReviewResult> {
   const user = await getCurrentUser();
   if (!user || user.role !== "customer") return { ok: false, error: "sign-in-required" };
@@ -138,7 +128,25 @@ export async function submitReview(formData: FormData): Promise<SubmitReviewResu
          ledger cannot explain. A reward of zero is the shop switching
          the whole thing off, and then nothing is written at all. */
       if (reward > 0) {
-        try {
+        /* Asked first, rather than written and the clash caught. Postgres
+           aborts a whole transaction the moment one statement in it fails,
+           so catching the unique violation and carrying on does not work:
+           every command after it — the rating recount below, for one —
+           comes back "current transaction is aborted", and the rewrite the
+           shopper just made is rolled back with it. Reading first costs one
+           query and keeps the ordinary path, which is somebody changing
+           their mind about a kettle, working.
+
+           The index is still what guarantees nobody is paid twice. Two
+           submissions racing for the same review would both read nothing
+           and one would lose on the insert — that transaction rolls back
+           whole, which is the right outcome, and a retry finds the row. */
+        const paid = await tx.balanceEntry.findUnique({
+          where: { reviewId: review.id },
+          select: { id: true },
+        });
+
+        if (!paid) {
           await tx.balanceEntry.create({
             data: {
               userId: user.id,
@@ -152,10 +160,6 @@ export async function submitReview(formData: FormData): Promise<SubmitReviewResu
             where: { id: user.id },
             data: { balance: { increment: reward } },
           });
-        } catch (error) {
-          // Already paid for. Anything else is a real failure and belongs
-          // to the caller's catch, which rolls the whole review back.
-          if (!isDuplicate(error)) throw error;
         }
       }
 

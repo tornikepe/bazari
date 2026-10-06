@@ -5,6 +5,8 @@ import { formatPrice } from "@/lib/format";
 import { getPage } from "@/lib/info-store";
 import type { InfoSlug } from "@/lib/info-pages";
 import { getSettings } from "@/lib/settings";
+import { enabledGateways } from "@/lib/payments/gateways";
+import { getAdapter } from "@/lib/payments";
 import type { ShopSettings } from "@/lib/settings-defaults";
 import type { Locale } from "@/lib/i18n";
 
@@ -30,6 +32,12 @@ import type { Locale } from "@/lib/i18n";
 /* ------------------------------------------------------------------ */
 
 /** Pages the assistant is allowed to answer from, in the order it should prefer. */
+/* Every public page, not a chosen six. The assistant was given the six that
+   seemed most likely to be asked about, which meant a question about the
+   terms or about what the shop does with a phone number was answered from
+   nothing — and those are exactly the questions somebody asks before they
+   trust a shop with a card. If it is published, a visitor can read it, and
+   the assistant should be able to read it too. */
 const CONTEXT_PAGES: InfoSlug[] = [
   "faq",
   "shipping",
@@ -37,6 +45,8 @@ const CONTEXT_PAGES: InfoSlug[] = [
   "warranty",
   "about",
   "contact",
+  "terms",
+  "privacy",
 ];
 
 type CacheEntry = { text: string; expiresAt: number };
@@ -119,14 +129,75 @@ async function infoPagesText(locale: Locale): Promise<string> {
     .join("\n\n");
 }
 
-/** The rules the code actually enforces, so the assistant can't soften them. */
-function shippingRules(locale: Locale, settings: ShopSettings): string {
-  return [
-    `Shipping costs ${formatPrice(settings.shippingFee, locale)}, and is free once the basket reaches ${formatPrice(settings.freeShippingThreshold, locale)}.`,
+/**
+ * The ways to pay that the checkout will actually offer, in its own order.
+ *
+ * Read rather than written down, for the same reason the delivery fee is:
+ * the gateways are switched on and off from the dashboard, and an assistant
+ * offering a bank the shop has not signed with is an assistant sending
+ * somebody to a dead end.
+ */
+async function paymentWays(locale: Locale): Promise<string[]> {
+  const gateways = await enabledGateways();
+  const ways = gateways.map((gateway) => getAdapter(gateway.provider).name);
+  // The sandbox stands in for a card while no real gateway is connected;
+  // it is not a way for a visitor to pay and is never named as one.
+  ways.push(locale === "ka" ? "საბანკო გადარიცხვა" : "bank transfer");
+  return ways;
+}
+
+/**
+ * The rules the code actually enforces, so the assistant can't soften them.
+ *
+ * Every line here is read from the shop's own settings or from what the
+ * checkout really does. Two of them used to be written by hand and had gone
+ * stale: it told people payment was cash on delivery, which the shop stopped
+ * taking, and that an order could be placed without an account, which it
+ * cannot. An assistant repeating a rule the shop no longer has is worse than
+ * one that says it does not know.
+ */
+function shippingRules(
+  locale: Locale,
+  settings: ShopSettings,
+  ways: string[],
+): string {
+  const lines = [
+    `Delivery costs ${formatPrice(settings.shippingFee, locale)}, and is free once the basket reaches ${formatPrice(settings.freeShippingThreshold, locale)}.`,
     "Delivery time is set per product and is shown on the product page — there is no single site-wide figure.",
-    "Payment is cash on delivery. Card payments are not connected yet, so do not offer them.",
-    "An order can be placed without an account; tracking one afterwards needs the order number and the phone number given at checkout (/track).",
-  ].join("\n");
+    settings.pickupEnabled
+      ? `Collection from the shop is offered as well as a courier${settings.pickupAddress ? `, from ${settings.pickupAddress}` : ""}.`
+      : "Everything is delivered by courier; there is no collection in person.",
+    `Ways to pay, and the only ones: ${ways.join(", ")}.`,
+    "Paying by bank transfer means uploading a photograph of the transfer slip at the checkout — the order cannot be placed without it, and the shop confirms once the money arrives.",
+    "Checkout requires an account. An order cannot be placed as a guest.",
+    "An order is tracked at /track with its number and the phone number given at checkout, or from the account that placed it.",
+    settings.returnWindowDays > 0
+      ? `Something can be sent back within ${settings.returnWindowDays} days of delivery, asked for from the order's own page.`
+      : "The shop does not currently take returns.",
+    settings.vatRate > 0
+      ? `Prices include ${settings.vatRate}% VAT.`
+      : "Prices are what is paid; no tax is added at the checkout.",
+  ];
+
+  if (settings.reviewRewardTetri > 0) {
+    lines.push(
+      `Somebody who bought a product and writes a review of it earns ${formatPrice(settings.reviewRewardTetri, locale)} on their account balance, once per product. Only a delivered order allows a review.`,
+    );
+  }
+
+  if (settings.bankIban) {
+    lines.push(
+      `The shop's own account for a transfer is shown at the checkout the moment "transfer" is chosen${settings.bankHolder ? `, in the name of ${settings.bankHolder}` : ""}. Do not read an account number out; send them to the checkout.`,
+    );
+  }
+
+  const reach = [
+    settings.contactPhone && `by telephone on ${settings.contactPhone}`,
+    settings.contactEmail && `by email at ${settings.contactEmail}`,
+  ].filter(Boolean);
+  if (reach.length > 0) lines.push(`The shop can be reached ${reach.join(", or ")}, and through /contact.`);
+
+  return lines.join("\n");
 }
 
 /**
@@ -141,14 +212,15 @@ export async function shopContext(locale: Locale): Promise<string> {
   if (cached && cached.expiresAt > Date.now()) return cached.text;
 
   const settings = await getSettings();
+  const ways = await paymentWays(locale);
 
   const text = [
     `# ${settings.name} — shop facts`,
     "",
     await catalogueSummary(locale),
     "",
-    "## Shipping, payment and orders",
-    shippingRules(locale, settings),
+    "## Delivery, payment, returns and orders",
+    shippingRules(locale, settings, ways),
     "",
     "# Information pages, verbatim",
     await infoPagesText(locale),

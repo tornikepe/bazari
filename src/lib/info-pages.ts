@@ -143,7 +143,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
         {
           heading: "როგორ გადავიხადო?",
           body: [
-            "კურიერთან ნაღდი ფულით ან ბარათით, საბანკო გადარიცხვით (ინვოისი შეკვეთის გვერდიდან იტვირთება), ან ონლაინ — რომელი გადახდის მეთოდია ჩართული, შეკვეთის გაფორმებისას ჩანს.",
+            "საბანკო გადარიცხვით ან ონლაინ — რომელი მეთოდია ჩართული, შეკვეთის გაფორმებისას ჩანს. გადარიცხვისას ჩვენი ანგარიში იქვე გამოჩნდება და ჩეკის ფოტოს ატვირთვა დაგჭირდება; შეკვეთას დავადასტურებთ, როგორც კი თანხა შემოვა. კურიერთან გადახდას აღარ ვიღებთ.",
           ],
         },
         {
@@ -179,7 +179,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
         {
           heading: "How do I pay?",
           body: [
-            "Cash or card to the courier, by bank transfer (the invoice downloads from the order page), or online — the payment methods that are switched on are shown at checkout.",
+            "By bank transfer or online — the methods that are switched on are shown at checkout. For a transfer our account appears there, and you upload a photograph of the slip; we confirm the order once the money arrives. We no longer take payment at the door.",
           ],
         },
         {
