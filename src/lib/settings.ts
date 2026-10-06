@@ -54,6 +54,7 @@ export const getSettings = cache(async (): Promise<ShopSettings> => {
       tiktokUrl: row.tiktokUrl,
       facebookUrl: row.facebookUrl,
       youtubeUrl: row.youtubeUrl,
+      reviewRewardTetri: row.reviewRewardTetri,
       returnWindowDays: row.returnWindowDays,
     };
   } catch (error) {

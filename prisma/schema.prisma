@@ -84,6 +84,14 @@ enum PaymentStatus {
   refunded
 }
 
+/// Why a shopper's balance moved, so that ledger explains itself too.
+enum BalanceReason {
+  /// Earned by writing a review of something they bought.
+  review_reward
+  /// Put there, or taken away, by the shop.
+  adjustment
+}
+
 /// Why a product's stock changed, so the ledger explains itself.
 enum StockReason {
   restock
@@ -567,6 +575,12 @@ model User {
   /// since an account has one and it is read with the account.
   avatar         Bytes?
   avatarType     String              @default("")
+  /// Tetri. What the shop owes this shopper — earned by reviewing what they
+  /// bought. A running total, kept in step with `BalanceEntry` inside the
+  /// same transaction that writes one, so no page has to add a ledger up to
+  /// show a figure.
+  balance        Int                 @default(0)
+  balanceEntries BalanceEntry[]
   /// The rest of the profile as the account page asks for it: sex, date of
   /// birth, the personal number an invoice can carry, and whether the
   /// customer wants news by text and by mail. All optional; all theirs.
@@ -763,6 +777,32 @@ model VerificationToken {
   @@index([expiresAt])
 }
 
+/// Every movement of a shopper's balance, and why.
+///
+/// The same idea as the stock ledger: the figure on the account is a total,
+/// and a total nobody can explain is a figure nobody trusts. One row per
+/// movement, in tetri, positive when the shop gives and negative when it
+/// takes back.
+///
+/// `reviewId` is unique, which is what stops a review being paid for twice:
+/// a shopper may rewrite what they wrote as often as they like, and the
+/// second write finds the row already there.
+model BalanceEntry {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Tetri. Positive is given, negative is taken back.
+  amount    Int
+  reason    BalanceReason
+  /// The review this was earned by, when it was earned by one.
+  reviewId  String?       @unique
+  /// What the shop wrote beside it — the product's name, or a reason.
+  note      String        @default("")
+  createdAt DateTime      @default(now())
+
+  @@index([userId, createdAt])
+}
+
 /// Fixed-window counters for rate limiting.
 ///
 /// Kept in Postgres rather than Redis so the app needs no second datastore:
@@ -938,6 +978,11 @@ model ShopSettings {
   tiktokUrl    String @default("")
   facebookUrl  String @default("")
   youtubeUrl   String @default("")
+
+  /// Tetri. What a shopper earns for reviewing something they bought, once
+  /// per product. Zero switches the reward off without removing the ledger
+  /// or what anybody has already earned.
+  reviewRewardTetri     Int     @default(500)
 
   /// Days after delivery in which a shopper may ask to return something.
   /// Zero switches the request form off without touching the policy page.

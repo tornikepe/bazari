@@ -29,6 +29,9 @@ const COLUMNS = {
   2: "grid-cols-2",
   3: "grid-cols-2 sm:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1",
   4: "grid-cols-2 lg:grid-cols-4",
+  /* Five is an odd strip, so the last cell takes the whole row on a phone
+     rather than sitting alone beside a gap. */
+  5: "grid-cols-2 lg:grid-cols-5 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1",
 } as const;
 
 export function Figures({

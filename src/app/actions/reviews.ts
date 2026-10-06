@@ -6,6 +6,7 @@ import { getCurrentAdmin, getCurrentUser } from "@/lib/auth";
 import { consume } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
 import { BODY_MAX, isRating, mayReview, PHOTOS_MAX, TITLE_MAX } from "@/lib/review-rules";
+import { getSettings } from "@/lib/settings";
 import { checkUpload } from "@/lib/image-upload";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -48,6 +49,16 @@ async function refreshRating(tx: Prisma.TransactionClient, productId: string) {
  * Each is read for what it is (see `image-upload.ts`), not for what the
  * browser called it.
  */
+/** Prisma's "a unique constraint would be broken" — here, "already paid". */
+function isDuplicate(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
+
 export async function submitReview(formData: FormData): Promise<SubmitReviewResult> {
   const user = await getCurrentUser();
   if (!user || user.role !== "customer") return { ok: false, error: "sign-in-required" };
@@ -80,6 +91,10 @@ export async function submitReview(formData: FormData): Promise<SubmitReviewResu
   });
   if (!product) return { ok: false, error: "not-found" };
 
+  // Read before the transaction: it is the shop's own setting, not
+  // anything this request carries.
+  const { reviewRewardTetri: reward } = await getSettings();
+
   const orders = await prisma.order.findMany({
     where: { userId: user.id, items: { some: { productId: product.id } } },
     select: { id: true, status: true },
@@ -108,6 +123,42 @@ export async function submitReview(formData: FormData): Promise<SubmitReviewResu
           data: photos.map((photo) => ({ reviewId: review.id, ...photo })),
         });
       }
+
+      /* What the shop pays for a review, once per product.
+         ---------------------------------------------------------------
+         The row above is an upsert keyed on the product and the shopper,
+         so there is exactly one review per person per product however
+         many times they rewrite it — and the ledger entry is keyed on
+         that row's id, which is what makes paying for it idempotent. The
+         second write finds the entry already there, takes the unique
+         violation, and nothing moves.
+
+         The running total and the ledger move together, inside this
+         transaction, so the figure on the account is never a figure the
+         ledger cannot explain. A reward of zero is the shop switching
+         the whole thing off, and then nothing is written at all. */
+      if (reward > 0) {
+        try {
+          await tx.balanceEntry.create({
+            data: {
+              userId: user.id,
+              amount: reward,
+              reason: "review_reward",
+              reviewId: review.id,
+              note: product.nameEn,
+            },
+          });
+          await tx.user.update({
+            where: { id: user.id },
+            data: { balance: { increment: reward } },
+          });
+        } catch (error) {
+          // Already paid for. Anything else is a real failure and belongs
+          // to the caller's catch, which rolls the whole review back.
+          if (!isDuplicate(error)) throw error;
+        }
+      }
+
       await refreshRating(tx, product.id);
     });
   } catch (error) {

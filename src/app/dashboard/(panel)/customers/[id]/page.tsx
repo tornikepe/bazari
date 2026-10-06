@@ -40,6 +40,15 @@ export default async function AdminCustomerPage({
       emailVerified: true,
       disabledAt: true,
       createdAt: true,
+      balance: true,
+      /* The ledger behind the figure. Capped: a page is a page, and a
+         shopper who has reviewed two hundred products does not need all
+         two hundred rows to understand what they are owed. */
+      balanceEntries: {
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: { id: true, amount: true, reason: true, note: true, createdAt: true },
+      },
       orders: {
         orderBy: { createdAt: "desc" },
         select: {
@@ -82,6 +91,7 @@ export default async function AdminCustomerPage({
       label: t.admin.lastOrder,
       value: user.orders[0] ? formatDate(user.orders[0].createdAt) : "—",
     },
+    { label: t.admin.balance, value: formatPrice(user.balance, locale) },
   ];
 
   return (
@@ -112,7 +122,7 @@ export default async function AdminCustomerPage({
         }
       />
 
-      <Figures className="mt-5" items={figures} columns={4} />
+      <Figures className="mt-5" items={figures} columns={5} />
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
         <section className="card overflow-hidden">
@@ -128,6 +138,48 @@ export default async function AdminCustomerPage({
             ))}
           </dl>
         </section>
+
+        {/* What the figure above is made of. Only when there is something
+            to explain — an empty ledger under a zero balance is a card
+            saying nothing. */}
+        {user.balanceEntries.length > 0 && (
+          <section className="card overflow-hidden lg:col-span-2">
+            <h2 className="card-head text-sm font-bold text-ink-900">
+              {t.admin.balanceLedger}
+            </h2>
+            <ul className="divide-y divide-line">
+              {user.balanceEntries.map((entry) => (
+                <li key={entry.id} className="flex items-start justify-between gap-4 px-5 py-2.5">
+                  <span className="min-w-0">
+                    <span className="block text-xs font-semibold text-ink-800">
+                      {entry.reason === "review_reward"
+                        ? t.admin.balanceReviewReward
+                        : t.admin.balanceAdjustment}
+                    </span>
+                    {entry.note && (
+                      <span className="mt-0.5 block text-xs leading-snug text-ink-400">
+                        {entry.note}
+                      </span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span
+                      className={`block text-xs font-bold tabular-nums ${
+                        entry.amount < 0 ? "text-danger" : "text-success"
+                      }`}
+                    >
+                      {entry.amount > 0 ? "+" : ""}
+                      {formatPrice(entry.amount, locale)}
+                    </span>
+                    <span className="mt-0.5 block text-xs whitespace-nowrap text-ink-400">
+                      {formatDate(entry.createdAt)}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section className="card overflow-hidden">
           <h2 className="card-head text-sm font-bold text-ink-900">

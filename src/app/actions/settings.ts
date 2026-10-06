@@ -102,6 +102,15 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     return { ok: false, error: "invalid" };
   }
 
+  /* What a review earns, in lari on the form and tetri from here on. Zero
+     is a valid answer — "we do not pay for reviews" — and a ceiling exists
+     because a slipped decimal point on this field writes a number the shop
+     owes to every reviewer. */
+  const reviewRewardTetri = tetri(formData, "reviewReward");
+  if (reviewRewardTetri === null || reviewRewardTetri < 0 || reviewRewardTetri > 100_00) {
+    return { ok: false, error: "invalid" };
+  }
+
   // Checked here rather than only in the browser: the colour input is a
   // convenience, and this action takes a POST from anywhere. A colour that fails
   // AA must not reach the stylesheet just because it skipped the form.
@@ -146,6 +155,7 @@ export async function saveSettings(formData: FormData): Promise<SettingsResult> 
     tiktokUrl: socialUrl(formData, "tiktokUrl"),
     facebookUrl: socialUrl(formData, "facebookUrl"),
     youtubeUrl: socialUrl(formData, "youtubeUrl"),
+    reviewRewardTetri,
     returnWindowDays,
   };
 

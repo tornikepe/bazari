@@ -42,6 +42,8 @@ export type ShopSettings = {
   tiktokUrl: string;
   facebookUrl: string;
   youtubeUrl: string;
+  /** Tetri. What a review of a bought product earns. Zero switches it off. */
+  reviewRewardTetri: number;
   /** Days after delivery in which a return may be asked for. Zero: never. */
   returnWindowDays: number;
 };
@@ -79,5 +81,6 @@ export const DEFAULT_SETTINGS: ShopSettings = {
   tiktokUrl: "",
   facebookUrl: "",
   youtubeUrl: "",
+  reviewRewardTetri: 500,
   returnWindowDays: 14,
 };

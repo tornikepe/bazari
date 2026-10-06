@@ -113,6 +113,7 @@ export default async function AdminCustomersPage({
       emailVerified: true,
       disabledAt: true,
       createdAt: true,
+      balance: true,
       _count: { select: { orders: true } },
     },
   });
@@ -253,8 +254,17 @@ export default async function AdminCustomersPage({
                         {user._count.orders} {t.admin.customerOrders}
                         {user.disabledAt && ` · ${t.admin.customerDisabled}`}
                       </span>
-                      <span className="font-bold text-ink-900">
-                        {formatPrice(money?.total ?? 0, locale)}
+                      <span className="flex flex-col items-end">
+                        <span className="font-bold text-ink-900">
+                          {formatPrice(money?.total ?? 0, locale)}
+                        </span>
+                        {/* Only when there is one: a column of zeroes beside
+                            every customer says nothing. */}
+                        {user.balance > 0 && (
+                          <span className="text-xs font-semibold whitespace-nowrap text-success">
+                            {t.admin.balance}: {formatPrice(user.balance, locale)}
+                          </span>
+                        )}
                       </span>
                     </div>
                   </Link>
@@ -347,6 +357,11 @@ export default async function AdminCustomersPage({
 
                       <td className="figures text-sm font-bold text-ink-900">
                         {formatPrice(money?.total ?? 0, locale)}
+                        {user.balance > 0 && (
+                          <span className="block text-xs font-semibold whitespace-nowrap text-success">
+                            {formatPrice(user.balance, locale)}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   );

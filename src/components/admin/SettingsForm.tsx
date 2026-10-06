@@ -256,6 +256,24 @@ export function SettingsForm({ settings }: { settings: ShopSettings }) {
         </div>
       </Section>
 
+      {/* What a review is worth. Its own section because it is the one
+          setting here that spends money rather than describing the shop. */}
+      <Section title={t.admin.settingsReviews} note={t.admin.reviewRewardHint}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            name="reviewReward"
+            label={t.admin.reviewRewardField}
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            defaultValue={settings.reviewRewardTetri / 100}
+            required
+            disabled={!canWrite}
+          />
+        </div>
+      </Section>
+
       <Section title={t.admin.settingsReturns} note={t.admin.returnWindowHint}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
