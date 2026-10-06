@@ -6,6 +6,11 @@ import { CheckIcon, ChevronDownIcon } from "@/components/ui/icons";
 
 export type SizeChoice = { id: string; label: string; available: boolean };
 
+/** Room for the longest size beside the words that say it is gone. */
+const MIN_PANEL = 280;
+/** How close to the screen's edge the panel may come. */
+const EDGE = 8;
+
 /**
  * The size, as a control of the shop's own rather than the platform's.
  *
@@ -57,10 +62,21 @@ export function SizeSelect({
       const room = window.innerHeight - box.bottom;
       const height = panel.current?.offsetHeight ?? 0;
       const above = room < Math.min(height || 240, 240) && box.top > room;
+
+      /* The panel is at least as wide as its button and never narrower than
+         a row needs. In a cart line the button is about a hundred and forty
+         pixels, and at that width "out of stock" wrapped onto two lines and
+         came down on top of the size it belonged to — the row read as two
+         pieces of text printed over each other. The floor is in the
+         stylesheet; what is measured here is the room to the right, so a
+         panel wider than its button cannot run off the screen. */
+      const width = Math.max(box.width, Math.min(MIN_PANEL, window.innerWidth - 2 * EDGE));
+      const left = Math.min(box.left, Math.max(EDGE, window.innerWidth - width - EDGE));
+
       setAt({
         top: above ? box.top - (height || 240) - 6 : box.bottom + 6,
-        left: box.left,
-        width: box.width,
+        left,
+        width,
       });
     };
 
@@ -140,7 +156,9 @@ export function SizeSelect({
                 {picked ? (
                   <CheckIcon size={15} strokeWidth={3} className="shrink-0" />
                 ) : !choice.available ? (
-                  <span className="text-[11px] font-semibold text-ink-400">{soldOutLabel}</span>
+                  <span className="text-[11px] font-semibold whitespace-nowrap text-ink-400">
+                    {soldOutLabel}
+                  </span>
                 ) : null}
               </button>
             );

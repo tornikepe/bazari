@@ -6877,6 +6877,11 @@ html[data-cursor] .cursor-dot[data-over="text"] {
 .size-select-panel {
   position: fixed;
   z-index: 60;
+  /* Never narrower than a row needs, and never wider than the screen. The
+     width is set inline from the button it belongs to; these are the two
+     limits that width is held between. */
+  min-width: 17.5rem;
+  max-width: calc(100vw - 1rem);
   max-height: 17rem;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -6903,6 +6908,13 @@ html[data-cursor] .cursor-dot[data-over="text"] {
    push the size off centre. */
 .size-select-option {
   display: grid;
+  /* The size in the middle, whatever sits at the right in a column of its
+     own. The right column used to take a third of the row and the words
+     "out of stock" did not fit in it, so they wrapped and came down over
+     the size. The outer two are equal, which is what keeps the size in the
+     middle of the row rather than the middle of what was left over; the
+     panel's own minimum width is what makes sure a third of a row is enough
+     for the words. */
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   width: 100%;
   min-height: 2.75rem;
@@ -7385,7 +7397,14 @@ html[data-cursor] .cursor-dot[data-over="text"] {
   background: #fff;
   font-size: var(--text-sm);
   font-weight: 600;
-  line-height: 1;
+  /* Not `1`. Google's own button specifies a line-height equal to its font
+     size, and that is a Latin assumption: at `1` the line box is exactly
+     the em, and Georgian draws above and below it. The words sit in a
+     `truncate` span, which clips what leaves its box, so "გაგრძელება
+     Google-ით" lost two pixels off its top and bottom — the one thing a
+     sign-in button must not do is look broken. The button's own height is
+     fixed and the text is centred in it, so nothing else moves. */
+  line-height: 1.4;
   color: #1f1f1f;
   transition:
     border-color 0.15s ease,
