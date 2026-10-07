@@ -498,10 +498,22 @@ export async function generateStaffPassword(): Promise<
 
   /* An alphabet with no 0/O and no 1/l/I in it: this is read off a screen
      and typed, or read down a phone. Four groups of five, which is a
-     shape people copy without losing their place. */
+     shape people copy without losing their place.
+
+     A byte is thirty-one letters' worth of choice and a little left over,
+     and that remainder would make the first eight letters likelier than
+     the rest. Bytes that fall in it are thrown away and drawn again, so
+     every letter is as likely as every other. */
   const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
-  const bytes = randomBytes(20);
-  const chars = [...bytes].map((byte) => ALPHABET[byte % ALPHABET.length]);
+  const CEILING = 256 - (256 % ALPHABET.length);
+  const chars: string[] = [];
+  while (chars.length < 20) {
+    for (const byte of randomBytes(32)) {
+      if (byte >= CEILING) continue;
+      chars.push(ALPHABET[byte % ALPHABET.length]!);
+      if (chars.length === 20) break;
+    }
+  }
   const password = [0, 5, 10, 15].map((at) => chars.slice(at, at + 5).join("")).join("-");
 
   try {
@@ -514,9 +526,18 @@ export async function generateStaffPassword(): Promise<
     return { ok: false };
   }
 
-  // Everything else signed out, this session kept.
-  const version = await revokeSessions(user.id);
-  await createSession(user.id, version);
+  /* From here the account's password *is* the one above, and this is the
+     only moment anybody will ever be able to read it. Signing the other
+     sessions out matters less than that, so a failure here is written to
+     the log and the password is still handed back — hiding it behind an
+     error message would leave an account nobody can sign into, and this
+     shop's admin address receives no mail to reset it with. */
+  try {
+    const version = await revokeSessions(user.id);
+    await createSession(user.id, version);
+  } catch (error) {
+    console.error("generateStaffPassword: password set, sessions not rolled", error);
+  }
 
   await audit({
     actor: user.email,
