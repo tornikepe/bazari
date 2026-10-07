@@ -2,16 +2,17 @@ import Link from "next/link";
 import { FooterLink } from "@/components/layout/FooterLink";
 import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import {
-  FacebookOutlineIcon,
-  InstagramIcon,
+  FacebookMarkIcon,
+  InstagramMarkIcon,
   MailIcon,
   PhoneIcon,
-  TikTokIcon,
-  YouTubeIcon,
+  TikTokMarkIcon,
+  YouTubeMarkIcon,
 } from "@/components/ui/icons";
 import { getSettings } from "@/lib/settings";
 import { getPublishedPages } from "@/lib/info-store";
 import { getI18n } from "@/lib/locale";
+import { fill } from "@/lib/i18n";
 import { InstallPrompt } from "@/components/layout/InstallPrompt";
 
 /**
@@ -57,7 +58,13 @@ export async function Footer() {
     },
   ];
 
-  const tagline = (locale === "ka" ? settings.taglineKa : settings.taglineEn) || t.footer.about;
+  /* The shop's own sentence when it has written one, and the dictionary's
+     until then — with the shop's name put into it, so renaming the shop on
+     the settings page renames it here too rather than leaving the old name
+     in a string nobody can find. */
+  const tagline =
+    (locale === "ka" ? settings.taglineKa : settings.taglineEn) ||
+    fill(t.footer.about, { name: settings.name });
   const contacts = [
     settings.contactPhone && {
       href: `tel:${settings.contactPhone.replace(/\s+/g, "")}`,
@@ -75,10 +82,10 @@ export async function Footer() {
      to an account that does not exist is worse than no mark, and a shop
      that has an Instagram and nothing else should show one. */
   const socials = [
-    { href: settings.instagramUrl, label: "Instagram", icon: InstagramIcon },
-    { href: settings.tiktokUrl, label: "TikTok", icon: TikTokIcon },
-    { href: settings.facebookUrl, label: "Facebook", icon: FacebookOutlineIcon },
-    { href: settings.youtubeUrl, label: "YouTube", icon: YouTubeIcon },
+    { href: settings.instagramUrl, label: "Instagram", icon: InstagramMarkIcon },
+    { href: settings.tiktokUrl, label: "TikTok", icon: TikTokMarkIcon },
+    { href: settings.facebookUrl, label: "Facebook", icon: FacebookMarkIcon },
+    { href: settings.youtubeUrl, label: "YouTube", icon: YouTubeMarkIcon },
   ].filter((social) => Boolean(social.href));
 
   return (
@@ -126,7 +133,7 @@ export async function Footer() {
           {socials.length > 0 && (
             <div className="mt-4">
               <p className="label text-ink-400">{t.footer.follow}</p>
-              <ul className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <ul className="mt-2.5 flex flex-wrap justify-center gap-2.5 sm:justify-start">
                 {socials.map((social) => (
                   <li key={social.label}>
                     <a
@@ -137,7 +144,7 @@ export async function Footer() {
                       title={social.label}
                       className="social-mark"
                     >
-                      <social.icon size={17} />
+                      <social.icon size={22} />
                     </a>
                   </li>
                 ))}

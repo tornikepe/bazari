@@ -121,8 +121,17 @@ export async function getFilteredProducts(filters: CatalogFilters) {
   return { items, total, page, pageCount };
 }
 
+/**
+ * The shelves a shopper may be offered, with what is on each.
+ *
+ * Hidden ones are left out here and everywhere else the storefront lists
+ * them. A hidden shelf's products are not withdrawn — they stay in the
+ * catalogue and answer to a direct address — so this filters the list of
+ * places to go, not the goods.
+ */
 export function getCategoriesWithCounts() {
   return prisma.category.findMany({
+    where: { isVisible: true },
     orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
     include: {
       _count: { select: { products: { where: { isActive: true } } } },

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getI18n } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 import { NoResultsArt } from "@/components/ui/illustrations";
-import { ChevronRightIcon } from "@/components/ui/icons";
 
 /**
  * The 404, without its chrome.
@@ -18,8 +17,10 @@ export async function NotFoundView() {
 
   /* Six at most: this is a signpost, not the catalogue. Ordered the way the
      shop orders them everywhere else rather than by name, so the list reads
-     the same here as it does in the menu. */
+     the same here as it does in the menu, and only the ones the shop is
+     listing — a shelf hidden from the bar should not be offered here. */
   const categories = await prisma.category.findMany({
+    where: { isVisible: true },
     orderBy: { sortOrder: "asc" },
     take: 6,
     select: { slug: true, nameKa: true, nameEn: true, icon: true },
@@ -27,12 +28,16 @@ export async function NotFoundView() {
 
   return (
     <div className="page-notice">
-      <div className="mx-auto max-w-lg">
+      {/* Everything on this page is centred on its own axis, including the
+          blocks that are not themselves text: the search row and the list of
+          shelves used to be full-width inside the column while the words
+          above them were centred, which read as two pages stacked. */}
+      <div className="mx-auto flex max-w-lg flex-col items-center text-center">
         {/* The drawing rather than a giant numeral. "404" is a status code
             — it means something to whoever wrote the link and nothing to
             the person who followed it, so it stays as the small print and
             the picture and the sentence carry the page. */}
-        <div className="flex flex-col items-center text-center">
+        <div className="flex flex-col items-center">
           <NoResultsArt size={104} />
 
           <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-ink-900">
@@ -47,7 +52,7 @@ export async function NotFoundView() {
         {/* A dead end is a bad empty state — most people arriving here
             were looking for a product, so the search comes before the
             links out. */}
-        <form action="/catalog" className="mt-7 flex gap-2">
+        <form action="/catalog" className="mt-7 flex w-full max-w-md gap-2">
           <input
             type="search"
             name="q"
@@ -61,10 +66,17 @@ export async function NotFoundView() {
         </form>
 
         {/* And the shelves themselves, because "go to the homepage" is a
-            way out rather than a way on. Counted from the database — the
-            categories a visitor can actually browse right now. */}
+            way out rather than a way on. Only the ones a visitor can
+            actually browse right now.
+
+            Laid out as a centred row that wraps, not as a grid. A grid of
+            two columns has to be given an even number of things or it ends
+            with a hole where the last cell should be, and it is only ever
+            centred by accident — with two categories it was a wide pair of
+            boxes, with five, four boxes and a gap. Wrapped pills centre
+            themselves at any count, including one. */}
         {categories.length > 0 && (
-          <nav aria-labelledby="notfound-categories" className="mt-8">
+          <nav aria-labelledby="notfound-categories" className="mt-8 text-center">
             <h2
               id="notfound-categories"
               className="text-xs font-bold tracking-wider text-ink-400 uppercase"
@@ -72,23 +84,15 @@ export async function NotFoundView() {
               {t.nav.categories}
             </h2>
 
-            <ul className="mt-3 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2">
+            <ul className="mt-3 flex flex-wrap justify-center gap-2">
               {categories.map((category) => (
                 <li key={category.slug}>
                   <Link
                     href={`/catalog?category=${category.slug}`}
-                    className="flex min-h-12 items-center justify-between gap-3 bg-surface px-4 py-2.5 text-sm text-ink-800 transition-colors hover:bg-ink-50"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-surface px-4 py-2 text-sm leading-snug text-ink-800 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
                   >
-                    {/* Wrapping: this is a list of places to go instead, and
-                        "📱 ტელეფონები და აქსესუარე…" is not one of them. */}
-                    <span className="leading-snug">
-                      {category.icon}{" "}
-                      {locale === "ka" ? category.nameKa : category.nameEn}
-                    </span>
-                    <ChevronRightIcon
-                      size={15}
-                      className="shrink-0 text-ink-300"
-                    />
+                    <span aria-hidden="true">{category.icon}</span>
+                    {locale === "ka" ? category.nameKa : category.nameEn}
                   </Link>
                 </li>
               ))}
@@ -96,7 +100,7 @@ export async function NotFoundView() {
           </nav>
         )}
 
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
           <Link href="/" className="btn btn-outline btn-md">
             {t.common.goHome}
           </Link>

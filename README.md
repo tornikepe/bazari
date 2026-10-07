@@ -133,9 +133,9 @@ Only the first two are required.
 | `DATABASE_POOL_MAX` | Connection ceiling for the pg adapter. |
 | `DATABASE_CONSOLE_URL` | Where Dashboard → Database links to. Guessed from the host for Neon and Prisma Postgres. |
 | `NEXT_PUBLIC_SITE_URL` | Absolute base for links in emails, invoices, sitemaps and OAuth callbacks. |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | The seeded admin. Same pattern for `VIEWER_*` and `CUSTOMER_*`. |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | The admin the seed *creates*. Re-seeding never rewrites a staff password, so rotating it in Dashboard → Staff sticks. Same pattern for `VIEWER_*` and `CUSTOMER_*`. |
 | `RESEND_API_KEY` | Sends order mail, verification codes and password resets. Without it nothing is emailed. |
-| `MAIL_FROM` | `Bazari <noreply@yourdomain>`. Must be a domain verified with Resend. |
+| `MAIL_FROM` | `Shop <noreply@yourdomain>`. Must be a domain verified with Resend. |
 | `STAFF_2FA` | `1` turns on the staff second step. Needs a mailer. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | "Sign in with Google". Callback: `/api/auth/google/callback`. |
 | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | Same for Facebook. |

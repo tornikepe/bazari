@@ -1,7 +1,8 @@
 import "server-only";
 
 import { shopContext } from "@/lib/chat/retrieval";
-import { SITE_NAME } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
+
 import type { Locale } from "@/lib/i18n";
 
 /**
@@ -117,8 +118,8 @@ How to write:
   context and the tools don't have it, say so.
 `.trim();
 
-const SCOPE = `
-You only handle ${SITE_NAME}: the catalogue, prices, stock, delivery, payment,
+const scopeRule = (shop: string) => `
+You only handle ${shop}: the catalogue, prices, stock, delivery, payment,
 returns, warranty, accounts and order status. If asked about anything else —
 general knowledge, code, homework, other shops, anything at all unrelated — say
 in one friendly sentence that you only help with this shop, and offer something
@@ -142,16 +143,17 @@ export async function buildSystemPrompt(
   locale: Locale,
   options: { callerHasOrders: boolean },
 ): Promise<string> {
-  const context = await shopContext(locale);
+  const [context, settings] = await Promise.all([shopContext(locale), getSettings()]);
+  const shop = settings.name;
 
   return [
-    `You are the assistant on ${SITE_NAME}, an online shop. You help visitors find products, understand how ordering works, and check their own orders.`,
+    `You are the assistant on ${shop}, an online shop. You help visitors find products, understand how ordering works, and check their own orders.`,
     "",
     languageRule(locale),
     "",
     STYLE,
     "",
-    SCOPE,
+    scopeRule(shop),
     "",
     TOOL_GUIDANCE,
     "",

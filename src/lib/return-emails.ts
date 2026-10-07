@@ -1,7 +1,8 @@
 import "server-only";
 
 import { sendMail } from "@/lib/mail";
-import { SITE_TITLE, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
+import { brandName } from "@/lib/settings";
 import type { Locale } from "@/lib/i18n";
 import type { ReturnStatus } from "@/lib/returns";
 
@@ -82,6 +83,7 @@ export async function sendReturnUpdateEmail(input: ReturnMailInput): Promise<boo
   if (!input.to) return false;
 
   const t = COPY[input.locale];
+  const brand = await brandName(input.locale);
   const heading = t.heading[input.status];
   const body = t.body[input.status];
   const orderUrl = `${SITE_URL}/order/${encodeURIComponent(input.number)}`;
@@ -103,7 +105,7 @@ export async function sendReturnUpdateEmail(input: ReturnMailInput): Promise<boo
 <html>
   <body style="margin:0;padding:24px;background:#f5f5f4;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
     <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;padding:32px;">
-      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${escapeHtml(SITE_TITLE)}</p>
+      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${escapeHtml(brand)}</p>
       <h1 style="margin:0 0 12px;font-size:20px;font-weight:700;color:#1c1917;">${escapeHtml(heading)}</h1>
       <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#44403c;">${escapeHtml(body)}</p>
       ${
@@ -133,7 +135,7 @@ export async function sendReturnUpdateEmail(input: ReturnMailInput): Promise<boo
 
   return sendMail({
     to: input.to,
-    subject: `${t.subject} ${input.number} — ${SITE_TITLE}`,
+    subject: `${t.subject} ${input.number} — ${brand}`,
     text,
     html,
   });

@@ -72,6 +72,7 @@ async function catalogueSummary(locale: Locale): Promise<string> {
       _max: { price: true },
     }),
     prisma.category.findMany({
+      where: { isVisible: true },
       orderBy: { sortOrder: "asc" },
       select: {
         slug: true,
@@ -359,6 +360,8 @@ export type CategorySummary = { name: string; url: string; products: number };
 
 export async function listCategories(locale: Locale): Promise<CategorySummary[]> {
   const categories = await prisma.category.findMany({
+    // The assistant recommends shelves; a hidden one is not on offer.
+    where: { isVisible: true },
     orderBy: { sortOrder: "asc" },
     select: {
       slug: true,

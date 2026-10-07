@@ -7,7 +7,8 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { BrandCube } from "@/components/home/BrandCube";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
 import {
   ArrowRightIcon,
   PackageIcon,
@@ -24,8 +25,9 @@ import Image from "next/image";
 export default async function HomePage() {
   const { locale, t } = await getI18n();
 
-  const [categories, featured, newArrivals, productCount, brands] = await Promise.all([
+  const [categories, featured, newArrivals, productCount, brands, settings] = await Promise.all([
     prisma.category.findMany({
+      where: { isVisible: true },
       orderBy: [{ sortOrder: "asc" }],
       include: {
         _count: { select: { products: { where: { isActive: true } } } },
@@ -60,6 +62,8 @@ export default async function HomePage() {
       distinct: ["brand"],
       select: { brand: true },
     }),
+    // The shop's own name, for the record search engines read.
+    getSettings(),
   ]);
 
   const name = (row: { nameKa: string; nameEn: string }) =>
@@ -86,7 +90,7 @@ export default async function HomePage() {
   const organisationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: SITE_NAME,
+    name: settings.name,
     url: SITE_URL,
     description: t.home.heroSubtitle,
   };
@@ -94,7 +98,7 @@ export default async function HomePage() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: SITE_NAME,
+    name: settings.name,
     url: SITE_URL,
     inLanguage: [locale === "ka" ? "ka-GE" : "en", locale === "ka" ? "en" : "ka-GE"],
     potentialAction: {

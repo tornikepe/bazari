@@ -25,7 +25,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
     }),
-    prisma.category.findMany({ select: { slug: true } }),
+    // A hidden shelf is not a page to send a crawler to.
+    prisma.category.findMany({ where: { isVisible: true }, select: { slug: true } }),
   ]);
 
   return [

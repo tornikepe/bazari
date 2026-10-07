@@ -179,6 +179,25 @@ export function clearCart() {
   commit(EMPTY);
 }
 
+/**
+ * Takes out every line for a product the shop no longer sells.
+ *
+ * A cart is a snapshot in somebody's browser and it can outlive what is in
+ * it by months. Until this existed, a product deleted from the catalogue
+ * stayed in the cart with its old name and its old price, counted towards
+ * the number on the bag in the bar, and could not be bought — checkout
+ * refuses a line it cannot find. The number said five and the shop could
+ * sell three.
+ *
+ * Silent when there is nothing to take out, so the common case wakes no
+ * subscriber.
+ */
+export function dropProducts(gone: ReadonlySet<string>) {
+  if (gone.size === 0) return;
+  const next = items.filter((entry) => !gone.has(entry.productId));
+  if (next.length !== items.length) commit(next);
+}
+
 /* ------------------------------------------------------------------ */
 
 export function cartTotals(entries: CartItem[], rules?: ShippingRules) {

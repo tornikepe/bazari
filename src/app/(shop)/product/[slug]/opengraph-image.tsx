@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { prisma } from "@/lib/prisma";
 import { getLocale } from "@/lib/locale";
 import { formatPrice } from "@/lib/format";
-import { SITE_NAME } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
 
 /**
  * The card a product link shows when it is pasted into a chat or a feed.
@@ -23,7 +23,7 @@ import { SITE_NAME } from "@/lib/site";
  * deploy never depends on Google being reachable.
  */
 
-export const alt = SITE_NAME;
+export const alt = "Product";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -34,7 +34,7 @@ export default async function ProductOgImage({
 }) {
   const { slug } = await params;
 
-  const [product, locale, font] = await Promise.all([
+  const [product, locale, font, settings] = await Promise.all([
     prisma.product.findFirst({
       where: { slug, isActive: true },
       select: {
@@ -48,11 +48,12 @@ export default async function ProductOgImage({
     }),
     getLocale(),
     readFile(join(process.cwd(), "assets", "NotoSansGeorgian-Bold.ttf")),
+    getSettings(),
   ]);
 
   // A withdrawn product still gets a card — a blank one is worse than a plain
   // one, and the page itself already answers 404.
-  const name = product ? (locale === "ka" ? product.nameKa : product.nameEn) : SITE_NAME;
+  const name = product ? (locale === "ka" ? product.nameKa : product.nameEn) : settings.name;
   const category = product
     ? locale === "ka"
       ? product.category.nameKa
@@ -80,9 +81,9 @@ export default async function ProductOgImage({
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ display: "flex", fontSize: 26, letterSpacing: 6, color: "#5f6675" }}>
-            {(product?.brand || category || SITE_NAME).toUpperCase()}
+            {(product?.brand || category || settings.name).toUpperCase()}
           </div>
-          <div style={{ display: "flex", fontSize: 30, color: "#161a23" }}>{SITE_NAME}</div>
+          <div style={{ display: "flex", fontSize: 30, color: "#161a23" }}>{settings.name}</div>
         </div>
 
         <div

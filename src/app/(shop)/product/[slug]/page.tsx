@@ -16,7 +16,7 @@ import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AlertIcon, BagCheckIcon, RefreshIcon, StarIcon, TruckIcon } from "@/components/ui/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { SITE_TITLE, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { parseSpecs, readSpec } from "@/lib/product-specs";
@@ -277,7 +277,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: SITE_TITLE },
+      seller: { "@type": "Organization", name: settings.name },
     },
   };
 

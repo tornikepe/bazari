@@ -7123,24 +7123,29 @@ html[data-cursor] .cursor-dot[data-over="text"] {
    square, large enough for a thumb, going to the brand's own colour on
    hover only — a row of four coloured badges in the foot of a page would
    out-shout the shop whose foot it is. */
+/* Big enough to be a tap target in its own right — 2.75rem is the 44px
+   every other control on this site honours, and the marks inside went from
+   17px to 22px with it. The colour each logo carries is its own; what
+   `currentColor` is still doing here is the one glyph that has none of its
+   own, TikTok's note, which is black on white and white on black. */
 .social-mark {
   display: grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
   background: var(--color-surface);
-  color: var(--color-ink-500);
+  color: var(--color-ink-900);
   transition:
-    color 0.15s ease,
     border-color 0.15s ease,
+    box-shadow 0.15s ease,
     transform 0.15s ease;
 }
 
 .social-mark:hover {
-  color: var(--color-brand-600);
-  border-color: var(--color-brand-600);
+  border-color: var(--color-ink-300);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.08);
   transform: translateY(-1px);
 }
 

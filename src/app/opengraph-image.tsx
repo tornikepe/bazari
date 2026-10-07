@@ -1,25 +1,44 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { SITE_NAME, SITE_TITLE } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
+import { getI18n } from "@/lib/locale";
+import { fill } from "@/lib/i18n";
 
 /**
  * The card for every route that does not generate its own — the home page,
  * the catalogue, the information pages.
  *
  * Same construction as the product card: a rule, a name, and nothing invented.
- * Deliberately does not count products or categories: this image is statically
- * generated at build time, so any figure baked into it would be frozen at
- * whatever the catalogue held on the day of the deploy, and a stale number is
- * worse than no number.
+ * Deliberately counts nothing — not products, not categories. A figure drawn
+ * into a shared picture is read months later, and a stale number is worse
+ * than no number.
+ *
+ * The three lines are the shop's own: its name, its suffix and its tagline,
+ * read at request time. They used to be constants, which meant renaming the
+ * shop left the old name on every card it had ever been shared with.
  */
 
-export const alt = SITE_TITLE;
+export const alt = "Online store";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function SiteOgImage() {
-  const font = await readFile(join(process.cwd(), "assets", "NotoSansGeorgian-Bold.ttf"));
+  const [font, settings, { locale, t }] = await Promise.all([
+    readFile(join(process.cwd(), "assets", "NotoSansGeorgian-Bold.ttf")),
+    getSettings(),
+    getI18n(),
+  ]);
+
+  const suffix = locale === "ka" ? settings.titleSuffixKa : settings.titleSuffixEn;
+  const written =
+    (locale === "ka" ? settings.taglineKa : settings.taglineEn) ||
+    fill(t.footer.about, { name: settings.name });
+
+  /* Two lines of it fit under the rule. A tagline longer than that would
+     climb into the name above, so it is cut at the last whole word. */
+  const tagline =
+    written.length <= 120 ? written : `${written.slice(0, 120).replace(/\s+\S*$/, "")}…`;
 
   return new ImageResponse(
     (
@@ -38,10 +57,10 @@ export default async function SiteOgImage() {
         }}
       >
         <div style={{ display: "flex", fontSize: 26, letterSpacing: 6, color: "#5f6675" }}>
-          ᲝᲜᲚᲐᲘᲜ ᲛᲐᲦᲐᲖᲘᲐ
+          {suffix.toUpperCase()}
         </div>
 
-        <div style={{ display: "flex", fontSize: 132, letterSpacing: -5 }}>{SITE_NAME}</div>
+        <div style={{ display: "flex", fontSize: 132, letterSpacing: -5 }}>{settings.name}</div>
 
         <div
           style={{
@@ -52,7 +71,7 @@ export default async function SiteOgImage() {
             paddingTop: 28,
           }}
         >
-          ტექნიკა და აქსესუარები ერთ ადგილას
+          {tagline}
         </div>
       </div>
     ),

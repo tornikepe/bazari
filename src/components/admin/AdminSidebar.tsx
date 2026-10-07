@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { useSettings } from "@/components/providers/SettingsProvider";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LocaleToggle } from "@/components/ui/LocaleToggle";
@@ -39,6 +40,7 @@ export function AdminSidebar({
   admin: { name: string; email: string; role: Role };
 }) {
   const { t } = useI18n();
+  const settings = useSettings();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -94,7 +96,11 @@ export function AdminSidebar({
       <div className="admin-rail-head flex items-center gap-2.5 px-2 pb-4">
         <LogoMark size={36} />
         <div className="min-w-0">
-          <p className="truncate text-sm font-extrabold tracking-tight text-panel-fg">Bazari</p>
+          {/* The shop's own name, not a constant: renaming the shop on the
+              settings page renames it here too. */}
+          <p className="truncate text-sm font-extrabold tracking-tight text-panel-fg">
+            {settings.name}
+          </p>
           <p className="truncate text-xs text-panel-muted">{t.admin.dashboard}</p>
         </div>
       </div>

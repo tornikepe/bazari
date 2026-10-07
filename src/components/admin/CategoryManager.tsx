@@ -4,10 +4,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { deleteCategory, saveCategory } from "@/app/actions/admin";
+import { deleteCategory, saveCategory, setCategoryVisible } from "@/app/actions/admin";
 import { useCanWrite } from "@/components/admin/StaffRoleProvider";
 import { ReadOnlyNotice } from "@/components/admin/ReadOnlyNotice";
-import { CloseIcon, PencilIcon, PlusIcon, TrashIcon } from "@/components/ui/icons";
+import { CloseIcon, EyeIcon, EyeOffIcon, PencilIcon, PlusIcon, TrashIcon } from "@/components/ui/icons";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { countText } from "@/lib/i18n";
@@ -20,6 +20,7 @@ export type AdminCategory = {
   nameEn: string;
   icon: string;
   sortOrder: number;
+  isVisible: boolean;
   _count: { products: number };
 };
 
@@ -49,6 +50,18 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
       }
 
       setEditing(null);
+      router.refresh();
+    });
+  }
+
+  function handleVisible(category: AdminCategory) {
+    setError(null);
+    startTransition(async () => {
+      const result = await setCategoryVisible(category.id, !category.isVisible);
+      if (!result.ok) {
+        setError({ title: t.common.error, hint: t.common.errorHint });
+        return;
+      }
       router.refresh();
     });
   }
@@ -193,6 +206,25 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                 />
               </div>
             </div>
+
+            {/* Spans both columns: the explanation under it is a sentence,
+                not a hint, and it reads badly in a half-width well. */}
+            <label className="flex items-start gap-2.5 sm:col-span-2">
+              <input
+                type="checkbox"
+                name="isVisible"
+                defaultChecked={editing === "new" ? true : editing.isVisible}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-ink-900">
+                  {t.admin.categoryVisible}
+                </span>
+                <span className="mt-0.5 block text-xs leading-snug text-ink-500">
+                  {t.admin.categoryVisibleHint}
+                </span>
+              </span>
+            </label>
           </div>
 
           <div className="mt-4 flex justify-end gap-2">
@@ -229,8 +261,17 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
         // sideways at 390px in Georgian, where the names run longer.
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {categories.map((category) => (
-            <li key={category.id} className="card flex min-w-0 items-center gap-3 card-pad-tight">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-control bg-ink-50 text-xl">
+            <li
+              key={category.id}
+              className={`card flex min-w-0 items-center gap-3 card-pad-tight ${
+                category.isVisible ? "" : "border-dashed"
+              }`}
+            >
+              <span
+                className={`grid h-11 w-11 shrink-0 place-items-center rounded-control bg-ink-50 text-xl ${
+                  category.isVisible ? "" : "opacity-45 grayscale"
+                }`}
+              >
                 {category.icon}
               </span>
 
@@ -241,6 +282,11 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                     can begin with the same word. */}
                 <p className="text-sm leading-snug font-bold text-ink-900">
                   {locale === "ka" ? category.nameKa : category.nameEn}
+                  {!category.isVisible && (
+                    <span className="ml-1.5 align-middle rounded-full bg-ink-100 px-1.5 py-0.5 text-[0.65rem] font-bold tracking-wide text-ink-500 uppercase">
+                      {t.admin.categoryHidden}
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs break-words text-ink-400">
                   /{category.slug} ·{" "}
@@ -259,6 +305,22 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
 
                 {canWrite && (
                   <>
+                    <button
+                      type="button"
+                      onClick={() => handleVisible(category)}
+                      disabled={isPending}
+                      aria-pressed={category.isVisible}
+                      aria-label={
+                        category.isVisible ? t.admin.categoryHide : t.admin.categoryShow
+                      }
+                      title={category.isVisible ? t.admin.categoryHide : t.admin.categoryShow}
+                      className={`btn btn-ghost h-8 w-8 rounded-control p-0 ${
+                        category.isVisible ? "text-ink-400" : "text-warning"
+                      }`}
+                    >
+                      {category.isVisible ? <EyeIcon size={15} /> : <EyeOffIcon size={15} />}
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {

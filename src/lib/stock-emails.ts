@@ -2,7 +2,8 @@ import "server-only";
 
 import { sendMail } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
-import { SITE_TITLE, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
+import { brandName, getSettings } from "@/lib/settings";
 
 /**
  * Telling the shop that something is running out.
@@ -42,6 +43,7 @@ async function shopkeepers(): Promise<string[]> {
 }
 
 export async function sendLowStockEmail(items: LowStockItem[]): Promise<void> {
+  const brand = await brandName("en");
   if (items.length === 0) return;
 
   const to = await shopkeepers();
@@ -49,8 +51,8 @@ export async function sendLowStockEmail(items: LowStockItem[]): Promise<void> {
 
   const subject =
     items.length === 1
-      ? `Low stock: ${items[0]!.name} — ${SITE_TITLE}`
-      : `Low stock: ${items.length} products — ${SITE_TITLE}`;
+      ? `Low stock: ${items[0]!.name} — ${brand}`
+      : `Low stock: ${items.length} products — ${brand}`;
 
   const lines = items.map(
     (item) => `• ${item.name} (${item.sku}) — ${item.stock} left, alert at ${item.threshold}`,
@@ -116,6 +118,9 @@ export async function releaseStockAlerts(productId: string): Promise<number> {
   await prisma.stockAlert.deleteMany({ where: { id: { in: waiting.map((row) => row.id) } } });
 
   const url = `${SITE_URL}/product/${product.slug}`;
+  /* One name for the whole batch: the recipients differ in language, the
+     shop does not, and the suffix is not what signs a one-line notice. */
+  const brand = (await getSettings()).name;
 
   await Promise.all(
     waiting.map((row) => {
@@ -129,7 +134,7 @@ export async function releaseStockAlerts(productId: string): Promise<number> {
 
       return sendMail({
         to: row.email,
-        subject: `${subject} — ${SITE_TITLE}`,
+        subject: `${subject} — ${brand}`,
         text: [body, "", name, url].join("\n"),
         html:
           `<p style="margin:0 0 12px">${body}</p>` +

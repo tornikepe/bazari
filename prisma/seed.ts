@@ -792,9 +792,19 @@ async function main() {
         "  npm run setup:credentials",
     );
   }
+  /* The password is set when the account is made and never again.
+   *
+   * `ADMIN_PASSWORD` is the password this shop *started* with. Once the
+   * owner has rotated it — Dashboard → Staff, which replaces the hash and
+   * signs every session out — the environment still holds the old one, and
+   * an upsert that wrote it on every run would quietly put the rotated
+   * password back the next time anybody seeded. On a live shop that is a
+   * silent downgrade to a password that has been sitting in a dashboard's
+   * environment list for months. The role and the verified flag are still
+   * reasserted, because those are what the seed is for. */
   const admin = await prisma.user.upsert({
     where: { email },
-    update: { password: hashPassword(password), role: "admin", emailVerified: true },
+    update: { role: "admin", emailVerified: true },
     create: {
       email,
       name: "Store admin",
@@ -817,9 +827,10 @@ async function main() {
         "  npm run setup:credentials",
     );
   }
+  // Its password is left alone on a re-run for the same reason the admin's is.
   await prisma.user.upsert({
     where: { email: viewerEmail },
-    update: { password: hashPassword(viewerPassword), role: "viewer", emailVerified: true },
+    update: { role: "viewer", emailVerified: true },
     create: {
       email: viewerEmail,
       name: "Store viewer",
@@ -848,6 +859,10 @@ async function main() {
         "  npm run setup:credentials",
     );
   }
+  /* This one *is* reset on every run, unlike the two staff accounts above.
+     It is a demo shopper whose whole purpose is to be signed into with the
+     password in the environment, so putting that password back is the point
+     rather than the hazard. */
   const demoCustomer = await prisma.user.upsert({
     where: { email: demoEmail },
     update: { password: hashPassword(demoPassword), role: "customer", emailVerified: true },

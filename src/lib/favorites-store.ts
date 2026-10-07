@@ -83,6 +83,20 @@ export function clearFavorites() {
 }
 
 /**
+ * Takes out every product the shop no longer sells.
+ *
+ * The wishlist page has always drawn only what it could still fetch, so a
+ * withdrawn product vanished from the page while the heart in the bar went
+ * on counting it. Same remedy as the cart's, and the same silence when
+ * there is nothing to take out.
+ */
+export function dropFavorites(gone: ReadonlySet<string>) {
+  if (gone.size === 0) return;
+  const next = ids.filter((id) => !gone.has(id));
+  if (next.length !== ids.length) commit(next);
+}
+
+/**
  * Replaces the list wholesale — what the account sync does on arrival, once
  * the browser's ids and the account's have been reconciled on the server.
  *

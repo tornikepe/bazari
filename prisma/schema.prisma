@@ -169,8 +169,18 @@ model Category {
   nameEn    String
   icon      String    @default("📦")
   sortOrder Int       @default(0)
+  /// Whether the shelf is listed: in the bar, on the home page, in the
+  /// catalogue's filters, in the sitemap and to the assistant. Hiding one
+  /// does not withdraw what is on it — its products stay in the catalogue
+  /// and stay buyable, and `/catalog?category=…` still answers for anyone
+  /// holding the address. To take the goods off sale, switch the products
+  /// off; this is the shelf, not the stock.
+  isVisible Boolean   @default(true)
   products  Product[]
   createdAt DateTime  @default(now())
+
+  /// The storefront asks for the listed ones in `sortOrder`, every time.
+  @@index([isVisible, sortOrder])
 }
 
 /// Money is stored in **tetri as whole numbers**, never as a float.

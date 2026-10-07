@@ -1,7 +1,8 @@
 import "server-only";
 
 import { sendMail, type MailInput } from "@/lib/mail";
-import { SITE_TITLE, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
+import { brandName } from "@/lib/settings";
 import { formatPrice } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
 
@@ -62,6 +63,7 @@ function escapeHtml(value: string) {
 }
 
 function layout(opts: {
+  brand: string;
   heading: string;
   body: string;
   number: string;
@@ -77,7 +79,7 @@ function layout(opts: {
 <html>
   <body style="margin:0;padding:24px;background:#f5f5f4;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
     <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;padding:32px;">
-      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${escapeHtml(SITE_TITLE)}</p>
+      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${escapeHtml(opts.brand)}</p>
       <h1 style="margin:0 0 12px;font-size:20px;font-weight:700;color:#1c1917;">${escapeHtml(opts.heading)}</h1>
       <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#44403c;">${escapeHtml(opts.body)}</p>
 
@@ -144,13 +146,14 @@ async function send(input: OrderMailInput, kind: "placed" | "shipped") {
   const body = kind === "placed" ? t.placedBody : t.shippedBody;
   const subject = kind === "placed" ? t.placedSubject : t.shippedSubject;
 
+  const brand = await brandName(input.locale);
   const trackUrl = `${SITE_URL}/track?number=${encodeURIComponent(input.number)}`;
   const items = renderItems(input.items, input.locale);
   const total = formatPrice(input.total, input.locale);
 
   return sendMail({
     to: input.to,
-    subject: `${subject} ${input.number} — ${SITE_TITLE}`,
+    subject: `${subject} ${input.number} — ${brand}`,
     attachments: input.attachments,
     text: [
       heading,
@@ -167,6 +170,7 @@ async function send(input: OrderMailInput, kind: "placed" | "shipped") {
       t.footer,
     ].join("\n"),
     html: layout({
+      brand,
       heading,
       body,
       number: input.number,

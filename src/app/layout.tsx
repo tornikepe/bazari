@@ -11,6 +11,7 @@ import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SITE_URL } from "@/lib/site";
 import { getSettings, siteTitle } from "@/lib/settings";
+import { fill } from "@/lib/i18n";
 import { getI18n } from "@/lib/locale";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { brandThemeCss } from "@/lib/brand-theme";
@@ -123,7 +124,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const title = siteTitle(settings, locale);
   const tagline = locale === "ka" ? settings.taglineKa : settings.taglineEn;
-  const description = tagline || t.footer.about;
+  const description = tagline || fill(t.footer.about, { name: settings.name });
 
   return {
     metadataBase: new URL(SITE_URL),

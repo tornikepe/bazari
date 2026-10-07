@@ -1,7 +1,7 @@
 import "server-only";
 
 import { sendMail } from "@/lib/mail";
-import { SITE_TITLE } from "@/lib/site";
+import { brandName } from "@/lib/settings";
 import type { Locale } from "@/lib/i18n";
 
 /**
@@ -44,15 +44,24 @@ const COPY = {
   },
 } satisfies Record<Locale, Record<string, string>>;
 
+/** The shop's name goes into HTML, so it is escaped like anything else. */
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 /** Minimal, table-free layout — it renders predictably in every client. */
-function wrap(heading: string, body: string, code: string, footer: string[]) {
+function wrap(brand: string, heading: string, body: string, code: string, footer: string[]) {
   const escaped = code.replace(/[^0-9A-Za-z]/g, "");
 
   return `<!doctype html>
 <html>
   <body style="margin:0;padding:24px;background:#f5f5f4;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
     <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:14px;padding:32px;">
-      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${SITE_TITLE}</p>
+      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${escapeHtml(brand)}</p>
       <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#1c1917;">${heading}</h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#44403c;">${body}</p>
       <p style="margin:0 0 20px;font-size:30px;font-weight:800;letter-spacing:6px;color:#1c1917;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">${escaped}</p>
@@ -74,24 +83,26 @@ function plain(heading: string, body: string, code: string, footer: string[]) {
 export async function sendVerificationEmail(to: string, code: string, locale: Locale) {
   const t = COPY[locale];
   const footer = [t.expires, t.ignore];
+  const brand = await brandName(locale);
 
   return sendMail({
     to,
-    subject: `${t.verifySubject} — ${SITE_TITLE}`,
+    subject: `${t.verifySubject} — ${brand}`,
     text: plain(t.verifyHeading, t.verifyBody, code, footer),
-    html: wrap(t.verifyHeading, t.verifyBody, code, footer),
+    html: wrap(brand, t.verifyHeading, t.verifyBody, code, footer),
   });
 }
 
 export async function sendPasswordResetEmail(to: string, code: string, locale: Locale) {
   const t = COPY[locale];
   const footer = [t.expires, t.ignore];
+  const brand = await brandName(locale);
 
   return sendMail({
     to,
-    subject: `${t.resetSubject} — ${SITE_TITLE}`,
+    subject: `${t.resetSubject} — ${brand}`,
     text: plain(t.resetHeading, t.resetBody, code, footer),
-    html: wrap(t.resetHeading, t.resetBody, code, footer),
+    html: wrap(brand, t.resetHeading, t.resetBody, code, footer),
   });
 }
 
@@ -105,11 +116,12 @@ export async function sendPasswordResetEmail(to: string, code: string, locale: L
 export async function sendStaffLoginEmail(to: string, code: string, locale: Locale) {
   const t = COPY[locale];
   const footer = [t.expires, t.staffWarn];
+  const brand = await brandName(locale);
 
   return sendMail({
     to,
-    subject: `${t.staffSubject} — ${SITE_TITLE}`,
+    subject: `${t.staffSubject} — ${brand}`,
     text: plain(t.staffHeading, t.staffBody, code, footer),
-    html: wrap(t.staffHeading, t.staffBody, code, footer),
+    html: wrap(brand, t.staffHeading, t.staffBody, code, footer),
   });
 }

@@ -7,12 +7,13 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 ).replace(/\/$/, "");
 
-export const SITE_NAME = "Bazari";
-
-/**
- * The browser tab title, used verbatim on every route.
+/* The shop's name is not here any more.
  *
- * There is no `template` in the root metadata and no page sets its own title,
- * so this string is what shows everywhere — by design.
- */
-export const SITE_TITLE = "Bazari - ონლაინ მაღაზია";
+ * It was two constants, and a shop renamed on the settings page kept the old
+ * name in its footer sentence, its share cards, its structured data, the
+ * dashboard rail and the signature on every email it sent. The name now
+ * comes from the settings row in all of those places — `settings.name`, or
+ * `brandName(locale)` in `settings.ts` where the suffix belongs with it.
+ *
+ * Only the URL stays a constant, because it is a deployment fact rather than
+ * something the shop's owner types. */

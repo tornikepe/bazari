@@ -1,7 +1,8 @@
 import "server-only";
 
 import { sendMail } from "@/lib/mail";
-import { SITE_TITLE, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
 
 /**
  * "You left these in your cart", the day after.
@@ -31,6 +32,9 @@ function escapeHtml(value: string) {
 export async function sendAbandonedCartEmail(input: AbandonedCartMailInput): Promise<boolean> {
   if (!input.to || input.items.length === 0) return false;
 
+  /* Written in both languages at once, so the name is taken without a
+     suffix rather than in one of them. */
+  const brand = (await getSettings()).name;
   const cartUrl = `${SITE_URL}/cart`;
   const lines = input.items.map((item) => `  ${item.nameKa} / ${item.nameEn} × ${item.quantity}`);
 
@@ -58,7 +62,7 @@ export async function sendAbandonedCartEmail(input: AbandonedCartMailInput): Pro
 <html>
   <body style="margin:0;padding:24px;background:#f5f5f4;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
     <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;padding:32px;">
-      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${escapeHtml(SITE_TITLE)}</p>
+      <p style="margin:0 0 4px;font-size:18px;font-weight:800;color:#de1f24;">${escapeHtml(brand)}</p>
       <h1 style="margin:0 0 4px;font-size:20px;font-weight:700;color:#1c1917;">კალათაში რაღაც დაგრჩა</h1>
       <p style="margin:0 0 12px;font-size:15px;color:#78716c;">Something is still in your cart</p>
       <p style="margin:0 0 4px;font-size:15px;line-height:1.6;color:#44403c;">გუშინ კალათაში ეს პროდუქტები დატოვე. ისინი ისევ იქ არის.</p>
@@ -74,7 +78,7 @@ export async function sendAbandonedCartEmail(input: AbandonedCartMailInput): Pro
 
   return sendMail({
     to: input.to,
-    subject: `კალათაში რაღაც დაგრჩა · Something is still in your cart — ${SITE_TITLE}`,
+    subject: `კალათაში რაღაც დაგრჩა · Something is still in your cart — ${brand}`,
     text,
     html,
   });

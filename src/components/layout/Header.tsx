@@ -4,11 +4,13 @@ import { getCurrentUser } from "@/lib/auth";
 import { HeaderBar } from "@/components/layout/HeaderBar";
 import { FavoritesSync } from "@/components/product/FavoritesSync";
 import { CartSync } from "@/components/cart/CartSync";
+import { StaleItemSweep } from "@/components/layout/StaleItemSweep";
 import { SocialButtons } from "@/components/auth/SocialButtons";
 
 async function HeaderContent() {
   const [categories, user] = await Promise.all([
     prisma.category.findMany({
+      where: { isVisible: true },
       orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
       select: { slug: true, nameKa: true, nameEn: true, icon: true },
     }),
@@ -29,6 +31,10 @@ async function HeaderContent() {
             : null
         }
       />
+      {/* Everyone, signed in or not: a guest's cart goes stale the same way
+          a customer's does. */}
+      <StaleItemSweep />
+
       {/* Here rather than in the layout, because this is where the session is
           already read: the sync is only mounted for a shopper, and mounting it
           for a guest would be a call the action refuses on every page. */}

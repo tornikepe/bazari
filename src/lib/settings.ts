@@ -65,6 +65,18 @@ export const getSettings = cache(async (): Promise<ShopSettings> => {
   }
 });
 
+/**
+ * How the shop signs an email, an invoice or a share card: its name and its
+ * suffix, as the tab shows them.
+ *
+ * A helper rather than a constant because the shop can be renamed on the
+ * settings page, and a renamed shop that still signs its order confirmations
+ * with the old name has not been renamed.
+ */
+export async function brandName(locale: "ka" | "en") {
+  return siteTitle(await getSettings(), locale);
+}
+
 /** The browser tab title: the shop's name plus its suffix for that language. */
 export function siteTitle(settings: ShopSettings, locale: "ka" | "en") {
   const suffix = locale === "ka" ? settings.titleSuffixKa : settings.titleSuffixEn;

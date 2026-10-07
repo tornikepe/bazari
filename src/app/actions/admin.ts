@@ -707,12 +707,21 @@ export async function saveCategory(id: string | null, formData: FormData): Promi
     nameEn,
     icon: text(formData, "icon") || "📦",
     sortOrder: Math.floor(number(formData, "sortOrder")),
+    // An unticked box sends nothing at all, so absence is "hidden".
+    isVisible: checkbox(formData, "isVisible"),
   };
 
   const before = id
     ? await prisma.category.findUnique({
         where: { id },
-        select: { slug: true, nameKa: true, nameEn: true, icon: true, sortOrder: true },
+        select: {
+          slug: true,
+          nameKa: true,
+          nameEn: true,
+          icon: true,
+          sortOrder: true,
+          isVisible: true,
+        },
       })
     : null;
 
@@ -733,10 +742,52 @@ export async function saveCategory(id: string | null, formData: FormData): Promi
     action: before ? "category.update" : "category.create",
     entityId: id ?? createdId ?? "",
     label: data.nameEn,
-    changes: before ? diff(before, data, ["slug", "nameKa", "nameEn", "icon", "sortOrder"]) : {},
+    changes: before
+      ? diff(before, data, ["slug", "nameKa", "nameEn", "icon", "sortOrder", "isVisible"])
+      : {},
   });
 
   revalidateStorefront();
+  return { ok: true };
+}
+
+/**
+ * Lists a category, or takes it off the lists.
+ *
+ * Hiding is not withdrawing. The products on the shelf stay in the
+ * catalogue, stay searchable and stay buyable, and anyone holding
+ * `/catalog?category=…` still gets the page — what goes is the shelf's
+ * name from the bar, the home page, the catalogue's filters, the sitemap
+ * and the assistant's answers. It is for a shelf being built, or one
+ * emptied for a season, rather than for taking goods off sale: that is
+ * what switching the products off is for.
+ */
+export async function setCategoryVisible(id: string, isVisible: boolean): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "unauthorized" };
+
+  let category: { nameEn: string } | null = null;
+  try {
+    category = await prisma.category.update({
+      where: { id },
+      data: { isVisible },
+      select: { nameEn: true },
+    });
+  } catch (error) {
+    console.error("setCategoryVisible failed", error);
+    return { ok: false, error: "failed" };
+  }
+
+  await audit({
+    actor: admin.email,
+    action: "category.visible",
+    entityId: id,
+    label: category.nameEn,
+    changes: { isVisible: [!isVisible, isVisible] },
+  });
+
+  revalidateStorefront();
+  revalidatePath("/dashboard/categories");
   return { ok: true };
 }
 

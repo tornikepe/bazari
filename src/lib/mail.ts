@@ -1,5 +1,7 @@
 import "server-only";
 
+import { getSettings } from "@/lib/settings";
+
 /**
  * Outgoing mail.
  *
@@ -81,13 +83,20 @@ function readApiKey(): string | undefined {
   return first;
 }
 
-function fromAddress() {
+async function fromAddress() {
   // A verified sender on your own domain. Resend's shared `onboarding@resend.dev`
   // only delivers to the account owner, so it is fine for a first smoke test
   // but not for real customers.
   // `||`, not `??`: an env var that exists but is empty must still fall back,
   // otherwise the provider rejects the message for a blank sender.
-  return process.env.MAIL_FROM || "Bazari <onboarding@resend.dev>";
+  if (process.env.MAIL_FROM) return process.env.MAIL_FROM;
+
+  /* The display name is the shop's own, so a smoke test before a domain is
+     verified still arrives from the shop rather than from whatever this
+     project was called when it was written. */
+  const { name } = await getSettings();
+  const display = name.replace(/["\\<>]/g, "").trim() || "Shop";
+  return `${display} <onboarding@resend.dev>`;
 }
 
 /**
@@ -128,7 +137,7 @@ export async function sendMail(input: MailInput): Promise<boolean> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: fromAddress(),
+        from: await fromAddress(),
         to: [input.to],
         subject: input.subject,
         text: input.text,

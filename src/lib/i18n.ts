@@ -619,7 +619,8 @@ const ka = {
   },
 
   footer: {
-    about: "Bazari — ონლაინ მაღაზია ტექნიკის, აქსესუარებისა და საყოფაცხოვრებო ნივთებისთვის, მიწოდებით მთელ საქართველოში.",
+    about:
+      "{name} — ონლაინ მაღაზია ტექნიკის, აქსესუარებისა და საყოფაცხოვრებო ნივთებისთვის, მიწოდებით მთელ საქართველოში.",
     shop: "მაღაზია",
     company: "კომპანია",
     follow: "გამოგვყევი",
@@ -745,6 +746,12 @@ const ka = {
     required: "შეავსე ყველა სავალდებულო ველი",
     slugTaken: "ასეთი slug უკვე გამოყენებულია",
     categoryHasProducts: "კატეგორიის წაშლა შეუძლებელია — მასში პროდუქტებია",
+    categoryVisible: "ჩანს კატალოგში",
+    categoryVisibleHint:
+      "ჩაკეცილი კატეგორია არ ჩანს ზედა ზოლში, მთავარ გვერდზე, ფილტრებში, საიტის რუკაში და ასისტენტთან. მისი პროდუქტები კატალოგში რჩება და იყიდება — პროდუქტების გასაჩერებლად თითოეული პროდუქტი გამორთე.",
+    categoryHidden: "დამალული",
+    categoryHide: "დამალვა",
+    categoryShow: "ჩვენება",
     saved: "შენახულია",
     deleted: "წაშლილია",
     all: "ყველა",
@@ -1197,6 +1204,7 @@ const ka = {
       "category.create": "დაამატა კატეგორია",
       "category.update": "შეცვალა კატეგორია",
       "category.delete": "წაშალა კატეგორია",
+      "category.visible": "დამალა / დააბრუნა კატეგორია",
       "order.status": "შეცვალა შეკვეთის სტატუსი",
       "payment.received": "მონიშნა გადახდა მიღებულად",
       "payment.refund": "დააბრუნა თანხა",
@@ -2053,7 +2061,8 @@ const en: Dictionary = {
   },
 
   footer: {
-    about: "Bazari is an online store for electronics, accessories and household goods, delivering across Georgia.",
+    about:
+      "{name} is an online store for electronics, accessories and household goods, delivering across Georgia.",
     shop: "Shop",
     company: "Company",
     follow: "Follow us",
@@ -2179,6 +2188,12 @@ const en: Dictionary = {
     required: "Fill in every required field",
     slugTaken: "That slug is already taken",
     categoryHasProducts: "Can't delete a category that still has products",
+    categoryVisible: "Listed in the catalogue",
+    categoryVisibleHint:
+      "A hidden category is left out of the bar, the home page, the filters, the sitemap and the assistant. Its products stay in the catalogue and stay on sale — to stop selling them, switch the products off.",
+    categoryHidden: "Hidden",
+    categoryHide: "Hide",
+    categoryShow: "Show",
     saved: "Saved",
     deleted: "Deleted",
     all: "All",
@@ -2631,6 +2646,7 @@ const en: Dictionary = {
       "category.create": "added a category",
       "category.update": "edited a category",
       "category.delete": "deleted a category",
+      "category.visible": "hid / listed a category",
       "order.status": "moved an order",
       "payment.received": "marked a payment received",
       "payment.refund": "refunded a payment",
