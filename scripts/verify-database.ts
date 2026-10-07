@@ -17,6 +17,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { INFO_SLUGS } from "../src/lib/info-pages";
+import { withVerifiedTls } from "../src/lib/db-url";
 
 // Checked over the same endpoint the setup used, so a pooler cannot mask a
 // migration that did not actually land.
@@ -26,7 +27,7 @@ if (!connectionString) {
   process.exit(1);
 }
 
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: withVerifiedTls(connectionString) }) });
 
 type Check = { label: string; run: () => Promise<string | null> };
 

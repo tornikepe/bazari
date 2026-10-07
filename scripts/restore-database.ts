@@ -19,12 +19,17 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { Client } from "pg";
 import type { Backup } from "./backup-database";
+import { withVerifiedTls } from "../src/lib/db-url";
 
-const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-if (!connectionString) {
+const rawConnectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+if (!rawConnectionString) {
   console.error("DATABASE_URL is not set — copy .env.example to .env");
   process.exit(1);
 }
+
+/* Resolved once, here: `process.exit` is typed as returning, so the check
+   above does not narrow the value for the rest of the file. */
+const connectionString: string = withVerifiedTls(rawConnectionString);
 
 const file = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 const replace = process.argv.includes("--replace");

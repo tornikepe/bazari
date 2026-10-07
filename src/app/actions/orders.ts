@@ -71,7 +71,13 @@ export type PlaceOrderResult =
     };
 
 /** What the shop will take as a photograph of a transfer, and how big. */
-const RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic"];
+const RECEIPT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/heic",
+];
 const MAX_RECEIPT_BYTES = 2_000_000;
 
 /** Thrown inside the order transaction when a line can no longer be filled. */
@@ -95,7 +101,9 @@ function generateOrderNumber() {
   return `BZ-${randomBytes(4).toString("hex").toUpperCase()}`;
 }
 
-export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
+export async function placeOrder(
+  input: PlaceOrderInput,
+): Promise<PlaceOrderResult> {
   const customerName = input.customerName?.trim() ?? "";
   // The one shape every number is kept in; anything else is refused below.
   const phone = normalizePhone(input.phone ?? "") ?? "";
@@ -107,7 +115,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   if (!throttle.ok) return { ok: false, error: "rate-limited" };
 
   if (!customerName || !phone) return { ok: false, error: "invalid" };
-  if (!Array.isArray(input.items) || input.items.length === 0) return { ok: false, error: "empty" };
+  if (!Array.isArray(input.items) || input.items.length === 0)
+    return { ok: false, error: "empty" };
 
   /* The slip, read here rather than trusted: a `File` arriving at a Server
      Action is whatever the caller put in the request, so its type and its
@@ -115,10 +124,15 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   let receipt: { bytes: Uint8Array<ArrayBuffer>; type: string } | null = null;
   if (input.paymentMethod === "bank_transfer") {
     const file = input.receipt;
-    if (!(file instanceof File) || file.size === 0) return { ok: false, error: "receipt" };
+    if (!(file instanceof File) || file.size === 0)
+      return { ok: false, error: "receipt" };
     if (file.size > MAX_RECEIPT_BYTES) return { ok: false, error: "receipt" };
-    if (!RECEIPT_TYPES.includes(file.type)) return { ok: false, error: "receipt" };
-    receipt = { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type };
+    if (!RECEIPT_TYPES.includes(file.type))
+      return { ok: false, error: "receipt" };
+    receipt = {
+      bytes: new Uint8Array(await file.arrayBuffer()),
+      type: file.type,
+    };
   }
 
   // How it leaves the shop. Decided from the settings and the zone table, not
@@ -127,32 +141,46 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const settings = await getSettings();
   const pickup = input.deliveryMethod === "pickup";
   if (pickup && !settings.pickupEnabled) return { ok: false, error: "invalid" };
-  if (!pickup && input.deliveryMethod !== undefined && input.deliveryMethod !== "courier") {
+  if (
+    !pickup &&
+    input.deliveryMethod !== undefined &&
+    input.deliveryMethod !== "courier"
+  ) {
     return { ok: false, error: "invalid" };
   }
   // A courier needs somewhere to go. A collection does not.
   if (!pickup && (!city || !address)) return { ok: false, error: "invalid" };
 
   const zones = pickup ? [] : await getActiveZones();
-  const zone = zones.find((candidate) => candidate.id === input.deliveryZoneId) ?? null;
+  const zone =
+    zones.find((candidate) => candidate.id === input.deliveryZoneId) ?? null;
   // With zones configured, a courier order must name one of them: the fee
   // depends on it, and "no zone" would be the shop-wide fee slipping past
   // the prices the shop actually set.
-  if (!pickup && zones.length > 0 && !zone) return { ok: false, error: "invalid" };
+  if (!pickup && zones.length > 0 && !zone)
+    return { ok: false, error: "invalid" };
 
-  const delivery: DeliveryChoice = pickup ? { method: "pickup" } : { method: "courier", zone };
+  const delivery: DeliveryChoice = pickup
+    ? { method: "pickup" }
+    : { method: "courier", zone };
 
   /* Normalised and de-duplicated before touching the database, by the product
      *and* the combination: one red medium and one blue medium are two lines,
      and folding them onto the product id would deliver two of whichever came
      second. */
-  const wanted = new Map<string, { productId: string; variantId?: string; quantity: number }>();
+  const wanted = new Map<
+    string,
+    { productId: string; variantId?: string; quantity: number }
+  >();
   for (const item of input.items) {
     if (typeof item?.productId !== "string") continue;
     const quantity = Math.floor(Number(item.quantity));
     if (!Number.isFinite(quantity) || quantity < 1) continue;
 
-    const variantId = typeof item.variantId === "string" && item.variantId ? item.variantId : undefined;
+    const variantId =
+      typeof item.variantId === "string" && item.variantId
+        ? item.variantId
+        : undefined;
     const key = variantId ? `${item.productId}:${variantId}` : item.productId;
     const seen = wanted.get(key);
     wanted.set(key, {
@@ -176,7 +204,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // order would attach the order to a user the "my orders" page never shows.
   if (user.role !== "customer") return { ok: false, error: "sign-in-required" };
 
-  const productIds = [...new Set([...wanted.values()].map((row) => row.productId))];
+  const productIds = [
+    ...new Set([...wanted.values()].map((row) => row.productId)),
+  ];
 
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, isActive: true },
@@ -188,7 +218,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       variants: { include: { values: { select: { valueId: true } } } },
     },
   });
-  if (products.length !== productIds.length) return { ok: false, error: "unavailable" };
+  if (products.length !== productIds.length)
+    return { ok: false, error: "unavailable" };
 
   const byId = new Map(products.map((product) => [product.id, product]));
 
@@ -200,7 +231,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const lines = [...wanted.values()].map((row) => {
     const product = byId.get(row.productId)!;
     const variant = row.variantId
-      ? (product.variants.find((candidate) => candidate.id === row.variantId) ?? null)
+      ? (product.variants.find((candidate) => candidate.id === row.variantId) ??
+        null)
       : null;
 
     // A product sold in several forms cannot be bought as itself, and a
@@ -218,7 +250,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           product.options.map((option) => ({
             id: option.id,
             name: option.nameEn,
-            values: option.values.map((value) => ({ id: value.id, label: value.valueEn })),
+            values: option.values.map((value) => ({
+              id: value.id,
+              label: value.valueEn,
+            })),
           })),
           {
             id: variant.id,
@@ -241,11 +276,15 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     };
   });
 
-  if (lines.some((line) => line.quantity < 1)) return { ok: false, error: "unavailable" };
+  if (lines.some((line) => line.quantity < 1))
+    return { ok: false, error: "unavailable" };
 
   // Tetri throughout: price is a whole number and quantity is an integer, so
   // this sum is exact and needs no rounding at all.
-  const subtotal = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+  const subtotal = lines.reduce(
+    (sum, line) => sum + line.price * line.quantity,
+    0,
+  );
   // Read here rather than trusted from the client, exactly like the prices
   // above: the cart lives in localStorage and every figure in it is editable.
   const shipping = shippingFor(subtotal, lines.length, settings, delivery);
@@ -271,7 +310,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     : "bank_transfer";
   // An online gateway the dashboard has not switched on — or has switched
   // off since the form was drawn — is refused here.
-  if (isGatewayMethod(paymentMethod) && !(await gatewayContext(paymentMethod))) {
+  if (
+    isGatewayMethod(paymentMethod) &&
+    !(await gatewayContext(paymentMethod))
+  ) {
     return { ok: false, error: "invalid" };
   }
 
@@ -339,20 +381,22 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
             receiptAt: receipt ? new Date() : null,
             status: "pending",
             items: {
-              create: lines.map(({ product, variant, quantity, price, sku, label }) => ({
-                productId: product.id,
-                nameKa: product.nameKa,
-                nameEn: product.nameEn,
-                sku,
-                image: product.image,
-                price,
-                costPrice: product.costPrice,
-                quantity,
-                variantId: variant?.id ?? null,
-                // Snapshotted like the name and the price beside it: a variant
-                // renamed or withdrawn next year must not rewrite this order.
-                variantLabel: label,
-              })),
+              create: lines.map(
+                ({ product, variant, quantity, price, sku, label }) => ({
+                  productId: product.id,
+                  nameKa: product.nameKa,
+                  nameEn: product.nameEn,
+                  sku,
+                  image: product.image,
+                  price,
+                  costPrice: product.costPrice,
+                  quantity,
+                  variantId: variant?.id ?? null,
+                  // Snapshotted like the name and the price beside it: a variant
+                  // renamed or withdrawn next year must not rewrite this order.
+                  variantLabel: label,
+                }),
+              ),
             },
             // Opens the order's timeline; the dashboard appends to it on every
             // status change.
@@ -370,7 +414,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
                       {
                         provider: "manual",
                         amount: toMinor(total),
-                        expiresAt: new Date(Date.now() + PAYMENT_WINDOW_MINUTES * 60_000),
+                        expiresAt: new Date(
+                          Date.now() + PAYMENT_WINDOW_MINUTES * 60_000,
+                        ),
                       },
                     ],
                   },
@@ -415,7 +461,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
              from above its threshold to at or below it. Collected here because
              this is the one place that knows both figures, and sent after the
              transaction commits — a mail outage must not roll back a sale. */
-          if (crossedLowStock(updated.stock + quantity, updated.stock, product.lowStockAt)) {
+          if (
+            crossedLowStock(
+              updated.stock + quantity,
+              updated.stock,
+              product.lowStockAt,
+            )
+          ) {
             crossed.push({
               id: product.id,
               name: product.nameEn || product.nameKa,
@@ -455,7 +507,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
           const took = await tx.coupon.updateMany({
             where: {
               id: couponId,
-              ...(couponMaxUses !== null ? { usedCount: { lt: couponMaxUses } } : {}),
+              ...(couponMaxUses !== null
+                ? { usedCount: { lt: couponMaxUses } }
+                : {}),
             },
             data: { usedCount: { increment: 1 } },
           });
@@ -511,7 +565,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
               total,
               tax,
               taxRate,
-              couponCode: input.couponCode && couponId ? input.couponCode.toUpperCase() : null,
+              couponCode:
+                input.couponCode && couponId
+                  ? input.couponCode.toUpperCase()
+                  : null,
             },
             settings,
             await getLocale(),
@@ -528,7 +585,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         number: order.number,
         total,
         attachments: invoice
-          ? [{ filename: `${order.number}.pdf`, content: invoice, contentType: "application/pdf" }]
+          ? [
+              {
+                filename: `${order.number}.pdf`,
+                content: invoice,
+                contentType: "application/pdf",
+              },
+            ]
           : undefined,
         items: lines.map(({ product, quantity, price, label }) => ({
           // The combination belongs in the name here: an email listing "T-shirt
@@ -567,8 +630,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
       return { ok: true, number: order.number };
     } catch (error) {
-      if (error instanceof OutOfStockError) return { ok: false, error: "unavailable" };
-      if (error instanceof CouponGoneError) return { ok: false, error: "coupon-gone" };
+      if (error instanceof OutOfStockError)
+        return { ok: false, error: "unavailable" };
+      if (error instanceof CouponGoneError)
+        return { ok: false, error: "coupon-gone" };
 
       const isDuplicateNumber =
         typeof error === "object" &&
@@ -590,13 +655,24 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
 export type CouponPreview =
   | { ok: true; code: string; discount: number }
-  | { ok: false; reason: "not-found" | "expired" | "used-up" | "min-total" | "rate-limited" };
+  | {
+      ok: false;
+      reason:
+        | "not-found"
+        | "expired"
+        | "used-up"
+        | "min-total"
+        | "rate-limited";
+    };
 
 /**
  * Checkout's "apply code" button. Returns what the discount *would* be; the
  * real one is recalculated when the order is placed.
  */
-export async function previewCoupon(code: string, subtotal: number): Promise<CouponPreview> {
+export async function previewCoupon(
+  code: string,
+  subtotal: number,
+): Promise<CouponPreview> {
   // Without this, the codes are short enough to simply enumerate.
   const throttle = await consume(`coupon:ip:${await clientIp()}`, 20, 60);
   if (!throttle.ok) return { ok: false, reason: "rate-limited" };

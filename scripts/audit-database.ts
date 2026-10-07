@@ -21,6 +21,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { withVerifiedTls } from "../src/lib/db-url";
 
 // Audited over the direct endpoint. A pooler is fine for this, but the point of
 // the exercise is to read what is actually stored.
@@ -30,7 +31,7 @@ if (!connectionString) {
   process.exit(1);
 }
 
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: withVerifiedTls(connectionString) }) });
 
 let failed = 0;
 

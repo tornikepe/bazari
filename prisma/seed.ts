@@ -12,6 +12,7 @@ import { DEFAULT_SHIPPING } from "../src/lib/cart-rules";
 import { getInfoPage, INFO_SLUGS } from "../src/lib/info-pages";
 import { serialiseSections } from "../src/lib/info-content";
 import { shopDayKey } from "../src/lib/format";
+import { withVerifiedTls } from "../src/lib/db-url";
 
 // `DIRECT_URL` when set: seeding is bulk writes run next to migrations, and
 // belongs on the same unpooled endpoint they use. Falls back to DATABASE_URL,
@@ -21,7 +22,7 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set — copy .env.example to .env");
 }
 
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: withVerifiedTls(connectionString) }) });
 
 /** Every product uses the same sample photo — swap per-product in the admin. */
 const IMAGE = "/products/placeholder.svg";

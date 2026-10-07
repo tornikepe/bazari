@@ -1,5 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
+import { withVerifiedTls } from "@/lib/db-url";
 
 /**
  * How many connections one instance may hold.
@@ -41,7 +42,9 @@ function createPrismaClient() {
 
   return new PrismaClient({
     adapter: new PrismaPg({
-      connectionString,
+      // Spelled out rather than left to a default that is about to change —
+      // see `withVerifiedTls`.
+      connectionString: withVerifiedTls(connectionString),
       max: poolMax(),
       // Hand connections back quickly: an instance that served one request and
       // went idle must not sit on a connection another instance is waiting for.
