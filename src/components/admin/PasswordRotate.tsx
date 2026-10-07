@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { fill } from "@/lib/i18n";
 import { generateStaffPassword } from "@/app/actions/auth";
 import { AlertIcon, CheckIcon, CopyIcon, ShieldIcon } from "@/components/ui/icons";
 
@@ -19,7 +20,14 @@ import { AlertIcon, CheckIcon, CopyIcon, ShieldIcon } from "@/components/ui/icon
  * can get into. Every other session is signed out at the same moment, so
  * this is also the button to press when a password may have leaked.
  */
-export function PasswordRotate({ twoStep }: { twoStep: boolean }) {
+export function PasswordRotate({
+  twoStep,
+  lastChanged,
+}: {
+  twoStep: boolean;
+  /** When this account last did it, or null if it never has. */
+  lastChanged: string | null;
+}) {
   const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
   const [password, setPassword] = useState<string | null>(null);
@@ -60,6 +68,16 @@ export function PasswordRotate({ twoStep }: { twoStep: boolean }) {
         <div className="min-w-0 flex-1">
           <h2 className="text-base font-bold text-ink-900">{t.admin.pwTitle}</h2>
           <p className="mt-1 text-sm leading-snug text-ink-500">{t.admin.pwHint}</p>
+          {/* Said here because this is the page somebody reads when they are
+              wondering whether to bother. A shop still on its seeded password
+              is told so plainly; one that has changed it is told when. */}
+          <p
+            className={`mt-1.5 text-xs leading-snug ${
+              lastChanged ? "text-ink-400" : "font-semibold text-warning"
+            }`}
+          >
+            {lastChanged ? fill(t.admin.pwLastChanged, { date: lastChanged }) : t.admin.pwNever}
+          </p>
         </div>
       </div>
 

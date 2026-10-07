@@ -20,6 +20,18 @@ export default async function AdminStaffPage() {
   const { t } = await getI18n();
   const me = await getCurrentUser();
 
+  /* When this reader last made themselves a password. The audit log already
+     records it, so nothing has to be stored twice — and a password nobody
+     has changed since the shop was seeded is worth saying out loud rather
+     than leaving in a document somebody has to remember to read. */
+  const lastRotation = me
+    ? await prisma.auditEntry.findFirst({
+        where: { action: "staff.password", entityId: me.id },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      })
+    : null;
+
   const staff = await prisma.user.findMany({
     where: { role: { in: ["admin", "viewer"] } },
     orderBy: [{ role: "asc" }, { createdAt: "asc" }],
@@ -60,7 +72,10 @@ export default async function AdminStaffPage() {
 
       {/* The one thing on this page that is about the reader rather than
           about the team. */}
-      <PasswordRotate twoStep={staffTwoStep()} />
+      <PasswordRotate
+        twoStep={staffTwoStep()}
+        lastChanged={lastRotation ? formatDate(lastRotation.createdAt) : null}
+      />
     </div>
   );
 }

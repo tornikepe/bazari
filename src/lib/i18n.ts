@@ -746,6 +746,8 @@ const ka = {
     required: "შეავსე ყველა სავალდებულო ველი",
     slugTaken: "ასეთი slug უკვე გამოყენებულია",
     categoryHasProducts: "კატეგორიის წაშლა შეუძლებელია — მასში პროდუქტებია",
+    pwLastChanged: "ბოლოს შეიცვალა {date}.",
+    pwNever: "ეს პაროლი არასდროს შეცვლილა — ისევ ის არის, რომელიც მაღაზიის აწყობისას დაგენერირდა.",
     categoryVisible: "ჩანს კატალოგში",
     categoryVisibleHint:
       "ჩაკეცილი კატეგორია არ ჩანს ზედა ზოლში, მთავარ გვერდზე, ფილტრებში, საიტის რუკაში და ასისტენტთან. მისი პროდუქტები კატალოგში რჩება და იყიდება — პროდუქტების გასაჩერებლად თითოეული პროდუქტი გამორთე.",
@@ -2188,6 +2190,8 @@ const en: Dictionary = {
     required: "Fill in every required field",
     slugTaken: "That slug is already taken",
     categoryHasProducts: "Can't delete a category that still has products",
+    pwLastChanged: "Last changed {date}.",
+    pwNever: "This password has never been changed — it is still the one the shop was set up with.",
     categoryVisible: "Listed in the catalogue",
     categoryVisibleHint:
       "A hidden category is left out of the bar, the home page, the filters, the sitemap and the assistant. Its products stay in the catalogue and stay on sale — to stop selling them, switch the products off.",
