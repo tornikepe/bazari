@@ -39,8 +39,12 @@ export async function saveCoupon(formData: FormData): Promise<CouponResult> {
     .replace(/\s+/g, "");
 
   const kind = formData.get("kind") === "amount" ? "amount" : "percent";
-  const value = Math.floor(Number(formData.get("value") ?? 0));
-  const minOrder = Math.max(0, Math.floor(Number(formData.get("minOrderTotal") ?? 0) * 100));
+  /* A percentage is a whole number; money is tetri, and rounded rather than
+     truncated — `19.99 * 100` is 1998.9999999999998 in binary floating point,
+     so flooring it takes a tetri off every coupon with a 99 in it. */
+  const typed = Number(formData.get("value") ?? 0);
+  const value = kind === "amount" ? Math.round(typed * 100) : Math.floor(typed);
+  const minOrder = Math.max(0, Math.round(Number(formData.get("minOrderTotal") ?? 0) * 100));
   const maxUsesRaw = String(formData.get("maxUses") ?? "").trim();
   const expiresRaw = String(formData.get("expiresAt") ?? "").trim();
 
@@ -52,11 +56,14 @@ export async function saveCoupon(formData: FormData): Promise<CouponResult> {
   const data = {
     code,
     percentOff: kind === "percent" ? value : null,
-    // Entered in lari, stored in tetri — the same boundary as every other
-    // price in this shop.
-    amountOff: kind === "amount" ? value * 100 : null,
+    // Already in tetri above; a percentage is itself.
+    amountOff: kind === "amount" ? value : null,
     minOrderTotal: minOrder,
-    maxUses: maxUsesRaw === "" ? null : Math.max(1, Math.floor(Number(maxUsesRaw))),
+    // `Number("x")` is NaN, and `Math.max(1, NaN)` is NaN — which reaches an
+    // integer column as a type error rather than as "no limit".
+    maxUses: Number.isFinite(Number(maxUsesRaw)) && maxUsesRaw !== ""
+      ? Math.max(1, Math.floor(Number(maxUsesRaw)))
+      : null,
     expiresAt: expiresRaw === "" ? null : new Date(`${expiresRaw}T23:59:59`),
     // An unchecked checkbox is absent from the form, not "off": the old test
     // read absence as on, so the box could be unticked and the code stayed

@@ -86,6 +86,11 @@ export function EditableNumber({
     });
   }
 
+  /* Three fields, three sentences: a reader hearing "change the stock of
+     the Samba" while the cost is in focus has been told the wrong thing. */
+  const label =
+    field === "price" ? t.admin.editPrice : field === "cost" ? t.admin.editCost : t.admin.editStock;
+
   if (editing) {
     return (
       <input
@@ -93,7 +98,11 @@ export function EditableNumber({
         type="number"
         inputMode="decimal"
         min={0}
-        step={field === "price" ? "0.01" : "1"}
+        /* Stock is a count of things; a price and a cost are money, and
+           money has tetri in it. The cost used to step by one, so ₾12.50
+           could not be typed into it at all even though the server stored
+           it to the tetri. */
+        step={field === "stock" ? "1" : "0.01"}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={save}
@@ -108,7 +117,7 @@ export function EditableNumber({
             setEditing(false);
           }
         }}
-        aria-label={fill(field === "price" ? t.admin.editPrice : t.admin.editStock, { name })}
+        aria-label={fill(label, { name })}
         className="field h-8 w-24 px-2 text-right text-sm tabular-nums"
       />
     );
@@ -128,7 +137,7 @@ export function EditableNumber({
           setDraft(String(value));
           setEditing(true);
         }}
-        aria-label={fill(field === "price" ? t.admin.editPrice : t.admin.editStock, { name })}
+        aria-label={fill(label, { name })}
         /* A dotted underline rather than a border: eleven bordered boxes down a
            column is a form, and this is a table. */
         className={`decoration-dotted underline-offset-4 hover:underline ${

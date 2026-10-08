@@ -2,7 +2,13 @@ import Link from "next/link";
 import { getI18n } from "@/lib/locale";
 import { countText } from "@/lib/i18n";
 import { parseFilters, type RawSearchParams } from "@/lib/filters";
-import { getBrands, getCategoriesWithCounts, getFilteredProducts, getPriceBounds } from "@/lib/catalog";
+import {
+  getBrands,
+  getCategoriesWithCounts,
+  getCategoryBySlug,
+  getFilteredProducts,
+  getPriceBounds,
+} from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { PRODUCT_GRID } from "@/components/ui/ProductGridSkeleton";
 import { FilterSidebar } from "@/components/catalog/FilterSidebar";
@@ -29,7 +35,16 @@ export default async function CatalogPage({
     getPriceBounds(),
   ]);
 
-  const activeCategory = categories.find((category) => category.slug === filters.category);
+  /* The shelf being browsed. Normally one of the listed ones; looked up on
+     its own when it is a hidden shelf somebody has the address for, so the
+     page can still name it and still offer the chip that takes the filter
+     off. The rail itself keeps offering only the listed ones. */
+  const listed = categories.find((category) => category.slug === filters.category);
+  const activeCategory =
+    listed ?? (filters.category ? await getCategoryBySlug(filters.category) : null);
+
+  // What the heading and the chips may name — the rail is unchanged.
+  const nameable = listed || !activeCategory ? categories : [...categories, { ...activeCategory, _count: { products: total } }];
 
   return (
     <div className="page">
@@ -124,7 +139,7 @@ export default async function CatalogPage({
             </div>
           </div>
 
-          <ActiveFilterChips filters={filters} categories={categories} bounds={bounds} />
+          <ActiveFilterChips filters={filters} categories={nameable} bounds={bounds} />
 
           {items.length === 0 ? (
             <EmptyState

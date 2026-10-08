@@ -31,23 +31,27 @@ export function StaleItemSweep() {
     let alive = true;
 
     const sweep = async () => {
-      const ids = [
-        ...new Set([
-          ...cartSnapshot().map((item) => item.productId),
-          ...favouritesSnapshot(),
-        ]),
+      const lines = cartSnapshot();
+      const products = [
+        ...new Set([...lines.map((item) => item.productId), ...favouritesSnapshot()]),
       ];
-      if (ids.length === 0) return;
+      /* Cart lines also name a size, and a size can be taken off a product
+         that is otherwise perfectly on sale. */
+      const variants = [...new Set(lines.flatMap((item) => (item.variantId ? [item.variantId] : [])))];
+      if (products.length === 0 && variants.length === 0) return;
 
-      for (let at = 0; at < ids.length; at += BATCH) {
-        const batch = ids.slice(at, at + BATCH);
-        const sellable = new Set(await sellableProducts(batch));
+      // Both lists are sliced together, so the usual small cart is one call.
+      for (let at = 0; at < Math.max(products.length, variants.length); at += BATCH) {
+        const { gone } = await sellableProducts(
+          products.slice(at, at + BATCH),
+          variants.slice(at, at + BATCH),
+        );
         if (!alive) return;
+        if (gone.length === 0) continue;
 
-        // Only ever within the batch that was actually asked about.
-        const gone = new Set(batch.filter((id) => !sellable.has(id)));
-        dropProducts(gone);
-        dropFavorites(gone);
+        const dead = new Set(gone);
+        dropProducts(dead);
+        dropFavorites(dead);
       }
     };
 

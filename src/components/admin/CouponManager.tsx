@@ -34,6 +34,10 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
 
   /** `null` closed, `"new"` adding, otherwise the id being edited. */
   const [editing, setEditing] = useState<string | null>(null);
+  /* Which of the two a coupon is, held here rather than read off the select
+     on submit: the value beside it is a percentage in one case and money in
+     the other, and money has tetri in it. */
+  const [kind, setKind] = useState<"percent" | "amount">("percent");
   const [error, setError] = useState<string | null>(null);
 
   const current = coupons.find((coupon) => coupon.id === editing);
@@ -107,7 +111,10 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
                 <div className="flex shrink-0 items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setEditing(coupon.id)}
+                    onClick={() => {
+                      setKind(coupon.amountOff !== null ? "amount" : "percent");
+                      setEditing(coupon.id);
+                    }}
                     className="btn btn-ghost h-9 w-9 rounded-control p-0"
                     aria-label={`${t.admin.edit} — ${coupon.code}`}
                   >
@@ -157,7 +164,8 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
               <span className="field-label">{t.admin.couponKind}</span>
               <select
                 name="kind"
-                defaultValue={current?.amountOff !== null && current ? "amount" : "percent"}
+                value={kind}
+                onChange={(event) => setKind(event.target.value === "amount" ? "amount" : "percent")}
                 className="field"
               >
                 <option value="percent">{t.admin.couponPercent}</option>
@@ -170,7 +178,12 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
               <input
                 name="value"
                 type="number"
-                min={1}
+                /* Whole percentages, but money to the tetri: a number input
+                   with no step of its own refuses "4.50", which is how a
+                   half-lari coupon could not be written at all. */
+                step={kind === "amount" ? "0.01" : "1"}
+                min={kind === "amount" ? "0.01" : 1}
+                max={kind === "percent" ? 100 : undefined}
                 required
                 defaultValue={
                   current?.percentOff ??
@@ -187,6 +200,8 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
               <input
                 name="minOrderTotal"
                 type="number"
+                /* Money, so tetri. The server rounds to them either way. */
+                step="0.01"
                 min={0}
                 defaultValue={current ? current.minOrderTotal / 100 : 0}
                 className="field"
@@ -237,7 +252,14 @@ export function CouponManager({ coupons }: { coupons: CouponRow[] }) {
           </div>
         </form>
       ) : (
-        <button type="button" onClick={() => setEditing("new")} className="btn btn-primary btn-sm w-fit">
+        <button
+          type="button"
+          onClick={() => {
+            setKind("percent");
+            setEditing("new");
+          }}
+          className="btn btn-primary btn-sm w-fit"
+        >
           <PlusIcon size={15} />
           {t.admin.couponNew}
         </button>

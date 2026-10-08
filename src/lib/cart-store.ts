@@ -194,7 +194,9 @@ export function clearCart() {
  */
 export function dropProducts(gone: ReadonlySet<string>) {
   if (gone.size === 0) return;
-  const next = items.filter((entry) => !gone.has(entry.productId));
+  const next = items.filter(
+    (entry) => !gone.has(entry.productId) && !(entry.variantId && gone.has(entry.variantId)),
+  );
   if (next.length !== items.length) commit(next);
 }
 

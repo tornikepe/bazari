@@ -71,3 +71,43 @@ export function checkUpload(bytes: Uint8Array): { ok: true; type: ImageType } | 
   return { ok: true, type };
 }
 
+/* ------------------------------------------------------------------ */
+/* Photographs people take, as opposed to pictures the shop publishes  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One more format, for a picture nobody is going to publish.
+ *
+ * HEIC is what an iPhone hands over when the browser could not redraw the
+ * photograph through a canvas first, and the one upload on this site where
+ * that happens is the bank slip: it is looked at once, by the shop, and
+ * never put on a page. It stays out of `ImageType` because everything that
+ * *is* published has to render in a browser, and Chrome does not draw HEIC.
+ */
+export type PhotoType = ImageType | "image/heic";
+
+/** The HEIF brands an iPhone writes. `avif` is handled above, as an image. */
+const HEIF_BRANDS = new Set(["heic", "heix", "heim", "heis", "hevc", "hevx", "mif1", "msf1"]);
+
+/** As `sniffImageType`, plus HEIC. Null is still a refusal. */
+export function sniffPhotoType(bytes: Uint8Array): PhotoType | null {
+  const published = sniffImageType(bytes);
+  if (published) return published;
+
+  if (!matches(bytes, 4, [0x66, 0x74, 0x79, 0x70])) return null;
+  const brand = String.fromCharCode(...bytes.slice(8, 12));
+  return HEIF_BRANDS.has(brand) ? "image/heic" : null;
+}
+
+/** As `checkUpload`, for the one upload that may also be a HEIC. */
+export function checkPhotoUpload(
+  bytes: Uint8Array,
+): { ok: true; type: PhotoType } | { ok: false; reason: UploadRefusal } {
+  if (bytes.byteLength === 0) return { ok: false, reason: "empty" };
+  if (bytes.byteLength > MAX_BYTES) return { ok: false, reason: "too-large" };
+
+  const type = sniffPhotoType(bytes);
+  if (!type) return { ok: false, reason: "not-an-image" };
+
+  return { ok: true, type };
+}

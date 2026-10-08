@@ -3,6 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { checkPhotoUpload } from "@/lib/image-upload";
 import { getCurrentUser } from "@/lib/auth";
 import { shippingFor, type DeliveryChoice } from "@/lib/cart-rules";
 import { getActiveZones } from "@/lib/delivery";
@@ -70,14 +71,7 @@ export type PlaceOrderResult =
         | "coupon-gone";
     };
 
-/** What the shop will take as a photograph of a transfer, and how big. */
-const RECEIPT_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/heic",
-];
+/** How big a photograph of a transfer may be before it is even read. */
 const MAX_RECEIPT_BYTES = 2_000_000;
 
 /** Thrown inside the order transaction when a line can no longer be filled. */
@@ -127,12 +121,16 @@ export async function placeOrder(
     if (!(file instanceof File) || file.size === 0)
       return { ok: false, error: "receipt" };
     if (file.size > MAX_RECEIPT_BYTES) return { ok: false, error: "receipt" };
-    if (!RECEIPT_TYPES.includes(file.type))
-      return { ok: false, error: "receipt" };
-    receipt = {
-      bytes: new Uint8Array(await file.arrayBuffer()),
-      type: file.type,
-    };
+
+    /* The bytes, not the `type` beside them. That field is written by
+       whatever made the request and a form posted by hand can put
+       "image/png" on anything at all; this is the same reading every other
+       upload on this site gets, with HEIC allowed because an iPhone sends
+       one whenever the browser could not redraw the photograph first. */
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const seen = checkPhotoUpload(bytes);
+    if (!seen.ok) return { ok: false, error: "receipt" };
+    receipt = { bytes, type: seen.type };
   }
 
   // How it leaves the shop. Decided from the settings and the zone table, not

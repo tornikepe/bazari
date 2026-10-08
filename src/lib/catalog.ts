@@ -140,6 +140,22 @@ export function getCategoriesWithCounts() {
 }
 
 /**
+ * One category by its address, listed or not.
+ *
+ * The filter rail offers only the listed ones, but somebody can arrive at
+ * `/catalog?category=…` for a hidden shelf — from a bookmark, a shared link,
+ * or the shop's own `?category=` written before it was hidden. Without this
+ * the page knew it was filtered and could not name the filter: no heading,
+ * and no chip to take it off with.
+ */
+export function getCategoryBySlug(slug: string) {
+  return prisma.category.findUnique({
+    where: { slug },
+    select: { slug: true, nameKa: true, nameEn: true, icon: true },
+  });
+}
+
+/**
  * Brands available under the *other* active filters, alphabetical.
  *
  * The brand facet itself is excluded from the scope — otherwise picking one
