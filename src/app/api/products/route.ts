@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { productCardSelect } from "@/lib/catalog";
 import { MAX_VIEWED } from "@/lib/recently-viewed-store";
+import { ON_SALE } from "@/lib/catalog";
 
 /**
  * Resolves a list of product ids into cards.
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
   if (ids.length === 0) return NextResponse.json({ products: [] });
 
   const products = await prisma.product.findMany({
-    where: { id: { in: ids }, isActive: true },
+    where: { id: { in: ids }, ...ON_SALE },
     select: productCardSelect,
   });
 

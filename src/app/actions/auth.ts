@@ -9,6 +9,7 @@ import { sendPasswordResetEmail, sendStaffLoginEmail, sendVerificationEmail } fr
 import { mailConfigured, staffTwoStep } from "@/lib/mail";
 import { getLocale } from "@/lib/locale";
 import { clientIp, consume, reset } from "@/lib/rate-limit";
+import { issueRecoveryCodes, spendRecoveryCode } from "@/lib/recovery";
 import { normalizePhone } from "@/lib/phone";
 import {
   createSession,
@@ -117,8 +118,25 @@ export async function login(_previous: AuthState, formData: FormData): Promise<A
     return { staffCode: { email: user.email } };
   }
 
+  await markSignedIn(user.id);
   await createSession(user.id, user.sessionVersion);
   redirect(safeNext(formData.get("next")) ?? homeFor(user.role));
+}
+
+/**
+ * Writes the moment, and never fails a sign-in over it.
+ *
+ * The staff page reads this to answer "was that me?", which is a question
+ * worth being able to ask of a dashboard. It is a note in the margin, so a
+ * database hiccup writing it must not stand between somebody and their own
+ * shop.
+ */
+async function markSignedIn(userId: string) {
+  try {
+    await prisma.user.update({ where: { id: userId }, data: { lastSignInAt: new Date() } });
+  } catch (error) {
+    console.error("markSignedIn failed", error);
+  }
 }
 
 /**
@@ -158,6 +176,7 @@ export async function confirmStaffSignIn(
   });
   if (!user || !isStaff(user.role) || user.disabledAt) return { error: "invalid" };
 
+  await markSignedIn(user.id);
   await createSession(user.id, user.sessionVersion);
   redirect(safeNext(formData.get("next")) ?? homeFor(user.role));
 }
@@ -490,6 +509,112 @@ export async function changePassword(_previous: AuthState, formData: FormData): 
  * The plain text is returned to the caller over the same TLS connection
  * that carried their session and is never written to a log or a column.
  */
+/**
+ * A fresh set of recovery codes for the staff member asking.
+ *
+ * Shown once, like the password is. What is stored is a hash of each, so
+ * this is the only moment they exist in readable form.
+ *
+ * Whatever the account had is thrown away in the same breath: a set is a
+ * set, and half-old half-new codes are a set nobody can count. The panel
+ * says how many are left, and that figure has to be true.
+ */
+export async function generateRecoveryCodes(): Promise<
+  { ok: true; codes: string[] } | { ok: false }
+> {
+  const user = await getCurrentUser();
+  if (!user || !isStaff(user.role)) return { ok: false };
+
+  let codes: string[];
+  try {
+    codes = await issueRecoveryCodes(user.id);
+  } catch (error) {
+    console.error("generateRecoveryCodes failed", error);
+    return { ok: false };
+  }
+
+  await audit({
+    actor: user.email,
+    action: "staff.recovery",
+    entityId: user.id,
+    label: user.email,
+  });
+
+  return { ok: true, codes };
+}
+
+/**
+ * The way back in when the password is gone.
+ *
+ * An address and one of that account's codes. The code is spent on the way
+ * through and every other session is signed out, because somebody using one
+ * of these has either lost their password or had it taken, and both cases
+ * are better served by everything else being closed.
+ *
+ * It does not say whether the address exists, whether it is staff, or
+ * whether the code was the wrong one — all four refusals read the same.
+ * Answering differently would turn this form into a way to find out who
+ * works here, which is exactly what the sign-in form already refuses to be.
+ *
+ * Metered hard, by address and by caller: five tries in fifteen minutes.
+ * Ten characters out of a thirty-one letter alphabet is a number with
+ * fifteen digits in it, so the limit is about noise rather than about
+ * anybody guessing one.
+ */
+export async function signInWithRecoveryCode(
+  _previous: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const code = String(formData.get("code") ?? "").trim();
+  if (!email.includes("@") || !code) return { error: "invalid" };
+
+  const ip = await clientIp();
+  for (const key of [`recover:ip:${ip}`, `recover:email:${email}`]) {
+    const limit = await consume(key, 5, 15 * 60);
+    if (!limit.ok) {
+      return { error: "rate-limited", retryMinutes: Math.ceil(limit.retryAfter / 60) };
+    }
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, role: true, disabledAt: true, email: true },
+  });
+
+  const spent =
+    user && isStaff(user.role) && !user.disabledAt
+      ? await spendRecoveryCode(user.id, code)
+      : false;
+
+  /* One answer for all four refusals: no such address, a customer's address,
+     a switched-off account, or simply the wrong code. The rate limit above
+     is what actually stops anybody working through the possibilities — a
+     known address does answer a little slower than an unknown one, because
+     it has hashes to walk, and five tries a quarter of an hour is not enough
+     to measure that through a network. */
+  if (!user || !spent) return { error: "invalid" };
+
+  await reset(`recover:ip:${ip}`);
+  await reset(`recover:email:${email}`);
+
+  const version = await revokeSessions(user.id);
+  await markSignedIn(user.id);
+  await createSession(user.id, version);
+
+  await audit({
+    actor: user.email,
+    action: "staff.recovered",
+    entityId: user.id,
+    label: user.email,
+  });
+
+  // Straight to the page the next thing happens on: the password this
+  // account has is one nobody knows, and leaving somebody on the dashboard
+  // would leave it that way until they thought of it.
+  redirect("/dashboard/staff?recovered=1");
+}
+
 export async function generateStaffPassword(): Promise<
   { ok: true; password: string } | { ok: false }
 > {
@@ -610,6 +735,7 @@ export async function acceptInvite(
     return { error: "failed" };
   }
 
+  await markSignedIn(user.id);
   await createSession(user.id, user.sessionVersion);
   redirect(homeFor(user.role));
 }

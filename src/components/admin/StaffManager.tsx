@@ -18,6 +18,8 @@ export type StaffRow = {
   role: string;
   disabled: boolean;
   since: string;
+  /** Formatted, or empty for an account that has never signed in. */
+  lastSeen: string;
 };
 
 export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
@@ -142,6 +144,15 @@ export function StaffManager({ me, staff }: { me: string; staff: StaffRow[] }) {
                     )}
                   </p>
                   <p className="truncate text-xs text-ink-500">{person.email}</p>
+                  {/* When this account was last used. A dashboard that keeps
+                      no record of its own use cannot answer "was that me?",
+                      which is the first question anybody asks when something
+                      in a shop has moved and nobody admits to moving it. */}
+                  <p className="mt-0.5 text-xs text-ink-400">
+                    {person.lastSeen
+                      ? fill(t.admin.staffLastSeen, { date: person.lastSeen })
+                      : t.admin.staffNeverSeen}
+                  </p>
                 </div>
 
                 {canWrite && !isMe ? (

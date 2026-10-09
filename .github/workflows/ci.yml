@@ -56,11 +56,11 @@ jobs:
       # rather than secrets because the database they seed is a throwaway
       # container that is destroyed with the job; they are not credentials to
       # anything.
-      ADMIN_EMAIL: admin@bazari.ge
+      ADMIN_EMAIL: admin@luto.ge
       ADMIN_PASSWORD: ci-only-admin-password
-      VIEWER_EMAIL: viewer@bazari.ge
+      VIEWER_EMAIL: viewer@luto.ge
       VIEWER_PASSWORD: ci-only-viewer-password
-      CUSTOMER_EMAIL: user@bazari.ge
+      CUSTOMER_EMAIL: user@luto.ge
       CUSTOMER_PASSWORD: ci-only-customer
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
 

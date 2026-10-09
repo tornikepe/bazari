@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
+import { ON_SALE } from "@/lib/catalog";
 
 // Generated per request rather than at build time: products change from the
 // admin panel, and a build shouldn't need a reachable database.
@@ -22,7 +23,7 @@ const STATIC_PATHS = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
-      where: { isActive: true },
+      where: ON_SALE,
       select: { slug: true, updatedAt: true },
     }),
     // A hidden shelf is not a page to send a crawler to.

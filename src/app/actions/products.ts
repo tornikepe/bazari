@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { productCardSelect, type ProductCardData } from "@/lib/catalog";
+import { ON_SALE } from "@/lib/catalog";
 
 /**
  * Resolves wishlist ids into product cards.
@@ -16,7 +17,7 @@ export async function getProductsByIds(ids: string[]): Promise<ProductCardData[]
 
   // Bound the query — the id list comes from the client.
   const products = await prisma.product.findMany({
-    where: { id: { in: clean.slice(0, 100) }, isActive: true },
+    where: { id: { in: clean.slice(0, 100) }, ...ON_SALE },
     select: productCardSelect,
   });
 
@@ -68,7 +69,7 @@ export async function sellableProducts(
   const [liveProducts, liveVariants] = await Promise.all([
     products.length > 0
       ? prisma.product.findMany({
-          where: { id: { in: products }, isActive: true },
+          where: { id: { in: products }, ...ON_SALE },
           select: { id: true },
         })
       : [],
@@ -76,7 +77,7 @@ export async function sellableProducts(
       ? prisma.productVariant.findMany({
           // The product has to be on sale too: a combination of a withdrawn
           // product is itself withdrawn, whatever its own flag says.
-          where: { id: { in: variants }, isActive: true, product: { isActive: true } },
+          where: { id: { in: variants }, isActive: true, product: ON_SALE },
           select: { id: true },
         })
       : [],

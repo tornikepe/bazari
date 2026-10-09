@@ -20,6 +20,31 @@ enum Role {
   viewer
 }
 
+/// A way back into a staff account that does not go through a mailbox.
+///
+/// This shop's staff address is on a domain it does not receive mail at, so
+/// the ordinary "email me a link" recovery cannot work and neither can a
+/// second factor sent by mail. Eight of these are made at once, shown once
+/// and stored only as hashes; one of them signs its owner in, is spent in
+/// doing so, and leaves them on the page where a new password is made.
+///
+/// They are the reason the password can safely be a long random string
+/// nobody memorises: losing it stops being the end of the account.
+model RecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// scrypt, like a password. The code itself exists only on the screen it
+  /// was shown on and in whatever the owner wrote it down in.
+  codeHash  String
+  /// Set the moment it is spent. A spent code is kept, not deleted, so the
+  /// panel can say how many are left without the number sliding silently.
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, usedAt])
+}
+
 /// What a one-time code is for. The same table serves both flows, so codes
 /// can't be replayed across them.
 enum TokenPurpose {
@@ -575,6 +600,10 @@ model User {
   /// cookie carries the value it was signed with, so an old one no longer
   /// matches and is rejected without needing a session table.
   sessionVersion Int                 @default(0)
+  /// When this account last signed in. Written on the way through, for the
+  /// one line on the staff page that answers "was that me?" — the question
+  /// nobody can ask of a dashboard that keeps no record of its own use.
+  lastSignInAt   DateTime?
   /// Set when an account is switched off. Sign-in is refused while it is set,
   /// and the row stays: an order points at the customer who placed it, and a
   /// deleted staff account takes its own audit trail with it.
@@ -591,6 +620,7 @@ model User {
   /// show a figure.
   balance        Int                 @default(0)
   balanceEntries BalanceEntry[]
+  recoveryCodes  RecoveryCode[]
   /// The rest of the profile as the account page asks for it: sex, date of
   /// birth, the personal number an invoice can carry, and whether the
   /// customer wants news by text and by mail. All optional; all theirs.

@@ -752,15 +752,15 @@ export async function saveCategory(id: string | null, formData: FormData): Promi
 }
 
 /**
- * Lists a category, or takes it off the lists.
+ * Lists a shelf, or puts it away.
  *
- * Hiding is not withdrawing. The products on the shelf stay in the
- * catalogue, stay searchable and stay buyable, and anyone holding
- * `/catalog?category=…` still gets the page — what goes is the shelf's
- * name from the bar, the home page, the catalogue's filters, the sitemap
- * and the assistant's answers. It is for a shelf being built, or one
- * emptied for a season, rather than for taking goods off sale: that is
- * what switching the products off is for.
+ * Putting it away takes the goods with it. The shelf leaves the bar, the
+ * home page, the catalogue, the search, the sitemap and the assistant, and
+ * its products stop being sold: a basket or a wishlist holding one has it
+ * swept out on the holder's next page, and checkout would refuse the line
+ * even if one survived. Somebody following a direct link to the product
+ * still gets its page, with nothing in stock on it — see `ON_SALE` in
+ * `catalog.ts`, which is the one rule all of that is written in.
  */
 export async function setCategoryVisible(id: string, isVisible: boolean): Promise<ActionResult> {
   const admin = await requireAdmin();

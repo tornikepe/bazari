@@ -223,6 +223,14 @@ export function LoginForm({
         </button>
       </form>
 
+      {/* Quiet, and below everything: this is for the one or two people who
+          run the shop, on the day the password is gone and the "email me a
+          link" above can do nothing for them. */}
+      <p className="mt-5 border-t border-line pt-4 text-center text-xs text-ink-400">
+        <Link href="/recover" className="inline-block py-2 -my-2 hover:text-ink-600 hover:underline">
+          {t.auth.recoverLink}
+        </Link>
+      </p>
     </AuthCard>
   );
 }

@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { productCardSelect, type ProductCardData } from "@/lib/catalog";
+import { ON_SALE } from "@/lib/catalog";
 
 /**
  * What people who bought this also bought.
@@ -54,7 +55,7 @@ export async function getBoughtTogether(
      product must drop out of the row without changing the ranking above it —
      which is why the SQL above asks for more ids than the row will show. */
   const products = await prisma.product.findMany({
-    where: { id: { in: ids }, isActive: true },
+    where: { id: { in: ids }, ...ON_SALE },
     select: productCardSelect,
   });
 

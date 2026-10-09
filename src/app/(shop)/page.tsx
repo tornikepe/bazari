@@ -20,6 +20,7 @@ import { SectionLink } from "@/components/ui/SectionLink";
 import { SplitWords } from "@/components/editorial/SplitWords";
 import { Rail } from "@/components/editorial/Rail";
 import Image from "next/image";
+import { ON_SALE } from "@/lib/catalog";
 
 
 export default async function HomePage() {
@@ -30,13 +31,13 @@ export default async function HomePage() {
       where: { isVisible: true },
       orderBy: [{ sortOrder: "asc" }],
       include: {
-        _count: { select: { products: { where: { isActive: true } } } },
+        _count: { select: { products: { where: ON_SALE } } },
         /* One picture for the tile. Real photographs sort before the
            placeholder because their path does ("/api/…" before
            "/products/…"), so a category with any of its own comes up with
            one of its own, and the rest show the sample picture. */
         products: {
-          where: { isActive: true },
+          where: ON_SALE,
           orderBy: [{ image: "asc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
           take: 1,
           select: { image: true },
@@ -44,7 +45,7 @@ export default async function HomePage() {
       },
     }),
     prisma.product.findMany({
-      where: { isActive: true, isFeatured: true },
+      where: { ...ON_SALE, isFeatured: true },
       select: productCardSelect,
       orderBy: { createdAt: "desc" },
       take: 8,
@@ -55,10 +56,10 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
       take: 4,
     }),
-    prisma.product.count({ where: { isActive: true } }),
+    prisma.product.count({ where: ON_SALE }),
     // Every hero stat is a real count from the database — nothing invented.
     prisma.product.findMany({
-      where: { isActive: true, brand: { not: "" } },
+      where: { ...ON_SALE, brand: { not: "" } },
       distinct: ["brand"],
       select: { brand: true },
     }),

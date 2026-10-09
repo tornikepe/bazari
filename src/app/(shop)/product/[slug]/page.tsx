@@ -34,11 +34,26 @@ import { getCurrentUser } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { averageRating, mayReview } from "@/lib/review-rules";
 import { formatDate, formatPrice } from "@/lib/format";
+import { ON_SALE } from "@/lib/catalog";
 
 const LOW_STOCK_THRESHOLD = 10;
 
-function getProduct(slug: string) {
-  return prisma.product.findFirst({
+/**
+ * The product, for its own page.
+ *
+ * `ON_SALE` is not used here, on purpose: a product on a shelf the shop has
+ * hidden is still fetched, so somebody holding the address — a bookmark, a
+ * shared link, a message from last week — gets the page rather than a 404
+ * that tells them nothing. What they get is the page with nothing in stock
+ * on it, which is the honest answer to "can I buy this": no.
+ *
+ * Zeroing the stock here rather than passing a flag down means every part of
+ * the page that already knows what "sold out" looks like keeps working — the
+ * buy panel, each size in the dropdown, the badge on the picture — and no
+ * caller has to be told about shelves at all.
+ */
+async function getProduct(slug: string) {
+  const product = await prisma.product.findFirst({
     where: { slug, isActive: true },
     include: {
       category: true,
@@ -52,6 +67,14 @@ function getProduct(slug: string) {
       },
     },
   });
+
+  if (!product || product.category.isVisible) return product;
+
+  return {
+    ...product,
+    stock: 0,
+    variants: product.variants.map((variant) => ({ ...variant, stock: 0 })),
+  };
 }
 
 export async function generateMetadata({
@@ -99,7 +122,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const [boughtTogether, related, reviews, ratingRows, ownOrders, ownReview] = await Promise.all([
     getBoughtTogether(product.id),
     prisma.product.findMany({
-      where: { isActive: true, categoryId: product.categoryId, NOT: { id: product.id } },
+      where: { ...ON_SALE, categoryId: product.categoryId, NOT: { id: product.id } },
       select: productCardSelect,
       orderBy: { createdAt: "desc" },
       take: 4,

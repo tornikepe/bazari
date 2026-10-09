@@ -23,6 +23,7 @@ import { labelFor } from "@/lib/variants";
 import { getLocale } from "@/lib/locale";
 import { vatIncluded } from "@/lib/tax";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
+import { ON_SALE } from "@/lib/catalog";
 
 export type PlaceOrderInput = {
   customerName: string;
@@ -207,7 +208,7 @@ export async function placeOrder(
   ];
 
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, isActive: true },
+    where: { id: { in: productIds }, ...ON_SALE },
     include: {
       options: {
         orderBy: { sortOrder: "asc" },

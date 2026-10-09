@@ -191,6 +191,16 @@ export const PrinterIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const KeyIcon = (p: IconProps) => (
+  <Icon {...p}>
+    {/* The bit and the bow: a ring, and a shaft with two teeth. */}
+    <circle cx="7.5" cy="15.5" r="4.5" />
+    <path d="m10.7 12.3 9.3-9.3" />
+    <path d="m17 6 2.5 2.5" />
+    <path d="m20 3 1.5 1.5" />
+  </Icon>
+);
+
 export const ShieldIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />

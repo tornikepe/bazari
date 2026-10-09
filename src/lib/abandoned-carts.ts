@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { productCardSelect } from "@/lib/catalog";
 import { sendAbandonedCartEmail } from "@/lib/cart-emails";
 import { isDueForReminder, type CartLine } from "@/lib/abandoned-cart-rules";
+import { ON_SALE } from "@/lib/catalog";
 
 export type { CartLine };
 
@@ -77,7 +78,7 @@ export async function remindAbandonedCarts(now = new Date()): Promise<{ reminded
 
     const lines = clean(snapshot.items);
     const products = await prisma.product.findMany({
-      where: { id: { in: lines.map((line) => line.productId) }, isActive: true },
+      where: { id: { in: lines.map((line) => line.productId) }, ...ON_SALE },
       select: productCardSelect,
     });
     const byId = new Map(products.map((product) => [product.id, product]));

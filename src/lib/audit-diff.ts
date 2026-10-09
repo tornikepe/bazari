@@ -16,6 +16,8 @@ export const AUDIT_ACTIONS = [
   "category.update",
   "category.delete",
   "category.visible",
+  "staff.recovery",
+  "staff.recovered",
   "order.status",
   "payment.received",
   "payment.refund",

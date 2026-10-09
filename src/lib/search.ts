@@ -60,12 +60,16 @@ export async function matchingProductIds(query: string): Promise<string[]> {
   if (trimmed.length === 0) return [];
 
   const rows = await prisma.$queryRaw<{ id: string }[]>`
-    SELECT "id"
+    SELECT "Product"."id"
     FROM "Product"
-    WHERE "isActive"
+    JOIN "Category" ON "Category"."id" = "Product"."categoryId"
+    -- A shelf the shop has put away is not searchable either: the same rule
+    -- as ON_SALE in catalog.ts, written again here because this one query is
+    -- SQL rather than Prisma. (No backticks: template literal.)
+    WHERE "Product"."isActive" AND "Category"."isVisible"
       AND (
-        to_tsvector('simple', "searchText") @@ plainto_tsquery('simple', ${trimmed})
-        OR "searchText" ILIKE ${"%" + trimmed + "%"}
+        to_tsvector('simple', "Product"."searchText") @@ plainto_tsquery('simple', ${trimmed})
+        OR "Product"."searchText" ILIKE ${"%" + trimmed + "%"}
         /* strict_word_similarity, and neither of the other two.
            
            similarity() compares two whole strings, so against a paragraph of
@@ -82,18 +86,18 @@ export async function matchingProductIds(query: string): Promise<string[]> {
            does not pretend otherwise.
            
            (No backticks in this comment: it is inside a template literal.) */
-        OR strict_word_similarity(${trimmed}, "searchText") > 0.4
+        OR strict_word_similarity(${trimmed}, "Product"."searchText") > 0.4
       )
     ORDER BY
       /* A hit in the name beats a hit in a paragraph of description, and it is
          not close: somebody searching "anker" wants the Anker products, not
          the one whose description mentions an Anker cable in passing. */
-      (CASE WHEN "nameKa" ILIKE ${"%" + trimmed + "%"} OR "nameEn" ILIKE ${"%" + trimmed + "%"} THEN 1 ELSE 0 END) DESC,
-      ts_rank(to_tsvector('simple', "searchText"), plainto_tsquery('simple', ${trimmed})) DESC,
-      strict_word_similarity(${trimmed}, "searchText") DESC,
+      (CASE WHEN "Product"."nameKa" ILIKE ${"%" + trimmed + "%"} OR "Product"."nameEn" ILIKE ${"%" + trimmed + "%"} THEN 1 ELSE 0 END) DESC,
+      ts_rank(to_tsvector('simple', "Product"."searchText"), plainto_tsquery('simple', ${trimmed})) DESC,
+      strict_word_similarity(${trimmed}, "Product"."searchText") DESC,
       -- A stable tiebreaker, so two equally good matches do not swap places
       -- between one page of results and the next.
-      "id" ASC
+      "Product"."id" ASC
     LIMIT ${MAX_MATCHES}
   `;
 

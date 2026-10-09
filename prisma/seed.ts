@@ -780,7 +780,7 @@ async function main() {
   }
 
   /* ---------------------------- users ------------------------------ */
-  const email = process.env.ADMIN_EMAIL ?? "admin@bazari.ge";
+  const email = process.env.ADMIN_EMAIL ?? "admin@luto.ge";
 
   // No fallback on purpose: a default admin password that ships in the repo is
   // a default admin password on every deployment that forgets to override it.
@@ -818,7 +818,7 @@ async function main() {
   // cannot change anything, but it can read every order, every customer's
   // address and every margin in the shop, so "it's only a viewer" is not a
   // reason to let a weak password in.
-  const viewerEmail = process.env.VIEWER_EMAIL ?? "viewer@bazari.ge";
+  const viewerEmail = process.env.VIEWER_EMAIL ?? "viewer@luto.ge";
   const viewerPassword = process.env.VIEWER_PASSWORD;
   if (!viewerPassword || viewerPassword.length < 12) {
     throw new Error(
@@ -848,7 +848,7 @@ async function main() {
   // file: fine for a demo nobody can lose anything in, but it meant three
   // accounts created three different ways, and the one that is easiest to
   // forget about is the one still holding a password from the repository.
-  const demoEmail = process.env.CUSTOMER_EMAIL ?? "user@bazari.ge";
+  const demoEmail = process.env.CUSTOMER_EMAIL ?? "user@luto.ge";
   const demoPassword = process.env.CUSTOMER_PASSWORD;
   if (!demoPassword || demoPassword.length < 8) {
     throw new Error(

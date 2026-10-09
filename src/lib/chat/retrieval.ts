@@ -9,6 +9,7 @@ import { enabledGateways } from "@/lib/payments/gateways";
 import { getAdapter } from "@/lib/payments";
 import type { ShopSettings } from "@/lib/settings-defaults";
 import type { Locale } from "@/lib/i18n";
+import { ON_SALE } from "@/lib/catalog";
 
 /**
  * Everything the assistant is allowed to know about the shop.
@@ -61,7 +62,7 @@ const contextCache = new Map<Locale, CacheEntry>();
  * repeats back. If the shop has 41 products, this says 41.
  */
 async function catalogueSummary(locale: Locale): Promise<string> {
-  const active = { isActive: true } as const;
+  const active = ON_SALE;
 
   const [total, inStock, aggregate, categories, brands] = await Promise.all([
     prisma.product.count({ where: active }),
@@ -312,7 +313,7 @@ export async function searchProducts(
 
   const products = await prisma.product.findMany({
     where: {
-      isActive: true,
+      ...ON_SALE,
       ...(options.inStockOnly ? { stock: { gt: 0 } } : {}),
       ...(options.categorySlug ? { category: { slug: options.categorySlug } } : {}),
       ...(trimmed
@@ -344,7 +345,7 @@ export async function getProductBySlug(
   locale: Locale,
 ): Promise<ProductDetail | null> {
   const product = await prisma.product.findFirst({
-    where: { slug, isActive: true },
+    where: { slug, ...ON_SALE },
     select: { ...matchSelect, sku: true, descriptionKa: true, descriptionEn: true },
   });
   if (!product) return null;
@@ -367,7 +368,7 @@ export async function listCategories(locale: Locale): Promise<CategorySummary[]>
       slug: true,
       nameKa: true,
       nameEn: true,
-      _count: { select: { products: { where: { isActive: true } } } },
+      _count: { select: { products: { where: ON_SALE } } },
     },
   });
 

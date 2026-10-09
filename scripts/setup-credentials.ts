@@ -42,7 +42,7 @@ const ACCOUNTS = [
     role: "admin",
     emailKey: "ADMIN_EMAIL",
     passwordKey: "ADMIN_PASSWORD",
-    defaultEmail: "admin@bazari.ge",
+    defaultEmail: "admin@luto.ge",
     minimum: 12,
     note: "full dashboard access — can change anything",
   },
@@ -50,7 +50,7 @@ const ACCOUNTS = [
     role: "viewer",
     emailKey: "VIEWER_EMAIL",
     passwordKey: "VIEWER_PASSWORD",
-    defaultEmail: "viewer@bazari.ge",
+    defaultEmail: "viewer@luto.ge",
     minimum: 12,
     // Held to the admin's minimum on purpose: it cannot write, but it can read
     // every order, address and margin in the shop.
@@ -60,7 +60,7 @@ const ACCOUNTS = [
     role: "customer",
     emailKey: "CUSTOMER_EMAIL",
     passwordKey: "CUSTOMER_PASSWORD",
-    defaultEmail: "user@bazari.ge",
+    defaultEmail: "user@luto.ge",
     minimum: 8,
     note: "demo shopper — so checkout can be tried without signing up",
   },

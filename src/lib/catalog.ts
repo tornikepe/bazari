@@ -6,6 +6,26 @@ import { PAGE_SIZE, type CatalogFilters, type Sort } from "@/lib/filters";
 import { matchingProductIds } from "@/lib/search";
 
 /**
+ * What the shop will sell: a product that is switched on, on a shelf the
+ * shop is showing.
+ *
+ * Hiding a category takes its goods off the floor. That is a decision about
+ * what hiding *means*, and it was made the other way first — hidden shelf,
+ * goods still on sale through a direct link — which left a shopper able to
+ * buy from a shelf the owner had put away, and a basket counting things the
+ * shop no longer offers. It means the same thing everywhere now: the
+ * catalogue, the search, the home page, the assistant, the sitemap, what a
+ * basket is allowed to hold, and what checkout will take money for.
+ *
+ * The product's own page is the one exception, and deliberately: somebody
+ * holding the address still gets the page, with nothing in stock on it.
+ */
+export const ON_SALE = {
+  isActive: true,
+  category: { isVisible: true },
+} as const satisfies Prisma.ProductWhereInput;
+
+/**
  * The search, as a filter the rest of the query can be built on.
  *
  * `matchingProductIds` answers *which products and in what order*; everything
@@ -20,7 +40,7 @@ function buildWhere(
   filters: CatalogFilters,
   matched: string[] | null,
 ): Prisma.ProductWhereInput {
-  const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
+  const and: Prisma.ProductWhereInput[] = [ON_SALE];
 
   if (matched !== null) and.push({ id: { in: matched } });
 
@@ -134,7 +154,7 @@ export function getCategoriesWithCounts() {
     where: { isVisible: true },
     orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
     include: {
-      _count: { select: { products: { where: { isActive: true } } } },
+      _count: { select: { products: { where: ON_SALE } } },
     },
   });
 }
@@ -186,7 +206,7 @@ export async function getBrands(filters: CatalogFilters) {
 /** Bounds for the price inputs, rounded outwards to whole units. */
 export async function getPriceBounds() {
   const result = await prisma.product.aggregate({
-    where: { isActive: true },
+    where: ON_SALE,
     _min: { price: true },
     _max: { price: true },
   });
