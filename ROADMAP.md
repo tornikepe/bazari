@@ -1,4 +1,4 @@
-# Bazari — რა დარჩა ლაივამდე
+# Luto — რა დარჩა ლაივამდე
 
 საიტი ცოცხალია: **https://bazari-one.vercel.app**
 
@@ -22,7 +22,14 @@ https://facebook.com/შენი_გვერდი     https://youtube.com/@�
 
 ---
 
-## 2. დომენი
+## 2. დომენი (`luto.ge`)
+
+**აქ იხსნება ელფოსტაც.** ადმინის მისამართი ახლა `admin@luto.ge`-ა, მაგრამ ეს
+ჯერ მხოლოდ სახელია — `luto.ge` შენი არ არის, ამიტომ იქ გაგზავნილი წერილი
+არსად მიდის. შესვლას ეს არ უშლის; პაროლის აღდგენას და ორნაბიჯიან კოდს კი — კი.
+სანამ ეს მოგვარდება, ანგარიშში დასაბრუნებელი გზაა **ავარიული კოდები**
+(Dashboard → პერსონალი). დომენის შეძენის შემდეგ საფოსტო ყუთი დაახლოებით
+$3–6/თვე ჯდება (Zoho-ს უფასო ტარიფიც არსებობს ერთ მომხმარებელზე).
 
 1. იყიდე → Vercel → Settings → Domains → დაამატე, DNS ჩაწერე.
 2. Vercel ცვლადი `NEXT_PUBLIC_SITE_URL` = `https://დომენი` → Redeploy.
@@ -30,7 +37,8 @@ https://facebook.com/შენი_გვერდი     https://youtube.com/@�
    `https://დომენი/api/auth/google/callback`.
 4. Resend → Domains → ახალი დომენი, 3 DNS ჩანაწერი → Verify →
    `MAIL_FROM` = `Luto <noreply@luto.ge>`.
-5. UptimeRobot-ში URL შეცვალე.
+5. Vercel → Environment Variables → `ADMIN_EMAIL` = `admin@luto.ge`.
+6. UptimeRobot-ში URL შეცვალე.
 
 ---
 
