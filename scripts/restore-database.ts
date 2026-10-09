@@ -2,7 +2,7 @@
  * Puts a backup back — into an *empty* database on the *same* schema.
  *
  *     npx prisma migrate deploy                 # the schema first, always
- *     npm run db:restore -- backups/bazari-2026-09-13T10-15.json
+ *     npm run db:restore -- backups/luto-2026-09-13T10-15.json
  *
  * It refuses two things. A database whose applied migrations differ from
  * the backup's — a row from last month does not fit a table from this one,

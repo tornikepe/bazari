@@ -1,19 +1,26 @@
 <div align="center">
 
-# Bazari
+# Luto
 
-**ბაზარი** — a bilingual Georgian online shop: storefront, checkout, payments, and a staff
-dashboard that runs the whole business from one place.
+A bilingual Georgian online shop: storefront, checkout, payments, and a staff dashboard that
+runs the whole business from one place.
 
 ქართული · English  ·  Next.js 16 App Router  ·  React 19  ·  PostgreSQL + Prisma 7  ·  Tailwind CSS v4
 
-[Live](https://bazari-one.vercel.app) · [Source](https://github.com/tornikepe/bazari) · [DESIGN.md](DESIGN.md) · [ROADMAP.md](ROADMAP.md)
+[Live](https://bazari-one.vercel.app) · [Source](https://github.com/tornikepe/bazari) · [DESIGN.md](DESIGN.md)
 
 </div>
 
 ---
 
-Bazari is a working shop, not a template. It takes orders, holds money against a bank transfer
+> The shop is called **Luto**. The repository, the Vercel project and the deployment URL still
+> say `bazari`, which is what it was called while it was being built — renaming those breaks
+> links and buys nothing. The name on screen is a row in the database (`ShopSettings.name`) and
+> nothing in this codebase hardcodes it, so changing it in Dashboard → Settings changes it
+> everywhere: the bar, the tab, the footer, the share cards, the structured data, the dashboard
+> rail and the signature on every email the shop sends.
+
+Luto is a working shop, not a template. It takes orders, holds money against a bank transfer
 or a card, prints an invoice, tracks what came back, counts what it cost to sell, and tells its
 owner where the profit went. Everything on screen is read from the database — the stock, the
 review stars, the delivery prices, the shop's own name and telephone number, the text of the
@@ -113,11 +120,25 @@ to an `admin` or `viewer` row are the seed and an invitation sent from Dashboard
 password, shows it once, stores the hash, and raises the account's `sessionVersion`, which
 signs out every existing session on that account immediately.
 
+**Recovery codes** are the way back in when the password is gone: Dashboard → Staff makes eight
+one-time codes, shows them once and stores only their scrypt hashes. `/recover` takes an address
+and one code, spends it, signs every other session out, and lands on the page where a new
+password is made. Every refusal there reads the same, so the form cannot be used to find out who
+works here, and it is metered five tries to the quarter hour by address and by caller.
+
+They exist because the usual way back does not work here. This deployment's staff address is on
+a domain it receives no mail at, so "email me a reset link" sends the link nowhere. They are also
+what makes the generated password safe to keep: a password nobody memorises is only a good
+password when losing it is survivable.
+
 **A second sign-in step** is available for staff: the password, then a six-digit code emailed to
 the address on the account. It is off unless `STAFF_2FA=1` **and** a mailer is configured. The
 switch is explicit on purpose — when it was keyed on the mailer alone, setting a mail key locked
 the owner out, because the code went to an address on a domain the shop does not receive mail
 at. Turn it on only once you are certain you read that mailbox.
+
+**Who last used the dashboard** is on the staff list: every account says when it last signed in,
+or that it never has.
 
 ---
 
@@ -135,8 +156,8 @@ Only the first two are required.
 | `NEXT_PUBLIC_SITE_URL` | Absolute base for links in emails, invoices, sitemaps and OAuth callbacks. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | The admin the seed *creates*. Re-seeding never rewrites a staff password, so rotating it in Dashboard → Staff sticks. Same pattern for `VIEWER_*` and `CUSTOMER_*`. |
 | `RESEND_API_KEY` | Sends order mail, verification codes and password resets. Without it nothing is emailed. |
-| `MAIL_FROM` | `Shop <noreply@yourdomain>`. Must be a domain verified with Resend. |
-| `STAFF_2FA` | `1` turns on the staff second step. Needs a mailer. |
+| `MAIL_FROM` | `Luto <noreply@yourdomain>`. Must be a domain verified with Resend. Without it the shop signs its mail with its own name and Resend's shared sender, which only reaches the account owner. |
+| `STAFF_2FA` | `1` turns on the staff second step. Needs a mailer **and** an address somebody reads — otherwise it locks the owner out. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | "Sign in with Google". Callback: `/api/auth/google/callback`. |
 | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | Same for Facebook. |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | The shop assistant. Either one. |
@@ -154,6 +175,13 @@ Only the first two are required.
 its place in the URL. Search runs against a generated `searchText` column, so a typo-tolerant
 query is one index lookup, not a table scan.
 
+What the shop will sell is one rule — `ON_SALE` in `src/lib/catalog.ts`: the product is switched
+on **and** its category is one the shop is showing. Hiding a category therefore takes its goods
+off the floor, everywhere at once: the catalogue, the search, the home page, the assistant, the
+sitemap, the baskets already holding one, and checkout. The product's own page is the single
+exception, and deliberately — somebody following a bookmark gets the page, with nothing in stock
+on it.
+
 **A product.** Gallery with a lightbox, specifications, cross-sells, recently viewed, stock
 warnings, and a "tell me when it is back" address that is deleted the moment the message is
 sent. Sizes and colours are real combinations with their own SKU, stock and price — a shop can
@@ -163,14 +191,19 @@ operating system's wheel, so a sold-out size can say so in the shop's own hand.
 
 **Cart and wishlist.** Held in `localStorage`, so they survive a closed tab without an
 account. What is in them is re-priced and re-checked against the database when the order is
-actually placed, never trusted from the browser. A line is a card a thumb can swipe away. Both
+actually placed, never trusted from the browser. Because they live in a browser they can name
+products withdrawn months ago, so each page load asks the shop which of them it still sells and
+sweeps out the rest — product and size both. A call that fails removes nothing: a shop that
+cannot be reached has not withdrawn anything. A line is a card a thumb can swipe away. Both
 pages read down the middle on a phone.
 
 **Checkout.** Saved addresses, delivery zones with their own prices and a free-delivery
 threshold, coupons, and a summary panel that scrolls with the page. Paying by bank transfer
 shows the shop's account and **requires a photograph of the transfer slip** before the order
 can be placed — the shop has no gateway telling it the money arrived, so the slip is the only
-evidence there will ever be. The photo is shrunk in the browser before it is sent.
+evidence there will ever be. The photo is shrunk in the browser before it is sent, and read from
+its own leading bytes on arrival rather than from the `type` the request claims: JPEG, PNG, WebP,
+AVIF or the HEIC an iPhone sends when the browser could not redraw it.
 
 **After the order.** A confirmation page with the status timeline, a PDF invoice, an emailed
 receipt, order tracking by number and phone for a guest, and a returns panel that opens inside
@@ -195,7 +228,7 @@ of a notched phone respected on every fixed edge.
 | **Home** | Today's takings, orders awaiting a decision, stock about to run out. |
 | **Orders** | Every order, its items as they were priced that day, its event log, its payments, its refunds, and the transfer slip to check against the bank. |
 | **Products** | Create and edit, in both languages: photos, specifications, options and generated variants, price, cost, stock. |
-| **Categories** | The tree, with its own bilingual names and images. |
+| **Categories** | The tree, with its own bilingual names and images, and an eye on every row: hiding one puts the whole shelf away, goods included. |
 | **Coupons** | Percentage or fixed, per-order minimums, expiry, usage caps. |
 | **Customers** | Who they are, what they bought, what they are owed. |
 | **Reviews** | Moderation. Only a customer whose order of that product was *delivered* can write one, so a star on the storefront is a fact. |
@@ -206,7 +239,7 @@ of a notched phone respected on every fixed edge.
 | **Traffic** | Visitors and pages, counted without a cookie — numbers and a hash that cannot be turned back into a person. The page says so at the top. |
 | **Pages** | The text of every info page, both languages. |
 | **Settings** | Name, tagline, telephone, address, hours, delivery zones and prices, tax rate, return window, brand colour, bank details. |
-| **Staff** | Invitations, roles, the password generator, and whether the second sign-in step is on. |
+| **Staff** | Invitations, roles, when each account last signed in, the password generator and how old the password is, the eight recovery codes, and whether the second sign-in step is on. |
 | **Audit** | Who changed what, and what it was before. |
 | **Database** | What it is, where it is, how many rows each table holds, and a link to the provider's own console. A window, nothing more. |
 
@@ -275,7 +308,13 @@ hides nothing: an action is reachable by direct POST.
 who is asking. A stranger asking for someone else's slip gets a 404, not a 403 — an order number
 that exists must not answer differently from one that does not.
 
-**Audit trail.** Every staff change is written to `AuditEntry` with the before and after.
+**Recovery without a mailbox.** Eight one-time codes per staff account, scrypt-hashed like a
+password, spent on use and redeemed at `/recover` — see *Accounts and passwords* above. This is
+the only way back into a staff account on this deployment; never propose an email-based reset
+for staff until the address on the account is a mailbox somebody reads.
+
+**Audit trail.** Every staff change is written to `AuditEntry` with the before and after,
+including the rotations, the recovery codes and the sign-ins that used one.
 
 ---
 
@@ -405,7 +444,7 @@ one it refuses every caller, which is the right way for an unconfigured deployme
 ## Backups and moving the database
 
 ```bash
-npm run db:backup     # every table to backups/bazari-<timestamp>.json
+npm run db:backup     # every table to backups/luto-<timestamp>.json
 npm run db:restore    # and back again
 npm run db:verify     # the schema is complete and the app can read it
 npm run db:audit      # nothing inside it contradicts anything else
@@ -432,6 +471,9 @@ database is an ocean away pays for it on every page.
   for money that arrived six months ago is dead weight and somebody else's personal data.
 - **No test suite.** There was one; it was removed deliberately. CI runs lint, typecheck and a
   migrate-from-empty check, and changes are verified against a real browser instead.
+- **The plan is not in this repository.** What is left to do before the shop opens lives in a
+  `ROADMAP.md` beside the checkout, untracked on purpose: it is the owner's business, not the
+  codebase's.
 - **The gateway adapters are written but not yet exercised against live merchant accounts.**
   TBC and BOG both need a contract first. `PAYMENT_SANDBOX=1` covers the whole path locally.
 - **Georgian phone numbers only** in the validation — this is a Georgian shop.

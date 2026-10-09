@@ -1,7 +1,7 @@
 /**
  * Every row of every table, into one file.
  *
- *     npm run db:backup                     # backups/bazari-2026-09-13T10-15.json
+ *     npm run db:backup                     # backups/luto-2026-09-13T10-15.json
  *     npm run db:backup -- --out /tmp/x.json
  *
  * Written with `pg` and a query per table rather than `pg_dump`, because the
@@ -36,7 +36,7 @@ const connectionString: string = withVerifiedTls(rawConnectionString);
 
 const outArg = process.argv.indexOf("--out");
 const stamp = new Date().toISOString().slice(0, 16).replace(":", "-");
-const outPath = outArg > -1 ? process.argv[outArg + 1]! : join("backups", `bazari-${stamp}.json`);
+const outPath = outArg > -1 ? process.argv[outArg + 1]! : join("backups", `luto-${stamp}.json`);
 
 export type Backup = {
   format: 1;

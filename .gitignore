@@ -55,3 +55,8 @@ skills-lock.json
 # database backups — a copy of the shop, never in the repository
 /backups/
 
+# The plan: what is left to do before the shop opens, with the owner's own
+# figures and dates in it. It sits beside the code so it is one click away,
+# and stays out of the repository because it is the business, not the build.
+/ROADMAP.md
+
