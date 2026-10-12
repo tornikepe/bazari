@@ -411,6 +411,28 @@
    utilities across fifteen files.
    ========================================================================== */
 
+/*
+ * A sixteen-pixel tick box is a dot on a phone.
+ *
+ * Outside every layer on purpose: the boxes are sized by a `h-4 w-4`
+ * utility, and a layered rule — components sits under utilities — loses to
+ * it however specific it is.
+ */
+@media (pointer: coarse) {
+  input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* And the label around it is what a thumb actually lands on, so it is
+     given the height of everything else to press — in padding cancelled by
+     margin, which leaves the row's rhythm exactly as it was. */
+  label:has(> input[type="checkbox"]) {
+    padding-block: 0.6875rem;
+    margin-block: -0.6875rem;
+  }
+}
+
 @layer components {
   /*
    * One page, one rhythm.
@@ -583,6 +605,70 @@
     padding-block: 0.4rem;
     padding-inline: 1.75rem;
     font-size: var(--text-base);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Reach                                                                */
+  /* ------------------------------------------------------------------ */
+
+  /*
+   * An icon-only control in a dense row — edit, delete, hide, open.
+   *
+   * Thirty-six pixels drawn, which is as large as a row of them can be
+   * without the row becoming a stack of buttons, and forty-four pixels to
+   * press on a touch screen. The extra eight come from a pseudo-element
+   * laid over the top rather than from padding, so the thumb gets its
+   * target and the row keeps its rhythm. Mice get nothing extra: a pointer
+   * lands where it is aimed.
+   *
+   * Stacked on `.btn btn-ghost` for the colours and the press; this class
+   * is the size and the reach only.
+   */
+  .icon-btn {
+    position: relative;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+    padding: 0;
+    border-radius: var(--radius-control);
+  }
+
+  /*
+   * The same reach, for something that is text rather than a button: an
+   * order number, a product name, a date in a table, "see all". These are
+   * sixteen to twenty-two pixels tall because they are a line of type, and
+   * a line of type is not a thing a thumb can find.
+   *
+   * The element has to establish a containing block for this to hang off,
+   * so the class sets `position: relative` at every width — that much is
+   * free, and doing it only inside the query would be a rule that changes
+   * stacking order halfway down a media query.
+   */
+  .tap {
+    position: relative;
+  }
+
+  @media (pointer: coarse) {
+    .icon-btn::after,
+    .tap::after,
+    /* The switch on a product row: twenty pixels of drawn track, and the
+       same forty-four to press as everything beside it. */
+    [role="switch"]::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      translate: -50% -50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      /* Above the row's own hover surface, below anything the control opens. */
+      z-index: 1;
+    }
+
+    [role="switch"] {
+      position: relative;
+    }
+
   }
 
   .btn-primary {
@@ -851,6 +937,21 @@
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease;
+  }
+
+  /*
+   * On a touch screen no field is shorter than a thumb.
+   *
+   * A few of them are deliberately small on a wide screen — the alt-text
+   * boxes under a photograph, the role dropdown in a staff row, the number
+   * that is edited where it is read — and `h-8` on those wins over the
+   * height above. `min-height` wins over both, so the same markup draws a
+   * compact field for a mouse and a reachable one for a thumb.
+   */
+  @media (pointer: coarse) {
+    .field {
+      min-height: 2.75rem;
+    }
   }
 
   /* The product page's stepper: minus, the number, plus, as one bordered
@@ -6933,6 +7034,11 @@ html[data-cursor] .cursor-dot[data-over="text"] {
 .qty-value {
   min-width: 0;
   flex: 1;
+  /* The full height of the stepper, not the height of one line of type.
+     Without this the number in the middle was a twenty-four-pixel strip
+     between two tall buttons, and tapping it to type a quantity meant
+     hitting a band a thumb cannot see. */
+  align-self: stretch;
   border: 0;
   background: transparent;
   text-align: center;
@@ -7085,6 +7191,37 @@ html[data-cursor] .cursor-dot[data-over="text"] {
 .social-mark:focus-visible {
   outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
+}
+
+/*
+ * The save bar at the foot of a long admin form on a phone.
+ *
+ * Sticky rather than fixed: it rides the bottom of the viewport while there
+ * is page left to scroll and then settles into the flow at the end, so it
+ * never covers the last field and the page needs no padding to compensate.
+ * The negative inline margin reaches past the panel's own gutter, which is
+ * what makes it read as a bar rather than as one more card.
+ */
+.admin-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  /* No `display` here. This rule is unlayered and would beat Tailwind's
+     `lg:hidden`, which lives in the utilities layer — the bar stayed on a
+     wide screen. The markup carries `flex lg:hidden` instead. */
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  margin-inline: -1rem;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-line);
+}
+
+@media (min-width: 640px) {
+  .admin-save-bar {
+    margin-inline: -1.5rem;
+    padding-inline: 1.5rem;
+  }
 }
 
 /* ---- A month of takings, folded to a week on a phone -------------------- */

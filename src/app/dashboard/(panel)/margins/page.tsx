@@ -269,7 +269,7 @@ export default async function MarginsPage({
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/dashboard/products/${row.id}`}
-                      className="line-clamp-2 text-sm font-semibold text-ink-900 hover:underline"
+                      className="tap line-clamp-2 text-sm font-semibold text-ink-900 hover:underline"
                     >
                       {nameOf(row)}
                     </Link>

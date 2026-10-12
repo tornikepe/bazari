@@ -75,7 +75,7 @@ export function ProductRowActions({
         href={`/dashboard/products/${id}`}
         aria-label={t.admin.edit}
         title={t.admin.edit}
-        className="btn btn-ghost h-8 w-8 rounded-control p-0"
+        className="btn btn-ghost icon-btn"
       >
         <PencilIcon size={15} />
       </Link>
@@ -86,7 +86,7 @@ export function ProductRowActions({
         disabled={isPending}
         aria-label={t.admin.delete}
         title={t.admin.delete}
-        className="btn btn-ghost h-8 w-8 rounded-control p-0 text-ink-400 hover:bg-danger-soft hover:text-danger"
+        className="btn btn-ghost icon-btn text-ink-400 hover:bg-danger-soft hover:text-danger"
       >
         {isPending ? <SpinnerIcon size={15} /> : <TrashIcon size={15} />}
       </button>

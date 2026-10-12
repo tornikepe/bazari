@@ -126,7 +126,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
               type="button"
               onClick={() => setEditing(null)}
               aria-label={t.admin.cancel}
-              className="btn btn-ghost h-8 w-8 rounded-control p-0"
+              className="btn btn-ghost icon-btn"
             >
               <CloseIcon size={16} />
             </button>
@@ -263,7 +263,13 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
           {categories.map((category) => (
             <li
               key={category.id}
-              className={`card flex min-w-0 items-center gap-3 card-pad-tight ${
+              /* Wrapping, with a floor under the name: four controls at
+                 thirty-six pixels each plus the picture leave a two-column
+                 card about a hundred and sixty pixels for the name, and
+                 "ელექტრონიკა" broke across lines with one letter on the
+                 second. Below that floor the controls drop to their own
+                 line instead, still at the right-hand edge. */
+              className={`card flex min-w-0 flex-wrap items-center gap-3 card-pad-tight ${
                 category.isVisible ? "" : "border-dashed"
               }`}
             >
@@ -275,7 +281,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                 {category.icon}
               </span>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[9rem] flex-1">
                 {/* Wrapping, not cut. "ტელეფონები და აქსესუარები" lost its
                     last word on a phone, and the list of categories is the
                     one place where the whole name is the point — two of them
@@ -294,11 +300,15 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                 </p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="ml-auto flex shrink-0 items-center gap-1">
+                {/* An arrow is not a label. A screen reader read this row as
+                    "link, ↗" and nothing else. */}
                 <Link
                   href={`/catalog?category=${category.slug}`}
                   target="_blank"
-                  className="btn btn-ghost h-8 px-2 text-xs"
+                  aria-label={t.admin.categoryOpen}
+                  title={t.admin.categoryOpen}
+                  className="btn btn-ghost icon-btn text-xs"
                 >
                   ↗
                 </Link>
@@ -314,7 +324,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                         category.isVisible ? t.admin.categoryHide : t.admin.categoryShow
                       }
                       title={category.isVisible ? t.admin.categoryHide : t.admin.categoryShow}
-                      className={`btn btn-ghost h-8 w-8 rounded-control p-0 ${
+                      className={`btn btn-ghost icon-btn ${
                         category.isVisible ? "text-ink-400" : "text-warning"
                       }`}
                     >
@@ -328,7 +338,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                         setEditing(category);
                       }}
                       aria-label={t.admin.edit}
-                      className="btn btn-ghost h-8 w-8 rounded-control p-0"
+                      className="btn btn-ghost icon-btn"
                     >
                       <PencilIcon size={15} />
                     </button>
@@ -338,7 +348,7 @@ export function CategoryManager({ categories }: { categories: AdminCategory[] })
                       onClick={() => handleDelete(category)}
                       disabled={isPending}
                       aria-label={t.admin.delete}
-                      className="btn btn-ghost h-8 w-8 rounded-control p-0 text-ink-400 hover:bg-danger-soft hover:text-danger"
+                      className="btn btn-ghost icon-btn text-ink-400 hover:bg-danger-soft hover:text-danger"
                     >
                       <TrashIcon size={15} />
                     </button>

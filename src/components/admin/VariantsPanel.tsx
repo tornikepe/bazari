@@ -255,7 +255,7 @@ export function VariantsPanel({
                       )
                     }
                     aria-label={t.admin.variantRemoveValue}
-                    className="btn btn-ghost h-8 w-8 rounded-control p-0 text-ink-400"
+                    className="btn btn-ghost icon-btn text-ink-400"
                   >
                     <CloseIcon size={14} />
                   </button>

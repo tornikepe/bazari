@@ -80,7 +80,7 @@ export function AdminToolbar({
   }, [term, search]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <div className="relative w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-xs">
         {isPending ? (
           <SpinnerIcon
@@ -103,29 +103,37 @@ export function AdminToolbar({
         />
       </div>
 
-      {filters.map((filter) => (
-        <select
-          key={filter.name}
-          value={filter.value}
-          aria-label={filter.label}
-          onChange={(event) =>
-            startTransition(() => router.push(urlWith({ [filter.name]: event.target.value })))
-          }
-          className="field h-9 w-full min-w-0 text-sm sm:w-44"
-        >
-          {filter.options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      ))}
+      {/* Two to a row on a phone, where one dropdown per line put four rows
+          of chrome between the heading and the first product. `sm:contents`
+          dissolves this wrapper from `sm` up, so on a wide screen the
+          dropdowns are direct children of the row again and lay out exactly
+          as they did. An odd one out takes the whole width rather than
+          sitting half-finished beside a gap. */}
+      <div className="grid grid-cols-2 gap-2 [&>select:last-child:nth-child(odd)]:col-span-2 sm:contents">
+        {filters.map((filter) => (
+          <select
+            key={filter.name}
+            value={filter.value}
+            aria-label={filter.label}
+            onChange={(event) =>
+              startTransition(() => router.push(urlWith({ [filter.name]: event.target.value })))
+            }
+            className="field h-9 w-full min-w-0 text-sm sm:w-44"
+          >
+            {filter.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        ))}
+      </div>
 
       {hasActive && (
         <button
           type="button"
           onClick={() => startTransition(() => router.push(basePath))}
-          className="btn btn-ghost btn-sm"
+          className="btn btn-ghost btn-sm self-start"
         >
           <CloseIcon size={14} />
           {t.admin.resetFilters}

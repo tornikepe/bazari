@@ -201,7 +201,7 @@ export default async function DashboardPage({
               {pendingCount > 0 ? (
                 <Link
                   href="/dashboard/orders?status=pending"
-                  className="inline-flex items-center gap-1.5 font-semibold text-panel-fg underline decoration-panel-muted underline-offset-4 transition-colors hover:decoration-panel-fg"
+                  className="tap inline-flex items-center gap-1.5 font-semibold text-panel-fg underline decoration-panel-muted underline-offset-4 transition-colors hover:decoration-panel-fg"
                 >
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-pill bg-warning opacity-75" />
@@ -325,7 +325,7 @@ export default async function DashboardPage({
             <h2 className="text-sm font-bold text-ink-900">{t.admin.recentOrders}</h2>
             <Link
               href="/dashboard/orders"
-              className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"
+              className="tap flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"
             >
               {t.home.viewAll}
               <ArrowRightIcon size={13} />

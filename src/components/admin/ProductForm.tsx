@@ -593,6 +593,32 @@ export function ProductForm({
           </section>
         </div>
       </div>
+
+      {/* The same two buttons again, pinned to the foot of the phone.
+          This form runs to three and a half thousand pixels on a 375-wide
+          screen, and the pair at the top of it meant scrolling the whole way
+          back after changing a price. Sticky rather than fixed, so it sits
+          in the flow at the very end instead of covering the last field, and
+          hidden from `lg` up where the top pair is never far away. */}
+      <div className="admin-save-bar flex lg:hidden">
+        <Link href="/dashboard/products" className="btn btn-outline btn-md flex-1">
+          {t.admin.cancel}
+        </Link>
+        <button type="submit" disabled={isPending} className="btn btn-primary btn-md flex-[2]">
+          <Swap
+            show={
+              isPending ? (
+                <Busy label={t.admin.saving} />
+              ) : product ? (
+                t.admin.save
+              ) : (
+                t.admin.create
+              )
+            }
+            of={[product ? t.admin.save : t.admin.create, t.admin.saving]}
+          />
+        </button>
+      </div>
     </form>
   );
 }

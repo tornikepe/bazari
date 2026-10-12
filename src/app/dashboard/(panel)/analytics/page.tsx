@@ -324,7 +324,7 @@ function FunnelTable({
                       has to guess at. */}
                   <td className="w-28 max-w-64 min-w-24 px-2 py-2.5 sm:w-64 sm:min-w-48 sm:px-5">
                     {href ? (
-                      <Link href={href} className="block leading-snug font-semibold text-ink-900 hover:text-brand-600">
+                      <Link href={href} className="tap block leading-snug font-semibold text-ink-900 hover:text-brand-600">
                         {nameOf(row)}
                       </Link>
                     ) : (

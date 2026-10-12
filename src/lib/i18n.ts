@@ -774,6 +774,7 @@ const ka = {
     categoryVisibleHint:
       "დამალული კატეგორია მთლიანად ქრება: ზედა ზოლიდან, მთავარი გვერდიდან, კატალოგიდან, ძებნიდან, საიტის რუკიდან და ასისტენტიდან. მისი პროდუქტები აღარ იყიდება — ვისაც კალათაში ან რჩეულებში ჰქონდა, ავტომატურად ეშლება, და პირდაპირი ბმულით შესულს პროდუქტი მარაგის გარეშე უჩანს.",
     categoryHidden: "დამალული",
+    categoryOpen: "გახსნა მაღაზიაში",
     categoryHide: "დამალვა",
     categoryShow: "ჩვენება",
     saved: "შენახულია",
@@ -2243,6 +2244,7 @@ const en: Dictionary = {
     categoryVisibleHint:
       "A hidden category disappears entirely: from the bar, the home page, the catalogue, the search, the sitemap and the assistant. Its products stop being sold — anybody holding one in a basket or a wishlist has it taken out, and anybody following a direct link gets the page with nothing in stock on it.",
     categoryHidden: "Hidden",
+    categoryOpen: "Open in the shop",
     categoryHide: "Hide",
     categoryShow: "Show",
     saved: "Saved",

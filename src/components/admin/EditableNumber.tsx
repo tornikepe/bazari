@@ -140,7 +140,7 @@ export function EditableNumber({
         aria-label={fill(label, { name })}
         /* A dotted underline rather than a border: eleven bordered boxes down a
            column is a form, and this is a table. */
-        className={`decoration-dotted underline-offset-4 hover:underline ${
+        className={`tap decoration-dotted underline-offset-4 hover:underline ${
           failed ? "text-danger" : ""
         } ${isPending ? "opacity-60" : ""}`}
       >
