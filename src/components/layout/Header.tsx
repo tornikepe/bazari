@@ -7,15 +7,29 @@ import { CartSync } from "@/components/cart/CartSync";
 import { StaleItemSweep } from "@/components/layout/StaleItemSweep";
 import { SocialButtons } from "@/components/auth/SocialButtons";
 
-async function HeaderContent() {
-  const [categories, user] = await Promise.all([
-    prisma.category.findMany({
+/**
+ * The shelves in the bar, or none of them.
+ *
+ * This sits in the layout, so a throw here does not lose a menu — it loses
+ * every page on the site at once. A bar with no category list is a small
+ * loss; a shop with no pages is the whole thing. Whatever is wrong is
+ * written to the log and the bar draws without the list.
+ */
+async function readBarCategories() {
+  try {
+    return await prisma.category.findMany({
       where: { isVisible: true },
       orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
       select: { slug: true, nameKa: true, nameEn: true, icon: true },
-    }),
-    getCurrentUser(),
-  ]);
+    });
+  } catch (error) {
+    console.error("[header] the categories could not be read", error);
+    return [];
+  }
+}
+
+async function HeaderContent() {
+  const [categories, user] = await Promise.all([readBarCategories(), getCurrentUser()]);
 
   return (
     <>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
 import { fill } from "@/lib/i18n";
-import { productCardSelect } from "@/lib/catalog";
+import { productCardSelect, type ProductCardData } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { PRODUCT_GRID_WIDE } from "@/components/ui/ProductGridSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -23,49 +23,93 @@ import Image from "next/image";
 import { ON_SALE } from "@/lib/catalog";
 
 
+/**
+ * Everything on the home page, or nothing.
+ *
+ * Each figure here is read from the database, and a database that would not
+ * answer used to take the whole page with it — the front door served thirty
+ * kilobytes of markup with no words in it, which is the worst page on the
+ * site to lose and the first one a visitor arrives at.
+ *
+ * So the read is allowed to fail. The hero, the four promises and the way
+ * into the catalogue are written in this file rather than fetched, and they
+ * stand either way; the shelves and the rails simply come back empty, with
+ * `reachable: false` so the page can say why instead of letting an empty
+ * shop imply an empty shop.
+ *
+ * `getSettings` is inside the same `try` but has its own fallback already,
+ * so it is the one thing here that cannot throw.
+ */
+async function loadHome() {
+  try {
+    const [categories, featured, newArrivals, productCount, brands, settings] =
+      await Promise.all([
+        readHomeCategories(),
+        prisma.product.findMany({
+          where: { ...ON_SALE, isFeatured: true },
+          select: productCardSelect,
+          orderBy: { createdAt: "desc" },
+          take: 8,
+        }),
+        prisma.product.findMany({
+          where: ON_SALE,
+          select: productCardSelect,
+          orderBy: { createdAt: "desc" },
+          take: 4,
+        }),
+        prisma.product.count({ where: ON_SALE }),
+        // Every hero stat is a real count from the database — nothing invented.
+        prisma.product.findMany({
+          where: { ...ON_SALE, brand: { not: "" } },
+          distinct: ["brand"],
+          select: { brand: true },
+        }),
+        // The shop's own name, for the record search engines read.
+        getSettings(),
+      ]);
+
+    return { reachable: true, categories, featured, newArrivals, productCount, brands, settings };
+  } catch (error) {
+    console.error("[home] the catalogue could not be read", error);
+    return {
+      reachable: false,
+      categories: [] as Awaited<ReturnType<typeof readHomeCategories>>,
+      featured: [] as ProductCardData[],
+      newArrivals: [] as ProductCardData[],
+      productCount: 0,
+      brands: [] as { brand: string }[],
+      settings: await getSettings(),
+    };
+  }
+}
+
+/**
+ * The shelves on the home page: each with what it holds and one picture.
+ *
+ * Its own function so the empty case in `loadHome` can be given the shape
+ * this returns rather than a hand-written copy of it that would drift.
+ */
+function readHomeCategories() {
+  return prisma.category.findMany({
+    where: { isVisible: true },
+    orderBy: [{ sortOrder: "asc" }],
+    include: {
+      _count: { select: { products: { where: ON_SALE } } },
+      products: {
+        where: ON_SALE,
+        orderBy: [{ image: "asc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
+        take: 1,
+        select: { image: true },
+      },
+    },
+  });
+}
+
 export default async function HomePage() {
   const { locale, t } = await getI18n();
 
-  const [categories, featured, newArrivals, productCount, brands, settings] = await Promise.all([
-    prisma.category.findMany({
-      where: { isVisible: true },
-      orderBy: [{ sortOrder: "asc" }],
-      include: {
-        _count: { select: { products: { where: ON_SALE } } },
-        /* One picture for the tile. Real photographs sort before the
-           placeholder because their path does ("/api/…" before
-           "/products/…"), so a category with any of its own comes up with
-           one of its own, and the rest show the sample picture. */
-        products: {
-          where: ON_SALE,
-          orderBy: [{ image: "asc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
-          take: 1,
-          select: { image: true },
-        },
-      },
-    }),
-    prisma.product.findMany({
-      where: { ...ON_SALE, isFeatured: true },
-      select: productCardSelect,
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    prisma.product.findMany({
-      where: { isActive: true },
-      select: productCardSelect,
-      orderBy: { createdAt: "desc" },
-      take: 4,
-    }),
-    prisma.product.count({ where: ON_SALE }),
-    // Every hero stat is a real count from the database — nothing invented.
-    prisma.product.findMany({
-      where: { ...ON_SALE, brand: { not: "" } },
-      distinct: ["brand"],
-      select: { brand: true },
-    }),
-    // The shop's own name, for the record search engines read.
-    getSettings(),
-  ]);
+  const { reachable, categories, featured, newArrivals, productCount, brands, settings } =
+    await loadHome();
 
   const name = (row: { nameKa: string; nameEn: string }) =>
     locale === "ka" ? row.nameKa : row.nameEn;
@@ -116,6 +160,20 @@ export default async function HomePage() {
     <>
       <JsonLd data={organisationSchema} />
       <JsonLd data={websiteSchema} />
+
+      {/* Said plainly, at the top, when the shelves could not be read. An
+          empty home page with no explanation reads as a shop with nothing
+          in it, which is a worse thing to tell somebody than the truth. */}
+      {!reachable && (
+        <div className="border-b border-warning/40 bg-warning-soft">
+          <p
+            role="status"
+            className="page-container py-3 text-center text-sm leading-snug font-semibold text-ink-900"
+          >
+            {t.home.unreachable}
+          </p>
+        </div>
+      )}
 
       {/* ------------------------------- hero ------------------------------ */}
       {/* The whole first screen: the headline in the serif, set large and

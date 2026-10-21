@@ -45,6 +45,8 @@ const ka = {
 
   home: {
     heroBadge: "ონლაინ მაღაზია",
+    unreachable:
+      "პროდუქტების ჩატვირთვა ვერ მოხერხდა. ცოტა ხანში სცადე — კატალოგი და შეკვეთის მოძებნა მუშაობს.",
     heroTitle: "ტექნიკა და აქსესუარები ერთ ადგილას",
     heroSubtitle:
       "დაათვალიერე კატალოგი, გაფილტრე კატეგორიით, ფასით ან ბრენდით და შეუკვეთე რამდენიმე წამში.",
@@ -1517,6 +1519,8 @@ const en: Dictionary = {
 
   home: {
     heroBadge: "Online store",
+    unreachable:
+      "The products could not be loaded. Try again shortly — the catalogue and order tracking still work.",
     heroTitle: "Electronics and accessories in one place",
     heroSubtitle:
       "Browse the catalog, filter by category, price or brand, and place an order in seconds.",

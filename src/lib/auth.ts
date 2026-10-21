@@ -111,23 +111,34 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const claim = readToken(token);
   if (!claim) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: claim.userId },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      city: true,
-      address: true,
-      role: true,
-      emailVerified: true,
-      sessionVersion: true,
-      disabledAt: true,
-      avatarType: true,
-      updatedAt: true,
-    },
-  });
+  /* A database that will not answer means "not signed in", not a thrown
+     page. This is read in the layout, so a throw here takes down every page
+     on the site at once — and the fallback is the safe direction: nobody is
+     handed an account they do not have, they are only asked to sign in
+     again once the shop can read its own records. */
+  let user;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: claim.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        city: true,
+        address: true,
+        role: true,
+        emailVerified: true,
+        sessionVersion: true,
+        disabledAt: true,
+        avatarType: true,
+        updatedAt: true,
+      },
+    });
+  } catch (error) {
+    console.error("[auth] the session could not be read", error);
+    return null;
+  }
   if (!user) return null;
 
   /* Checked on every request, not only at sign-in. Disabling bumps
