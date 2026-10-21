@@ -240,6 +240,7 @@ must be **redeployed**: a variable added after a build is not in that build.
 | `DATABASE_CONSOLE_URL` | Where "open the database" in Dashboard → Database points. Guessed from the host for Neon and Prisma Postgres, so most deployments leave it blank. | the provider's console URL |
 | `NEXT_PUBLIC_SENTRY_DSN` | Error reporting. Nothing is loaded without it. | from [sentry.io](https://sentry.io) → the project's DSN |
 | `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` | Uploads source maps at build time, so a stack trace names your code instead of a minified chunk. Build-time only. | from Sentry → Auth Tokens |
+| `BLOB_READ_WRITE_TOKEN` | Where product photographs go. Set, they go to Vercel Blob and the database never holds an image; blank, they go into Postgres and are served by `/api/images/<id>`. A real deployment should set it — on this shop the photographs reached 98% of the database and each one cost a query to serve, which is what spends a free database plan. Transfer slips are never affected: a slip is somebody's bank details behind a route that checks who is asking. | Vercel → the project → Storage → connect a Blob store, ticking "add a read-write token" |
 | `PAYMENT_SANDBOX` | `1` mounts a fake gateway at `/pay/sandbox` that calls the webhook back the way a real one does, so the whole card path can be walked without a merchant account. **Never set this in production.** | `1` locally, never on Vercel |
 
 Four more are set by the platform and never by you: `NODE_ENV`, `VERCEL`, `VERCEL_ENV`,
@@ -540,13 +541,17 @@ database is an ocean away pays for it on every page.
 
 ## Known limits
 
-- **Everything uploaded lives in Postgres** — product photos, avatars, review photos and
-  transfer slips — served through routes with `immutable` cache headers, so the CDN answers
-  after the first hit and the database is not touched again. Simple, and no second service to
-  configure. The figure to watch is the slips: they are the largest thing a shopper uploads
-  (about 300 kB each, one per bank-transfer order), and at a couple of thousand orders they
-  outweigh the whole catalogue. Either move to a larger database plan, or expire them — a slip
-  for money that arrived six months ago is dead weight and somebody else's personal data.
+- **Product photographs go to a blob store** when `BLOB_READ_WRITE_TOKEN` is set, and into
+  Postgres when it is not. They used to go into Postgres always, and on this shop they grew to
+  forty-six megabytes against one megabyte of everything else — ninety-eight per cent of the
+  database — with every one of them costing a query to serve. That is what spent a free
+  database plan and took the shop down.
+- **Everything else a visitor uploads still lives in Postgres** — avatars, review photos and
+  transfer slips — served through routes that check who is asking, which is why they are not in
+  a public store. The figure to watch is the slips: about 300 kB each, one per bank-transfer
+  order, so a couple of thousand orders outweigh the whole catalogue. Either a larger database
+  plan, or expire them — a slip for money that arrived six months ago is dead weight and
+  somebody else's personal data.
 - **A database on a free tier will stop the shop.** Neon's free project refuses every query
   once its quota is spent — not a slow query, a refused one. The chrome and the written pages
   survive it (see *Before you go live*), but nothing can be bought until it answers again.
