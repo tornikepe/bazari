@@ -38,7 +38,12 @@ export type AuthState = {
        anybody. Never says anything about a particular address. */
     | "mail-unavailable"
     /* The account page's password change: the current one was not right. */
-    | "wrong-password";
+    | "wrong-password"
+    /* The account page's details: the name was blank, the date of birth was
+       not a date, the personal number was not eleven digits. */
+    | "name"
+    | "birth"
+    | "personal-id";
   sent?: boolean;
   /** Minutes until a rate-limited caller may retry. */
   retryMinutes?: number;
@@ -403,8 +408,71 @@ export async function logout() {
 }
 
 /* ------------------------------------------------------------------ */
-/* The account page: three things change on their own, in place          */
+/* The account page: each row changes on its own, in place               */
 /* ------------------------------------------------------------------ */
+
+/**
+ * The details that are nobody's business but the shopper's own: the name
+ * they are called by, sex, date of birth, personal number. All four are
+ * optional except the name, and all four are theirs to leave blank — the
+ * shop needs none of them to sell anything, and asks only because an
+ * account page that shows a field it cannot fill is a field that is never
+ * filled.
+ */
+export async function updateProfileDetails(
+  _previous: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "invalid" };
+
+  const first = String(formData.get("firstName") ?? "").trim();
+  const last = String(formData.get("lastName") ?? "").trim();
+  const name = [first, last].filter(Boolean).join(" ");
+  if (!name) return { error: "name" };
+
+  const gender = String(formData.get("gender") ?? "");
+  if (gender !== "" && gender !== "female" && gender !== "male") return { error: "invalid" };
+
+  /* A date input hands over `yyyy-mm-dd` and nothing else, but the action is
+     reachable by a plain POST, so the string is read rather than trusted.
+     Stored at midnight UTC: it is a birthday, not a moment, and a timezone
+     applied to it would move it a day in half the world. */
+  const birthRaw = String(formData.get("birthDate") ?? "").trim();
+  let birthDate: Date | null = null;
+  if (birthRaw) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthRaw);
+    if (!match) return { error: "birth" };
+    const parsed = new Date(`${birthRaw}T00:00:00.000Z`);
+    const [, year, month, day] = match;
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getUTCFullYear() !== Number(year) ||
+      parsed.getUTCMonth() + 1 !== Number(month) ||
+      parsed.getUTCDate() !== Number(day) ||
+      parsed.getTime() > Date.now() ||
+      Number(year) < 1900
+    ) {
+      return { error: "birth" };
+    }
+    birthDate = parsed;
+  }
+
+  // Eleven digits, the Georgian personal number. Spaces are forgiven.
+  const personalId = String(formData.get("personalId") ?? "").replace(/\s+/g, "");
+  if (personalId && !/^\d{11}$/.test(personalId)) return { error: "personal-id" };
+
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { name, gender, birthDate, personalId },
+    });
+  } catch (error) {
+    console.error("updateProfileDetails failed", error);
+    return { error: "failed" };
+  }
+  redirect("/account?saved=profile");
+}
 
 /**
  * The mobile number, on its own. The one shape every number is kept in;

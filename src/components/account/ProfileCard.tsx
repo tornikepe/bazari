@@ -8,6 +8,7 @@ import {
   updateConsent,
   updateEmail,
   updatePhone,
+  updateProfileDetails,
   type AuthState,
 } from "@/app/actions/auth";
 import { PhoneField } from "@/components/ui/PhoneField";
@@ -28,8 +29,8 @@ export type Profile = {
   emailOptIn: boolean;
 };
 
-/** Which of the three editors is open; one at a time. */
-type Editor = "phone" | "email" | "password" | null;
+/** Which of the editors is open; one at a time. */
+type Editor = "details" | "phone" | "email" | "password" | null;
 
 /* One field: the label, the value or the control, the rule. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -93,6 +94,10 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
   const { t } = useI18n();
   const [editor, setEditor] = useState<Editor>(null);
 
+  const [detailsState, detailsAction, detailsPending] = useActionState<AuthState, FormData>(
+    updateProfileDetails,
+    {},
+  );
   const [phoneState, phoneAction, phonePending] = useActionState<AuthState, FormData>(updatePhone, {});
   const [emailState, emailAction, emailPending] = useActionState<AuthState, FormData>(updateEmail, {});
   const [passwordState, passwordAction, passwordPending] = useActionState<AuthState, FormData>(
@@ -100,6 +105,15 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
     {},
   );
 
+  useFieldShake(
+    detailsState,
+    Boolean(detailsState.error),
+    detailsState.error === "birth"
+      ? ["birthDate"]
+      : detailsState.error === "personal-id"
+        ? ["personalId"]
+        : ["firstName"],
+  );
   useFieldShake(phoneState, Boolean(phoneState.error), ["phone"]);
   useFieldShake(emailState, Boolean(emailState.error), ["email"]);
   useFieldShake(
@@ -108,6 +122,16 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
     passwordState.error === "wrong-password" ? ["currentPassword"] : ["newPassword", "confirmPassword"],
   );
 
+  const detailsFault =
+    detailsState.error === "name"
+      ? t.account.nameRequired
+      : detailsState.error === "birth"
+        ? t.account.birthInvalid
+        : detailsState.error === "personal-id"
+          ? t.account.personalIdInvalid
+          : detailsState.error
+            ? t.common.error
+            : null;
   const phoneFault =
     phoneState.error === "phone"
       ? t.auth.phoneInvalid
@@ -159,35 +183,107 @@ export function ProfileCard({ profile, saved }: { profile: Profile; saved: strin
 
       <div className="grid gap-x-16 gap-y-2 lg:grid-cols-2">
         <div>
-          <Field label={t.account.firstName}>
-            <Value text={firstName} fallback={t.account.notSet} />
-          </Field>
-          <Field label={t.account.lastName}>
-            <Value text={lastName} fallback={t.account.notSet} />
-          </Field>
-          <Field label={t.account.gender}>
-            <span className="profile-radios">
-              {(["female", "male"] as const).map((option) => (
-                <label key={option} className="pointer-events-none">
-                  <input type="radio" name="gender" value={option} checked={profile.gender === option} readOnly disabled />
-                  <span className="profile-radio" aria-hidden="true" />
-                  <span className={profile.gender === option ? "text-ink-700" : "text-ink-400"}>
-                    {option === "female" ? t.account.genderFemale : t.account.genderMale}
-                  </span>
-                </label>
-              ))}
-              {!genderShown && <span className="sr-only">{t.account.notSet}</span>}
-            </span>
-          </Field>
-          <Field label={t.account.birthDate}>
-            <span className="profile-row">
-              <Value text={birthShown} fallback={t.account.notSet} />
-              <CalendarIcon size={20} className="hidden shrink-0 text-ink-400 sm:block" aria-hidden="true" />
-            </span>
-          </Field>
-          <Field label={t.account.personalId}>
-            <Value text={profile.personalId} fallback={t.account.notSet} />
-          </Field>
+          {/* ----------------------------- details ---------------------------- */}
+          {editor === "details" ? (
+            <form action={detailsAction}>
+              <Field label={t.account.firstName}>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  defaultValue={firstName}
+                  required
+                  autoFocus
+                  autoComplete="given-name"
+                  className="field"
+                />
+              </Field>
+              <Field label={t.account.lastName}>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  defaultValue={lastName}
+                  autoComplete="family-name"
+                  className="field"
+                />
+              </Field>
+              <Field label={t.account.gender}>
+                <span className="profile-radios">
+                  {(["female", "male"] as const).map((option) => (
+                    <label key={option}>
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={option}
+                        defaultChecked={profile.gender === option}
+                      />
+                      <span className="profile-radio" aria-hidden="true" />
+                      <span className="text-ink-700">
+                        {option === "female" ? t.account.genderFemale : t.account.genderMale}
+                      </span>
+                    </label>
+                  ))}
+                </span>
+              </Field>
+              <Field label={t.account.birthDate}>
+                <input
+                  id="birthDate"
+                  name="birthDate"
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  defaultValue={profile.birthDate ? profile.birthDate.slice(0, 10) : ""}
+                  className="field"
+                />
+              </Field>
+              <Field label={t.account.personalId}>
+                <input
+                  id="personalId"
+                  name="personalId"
+                  inputMode="numeric"
+                  maxLength={11}
+                  defaultValue={profile.personalId}
+                  className="field"
+                />
+              </Field>
+              <p className="mt-1.5 text-xs text-ink-500">{t.account.detailsHint}</p>
+              <FormFault message={detailsFault} />
+              <EditorFoot pending={detailsPending} onCancel={() => setEditor(null)} t={t} />
+            </form>
+          ) : (
+            <>
+              <Field label={t.account.firstName}>
+                <span className="profile-row">
+                  <Value text={firstName} fallback={t.account.notSet} />
+                  <EditLink onClick={() => setEditor("details")} label={t.account.edit} />
+                </span>
+              </Field>
+              <Field label={t.account.lastName}>
+                <Value text={lastName} fallback={t.account.notSet} />
+              </Field>
+              <Field label={t.account.gender}>
+                <span className="profile-radios">
+                  {(["female", "male"] as const).map((option) => (
+                    <label key={option} className="pointer-events-none">
+                      <input type="radio" name="gender" value={option} checked={profile.gender === option} readOnly disabled />
+                      <span className="profile-radio" aria-hidden="true" />
+                      <span className={profile.gender === option ? "text-ink-700" : "text-ink-400"}>
+                        {option === "female" ? t.account.genderFemale : t.account.genderMale}
+                      </span>
+                    </label>
+                  ))}
+                  {!genderShown && <span className="sr-only">{t.account.notSet}</span>}
+                </span>
+              </Field>
+              <Field label={t.account.birthDate}>
+                <span className="profile-row">
+                  <Value text={birthShown} fallback={t.account.notSet} />
+                  <CalendarIcon size={20} className="hidden shrink-0 text-ink-400 sm:block" aria-hidden="true" />
+                </span>
+              </Field>
+              <Field label={t.account.personalId}>
+                <Value text={profile.personalId} fallback={t.account.notSet} />
+              </Field>
+            </>
+          )}
         </div>
 
         <div>

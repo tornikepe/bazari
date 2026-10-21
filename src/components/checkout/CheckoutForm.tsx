@@ -168,6 +168,11 @@ export function CheckoutForm({
     action?: { href: string; label: string };
   }>(null);
   const [submitting, setSubmitting] = useState(false);
+  /* The order exists and the cart has been emptied, but the browser has not
+     arrived at the order page yet. Without this the page would notice an
+     empty cart and say so — telling somebody who has just paid that their
+     cart is empty, for as long as the next page takes to load. */
+  const [placed, setPlaced] = useState(false);
 
   const discount = coupon?.ok ? coupon.discount : 0;
   // Both are tetri, so this is exact.
@@ -300,6 +305,7 @@ export function CheckoutForm({
       }
 
       // Clear only after the order is safely persisted.
+      setPlaced(true);
       clear();
       // A card order with a gateway goes there to be paid; the gateway sends
       // the browser back to the order. Everything else goes to the order now.
@@ -315,7 +321,7 @@ export function CheckoutForm({
     }
   }
 
-  if (hydrated && items.length === 0) {
+  if (hydrated && items.length === 0 && !placed) {
     return (
       <div className="page-notice">
         <div className="card card-pad-notice mx-auto flex max-w-md flex-col items-center gap-3 text-center">
@@ -876,8 +882,12 @@ export function CheckoutForm({
             />
           )}
 
-          <button type="submit" disabled={submitting} className="btn btn-primary btn-lg mt-5 w-full">
-            {submitting ? t.checkout.placing : t.checkout.placeOrder}
+          <button
+            type="submit"
+            disabled={submitting || placed}
+            className="btn btn-primary btn-lg mt-5 w-full"
+          >
+            {submitting || placed ? t.checkout.placing : t.checkout.placeOrder}
           </button>
 
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-400">
@@ -897,8 +907,12 @@ export function CheckoutForm({
             <span className="block text-[11px] font-semibold whitespace-nowrap text-ink-500">{t.cart.total}</span>
             <Price value={payable} size="md" />
           </div>
-          <button type="submit" disabled={submitting} className="btn btn-primary btn-md shrink-0 whitespace-nowrap">
-            {submitting ? t.checkout.placing : t.checkout.placeOrderShort}
+          <button
+            type="submit"
+            disabled={submitting || placed}
+            className="btn btn-primary btn-md shrink-0 whitespace-nowrap"
+          >
+            {submitting || placed ? t.checkout.placing : t.checkout.placeOrderShort}
           </button>
         </div>
       </form>

@@ -6,7 +6,7 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { PaymentMark } from "@/components/checkout/PaymentMark";
 import { CheckIcon, PencilIcon, PlusIcon, SpinnerIcon, TrashIcon } from "@/components/ui/icons";
-import { shakeField } from "@/components/ui/field-fault";
+import { FormFault, shakeField } from "@/components/ui/field-fault";
 import {
   deleteRefundAccount,
   makeDefaultRefundAccount,
@@ -38,7 +38,10 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
   /** `null` when closed, `"new"` when adding, otherwise the id being edited. */
   const [editing, setEditing] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
-  const [ibanBad, setIbanBad] = useState(false);
+  /* Empty and wrong-shape are two different mistakes, and a red box that
+     says neither leaves somebody retyping a number that was never the
+     problem. `null` is fine; the other two each get their own sentence. */
+  const [ibanBad, setIbanBad] = useState<"empty" | "shape" | null>(null);
   const [holderBad, setHolderBad] = useState(false);
   const [bank, setBank] = useState("");
 
@@ -47,7 +50,7 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
 
   function open(id: string | null) {
     setFailed(false);
-    setIbanBad(false);
+    setIbanBad(null);
     setHolderBad(false);
     setBank(id ? (accounts.find((account) => account.id === id)?.bank ?? "") : "");
     setEditing(id);
@@ -57,7 +60,7 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     setFailed(false);
-    setIbanBad(false);
+    setIbanBad(null);
     setHolderBad(false);
 
     /* Both are required, and the form says which is missing before it asks
@@ -66,7 +69,7 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
     const holder = String(formData.get("holder") ?? "").trim();
     if (!iban || !holder) {
       if (!iban) {
-        setIbanBad(true);
+        setIbanBad("empty");
         shakeField(document.getElementById("account-iban"));
       }
       if (!holder) {
@@ -82,7 +85,7 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
         /* A number in the wrong shape reddens its own box; anything else
            is the shop's own failure and says so. */
         if (result.error === "invalid") {
-          setIbanBad(true);
+          setIbanBad("shape");
           shakeField(document.getElementById("account-iban"));
         } else {
           setFailed(true);
@@ -238,9 +241,12 @@ export function RefundAccounts({ accounts }: { accounts: SavedRefundAccount[] })
               autoComplete="off"
               spellCheck={false}
               required
-              aria-invalid={ibanBad || undefined}
-              onChange={() => ibanBad && setIbanBad(false)}
+              aria-invalid={ibanBad ? true : undefined}
+              onChange={() => ibanBad && setIbanBad(null)}
               className="field font-mono"
+            />
+            <FormFault
+              message={ibanBad === "shape" ? t.account.refundIbanInvalid : null}
             />
           </div>
 
