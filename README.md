@@ -35,6 +35,7 @@ and the Georgian is set in its own typeface.
 ## Contents
 
 - [Quick start](#quick-start)
+- [Before you go live](#before-you-go-live)
 - [Accounts and passwords](#accounts-and-passwords)
 - [Environment variables](#environment-variables)
 - [The storefront](#the-storefront)
@@ -99,6 +100,55 @@ The shop is at `http://localhost:3000`, the dashboard at `/dashboard`.
 
 ---
 
+## Before you go live
+
+Everything below is a decision or an account, not code. The shop runs without any of it — it
+simply runs as a demonstration rather than as a business.
+
+**Must be done, in this order:**
+
+1. **A database that is not on a free tier.** This is the one that bites: a free Neon project
+   runs out of its quota and then refuses *every* query, and the shop goes quiet. The pages now
+   degrade rather than going blank — the home page says so at the top, the cart and order
+   tracking keep working — but nothing can be bought until the database answers again. Watch
+   the provider's usage page; the figure that grows fastest here is the transfer slips.
+2. **Hosting that allows a shop.** Vercel's Hobby plan is for non-commercial use; a shop that
+   takes money needs Pro. This is the only unavoidable monthly cost on day one.
+3. **Rotate the seeded admin password** — Dashboard → Staff. The page says how old it is. Make
+   the **recovery codes** first: eight one-time codes, shown once, and the only way back into a
+   staff account on a deployment whose staff address receives no mail.
+4. **Fill in the shop's own details** — Dashboard → Settings. Name, telephone, address, hours,
+   and the **bank account holder's name**: an IBAN with no name beside it tells a customer
+   nothing about who they are paying.
+5. **Real prices, real stock, real cost prices.** The cost price is what every margin and profit
+   figure in the dashboard is calculated from; left at zero, those pages lie.
+6. **A domain**, and with it a mailbox. Until the staff address is on a domain you own and read,
+   password resets and the second sign-in step cannot work — see the environment table.
+7. **Clear the test data** on the day you open:
+   ```bash
+   npm run db:backup
+   npm run db:reset-live -- --yes
+   ```
+   It removes test orders and customer accounts. The catalogue, delivery zones, coupons,
+   settings and your own staff account stay.
+
+**Should be done, but the shop sells without them:**
+
+- **A payment gateway.** Four adapters are written — PayPal, Coinbase Commerce, TBC, BOG — and
+  none is configured. Until one is, the shop works by bank transfer: the customer uploads a
+  photograph of the slip, you confirm when the money arrives, and the commission is zero. The
+  two Georgian banks need a contract, which needs a registered business first.
+- **Business registration**, if you are taking money in Georgia. Banks and PayPal will not open
+  a merchant account without it.
+- **Social accounts.** Dashboard → Settings → Social. A blank field draws no mark at all, which
+  is better than a mark that opens instagram.com rather than your page.
+- **A logo and a tagline.** Both blank fall back to a default mark and a generic sentence.
+- **`CRON_SECRET`**, or the daily job — expiring stale payment attempts, writing to people who
+  left a cart — never runs.
+- **An uptime monitor** on `/api/health`, which answers `{ ok, db, ms }`.
+
+---
+
 ## Accounts and passwords
 
 The seed creates three accounts, and it will not invent a password for any of them.
@@ -144,28 +194,56 @@ or that it never has.
 
 ## Environment variables
 
-Only the first two are required.
+Copy `.env.example` to `.env` and fill it in. `npm run setup:credentials` generates the secrets
+and the seeded passwords into that file for you — nothing is printed to the terminal and `.env`
+is gitignored.
 
-| Variable | What it does |
-| --- | --- |
-| `DATABASE_URL` | Postgres connection string. Pooled, if your provider offers one. |
-| `AUTH_SECRET` | HMAC key for the session cookie. `npm run setup:credentials` writes it. |
-| `DIRECT_URL` | Unpooled connection for migrations. Neon and Supabase need it; the Prisma CLI prefers it. |
-| `DATABASE_POOL_MAX` | Connection ceiling for the pg adapter. |
-| `DATABASE_CONSOLE_URL` | Where Dashboard → Database links to. Guessed from the host for Neon and Prisma Postgres. |
-| `NEXT_PUBLIC_SITE_URL` | Absolute base for links in emails, invoices, sitemaps and OAuth callbacks. |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | The admin the seed *creates*. Re-seeding never rewrites a staff password, so rotating it in Dashboard → Staff sticks. Same pattern for `VIEWER_*` and `CUSTOMER_*`. |
-| `RESEND_API_KEY` | Sends order mail, verification codes and password resets. Without it nothing is emailed. |
-| `MAIL_FROM` | `Luto <noreply@yourdomain>`. Must be a domain verified with Resend. Without it the shop signs its mail with its own name and Resend's shared sender, which only reaches the account owner. |
-| `STAFF_2FA` | `1` turns on the staff second step. Needs a mailer **and** an address somebody reads — otherwise it locks the owner out. |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | "Sign in with Google". Callback: `/api/auth/google/callback`. |
-| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | Same for Facebook. |
-| `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | The shop assistant. Either one. |
-| `CHAT_PROVIDER` | `anthropic` or `gemini`, when both keys are present. |
-| `CHAT_MONTHLY_BUDGET_USD` / `CHAT_MONTHLY_REQUEST_CAP` | Hard ceilings. The assistant stops answering rather than overspending. |
-| `PAYMENT_SANDBOX` | `1` mounts a fake gateway at `/pay/sandbox` for end-to-end testing. **Never set in production.** |
-| `CRON_SECRET` | Bearer token for `/api/cron/daily`. Without it the route refuses everything. |
-| `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Error reporting and source maps. |
+In production these go in **Vercel → Settings → Environment Variables**, and then the project
+must be **redeployed**: a variable added after a build is not in that build.
+
+### Required — the shop will not run without these
+
+| Variable | What it is | How to write it |
+| --- | --- | --- |
+| `DATABASE_URL` | Where the shop keeps everything. Any Postgres: Neon, Supabase, Prisma Postgres, Railway, a local server. Use the **pooled** string if the provider offers two. | `postgresql://user:pass@host:5432/db?sslmode=require` |
+| `AUTH_SECRET` | The key the session cookie is signed with. Changing it signs everybody out. | 32+ random bytes: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | The staff account the seed **creates**. The password is only used at creation — rotating it in Dashboard → Staff sticks, because re-seeding never rewrites a staff password. Minimum 12 characters; the seed refuses to run without one. | `admin@luto.ge` / a generated string |
+| `VIEWER_EMAIL` / `VIEWER_PASSWORD` | Read-only staff. Sees every dashboard page, changes nothing. Same 12-character rule — it cannot write, but it can read every order, address and margin. | `viewer@luto.ge` / a generated string |
+| `CUSTOMER_EMAIL` / `CUSTOMER_PASSWORD` | A demo shopper, so checkout can be tried without signing up. Minimum 8. This one *is* reset on every re-seed, because being able to sign into it is the point. | `user@luto.ge` / anything memorable |
+
+### Needed in production, optional locally
+
+| Variable | What it is | How to write it |
+| --- | --- | --- |
+| `DIRECT_URL` | The **unpooled** connection, for migrations. Prisma Migrate holds a session-level lock and a transaction-mode pooler does not keep a session between statements — the symptom is a migration that hangs forever. Neon and Supabase hand out two strings; this is the other one. Leave it unset for a local Postgres with no pooler. | the same shape as `DATABASE_URL` |
+| `NEXT_PUBLIC_SITE_URL` | The canonical origin. Everything that has to be absolute reads it: links in emails and invoices, the sitemap, the share images, the OAuth callbacks. Without it they all point at `localhost`. **Public on purpose** — it is the address of the site. | `https://luto.ge`, no trailing slash |
+| `CRON_SECRET` | The bearer token `/api/cron/daily` demands. Without it the route refuses every caller, which is how an unconfigured deployment should behave — but it also means the daily job does nothing. | any long random string, same value in Vercel's cron settings |
+
+### Email — without it nothing is ever sent
+
+| Variable | What it is | How to write it |
+| --- | --- | --- |
+| `RESEND_API_KEY` | The sender for order confirmations, verification codes, password resets and low-stock warnings. Without a key the codes are written to the server log in development and nothing at all is sent in production. | from [resend.com](https://resend.com) → API Keys |
+| `MAIL_FROM` | Who the mail comes from. Must be on a domain **verified with Resend**. Left blank, the shop signs with its own name and Resend's shared sender, which only ever reaches the account owner — fine for a first smoke test, useless for customers. | `Luto <noreply@luto.ge>` |
+| `STAFF_2FA` | `1` asks staff for a six-digit code after the password. **Leave it off until the staff address is a mailbox somebody actually reads** — a code nobody can read is not a second factor, it is a locked door. Recovery codes (Dashboard → Staff) are the way back in on a deployment whose staff address receives no mail. | `1`, or blank |
+
+### Optional — each feature is simply absent without its keys
+
+| Variable | What it is | How to write it |
+| --- | --- | --- |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | "Sign in with Google". The button only appears when **both** are set, so an unconfigured deployment shows a plain email form rather than a button that fails after a round trip. | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) → OAuth client ID (Web). Redirect URI: `https://<domain>/api/auth/google/callback` |
+| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | The same for Facebook. It only returns an email once it has confirmed one, and this app refuses a sign-in without one, so the app needs the `email` permission approved before it works for anybody outside your test users. | [developers.facebook.com](https://developers.facebook.com/apps) → Facebook Login. Redirect: `https://<domain>/api/auth/facebook/callback` |
+| `ANTHROPIC_API_KEY` *or* `GEMINI_API_KEY` | The shop assistant. With neither, the chat launcher is not rendered at all and the shop works exactly as before. | from [console.anthropic.com](https://console.anthropic.com) or [aistudio.google.com](https://aistudio.google.com/apikey) |
+| `CHAT_PROVIDER` | Which one to use when both keys are present. | `anthropic` or `gemini` |
+| `CHAT_MONTHLY_BUDGET_USD` / `CHAT_MONTHLY_REQUEST_CAP` | Hard ceilings for the month. The assistant stops answering rather than overspending. | `10` / `2000` |
+| `DATABASE_POOL_MAX` | How many connections the pool may open. Set it when the host counts connections against you. | `5` |
+| `DATABASE_CONSOLE_URL` | Where "open the database" in Dashboard → Database points. Guessed from the host for Neon and Prisma Postgres, so most deployments leave it blank. | the provider's console URL |
+| `NEXT_PUBLIC_SENTRY_DSN` | Error reporting. Nothing is loaded without it. | from [sentry.io](https://sentry.io) → the project's DSN |
+| `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` | Uploads source maps at build time, so a stack trace names your code instead of a minified chunk. Build-time only. | from Sentry → Auth Tokens |
+| `PAYMENT_SANDBOX` | `1` mounts a fake gateway at `/pay/sandbox` that calls the webhook back the way a real one does, so the whole card path can be walked without a merchant account. **Never set this in production.** | `1` locally, never on Vercel |
+
+Four more are set by the platform and never by you: `NODE_ENV`, `VERCEL`, `VERCEL_ENV`,
+`VERCEL_GIT_COMMIT_SHA`.
 
 ---
 
@@ -469,6 +547,9 @@ database is an ocean away pays for it on every page.
   (about 300 kB each, one per bank-transfer order), and at a couple of thousand orders they
   outweigh the whole catalogue. Either move to a larger database plan, or expire them — a slip
   for money that arrived six months ago is dead weight and somebody else's personal data.
+- **A database on a free tier will stop the shop.** Neon's free project refuses every query
+  once its quota is spent — not a slow query, a refused one. The chrome and the written pages
+  survive it (see *Before you go live*), but nothing can be bought until it answers again.
 - **No test suite.** There was one; it was removed deliberately. CI runs lint, typecheck and a
   migrate-from-empty check, and changes are verified against a real browser instead.
 - **The plan is not in this repository.** What is left to do before the shop opens lives in a
