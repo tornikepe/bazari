@@ -9,8 +9,8 @@
 --
 --   * Full-text, with the `simple` configuration. It tokenises and lowercases
 --     and gives a rank, which is what turns a heap into an order. It does not
---     stem: **Postgres ships no Georgian dictionary**, and neither Neon nor the
---     `postgres:16` image CI runs has one to install. A stemmer for a language
+--     stem: **Postgres ships no Georgian dictionary**, and neither a managed
+--     host nor the `postgres:16` image CI runs has one to install. A stemmer for a language
 --     with this much suffixing is a real piece of linguistics, not a config
 --     line, so it is not pretended at here.
 --

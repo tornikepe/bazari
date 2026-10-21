@@ -2,42 +2,26 @@ import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DatabaseIcon, ArrowRightIcon } from "@/components/ui/icons";
+import { describeDatabase } from "@/lib/database-console";
 
 /**
  * The database, as the owner can see it from here: what it is, where it
  * is, how many rows each table holds, and the way to the provider's own
  * console — the one place with backups, point-in-time restore and the
  * tables themselves. The console's address comes from the environment
- * (`DATABASE_CONSOLE_URL`) or is guessed from the host: Neon's for a Neon
- * database, Prisma's for a Prisma Postgres one.
+ * (`DATABASE_CONSOLE_URL`) or is worked out from the connection string.
  *
  * Nothing here can change anything; it is a window, and the button is a
  * door.
  */
+
 export default async function DatabasePage() {
   const { locale, t } = await getI18n();
 
-  const url = process.env.DATABASE_URL ?? "";
-  let host = "";
-  try {
-    host = new URL(url).hostname;
-  } catch {
-    host = "";
-  }
-  const provider = host.endsWith("neon.tech")
-    ? "Neon"
-    : host.endsWith("prisma.io")
-      ? "Prisma Postgres"
-      : host
-        ? "PostgreSQL"
-        : "";
-  const consoleUrl =
-    process.env.DATABASE_CONSOLE_URL ||
-    (host.endsWith("neon.tech")
-      ? "https://console.neon.tech/"
-      : host.endsWith("prisma.io")
-        ? "https://console.prisma.io/"
-        : "");
+  const { host, provider, consoleUrl } = describeDatabase(
+    process.env.DATABASE_URL ?? "",
+    process.env.DATABASE_CONSOLE_URL,
+  );
 
   // Counted in one round of queries, every table the shop writes to.
   const tables: { name: string; count: Promise<number> }[] = [

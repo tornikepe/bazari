@@ -18,8 +18,8 @@ import { prisma } from "@/lib/prisma";
  * order.
  *
  * It does not stem, and that is worth saying plainly rather than leaving as a
- * surprise: **Postgres ships no Georgian dictionary.** Not on Neon, not in the
- * `postgres:16` image CI runs. A stemmer for a language that inflects this
+ * surprise: **Postgres ships no Georgian dictionary.** Not on a managed host,
+ * not in the `postgres:16` image CI runs. A stemmer for a language that inflects this
  * much is a real piece of linguistics rather than a configuration line, so
  * this does not pretend to have one.
  *

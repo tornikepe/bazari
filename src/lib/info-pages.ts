@@ -423,7 +423,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
         {
           heading: "ვის გადაეცემა",
           body: [
-            "Vercel — ჰოსტინგი; ამუშავებს მოთხოვნებს და ინახავს სერვერის ლოგებს (IP მისამართი, გვერდი, დრო). Neon — ბაზა, სადაც შეკვეთები და ანგარიშები ინახება.",
+            "Vercel — ჰოსტინგი; ამუშავებს მოთხოვნებს და ინახავს სერვერის ლოგებს (IP მისამართი, გვერდი, დრო). Supabase — ბაზა, სადაც შეკვეთები და ანგარიშები ინახება.",
             "Resend — ელფოსტის გაგზავნა; იღებს მიმღების მისამართს და წერილის შიგთავსს (დადასტურების კოდი, შეკვეთის დეტალები). Sentry — შეცდომების აღრიცხვა; იღებს შეცდომის ტექსტს, არასდროს — cookie-ს ან ფორმის შიგთავსს.",
             "Google — შესვლა Google-ით, თუ ამას აირჩევ. გადახდის პროვაიდერი (ბანკი, PayPal ან კრიპტო-სერვისი) — მხოლოდ ონლაინ გადახდისას, შეკვეთის თანხა და ნომერი.",
             "ჩატ-ასისტენტი, თუ ჩართულია, ენობრივი მოდელის პროვაიდერს (Google ან Anthropic) გადასცემს შენს შეტყობინებას და პასუხისთვის საჭირო კატალოგის მონაცემებს. შეკვეთის სტატუსის კითხვისას — სტატუსს, ნივთებს, თანხას და ქალაქს; სახელს, ტელეფონს და მისამართს არა. ჩატში პერსონალურ მონაცემებს ნუ დაწერ.",
@@ -464,7 +464,7 @@ const pages: Record<InfoSlug, Record<Locale, Content>> = {
         {
           heading: "Who else sees it",
           body: [
-            "Vercel — hosting; handles requests and keeps server logs (IP address, path, timestamp). Neon — the database where orders and accounts live.",
+            "Vercel — hosting; handles requests and keeps server logs (IP address, path, timestamp). Supabase — the database where orders and accounts live.",
             "Resend — email delivery; receives the recipient address and the message (a verification code, order details). Sentry — error tracking; receives the error text, never a cookie or a form's contents.",
             "Google — sign-in with Google, if you choose it. A payment provider (a bank, PayPal or a crypto service) — only when paying online, the order amount and number.",
             "The chat assistant, when it is on, sends your message and the catalogue data needed to answer it to the language-model provider (Google or Anthropic). When you ask about an order it receives the status, items, total and city — not the name, phone or street address. Don't type personal details into the chat.",

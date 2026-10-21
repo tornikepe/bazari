@@ -34,7 +34,7 @@ and the Georgian is set in its own typeface.
 
 ## Contents
 
-- [Quick start](#quick-start)
+- [Quick start](#quick-start) · [Two strings, not one](#two-strings-not-one)
 - [Before you go live](#before-you-go-live)
 - [Accounts and passwords](#accounts-and-passwords)
 - [Environment variables](#environment-variables)
@@ -64,12 +64,16 @@ npm install
 cp .env.example .env
 ```
 
-Put a connection string in `DATABASE_URL`. Any Postgres works — Neon, Supabase, Railway, a
-local server. For a throwaway one that expires by itself:
+Put a connection string in `DATABASE_URL`. Any Postgres works. For a throwaway one that
+expires by itself and needs no account:
 
 ```bash
 npx -y create-db@latest create -t 24h -j
 ```
+
+This shop runs on **Supabase**, and a hosted Postgres usually hands out more than one string.
+Which one goes where matters, and the wrong choice fails in a way that reads like a bug in the
+tool rather than a line in a file — see [Two strings, not one](#two-strings-not-one).
 
 Generate the secrets. **The seed refuses to run without them**, deliberately — see
 [Accounts and passwords](#accounts-and-passwords):
@@ -98,6 +102,27 @@ The shop is at `http://localhost:3000`, the dashboard at `/dashboard`.
 > DATABASE_URL=… DIRECT_URL=… npx prisma migrate deploy
 > ```
 
+### Two strings, not one
+
+| Variable | Supabase calls it | Port | Who uses it |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | **Transaction pooler**, with `?pgbouncer=true` | 6543 | the running app, every page |
+| `DIRECT_URL` | **Session pooler** | 5432 | migrations and the seed |
+
+Both go through the pooler host (`aws-0-<region>.pooler.supabase.com`). Supabase also offers a
+**Direct connection** at `db.<ref>.supabase.co`, and despite the name it is the wrong answer
+here: that host answers on IPv6 only, and Vercel cannot reach it.
+
+Why two at all. The app is serverless, so every warm instance builds its own pool and a few of
+them exhaust a small plan — that has taken this site down once already, as `P2037`. Migrations
+have the opposite need: Prisma Migrate takes a session-level advisory lock, and a
+transaction-mode pooler hands out a different connection for every statement, so the lock is
+taken and then never seen again. The symptom is a migration that hangs for ever with nothing
+in the log.
+
+A local Postgres has no pooler and needs neither: leave `DIRECT_URL` blank and everything falls
+back to `DATABASE_URL`.
+
 ---
 
 ## Before you go live
@@ -107,11 +132,18 @@ simply runs as a demonstration rather than as a business.
 
 **Must be done, in this order:**
 
-1. **A database that is not on a free tier.** This is the one that bites: a free Neon project
-   runs out of its quota and then refuses *every* query, and the shop goes quiet. The pages now
-   degrade rather than going blank — the home page says so at the top, the cart and order
-   tracking keep working — but nothing can be bought until the database answers again. Watch
-   the provider's usage page; the figure that grows fastest here is the transfer slips.
+1. **Know what will fill the database, and watch it.** A free plan does not slow down when it
+   is spent — it refuses *every* query, and the shop goes quiet. That happened here on
+   21 October, and it is why the pages now degrade instead of going blank: the home page says
+   so at the top and the cart, order tracking and sign-in keep working, but nothing can be
+   bought until the database answers again.
+
+   The shop itself is about a megabyte. What grows is what people upload. Product photographs
+   were ninety-eight per cent of this database until they were moved to a blob store — set
+   `BLOB_READ_WRITE_TOKEN` and they never touch Postgres again. After that the figure to watch
+   is the **transfer slips**: about 300 kB each, one per bank-transfer order, and they stay in
+   Postgres on purpose because a slip is somebody's bank details behind a route that checks who
+   is asking.
 2. **Hosting that allows a shop.** Vercel's Hobby plan is for non-commercial use; a shop that
    takes money needs Pro. This is the only unavoidable monthly cost on day one.
 3. **Rotate the seeded admin password** — Dashboard → Staff. The page says how old it is. Make
@@ -205,7 +237,7 @@ must be **redeployed**: a variable added after a build is not in that build.
 
 | Variable | What it is | How to write it |
 | --- | --- | --- |
-| `DATABASE_URL` | Where the shop keeps everything. Any Postgres: Neon, Supabase, Prisma Postgres, Railway, a local server. Use the **pooled** string if the provider offers two. | `postgresql://user:pass@host:5432/db?sslmode=require` |
+| `DATABASE_URL` | Where the shop keeps everything. Any Postgres. When the provider offers more than one string this is the **pooled** one — on Supabase the *transaction* pooler, port 6543, with `?pgbouncer=true`. See [Two strings, not one](#two-strings-not-one). | `postgresql://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true` |
 | `AUTH_SECRET` | The key the session cookie is signed with. Changing it signs everybody out. | 32+ random bytes: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | The staff account the seed **creates**. The password is only used at creation — rotating it in Dashboard → Staff sticks, because re-seeding never rewrites a staff password. Minimum 12 characters; the seed refuses to run without one. | `admin@luto.ge` / a generated string |
 | `VIEWER_EMAIL` / `VIEWER_PASSWORD` | Read-only staff. Sees every dashboard page, changes nothing. Same 12-character rule — it cannot write, but it can read every order, address and margin. | `viewer@luto.ge` / a generated string |
@@ -215,7 +247,7 @@ must be **redeployed**: a variable added after a build is not in that build.
 
 | Variable | What it is | How to write it |
 | --- | --- | --- |
-| `DIRECT_URL` | The **unpooled** connection, for migrations. Prisma Migrate holds a session-level lock and a transaction-mode pooler does not keep a session between statements — the symptom is a migration that hangs forever. Neon and Supabase hand out two strings; this is the other one. Leave it unset for a local Postgres with no pooler. | the same shape as `DATABASE_URL` |
+| `DIRECT_URL` | A connection that keeps a *session*, for migrations and the seed. Prisma Migrate takes a session-level advisory lock, and a transaction-mode pooler hands out a different connection per statement — the symptom is a migration that hangs for ever. On Supabase this is the **session pooler**, port 5432, *not* the "Direct connection", which is IPv6-only and unreachable from Vercel. Leave it unset for a local Postgres. | `postgresql://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:5432/postgres` |
 | `NEXT_PUBLIC_SITE_URL` | The canonical origin. Everything that has to be absolute reads it: links in emails and invoices, the sitemap, the share images, the OAuth callbacks. Without it they all point at `localhost`. **Public on purpose** — it is the address of the site. | `https://luto.ge`, no trailing slash |
 | `CRON_SECRET` | The bearer token `/api/cron/daily` demands. Without it the route refuses every caller, which is how an unconfigured deployment should behave — but it also means the daily job does nothing. | any long random string, same value in Vercel's cron settings |
 
@@ -237,7 +269,7 @@ must be **redeployed**: a variable added after a build is not in that build.
 | `CHAT_PROVIDER` | Which one to use when both keys are present. | `anthropic` or `gemini` |
 | `CHAT_MONTHLY_BUDGET_USD` / `CHAT_MONTHLY_REQUEST_CAP` | Hard ceilings for the month. The assistant stops answering rather than overspending. | `10` / `2000` |
 | `DATABASE_POOL_MAX` | How many connections the pool may open. Set it when the host counts connections against you. | `5` |
-| `DATABASE_CONSOLE_URL` | Where "open the database" in Dashboard → Database points. Guessed from the host for Neon and Prisma Postgres, so most deployments leave it blank. | the provider's console URL |
+| `DATABASE_CONSOLE_URL` | Where "open the database" in Dashboard → Database points. Worked out from the connection string for Supabase, Neon and Prisma Postgres — and on Supabase it finds *this project*, not the list of projects, by reading the reference out of the pooler's username. Most deployments leave it blank. | the provider's console URL |
 | `NEXT_PUBLIC_SENTRY_DSN` | Error reporting. Nothing is loaded without it. | from [sentry.io](https://sentry.io) → the project's DSN |
 | `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` | Uploads source maps at build time, so a stack trace names your code instead of a minified chunk. Build-time only. | from Sentry → Auth Tokens |
 | `BLOB_READ_WRITE_TOKEN` | Where product photographs go. Set, they go to Vercel Blob and the database never holds an image; blank, they go into Postgres and are served by `/api/images/<id>`. A real deployment should set it — on this shop the photographs reached 98% of the database and each one cost a query to serve, which is what spends a free database plan. Transfer slips are never affected: a slip is somebody's bank details behind a route that checks who is asking. | Vercel → the project → Storage → connect a Blob store, ticking "add a read-write token" |
@@ -532,10 +564,25 @@ npm run db:audit      # nothing inside it contradicts anything else
 A backup nobody has restored is not a backup. Restore one into a throwaway database and run
 `db:verify` against it before you rely on the file.
 
-To move to another Postgres: put both strings in `.env`, `npx prisma migrate deploy` against the
-new one, restore, then run `db:verify` and `db:audit`. Keep the database in the same region as
-the compute — the `x-vercel-id` header names the edge and the compute region, and a shop whose
-database is an ocean away pays for it on every page.
+**Moving to another Postgres**, which this shop did on 21 October and which took about fifteen
+minutes:
+
+```bash
+npm run db:backup                                   # from the old one
+# put the new strings in .env
+npx prisma migrate deploy                           # schema first, always
+npm run db:restore -- backups/luto-<timestamp>.json
+npm run db:verify && npm run db:audit
+```
+
+Then set `DATABASE_URL` and `DIRECT_URL` wherever the app is deployed and redeploy — a variable
+added after a build is not in that build.
+
+Two things learned doing it. A backup is almost always *older* than the schema by the time it
+is needed, so `db:restore` accepts a database whose migrations have moved on and refuses one
+that is behind; it lists what it is restoring into. And keep the database in the same region as
+the compute — the `x-vercel-id` header names both, and a shop whose database is an ocean away
+pays for it on every page.
 
 ---
 
@@ -552,9 +599,9 @@ database is an ocean away pays for it on every page.
   order, so a couple of thousand orders outweigh the whole catalogue. Either a larger database
   plan, or expire them — a slip for money that arrived six months ago is dead weight and
   somebody else's personal data.
-- **A database on a free tier will stop the shop.** Neon's free project refuses every query
-  once its quota is spent — not a slow query, a refused one. The chrome and the written pages
-  survive it (see *Before you go live*), but nothing can be bought until it answers again.
+- **A spent database plan stops the shop**, and does not degrade first: the queries are
+  refused, not slowed. The chrome and the written pages survive it — see *Before you go live* —
+  but nothing can be bought until it answers again.
 - **No test suite.** There was one; it was removed deliberately. CI runs lint, typecheck and a
   migrate-from-empty check, and changes are verified against a real browser instead.
 - **The plan is not in this repository.** What is left to do before the shop opens lives in a
