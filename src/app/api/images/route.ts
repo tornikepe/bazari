@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { checkUpload, MAX_BYTES, type UploadRefusal } from "@/lib/image-upload";
+import { storePhoto } from "@/lib/photo-store";
 
 /**
  * Receives a product photo.
@@ -49,19 +49,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const stored = await prisma.productImage.create({
-      data: {
-        data: Buffer.from(bytes),
-        contentType: checked.type,
-        filename: file.name.slice(0, 120),
-        bytes: bytes.byteLength,
-      },
-      select: { id: true },
-    });
-
     // A URL, because that is what `Product.image` holds and what every card
-    // renders. The caller never sees the row.
-    return NextResponse.json({ url: `/api/images/${stored.id}` }, { status: 201 });
+    // renders. Whether it points at the blob store or at a row in this
+    // database is `storePhoto`'s business, not the caller's.
+    const url = await storePhoto(bytes, checked.type, file.name);
+    return NextResponse.json({ url }, { status: 201 });
   } catch (error) {
     console.error("[images] upload failed", error);
     return NextResponse.json({ error: "failed" }, { status: 500 });

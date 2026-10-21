@@ -16,6 +16,7 @@ import { releaseStockAlerts } from "@/lib/stock-emails";
 import type { Prisma } from "@/generated/prisma/client";
 import { audit, diff } from "@/lib/audit";
 import { PRODUCT_NUMBER_FIELDS, type ProductNumberField } from "@/lib/product-numbers";
+import { isStoredPhoto, storePhoto } from "@/lib/photo-store";
 
 // The placeholder every product without a photo of its own shares.
 const DEFAULT_IMAGE = DEFAULT_PHOTO;
@@ -257,7 +258,12 @@ async function adoptPastedPhotos(
   const out: Photo[] = [];
 
   for (const photo of photos) {
-    if (photo.url.startsWith("/")) {
+    /* Already kept by this shop, and so not to be fetched again: a path of
+       ours, or a blob in our own store. The blob half matters — a blob URL
+       is absolute, and testing only for a leading slash would have had
+       every save re-download and re-upload every photograph on the
+       product, leaving the old ones behind each time. */
+    if (photo.url.startsWith("/") || isStoredPhoto(photo.url)) {
       out.push(photo);
       continue;
     }
@@ -268,18 +274,11 @@ async function adoptPastedPhotos(
       return { ok: false };
     }
 
-    const stored = await prisma.productImage.create({
-      data: {
-        data: Buffer.from(fetched.bytes),
-        contentType: fetched.type,
-        bytes: fetched.bytes.byteLength,
-        /* The last part of the address it came from, so the dashboard's
-           list of stored pictures can say where this one was found. */
-        filename: new URL(photo.url).pathname.split("/").pop()?.slice(0, 120) ?? "",
-      },
-      select: { id: true },
-    });
-    out.push({ ...photo, url: `/api/images/${stored.id}` });
+    /* The last part of the address it came from, so the dashboard's list
+       of stored pictures can say where this one was found. */
+    const name = new URL(photo.url).pathname.split("/").pop() ?? "";
+    const url = await storePhoto(fetched.bytes, fetched.type, name);
+    out.push({ ...photo, url });
   }
 
   return { ok: true, photos: out };

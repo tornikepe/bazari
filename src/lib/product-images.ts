@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { parsePhotos } from "@/lib/product-photos";
+import { dropPhotos, isStoredPhoto } from "@/lib/photo-store";
 
 /**
  * Deleting the bytes behind a photo nobody points at any more.
@@ -11,12 +12,11 @@ import { parsePhotos } from "@/lib/product-photos";
  * was noticed; a shop whose owner re-photographs a product every season would
  * accumulate them the same way, just slower.
  *
- * Only images this application stores are considered. A pasted link to another
- * site is not ours to delete, and the placeholder is shared by every product
- * that has no photo of its own.
+ * Only images this application stores are considered — a row of ours or a
+ * blob in our own store. A pasted link to another site is not ours to
+ * delete, and the placeholder is shared by every product that has no photo
+ * of its own.
  */
-
-const OWN_IMAGE = /^\/api\/images\/([a-z0-9]+)$/i;
 
 /**
  * Forgets any of `urls` that no product refers to any more.
@@ -27,16 +27,12 @@ const OWN_IMAGE = /^\/api\/images\/([a-z0-9]+)$/i;
  * would delete a photo that is about to be re-attached.
  */
 export async function forgetUnusedImages(urls: string[]): Promise<number> {
-  const ids = [...new Set(urls)]
-    .map((url) => OWN_IMAGE.exec(url)?.[1])
-    .filter((id): id is string => id !== undefined);
-
-  if (ids.length === 0) return 0;
+  const ours = [...new Set(urls)].filter(isStoredPhoto);
+  if (ours.length === 0) return 0;
 
   const unused: string[] = [];
 
-  for (const id of ids) {
-    const url = `/api/images/${id}`;
+  for (const url of ours) {
     /* `photos` is JSON, so "does any product still point at this?" is a
        containment test rather than an array membership one. The partial object
        matches an element with that URL whatever its alt text says. */
@@ -45,17 +41,17 @@ export async function forgetUnusedImages(urls: string[]): Promise<number> {
         OR: [{ image: url }, { photos: { array_contains: [{ url }] } }],
       },
     });
-    if (stillUsed === 0) unused.push(id);
+    if (stillUsed === 0) unused.push(url);
     // Said out loud either way. An image kept because a product still points
     // at it is the correct outcome and the one a reader wants explained.
-    else console.info(`[images] kept ${id}: still used by ${stillUsed} product(s)`);
+    else console.info(`[images] kept ${url}: still used by ${stillUsed} product(s)`);
   }
 
   if (unused.length === 0) return 0;
 
-  const { count } = await prisma.productImage.deleteMany({ where: { id: { in: unused } } });
-  console.info(`[images] forgot ${count} of ${unused.length}: ${unused.join(", ")}`);
-  return count;
+  const gone = await dropPhotos(unused);
+  console.info(`[images] forgot ${gone} of ${unused.length}`);
+  return gone;
 }
 
 /** Every URL a product refers to, main one first. */
