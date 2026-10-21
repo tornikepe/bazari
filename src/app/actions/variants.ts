@@ -89,7 +89,13 @@ export async function saveVariants(
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { id: true, nameEn: true, nameKa: true, category: { select: { slug: true } } },
+    select: {
+      id: true,
+      slug: true,
+      nameEn: true,
+      nameKa: true,
+      category: { select: { slug: true } },
+    },
   });
   if (!product) return { ok: false, error: "invalid" };
 
@@ -294,6 +300,11 @@ export async function saveVariants(
   });
 
   revalidatePath("/catalog");
+  /* And the page the shopper actually buys from. Without this a colour
+     added here was in the database, in the dashboard and in the catalogue,
+     and simply absent from the product's own page until something else
+     happened to clear it. */
+  revalidatePath(`/product/${product.slug}`);
   revalidatePath(`/dashboard/products/${productId}`);
   return { ok: true };
 }

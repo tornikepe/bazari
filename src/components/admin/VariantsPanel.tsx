@@ -42,7 +42,7 @@ export function VariantsPanel({
   options: { id: string; nameKa: string; nameEn: string; values: ValueDraft[] }[];
   variants: { valueIds: string[]; sku: string; price: number | null; stock: number; isActive: boolean }[];
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const router = useRouter();
   const canWrite = useCanWrite();
   const [isPending, startTransition] = useTransition();
@@ -80,24 +80,28 @@ export function VariantsPanel({
       option.values.some((value) => value.valueKa.trim() && value.valueEn.trim()),
   );
 
+  /* Both languages are typed in and both are stored; which one this table
+     shows is simply which one the person reading it asked for. It used to
+     be English always, so a Georgian panel labelled its own combinations
+     "Black · 40". */
+  const shown = (value: ValueDraft) => (locale === "ka" ? value.valueKa : value.valueEn);
+
   const grid = combinations(
     usable.map((option) => ({
       id: option.id,
-      name: option.nameEn,
+      name: locale === "ka" ? option.nameKa : option.nameEn,
       values: option.values
         .filter((value) => value.valueKa.trim() && value.valueEn.trim())
-        .map((value) => ({ id: value.id, label: value.valueEn })),
+        .map((value) => ({ id: value.id, label: shown(value) })),
     })),
   ).filter((row) => row.length > 0);
 
   const labelOf = (valueIds: string[]) =>
     valueIds
-      .map(
-        (id) =>
-          usable
-            .flatMap((option) => option.values)
-            .find((value) => value.id === id)?.valueEn ?? "",
-      )
+      .map((id) => {
+        const value = usable.flatMap((option) => option.values).find((row) => row.id === id);
+        return value ? shown(value) : "";
+      })
       .filter(Boolean)
       .join(" · ");
 
