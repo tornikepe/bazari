@@ -72,20 +72,41 @@ async function main() {
   const client = new Client({ connectionString });
   await client.connect();
 
-  // The same schema, exactly: not a subset, not a newer one.
+  /*
+   * The backup's schema has to be *contained* in this database's.
+   *
+   * Missing migrations are refused, as they always were: a row written
+   * against a table this database does not have yet cannot land, and
+   * guessing is how a restore corrupts what it was meant to save.
+   *
+   * Migrations this database has and the backup does not are allowed, and
+   * that is the change. A backup is nearly always older than the schema by
+   * the time anybody needs it — ours was one migration behind within hours
+   * — and refusing on that made the newest backup unrestorable, which is
+   * the opposite of what a backup is for. Restoring old rows into an
+   * additively newer schema is the ordinary case: a table added since
+   * stays empty, a nullable column added since stays null. A migration
+   * that renamed or tightened a column is the hard case, and it does not
+   * pass silently — the insert fails and the whole transaction rolls back.
+   */
   const applied = (
     await client.query<{ migration_name: string }>(
       `SELECT migration_name FROM "_prisma_migrations" WHERE finished_at IS NOT NULL ORDER BY migration_name`,
     )
   ).rows.map((row) => row.migration_name);
   const missing = backup.migrations.filter((name) => !applied.includes(name));
-  const extra = applied.filter((name) => !backup.migrations.includes(name));
-  if (missing.length > 0 || extra.length > 0) {
-    console.error("✗ the database is not on the backup's schema.");
-    if (missing.length > 0) console.error(`  not applied here: ${missing.join(", ")}`);
-    if (extra.length > 0) console.error(`  applied here but not in the backup: ${extra.join(", ")}`);
-    console.error("  run `npx prisma migrate deploy` against a fresh database, then restore.");
+  if (missing.length > 0) {
+    console.error("✗ this database is behind the backup's schema.");
+    console.error(`  not applied here: ${missing.join(", ")}`);
+    console.error("  run `npx prisma migrate deploy`, then restore.");
     process.exit(1);
+  }
+
+  const newer = applied.filter((name) => !backup.migrations.includes(name));
+  if (newer.length > 0) {
+    console.log(`  the schema is ${newer.length} migration(s) ahead of this backup:`);
+    for (const name of newer) console.log(`    ${name}`);
+    console.log("  anything they added will be empty or null on the restored rows.");
   }
 
   const tables = Object.keys(backup.tables);
