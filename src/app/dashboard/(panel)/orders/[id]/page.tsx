@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { InvoiceHead } from "@/components/order/InvoiceHead";
 import { PrintButton } from "@/components/order/PrintButton";
 import { TaxNote } from "@/components/ui/TaxNote";
+import { orderNoteText } from "@/lib/order-notes";
 import {
   ChevronLeftIcon,
   FileIcon,
@@ -376,6 +377,15 @@ export default async function AdminOrderDetailPage({
 
                   <div className="min-w-0 flex-1 pb-4 last:pb-0">
                     <p className="text-xs font-semibold text-ink-800">{t.status[event.status]}</p>
+                    {/* Why the row is here, when the status alone does not say:
+                        two "pending" rows in a row were a placed order and a
+                        transfer that cleared, and the panel showed the same
+                        word twice with nothing to tell them apart. */}
+                    {event.note && (
+                      <p className="mt-0.5 text-xs text-ink-600">
+                        {orderNoteText(event.note, t, locale)}
+                      </p>
+                    )}
                     <p className="mt-0.5 text-xs text-ink-400 tabular-nums">
                       {formatDateTime(event.createdAt)}
                     </p>

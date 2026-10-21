@@ -269,7 +269,7 @@ export async function applyPaymentEvent(input: {
           data: {
             orderId: payment.orderId,
             status: confirm ? "confirmed" : (order?.status ?? "pending"),
-            note: "Payment received",
+            note: "payment-received",
           },
         });
       }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/lib/locale";
 import { formatDateTime } from "@/lib/format";
+import { stockNoteText } from "@/lib/order-notes";
 
 /**
  * The append-only stock ledger for one product.
@@ -11,7 +12,7 @@ import { formatDateTime } from "@/lib/format";
  * level — that's the whole point of keeping the ledger.
  */
 export async function StockLedger({ productId }: { productId: string }) {
-  const { t } = await getI18n();
+  const { locale, t } = await getI18n();
 
   const movements = await prisma.stockMovement.findMany({
     where: { productId },
@@ -53,7 +54,9 @@ export async function StockLedger({ productId }: { productId: string }) {
                         and nothing showed it, which made the field a place to
                         write things nobody would ever read. */}
                     {movement.note && (
-                      <p className="mt-0.5 text-ink-600">{movement.note}</p>
+                      <p className="mt-0.5 text-ink-600">
+                        {stockNoteText(movement.note, t, locale)}
+                      </p>
                     )}
                     <p className="mt-0.5 whitespace-nowrap text-ink-400">
                       {formatDateTime(movement.createdAt)}

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth";
-import { getAdapter, fromMinor } from "@/lib/payments";
+import { getAdapter } from "@/lib/payments";
 import { expireStalePayments, gatewayContext } from "@/lib/payments/service";
 
 export type PaymentActionResult =
@@ -29,7 +29,7 @@ export async function markPaymentReceived(paymentId: string): Promise<PaymentAct
       provider: true,
       state: true,
       amount: true,
-      order: { select: { number: true } },
+      order: { select: { number: true, status: true } },
     },
   });
 
@@ -37,17 +37,31 @@ export async function markPaymentReceived(paymentId: string): Promise<PaymentAct
   if (payment.provider !== "manual") return { ok: false, error: "invalid" };
   if (payment.state === "captured") return { ok: true };
 
+  /* The money arriving is what moves a transfer order on, exactly as the
+     gateway's own callback does for a card. Without this a paid order sat
+     at "we will confirm it" until somebody also changed the status by hand,
+     and the shopper watching the page had no way to tell the difference
+     between paid and ignored. */
+  const confirm = payment.order.status === "pending";
+
   await prisma.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: payment.id },
       data: { state: "captured", capturedAt: new Date() },
     });
-    await tx.order.update({ where: { id: payment.orderId }, data: { paymentStatus: "paid" } });
+    await tx.order.update({
+      where: { id: payment.orderId },
+      data: { paymentStatus: "paid", ...(confirm ? { status: "confirmed" as const } : {}) },
+    });
     await tx.orderEvent.create({
       data: {
         orderId: payment.orderId,
-        status: "pending",
-        note: `Payment marked received by ${admin.email}`,
+        /* The status the order is in after this, never a guess: an order
+           already on its way does not go back to "pending" because the
+           transfer finally cleared. */
+        status: confirm ? "confirmed" : payment.order.status,
+        note: "payment-received",
+        actor: admin.email,
       },
     });
   });
@@ -160,7 +174,7 @@ export async function refundPayment(paymentId: string): Promise<PaymentActionRes
             reason: "return_to_stock",
             balance: updated.stock,
             orderId: payment.orderId,
-            note: `Refund of ${fromMinor(outstanding)} GEL`,
+            note: `refunded:${outstanding}`,
           },
         });
       }
@@ -175,7 +189,8 @@ export async function refundPayment(paymentId: string): Promise<PaymentActionRes
       data: {
         orderId: payment.orderId,
         status: "cancelled",
-        note: `Refunded ${fromMinor(outstanding)} GEL by ${admin.email}`,
+        note: `refunded:${outstanding}`,
+        actor: admin.email,
       },
     });
   });

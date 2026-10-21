@@ -942,7 +942,7 @@ async function applyOrderStatus(
               reason: "return_to_stock",
               balance: updated.stock,
               orderId: id,
-              note: "Order cancelled",
+              note: "order-cancelled",
             },
           });
 

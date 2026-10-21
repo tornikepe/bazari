@@ -399,7 +399,7 @@ export async function placeOrder(
             },
             // Opens the order's timeline; the dashboard appends to it on every
             // status change.
-            events: { create: [{ status: "pending", note: "Order placed" }] },
+            events: { create: [{ status: "pending", note: "order-placed" }] },
 
             // Every order gets a payment row from the start, so "is this paid?"
             // has one answer regardless of how the money arrives. Card orders

@@ -201,7 +201,7 @@ export async function moveReturn(
             reason: "return_to_stock",
             balance: updated.stock,
             orderId: request.orderId,
-            note: "Returned by the customer",
+            note: "customer-return",
           },
         });
       }
