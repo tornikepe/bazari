@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { fill } from "@/lib/i18n";
 import { generateRecoveryCodes } from "@/app/actions/auth";
@@ -23,6 +24,7 @@ import { AlertIcon, CheckIcon, CopyIcon, KeyIcon } from "@/components/ui/icons";
  */
 export function RecoveryCodes({ left }: { left: number }) {
   const { t } = useI18n();
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [codes, setCodes] = useState<string[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -38,6 +40,11 @@ export function RecoveryCodes({ left }: { left: number }) {
         return;
       }
       setCodes(result.codes);
+      /* The count above comes from the server, and without this it still
+         reads "you have no codes" directly over the eight that were just
+         made — which invites making them again and throwing away the set
+         somebody has only just written down. */
+      router.refresh();
     });
   }
 
