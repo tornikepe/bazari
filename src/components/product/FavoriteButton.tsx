@@ -52,7 +52,7 @@ export function FavoriteButton({
       // So the chip itself grows. Not to 44: this is a secondary action sitting
       // on top of the card's own link, and at 44 it starts covering the product
       // photo it is meant to sit quietly on top of.
-      className={`grid place-items-center transition-colors ${
+      className={`fav-chip grid place-items-center transition-colors ${
         size === "chip"
           ? "h-10 w-10 rounded-control"
           : /* A square the stepper's height, at every width: it was full
@@ -64,7 +64,11 @@ export function FavoriteButton({
           : "bg-surface text-ink-500 hover:text-brand-600"
       } ${className}`}
     >
-      <HeartIcon size={size === "chip" ? 16 : 18} filled={isFavorite} />
+      {/* Keyed so the pop replays: the class alone would animate once and
+          never again, and this is a button somebody presses twice. */}
+      <span key={isFavorite ? "on" : "off"} className={isFavorite ? "animate-heart" : undefined}>
+        <HeartIcon size={size === "chip" ? 16 : 18} filled={isFavorite} />
+      </span>
     </button>
   );
 }

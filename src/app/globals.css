@@ -1298,6 +1298,88 @@
   animation: fade 0.4s ease both;
 }
 
+/* ------------------------------------------------------------------ */
+/* The press, for the controls `.btn` never reaches                     */
+/* ------------------------------------------------------------------ */
+/*
+ * `.btn` has pressed since the beginning — a hair smaller, a hair lower.
+ * Everything else that can be clicked did not, and a control that does not
+ * move under the finger reads as a control that did not take the press. On a
+ * phone, where there is no hover to confirm anything, it is the only
+ * feedback there is before the screen changes.
+ *
+ * Scale only, and `scale` rather than `transform`, so a control already
+ * being moved by an animation still presses. Nothing here shifts layout, and
+ * the reduced-motion block at the foot of this file flattens all of it —
+ * which it can, because none of this carries information.
+ */
+.icon-btn:active:not(:disabled),
+.qty-button:active:not(:disabled),
+.size-select-button:active,
+.fav-chip:active,
+.filter-chip:active {
+  scale: 0.94;
+}
+
+/* Text that is a link presses less: a word that shrinks by six per cent
+   reads as a glitch rather than a key going down. */
+.tap:active {
+  scale: 0.97;
+}
+
+/*
+ * A heart that has just been filled.
+ *
+ * The one place in the shop where the press *is* the result — nothing else
+ * happens, no page changes, no number moves except a badge in the corner —
+ * so the control itself has to say it took. Overshoots and settles, the way
+ * a thing being pinned does.
+ */
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.32);
+  }
+  65% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-heart {
+  animation: heart-pop 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * A line of confirmation arriving — "saved", "variants saved", "added 5".
+ *
+ * These appear in place, often under the button that was just pressed, and
+ * appearing instantly makes them easy to miss: the eye is still on the
+ * button. A tenth of a second of fade and a few pixels of travel is enough
+ * to catch it without delaying the news.
+ *
+ * `aria-busy` is excluded on purpose — that is a loading skeleton, which is
+ * already animating and must not start by sliding.
+ */
+[role="status"]:not([aria-busy]) {
+  animation: status-in 0.22s var(--ease-out) both;
+}
+
+@keyframes status-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Staggers a grid or list so items settle in sequence rather than as one
    block. Capped at 8 — beyond that the last card feels late. */
 .stagger > * {
