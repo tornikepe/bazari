@@ -6,7 +6,12 @@ import { getCurrentUser } from "@/lib/auth";
 import { getLocale } from "@/lib/locale";
 import { gatewayFor } from "@/lib/payments";
 import { gatewayContext, startPayment } from "@/lib/payments/service";
-import { sandboxLinkValid, sandboxSign, type SandboxEvent } from "@/lib/payments/sandbox";
+import {
+  sandboxEnabled,
+  sandboxLinkValid,
+  sandboxSign,
+  type SandboxEvent,
+} from "@/lib/payments/sandbox";
 import { requestOrigin } from "@/lib/request-origin";
 
 export type RetryPaymentResult =
@@ -53,6 +58,13 @@ export async function retryPayment(orderNumber: string): Promise<RetryPaymentRes
  * over it.
  */
 export async function sandboxDecide(formData: FormData): Promise<void> {
+  /* The page in front of this already refuses to render when the sandbox is
+     off; the action is a POST endpoint of its own and has to refuse too. The
+     signature below could only be forged by somebody who already had
+     AUTH_SECRET, but a shop that sells for real should have no reachable path
+     that marks an order paid without money, forgeable or not. */
+  if (!sandboxEnabled()) redirect("/");
+
   const params = new URLSearchParams();
   for (const key of ["payment", "ref", "amount", "currency", "order", "return", "webhook", "locale", "sig"]) {
     const value = formData.get(key);

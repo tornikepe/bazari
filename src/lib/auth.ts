@@ -4,20 +4,13 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { secureCookies } from "@/lib/cookie-security";
 import { prisma } from "@/lib/prisma";
+import { authSecret } from "@/lib/auth-secret";
 import { isStaff, type Role } from "@/lib/auth-roles";
 
 export { hashPassword, verifyPassword } from "@/lib/auth-hash";
 
 const SESSION_COOKIE = "bz_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
-
-function secret() {
-  const value = process.env.AUTH_SECRET;
-  if (!value) {
-    throw new Error("AUTH_SECRET is not set — copy .env.example to .env");
-  }
-  return value;
-}
 
 /* ------------------------------------------------------------------ */
 /* Session cookie: "<userId>.<sessionVersion>.<expiresAt>.<hmac>"       */
@@ -35,7 +28,7 @@ function secret() {
 /* ------------------------------------------------------------------ */
 
 function sign(payload: string) {
-  return createHmac("sha256", secret()).update(payload).digest("hex");
+  return createHmac("sha256", authSecret()).update(payload).digest("hex");
 }
 
 function readToken(token: string) {

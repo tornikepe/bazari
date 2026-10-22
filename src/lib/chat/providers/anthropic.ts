@@ -4,7 +4,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { CHAT_TOOLS, isChatToolName, runChatTool } from "@/lib/chat/tools";
 import { readKey } from "@/lib/chat/providers/key";
 import {
+  ProviderAuthError,
   ProviderRateLimitError,
+  isUpstreamAuthFailure,
   isUpstreamRateLimit,
   type ChatProvider,
   type RunInput,
@@ -120,6 +122,7 @@ export const anthropicProvider: ChatProvider = {
         // Same distinction as Gemini: being throttled is not a failure the
         // visitor caused, and it is worth a different sentence.
         if (isUpstreamRateLimit(error)) throw new ProviderRateLimitError("anthropic");
+        if (isUpstreamAuthFailure(error)) throw new ProviderAuthError("anthropic");
         throw error;
       }
 

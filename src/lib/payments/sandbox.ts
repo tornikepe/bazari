@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { authSecret } from "@/lib/auth-secret";
 import type {
   Adapter,
   StartInput,
@@ -36,9 +37,7 @@ export function sandboxEnabled(): boolean {
 
 /** Keyed on the session secret, so nothing else has to be configured. */
 function key(): string {
-  return createHmac("sha256", process.env.AUTH_SECRET ?? "")
-    .update("payments:sandbox")
-    .digest("hex");
+  return createHmac("sha256", authSecret()).update("payments:sandbox").digest("hex");
 }
 
 /** Signs the hosted page's link and the webhook's body the same way. */

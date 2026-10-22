@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { shopDayKey } from "@/lib/format";
+import { authSecret } from "@/lib/auth-secret";
 import type { ProductEventKind } from "@/lib/product-events";
 
 /**
@@ -37,8 +38,7 @@ export function normalisePath(raw: string): string | null {
 
 /** The day's key for the visitor hash. New every shop day; never stored. */
 function dailyKey(day: string): string {
-  const secret = process.env.AUTH_SECRET ?? "";
-  return createHmac("sha256", secret).update(`traffic:${day}`).digest("hex");
+  return createHmac("sha256", authSecret()).update(`traffic:${day}`).digest("hex");
 }
 
 /**

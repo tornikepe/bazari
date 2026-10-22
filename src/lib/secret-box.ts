@@ -6,6 +6,7 @@ import {
   createHash,
   randomBytes,
 } from "node:crypto";
+import { authSecret } from "@/lib/auth-secret";
 
 /**
  * Seals a secret so it can sit in the database without being readable there.
@@ -23,10 +24,7 @@ import {
 const MARK = "sealed:v1:";
 
 function key(): Buffer {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret)
-    throw new Error("AUTH_SECRET is not set — copy .env.example to .env");
-  return createHash("sha256").update(`${secret}:secret-box`).digest();
+  return createHash("sha256").update(`${authSecret()}:secret-box`).digest();
 }
 
 export function seal(plain: string): string {

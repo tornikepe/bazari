@@ -4,7 +4,9 @@ import { GoogleGenAI, type Content, type Part } from "@google/genai";
 import { CHAT_TOOLS, isChatToolName, runChatTool } from "@/lib/chat/tools";
 import { readKey } from "@/lib/chat/providers/key";
 import {
+  ProviderAuthError,
   ProviderRateLimitError,
+  isUpstreamAuthFailure,
   isUpstreamRateLimit,
   retryAfterSeconds,
   type ChatProvider,
@@ -60,6 +62,7 @@ async function generateOrRateLimit<T>(call: () => Promise<T>): Promise<T> {
     if (isUpstreamRateLimit(error)) {
       throw new ProviderRateLimitError("gemini", retryAfterSeconds(error));
     }
+    if (isUpstreamAuthFailure(error)) throw new ProviderAuthError("gemini");
     throw error;
   }
 }

@@ -46,10 +46,41 @@ export class ProviderRateLimitError extends Error {
   }
 }
 
+/**
+ * The key the shop was given is not one the provider will accept.
+ *
+ * Told apart from every other failure because it is the only one where
+ * "try again" is a lie: a rejected key rejects every request until somebody
+ * changes an environment variable. The visitor is told the assistant is away
+ * rather than invited to retry, and the log says plainly what to fix.
+ */
+export class ProviderAuthError extends Error {
+  constructor(provider: ProviderId) {
+    super(`${provider} rejected the API key`);
+    this.name = "ProviderAuthError";
+  }
+}
+
 /** Whether an SDK error is an upstream 429, whichever SDK threw it. */
 export function isUpstreamRateLimit(error: unknown): boolean {
   const status = (error as { status?: unknown })?.status;
   return status === 429;
+}
+
+/**
+ * Whether an SDK error means the key was refused.
+ *
+ * Google answers a bad key with 400 and `API_KEY_INVALID`, Anthropic with
+ * 401; a plain 400 is a malformed request and must not be mistaken for this,
+ * so the 400 case has to name the reason.
+ */
+export function isUpstreamAuthFailure(error: unknown): boolean {
+  const status = (error as { status?: unknown })?.status;
+  if (status === 401 || status === 403) return true;
+  if (status !== 400) return false;
+
+  const message = (error as { message?: unknown })?.message;
+  return typeof message === "string" && /API_KEY_INVALID|API key not valid/i.test(message);
 }
 
 /** The `retryDelay` Google returns, in whole seconds, when present. */

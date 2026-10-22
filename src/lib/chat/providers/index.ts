@@ -6,7 +6,7 @@ import type { ChatProvider, ProviderId } from "@/lib/chat/providers/types";
 
 export type * from "@/lib/chat/providers/types";
 // A value, not a type — the route catches it with `instanceof`.
-export { ProviderRateLimitError } from "@/lib/chat/providers/types";
+export { ProviderAuthError, ProviderRateLimitError } from "@/lib/chat/providers/types";
 
 /**
  * Every provider the app knows about, in the order it prefers them.

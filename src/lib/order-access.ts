@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { secureCookies } from "@/lib/cookie-security";
+import { authSecret } from "@/lib/auth-secret";
 
 /**
  * Who is allowed to see a guest order's full details.
@@ -20,16 +21,8 @@ const RECEIPT_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 /** Keeps the cookie small — older receipts fall off the end. */
 const MAX_REMEMBERED = 20;
 
-function secret() {
-  const value = process.env.AUTH_SECRET;
-  if (!value) {
-    throw new Error("AUTH_SECRET is not set — copy .env.example to .env");
-  }
-  return value;
-}
-
 function sign(payload: string) {
-  return createHmac("sha256", secret()).update(payload).digest("hex");
+  return createHmac("sha256", authSecret()).update(payload).digest("hex");
 }
 
 function verify(payload: string, signature: string) {

@@ -126,9 +126,11 @@ export function ChatWidget({ available }: { available: boolean }) {
     : null;
 
   /* Asking the same question again can only help when the failure was
-     transient. `bad_request` would be rejected identically, and the other two
-     are the shop's own limits rather than a hiccup. */
-  const retryable = error === "failed" || error === "unavailable";
+     transient. `bad_request` would be rejected identically, the two limits
+     are the shop's own ceilings rather than a hiccup, and `unavailable`
+     means there is no working provider at all — offering a retry there is
+     offering a button that cannot work. */
+  const retryable = error === "failed";
 
   const activityText: Record<ChatToolName, string> = {
     search_products: t.chat.toolSearchProducts,

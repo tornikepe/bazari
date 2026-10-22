@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { clientIp } from "@/lib/rate-limit";
+import { clientIp, consume } from "@/lib/rate-limit";
 import { normalisePath, recordProductEvents, recordView } from "@/lib/traffic";
 import { isProductEventKind } from "@/lib/product-events";
 
@@ -17,6 +17,17 @@ import { isProductEventKind } from "@/lib/product-events";
  */
 export async function POST(request: NextRequest) {
   const done = new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+
+  /* A ceiling, because this is the one write in the shop that anybody may
+     ask for without an account, a cart or a captcha. A page is a row per day
+     and path, so a script posting invented paths can grow the table without
+     limit — and a database that runs out of room takes the catalogue with
+     it, which has happened to this shop once already. Three hundred an hour
+     is more pages than a person opens and far fewer than a script wants.
+     Over the limit the answer is the same 204: the beacon must never tell a
+     page anything, including that it was refused. */
+  const burst = await consume(`hit:ip:${await clientIp()}`, 300, 60 * 60);
+  if (!burst.ok) return done;
 
   let body: { path?: unknown; event?: unknown; productIds?: unknown } = {};
   try {

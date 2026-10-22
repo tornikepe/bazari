@@ -1,4 +1,9 @@
-import { activeProvider, ProviderRateLimitError, type ChatProvider } from "@/lib/chat/providers";
+import {
+  activeProvider,
+  ProviderAuthError,
+  ProviderRateLimitError,
+  type ChatProvider,
+} from "@/lib/chat/providers";
 import { buildSystemPrompt } from "@/lib/chat/prompt";
 import { callerHasOrders } from "@/lib/chat/order-lookup";
 import { checkBudget, recordUsage, type TokenUsage } from "@/lib/chat/budget";
@@ -186,6 +191,20 @@ function runConversation({
               (error.retryAfter === null ? "" : `; retry in ~${error.retryAfter}s`),
           );
           send({ type: "error", code: "rate_limited" });
+          return;
+        }
+
+        if (error instanceof ProviderAuthError) {
+          /* A refused key refuses every request, so inviting a retry would
+             be a lie. The visitor is told the assistant is away; the log
+             says what an operator has to change, because nothing else in
+             the shop will ever mention it. */
+          console.error(
+            `[chat] ${provider.id} rejected the API key — set a valid one in the ` +
+              `environment (${provider.id === "gemini" ? "GEMINI_API_KEY" : "ANTHROPIC_API_KEY"}) ` +
+              `or clear it to hide the assistant.`,
+          );
+          send({ type: "error", code: "unavailable" });
           return;
         }
 
