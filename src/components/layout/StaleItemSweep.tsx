@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { dropProducts, getSnapshot as cartSnapshot } from "@/lib/cart-store";
 import { dropFavorites, getSnapshot as favouritesSnapshot } from "@/lib/favorites-store";
 import { sellableProducts } from "@/app/actions/products";
+import { noteWithdrawn } from "@/lib/withdrawn-store";
 
 /** Matches the server action's limit; the lists are sent a hundred at a time. */
 const BATCH = 100;
@@ -50,8 +51,9 @@ export function StaleItemSweep() {
         if (gone.length === 0) continue;
 
         const dead = new Set(gone);
-        dropProducts(dead);
-        dropFavorites(dead);
+        /* Counted, so the cart and the wishlist can say what happened. A
+           line that vanishes without a word reads as the shop losing it. */
+        noteWithdrawn({ cart: dropProducts(dead), favorites: dropFavorites(dead) });
       }
     };
 

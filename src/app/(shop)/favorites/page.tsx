@@ -17,6 +17,7 @@ import { PageIntro } from "@/components/ui/PageIntro";
 import { countText } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WithdrawnNotice } from "@/components/layout/WithdrawnNotice";
 import { EmptyHeartArt } from "@/components/ui/illustrations";
 
 /**
@@ -76,6 +77,9 @@ export default function FavoritesPage() {
           {/* The card below says the sentence; the head only names the page. */}
           <PageIntro eyebrow={t.account.menuWishlist} title={t.favorites.title} />
 
+          {/* Why it is empty, when it was not a moment ago. */}
+          <WithdrawnNotice list="favorites" className="mt-6 mb-0" />
+
           <EmptyState
             className="card mx-auto mt-8 max-w-md"
             art={<EmptyHeartArt size={96} />}
@@ -103,6 +107,8 @@ export default function FavoritesPage() {
           `${t.favorites.worth} ${formatPrice(worth, locale)}`,
         ]}
       />
+
+      <WithdrawnNotice list="favorites" className="mt-8 mb-0" />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-2.5 sm:gap-3">

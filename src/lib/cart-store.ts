@@ -192,12 +192,14 @@ export function clearCart() {
  * Silent when there is nothing to take out, so the common case wakes no
  * subscriber.
  */
-export function dropProducts(gone: ReadonlySet<string>) {
-  if (gone.size === 0) return;
+export function dropProducts(gone: ReadonlySet<string>): number {
+  if (gone.size === 0) return 0;
   const next = items.filter(
     (entry) => !gone.has(entry.productId) && !(entry.variantId && gone.has(entry.variantId)),
   );
-  if (next.length !== items.length) commit(next);
+  const removed = items.length - next.length;
+  if (removed > 0) commit(next);
+  return removed;
 }
 
 /* ------------------------------------------------------------------ */

@@ -90,10 +90,12 @@ export function clearFavorites() {
  * on counting it. Same remedy as the cart's, and the same silence when
  * there is nothing to take out.
  */
-export function dropFavorites(gone: ReadonlySet<string>) {
-  if (gone.size === 0) return;
+export function dropFavorites(gone: ReadonlySet<string>): number {
+  if (gone.size === 0) return 0;
   const next = ids.filter((id) => !gone.has(id));
-  if (next.length !== ids.length) commit(next);
+  const removed = ids.length - next.length;
+  if (removed > 0) commit(next);
+  return removed;
 }
 
 /**

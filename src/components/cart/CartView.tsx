@@ -14,6 +14,7 @@ import { formatPrice } from "@/lib/format";
 import { fill } from "@/lib/i18n";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EmptyCartArt } from "@/components/ui/illustrations";
+import { WithdrawnNotice } from "@/components/layout/WithdrawnNotice";
 import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { useChangeKey } from "@/components/ui/useChangeKey";
 import { PageIntro } from "@/components/ui/PageIntro";
@@ -60,6 +61,9 @@ export function CartView() {
               sentence, and saying it twice read as a mistake. */}
           <PageIntro eyebrow={t.nav.cart} title={t.cart.title} />
 
+          {/* Why it is empty, when it was not a moment ago. */}
+          <WithdrawnNotice list="cart" />
+
           <EmptyState
             className="card mx-auto mt-8 max-w-md"
             art={<EmptyCartArt size={96} />}
@@ -94,6 +98,10 @@ export function CartView() {
           `${t.cart.subtotal} ${formatPrice(subtotal, locale)}`,
         ]}
       />
+
+      {/* A cart that lost a line while it sat here says so, above the lines
+          that are left. Draws nothing at all when nothing was lost. */}
+      <WithdrawnNotice list="cart" className="mt-8 mb-0" />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         {/* ------------------------------- items ----------------------------- */}
